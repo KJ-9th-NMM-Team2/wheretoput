@@ -1,5 +1,7 @@
 // Wall Detection Module - OpenCV.js를 사용한 벽 검출 알고리즘
-// 사용법: import { WallDetector } from './wallDetection.js'
+// HTML 예제 기반으로 최적화된 버전
+
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 export class WallDetector {
   constructor() {
@@ -93,7 +95,7 @@ export class WallDetector {
     })
   }
 
-  // 이미지 처리 함수
+  // 이미지 처리 함수 (HTML 예제 기반)
   processImage(img, params) {
     const { morphType, canny1, canny2, houghTh, minLen, maxGap } = params
     
@@ -141,9 +143,13 @@ export class WallDetector {
       window.cv.HoughLinesP(edges, lines, 1, Math.PI / 180, houghTh, minLen, maxGap)
 
       // 6. 선분 데이터 추출
-      const wallLines = this.extractLines(lines)
+      let wallLines = this.extractLines(lines)
 
-      // 7. 메모리 해제
+      // 7. 평행선 병합 및 후처리
+      wallLines = this.mergeParallelLines(wallLines)
+      wallLines = this.filterLines(wallLines)
+
+      // 8. 메모리 해제
       srcImg.delete()
       gray.delete()
       binary.delete()
@@ -169,19 +175,127 @@ export class WallDetector {
     }
   }
 
-  // 선분 데이터 추출
+  // 선분 데이터 추출 (HTML 예제와 동일)
   extractLines(lines) {
     const wallLines = []
     for (let i = 0; i < lines.rows; i++) {
-      const lineData = lines.data32S.slice(i * 4, (i + 1) * 4)
-      const [x1, y1, x2, y2] = lineData
+      const linePtr = lines.intPtr(i)
+      const [x1, y1, x2, y2] = [linePtr[0], linePtr[1], linePtr[2], linePtr[3]]
       wallLines.push({ x1, y1, x2, y2 })
     }
     return wallLines
   }
 
-  // 선분 필터링 (길이, 각도 기준)
-  filterLines(lines, minLength = 20, angleThreshold = 10) {
+  // 평행선 병합 (벽 두께 문제 해결)
+  mergeParallelLines(lines, maxDistance = 15, angleThreshold = 5) {
+    const merged = []
+    const used = new Set()
+    
+    for (let i = 0; i < lines.length; i++) {
+      if (used.has(i)) continue
+      
+      const line1 = lines[i]
+      const parallelGroup = [line1]
+      used.add(i)
+      
+      // 평행한 선들 찾기
+      for (let j = i + 1; j < lines.length; j++) {
+        if (used.has(j)) continue
+        
+        const line2 = lines[j]
+        if (this.areParallelLines(line1, line2, maxDistance, angleThreshold)) {
+          parallelGroup.push(line2)
+          used.add(j)
+        }
+      }
+      
+      // 평행선들의 중심선 계산
+      if (parallelGroup.length > 1) {
+        merged.push(this.calculateCenterLine(parallelGroup))
+      } else {
+        merged.push(line1)
+      }
+    }
+    
+    return merged
+  }
+
+  // 두 선이 평행한지 확인
+  areParallelLines(line1, line2, maxDistance, angleThreshold) {
+    // 각도 비교
+    const angle1 = Math.atan2(line1.y2 - line1.y1, line1.x2 - line1.x1) * 180 / Math.PI
+    const angle2 = Math.atan2(line2.y2 - line2.y1, line2.x2 - line2.x1) * 180 / Math.PI
+    
+    let angleDiff = Math.abs(angle1 - angle2)
+    if (angleDiff > 90) angleDiff = 180 - angleDiff
+    
+    if (angleDiff > angleThreshold) return false
+    
+    // 평행선 간의 거리 계산
+    const distance = this.distanceBetweenParallelLines(line1, line2)
+    return distance <= maxDistance
+  }
+
+  // 평행선 간의 거리 계산
+  distanceBetweenParallelLines(line1, line2) {
+    // line1의 중점에서 line2까지의 거리
+    const midX1 = (line1.x1 + line1.x2) / 2
+    const midY1 = (line1.y1 + line1.y2) / 2
+    
+    // line2를 직선의 일반형으로 변환 (ax + by + c = 0)
+    const a = line2.y2 - line2.y1
+    const b = line2.x1 - line2.x2
+    const c = line2.x2 * line2.y1 - line2.x1 * line2.y2
+    
+    // 점에서 직선까지의 거리 공식
+    return Math.abs(a * midX1 + b * midY1 + c) / Math.sqrt(a * a + b * b)
+  }
+
+  // 평행선들의 중심선 계산
+  calculateCenterLine(parallelLines) {
+    // 모든 선의 시작점과 끝점을 수집
+    const points = []
+    parallelLines.forEach(line => {
+      points.push({ x: line.x1, y: line.y1 })
+      points.push({ x: line.x2, y: line.y2 })
+    })
+    
+    // 주요 방향 벡터 계산 (첫 번째 선 기준)
+    const mainLine = parallelLines[0]
+    const dx = mainLine.x2 - mainLine.x1
+    const dy = mainLine.y2 - mainLine.y1
+    const length = Math.sqrt(dx * dx + dy * dy)
+    const dirX = dx / length
+    const dirY = dy / length
+    
+    // 모든 점을 주요 방향으로 투영
+    const projections = points.map(point => {
+      return (point.x - mainLine.x1) * dirX + (point.y - mainLine.y1) * dirY
+    })
+    
+    const minProj = Math.min(...projections)
+    const maxProj = Math.max(...projections)
+    
+    // 중심선의 시작점과 끝점 계산
+    const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length
+    const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length
+    
+    // 중심점에서 주요 방향으로 선을 그어 시작점과 끝점 결정
+    const startX = centerX + (minProj - (centerX - mainLine.x1) * dirX - (centerY - mainLine.y1) * dirY) * dirX
+    const startY = centerY + (minProj - (centerX - mainLine.x1) * dirX - (centerY - mainLine.y1) * dirY) * dirY
+    const endX = centerX + (maxProj - (centerX - mainLine.x1) * dirX - (centerY - mainLine.y1) * dirY) * dirX
+    const endY = centerY + (maxProj - (centerX - mainLine.x1) * dirX - (centerY - mainLine.y1) * dirY) * dirY
+    
+    return {
+      x1: Math.round(startX),
+      y1: Math.round(startY),
+      x2: Math.round(endX),
+      y2: Math.round(endY)
+    }
+  }
+
+  // 선분 필터링 (길이, 각도 기준, 디폴트 10)
+  filterLines(lines, minLength = 20, angleThreshold = 5) {
     return lines.filter(line => {
       const length = Math.sqrt(
         Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2)
@@ -198,73 +312,6 @@ export class WallDetector {
     })
   }
 
-  // 선분 병합 (인접한 선분들을 하나로)
-  mergeLines(lines, distanceThreshold = 20, angleThreshold = 5) {
-    const merged = []
-    const used = new Set()
-    
-    for (let i = 0; i < lines.length; i++) {
-      if (used.has(i)) continue
-      
-      const line1 = lines[i]
-      const group = [line1]
-      used.add(i)
-      
-      for (let j = i + 1; j < lines.length; j++) {
-        if (used.has(j)) continue
-        
-        const line2 = lines[j]
-        if (this.areLinesSimilar(line1, line2, distanceThreshold, angleThreshold)) {
-          group.push(line2)
-          used.add(j)
-        }
-      }
-      
-      // 그룹의 선분들을 하나로 병합
-      merged.push(this.mergeSimilarLines(group))
-    }
-    
-    return merged
-  }
-
-  // 두 선분이 비슷한지 판단
-  areLinesSimilar(line1, line2, distanceThreshold, angleThreshold) {
-    // 각도 비교
-    const angle1 = Math.atan2(line1.y2 - line1.y1, line1.x2 - line1.x1)
-    const angle2 = Math.atan2(line2.y2 - line2.y1, line2.x2 - line2.x1)
-    const angleDiff = Math.abs(angle1 - angle2) * 180 / Math.PI
-    
-    if (angleDiff > angleThreshold && angleDiff < (180 - angleThreshold)) {
-      return false
-    }
-    
-    // 거리 비교 (선분 중점 간 거리)
-    const center1 = { x: (line1.x1 + line1.x2) / 2, y: (line1.y1 + line1.y2) / 2 }
-    const center2 = { x: (line2.x1 + line2.x2) / 2, y: (line2.y1 + line2.y2) / 2 }
-    const distance = Math.sqrt(
-      Math.pow(center2.x - center1.x, 2) + Math.pow(center2.y - center1.y, 2)
-    )
-    
-    return distance < distanceThreshold
-  }
-
-  // 비슷한 선분들을 하나로 병합
-  mergeSimilarLines(lines) {
-    if (lines.length === 1) return lines[0]
-    
-    let minX = Infinity, maxX = -Infinity
-    let minY = Infinity, maxY = -Infinity
-    
-    lines.forEach(line => {
-      minX = Math.min(minX, line.x1, line.x2)
-      maxX = Math.max(maxX, line.x1, line.x2)
-      minY = Math.min(minY, line.y1, line.y2)
-      maxY = Math.max(maxY, line.y1, line.y2)
-    })
-    
-    return { x1: minX, y1: minY, x2: maxX, y2: maxY }
-  }
-
   // 기본 파라미터 반환
   static getDefaultParams() {
     return {
@@ -278,24 +325,12 @@ export class WallDetector {
   }
 }
 
-// React Hook 버전 (기존 코드와 호환) - React import 필요
-let React = null
-
-// React hooks가 사용 가능한 경우에만 export
+// React Hook 버전
 export function useWallDetection() {
-  // React가 없으면 에러
-  if (!React) {
-    try {
-      React = await import('react')
-    } catch (e) {
-      throw new Error('React is required for useWallDetection hook')
-    }
-  }
+  const [isReady, setIsReady] = useState(false)
+  const detectorRef = useRef(null)
   
-  const [isReady, setIsReady] = React.useState(false)
-  const detectorRef = React.useRef(null)
-  
-  React.useEffect(() => {
+  useEffect(() => {
     if (!detectorRef.current) {
       detectorRef.current = new WallDetector()
       
@@ -308,7 +343,7 @@ export function useWallDetection() {
     }
   }, [])
   
-  const detectWalls = React.useCallback(async (imageFile, params = {}) => {
+  const detectWalls = useCallback(async (imageFile, params = {}) => {
     if (!detectorRef.current) {
       throw new Error('WallDetector not initialized')
     }

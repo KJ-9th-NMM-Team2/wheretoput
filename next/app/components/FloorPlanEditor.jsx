@@ -1,12 +1,13 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { WallDetector } from '../wallDetection.js';
 
 import {
   Square,
   MousePointer,
   Eraser,
   Check,
-  ZoomIn,
-  ZoomOut,
+  Upload,
+  Trash2,
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
@@ -17,14 +18,14 @@ const FloorPlanEditor = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startPoint, setStartPoint] = useState(null);
   const [currentPoint, setCurrentPoint] = useState(null);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const [lastPanPoint, setLastPanPoint] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedWall, setSelectedWall] = useState(null);
+  const fileInputRef = useRef(null);
 
-  const GRID_SIZE = 50; // 500mm를 50px로 표현 (1px = 10mm)
-  const CANVAS_WIDTH = 2000; // 더 큰 캔버스 (20m x 15m)
-  const CANVAS_HEIGHT = 1500;
+  const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
+  const CANVAS_WIDTH = 600; // 캔버스 크기 축소
+  const CANVAS_HEIGHT = 300;
 
   // 격자에 스냅하는 함수
   const snapToGrid = (x, y) => {
@@ -39,7 +40,7 @@ const FloorPlanEditor = () => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return Math.round(distance * 10); // px를 mm로 변환 (1px = 10mm)
+    return Math.round(distance * 20); // px를 mm로 변환 (1px = 20mm, 격자 25px = 500mm)
   };
 
   // 점과 선분 사이의 거리 계산
@@ -79,8 +80,8 @@ const FloorPlanEditor = () => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    const x = ((e.clientX - rect.left) * scaleX - pan.x) / zoom;
-    const y = ((e.clientY - rect.top) * scaleY - pan.y) / zoom;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
     return { x, y };
   };
 
@@ -89,10 +90,14 @@ const FloorPlanEditor = () => {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    ctx.fillStyle = "#ff6600";
-    ctx.font = `${16 / zoom}px Arial`;
+    ctx.fillStyle = "#000000";
+    ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    
+    // 텍스트 렌더링 품질 개선
+    ctx.textRenderingOptimization = 'optimizeQuality';
+    
     ctx.fillText(text, 0, 0);
     ctx.restore();
   };
@@ -105,14 +110,14 @@ const FloorPlanEditor = () => {
     // 전체 캔버스 클리어
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 변환 적용
-    ctx.save();
-    ctx.scale(zoom, zoom);
-    ctx.translate(pan.x / zoom, pan.y / zoom);
+    // 텍스트 렌더링 품질 개선
+    ctx.textRenderingOptimization = 'optimizeQuality';
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // 격자 그리기
-    ctx.strokeStyle = "#ffcc99";
-    ctx.lineWidth = 1 / zoom;
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 0.5;
 
     // 세로선
     for (let x = 0; x <= CANVAS_WIDTH; x += GRID_SIZE) {
@@ -132,10 +137,16 @@ const FloorPlanEditor = () => {
 
     // 완성된 벽들 그리기
     ctx.strokeStyle = "#ff6600";
-    ctx.lineWidth = 3 / zoom;
+    ctx.lineWidth = 3;
 
     walls.forEach((wall) => {
-      // 벽 그리기
+      // 선택된 벽인지 확인
+      const isSelected = selectedWall?.id === wall.id;
+      
+      // 벽 그리기 (선택된 벽은 다른 색상)
+      ctx.strokeStyle = isSelected ? "#00ff00" : "#ff6600";
+      ctx.lineWidth = isSelected ? 4 : 3;
+      
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
       ctx.lineTo(wall.end.x, wall.end.y);
@@ -153,10 +164,10 @@ const FloorPlanEditor = () => {
       // 배경 박스
       ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
       ctx.strokeStyle = "#ff6600";
-      ctx.lineWidth = 1 / zoom;
+      ctx.lineWidth = 1;
 
-      const textWidth = ctx.measureText(`${distance}mm`).width + 16;
-      const textHeight = 24;
+      const textWidth = ctx.measureText(`${distance}mm`).width + 8;
+      const textHeight = 16;
 
       ctx.save();
       ctx.translate(midX, midY);
@@ -171,8 +182,8 @@ const FloorPlanEditor = () => {
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
       ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 3 / zoom;
-      ctx.setLineDash([5 / zoom, 5 / zoom]);
+      ctx.lineWidth = 3;
+      ctx.setLineDash([5, 5]);
 
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
@@ -192,10 +203,10 @@ const FloorPlanEditor = () => {
 
       ctx.fillStyle = "rgba(255, 153, 51, 0.9)";
       ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 1 / zoom;
+      ctx.lineWidth = 1;
 
-      const textWidth = ctx.measureText(`${distance}mm`).width + 16;
-      const textHeight = 24;
+      const textWidth = ctx.measureText(`${distance}mm`).width + 8;
+      const textHeight = 16;
 
       ctx.save();
       ctx.translate(midX, midY);
@@ -206,26 +217,36 @@ const FloorPlanEditor = () => {
 
       drawText(ctx, `${distance}mm`, midX, midY, angle);
     }
-
-    ctx.restore();
   };
 
   // 마우스 이벤트 핸들러들
   const handleMouseDown = (e) => {
     const coords = getCanvasCoordinates(e);
 
-    if (e.button === 1 || (e.button === 0 && e.ctrlKey)) {
-      // 중간 버튼 또는 Ctrl+클릭으로 팬
-      setIsPanning(true);
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
-      return;
-    }
-
     if (tool === "wall") {
       const snapped = snapToGrid(coords.x, coords.y);
       setStartPoint(snapped);
       setCurrentPoint(snapped);
       setIsDrawing(true);
+    } else if (tool === "select") {
+      // 선택 도구: 클릭한 위치에서 가장 가까운 벽 선택
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_SELECT_DISTANCE = 30; // 30픽셀 이내의 벽만 선택 가능
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_SELECT_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      if (closestWall) {
+        setSelectedWall(selectedWall?.id === closestWall.id ? null : closestWall);
+      } else {
+        setSelectedWall(null);
+      }
     } else if (tool === "eraser") {
       // 클릭 위치에서 가장 가까운 벽 찾기
       let closestWall = null;
@@ -248,14 +269,6 @@ const FloorPlanEditor = () => {
   };
 
   const handleMouseMove = (e) => {
-    if (isPanning && lastPanPoint) {
-      const dx = e.clientX - lastPanPoint.x;
-      const dy = e.clientY - lastPanPoint.y;
-      setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
-      return;
-    }
-
     if (isDrawing && tool === "wall") {
       const coords = getCanvasCoordinates(e);
       const snapped = snapToGrid(coords.x, coords.y);
@@ -264,12 +277,6 @@ const FloorPlanEditor = () => {
   };
 
   const handleMouseUp = (e) => {
-    if (isPanning) {
-      setIsPanning(false);
-      setLastPanPoint(null);
-      return;
-    }
-
     if (isDrawing && tool === "wall" && startPoint) {
       const coords = getCanvasCoordinates(e);
       const snapped = snapToGrid(coords.x, coords.y);
@@ -291,42 +298,79 @@ const FloorPlanEditor = () => {
     }
   };
 
-  // 휠 이벤트로 줌
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.max(0.1, Math.min(3, zoom * delta));
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    setPan((prev) => ({
-      x: mouseX - (mouseX - prev.x) * (newZoom / zoom),
-      y: mouseY - (mouseY - prev.y) * (newZoom / zoom),
-    }));
-
-    setZoom(newZoom);
-  };
 
   // 캔버스 다시 그리기
   useEffect(() => {
     drawCanvas();
-  }, [walls, isDrawing, startPoint, currentPoint, zoom, pan]);
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+
+  // 이미지 업로드 처리
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    try {
+      // 이미지 미리보기용
+      const imageUrl = URL.createObjectURL(file);
+      setUploadedImage(imageUrl);
+
+      // WallDetector로 벽 검출 (최적화된 매개변수)
+      const detector = new WallDetector();
+      const result = await detector.detectWalls(file, {
+        morphType: 0,      // OPEN 연산으로 노이즈 제거
+        canny1: 50,        // 낮은 임계값
+        canny2: 100,       // 높은 임계값
+        houghTh: 60,       // Hough 변환 임계값 낮춤
+        minLen: 25,        // 최소 선분 길이
+        maxGap: 15         // 선분 간 최대 간격
+      });
+      
+      // 검출된 선분들을 벽으로 변환
+      const detectedWalls = result.lines.map((line, index) => ({
+        id: Date.now() + index,
+        start: { x: line.x1 * 0.5, y: line.y1 * 0.5 }, // 스케일 조정
+        end: { x: line.x2 * 0.5, y: line.y2 * 0.5 }
+      }));
+      
+      setWalls(detectedWalls);
+    } catch (error) {
+      console.error('Wall detection failed:', error);
+      alert('벽 검출에 실패했습니다.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 전체 벽 지우기 함수
+  const clearAllWalls = () => {
+    if (walls.length === 0) {
+      alert('지울 벽이 없습니다.');
+      return;
+    }
+    
+    if (window.confirm(`모든 벽을 삭제하시겠습니까? (총 ${walls.length}개)`)) {
+      setWalls([]);
+      setSelectedWall(null);
+      alert('모든 벽이 삭제되었습니다.');
+    }
+  };
+
+  // PNG 다운로드 함수
+  const downloadAsPNG = () => {
+    const canvas = canvasRef.current;
+    const link = document.createElement('a');
+    link.download = `floor-plan-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+  };
 
   // 완성 버튼 핸들러
   const handleComplete = () => {
-    alert(`도면이 완성되었습니다! 총 ${walls.length}개의 벽이 그려졌습니다.`);
+    downloadAsPNG();
+    alert(`도면이 완성되어 PNG 파일로 저장되었습니다! 총 ${walls.length}개의 벽이 그려졌습니다.`);
   };
 
-  // 줌 버튼 핸들러
-  const handleZoomIn = () => {
-    setZoom((prev) => Math.min(3, prev * 1.2));
-  };
-
-  const handleZoomOut = () => {
-    setZoom((prev) => Math.max(0.1, prev / 1.2));
-  };
 
   return (
     <div className="w-full h-screen bg-orange-50 flex flex-col">
@@ -372,25 +416,33 @@ const FloorPlanEditor = () => {
               <Eraser size={18} />
               지우기
             </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
+            >
+              <Upload size={18} />
+              {isProcessing ? '처리중...' : '도면 업로드'}
+            </button>
+
+            <button
+              onClick={clearAllWalls}
+              className="flex items-center gap-2 px-4 py-2 bg-red-200 text-red-700 rounded-lg font-medium hover:bg-red-300 transition-colors"
+            >
+              <Trash2 size={18} />
+              전체 지우기
+            </button>
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={handleZoomOut}
-              className="flex items-center gap-2 px-3 py-2 bg-orange-200 text-orange-700 rounded-lg hover:bg-orange-300 transition-colors"
-            >
-              <ZoomOut size={18} />
-            </button>
-            <span className="px-3 py-2 bg-orange-200 text-orange-700 rounded-lg font-medium min-w-[80px] text-center">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              className="flex items-center gap-2 px-3 py-2 bg-orange-200 text-orange-700 rounded-lg hover:bg-orange-300 transition-colors"
-            >
-              <ZoomIn size={18} />
-            </button>
-          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+
 
           <div className="ml-auto">
             <button
@@ -411,29 +463,22 @@ const FloorPlanEditor = () => {
           <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
             <div
               ref={containerRef}
-              className="w-full h-full overflow-auto"
+              className="w-full h-full"
               style={{
-                cursor: isPanning
-                  ? "grabbing"
-                  : tool === "wall"
-                  ? "crosshair"
-                  : "default",
+                cursor: tool === "wall" ? "crosshair" : "default"
               }}
             >
               <canvas
                 ref={canvasRef}
-                width={800}
-                height={600}
+                width={600}
+                height={300}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
-                onWheel={handleWheel}
                 className="block"
                 style={{
                   width: "100%",
-                  height: "100%",
-                  minWidth: "800px",
-                  minHeight: "600px",
+                  height: "100%"
                 }}
               />
             </div>
@@ -441,12 +486,9 @@ const FloorPlanEditor = () => {
 
           {/* 격자 정보 */}
           <div className="mt-4 text-sm text-orange-600">
-            <p>격자 크기: 500mm × 500mm | 전체 영역: 20m × 15m</p>
+            <p>격자 크기: 500mm × 500mm</p>
             <p>
-              총 벽 개수: {walls.length}개 | 줌: {Math.round(zoom * 100)}%
-            </p>
-            <p className="text-xs mt-1">
-              💡 마우스 휠로 줌, Ctrl+클릭으로 이동
+              총 벽 개수: {walls.length}개
             </p>
           </div>
         </div>
@@ -474,9 +516,26 @@ const FloorPlanEditor = () => {
           {tool === "select" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <h4 className="font-medium text-orange-700 mb-2">선택 모드</h4>
-              <p className="text-sm text-orange-600">
+              <p className="text-sm text-orange-600 mb-3">
                 벽을 클릭하여 선택하고 편집할 수 있습니다.
               </p>
+              {selectedWall && (
+                <div className="bg-green-50 p-3 rounded border border-green-200">
+                  <h5 className="font-medium text-green-700 mb-1">선택된 벽</h5>
+                  <p className="text-sm text-green-600">
+                    길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
+                  </p>
+                  <button
+                    onClick={() => {
+                      setWalls((prev) => prev.filter((wall) => wall.id !== selectedWall.id));
+                      setSelectedWall(null);
+                    }}
+                    className="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -508,9 +567,9 @@ const FloorPlanEditor = () => {
                       길이: {calculateDistance(wall.start, wall.end)}mm
                     </p>
                     <p className="text-xs text-orange-500">
-                      ({Math.round(wall.start.x / 5)},{" "}
-                      {Math.round(wall.start.y / 5)}) → (
-                      {Math.round(wall.end.x / 5)}, {Math.round(wall.end.y / 5)}
+                      ({Math.round(wall.start.x / 2.5)},{" "}
+                      {Math.round(wall.start.y / 2.5)}) → (
+                      {Math.round(wall.end.x / 2.5)}, {Math.round(wall.end.y / 2.5)}
                       )
                     </p>
                   </div>
