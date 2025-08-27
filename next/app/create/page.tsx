@@ -3,7 +3,7 @@
 import FloorPlanEditor from '../components/FloorPlanEditor.jsx'
 
 export default function CreatePage() {
-  const handleFloorPlanChange = (walls) => {
+  const handleFloorPlanChange = (walls: any[]) => {
     console.log('Floor plan updated:', walls)
   }
 
