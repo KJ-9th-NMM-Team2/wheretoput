@@ -326,8 +326,8 @@ const FloorPlanEditor = () => {
       // 검출된 선분들을 벽으로 변환
       const detectedWalls = result.lines.map((line, index) => ({
         id: Date.now() + index,
-        start: { x: line.x1 * 0.5, y: line.y1 * 0.5 }, // 스케일 조정
-        end: { x: line.x2 * 0.5, y: line.y2 * 0.5 }
+        start: { x: line.x1 * 1.5, y: line.y1 * 1.5 }, // 스케일 조정
+        end: { x: line.x2 * 1.5, y: line.y2 * 1.5 }
       }));
       
       setWalls(detectedWalls);
