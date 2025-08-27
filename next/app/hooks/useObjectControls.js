@@ -38,8 +38,8 @@ export function useObjectControls(modelId, onPositionChange, onRotationChange, o
       const intersectPoint = new THREE.Vector3()
       raycaster.ray.intersectPlane(floorPlane, intersectPoint)
       
-      if (intersectPoint && e.currentTarget) {
-        setDragOffset(intersectPoint.clone().sub(new THREE.Vector3(...e.currentTarget.position)))
+      if (intersectPoint && e.currentTarget && e.currentTarget.position) {
+        setDragOffset(intersectPoint.clone().sub(e.currentTarget.position))
       }
       
       gl.domElement.style.cursor = 'grabbing'
