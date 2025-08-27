@@ -104,7 +104,7 @@ const FloorPlanEditor = () => {
     ctx.restore();
   };
 
-  // 캔버스 그리기
+  // 캔버스 그리기 : 선분 두께 등 수정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -189,7 +189,7 @@ const FloorPlanEditor = () => {
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
       ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 6;
       ctx.setLineDash([5, 5]);
 
       ctx.beginPath();
@@ -323,12 +323,34 @@ const FloorPlanEditor = () => {
         maxGap: 15         // 선분 간 최대 간격
       });
       
-      // 검출된 선분들을 벽으로 변환
-      const detectedWalls = result.lines.map((line, index) => ({
-        id: Date.now() + index,
-        start: { x: line.x1 * 1.5, y: line.y1 * 1.5 }, // 스케일 조정
-        end: { x: line.x2 * 1.5, y: line.y2 * 1.5 }
-      }));
+      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / result.imageWidth;
+      const scaleY = rect.height / result.imageHeight;
+      
+      // 검출된 선분들을 벽으로 변환하고 격자에 스냅
+      const detectedWalls = result.lines.map((line, index) => {
+        // 스케일 적용
+        const scaledStart = {
+          x: line.x1 * scaleX,
+          y: line.y1 * scaleY
+        };
+        const scaledEnd = {
+          x: line.x2 * scaleX,
+          y: line.y2 * scaleY
+        };
+        
+        // 격자에 스냅
+        const snappedStart = snapToGrid(scaledStart.x, scaledStart.y);
+        const snappedEnd = snapToGrid(scaledEnd.x, scaledEnd.y);
+        
+        return {
+          id: Date.now() + index,
+          start: snappedStart,
+          end: snappedEnd
+        };
+      });
       
       setWalls(detectedWalls);
     } catch (error) {
