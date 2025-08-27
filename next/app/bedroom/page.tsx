@@ -25,7 +25,7 @@ function Floor() {
   )
 }
 
-function Wall({ width, height, position, rotation = 0 }) {
+function Wall({ width, height, position, rotation = 0 }: { width: number; height: number; position: [number, number, number]; rotation?: number }) {
   return (
     <mesh position={position} rotation={[0, rotation, 0]} receiveShadow castShadow>
       <planeGeometry args={[width, height]} />
@@ -40,7 +40,7 @@ function Wall({ width, height, position, rotation = 0 }) {
   )
 }
 
-function Bed({ position }) {
+function Bed({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
@@ -63,7 +63,7 @@ function Bed({ position }) {
   )
 }
 
-function Desk({ position }) {
+function Desk({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh position={[0, 1, 0]} castShadow receiveShadow>
@@ -84,7 +84,7 @@ function Desk({ position }) {
   )
 }
 
-function Chair({ position, rotation }) {
+function Chair({ position, rotation }: { position: [number, number, number]; rotation: number }) {
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       <mesh position={[0, 0.5, 0]} castShadow>
@@ -105,7 +105,7 @@ function Chair({ position, rotation }) {
   )
 }
 
-function Window({ position }) {
+function Window({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh castShadow>
@@ -134,7 +134,7 @@ function Window({ position }) {
   )
 }
 
-function Nightstand({ position }) {
+function Nightstand({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh position={[0, 0.6, 0]} castShadow>
@@ -149,7 +149,7 @@ function Nightstand({ position }) {
   )
 }
 
-function Lamp({ position }) {
+function Lamp({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
       <mesh>
@@ -175,7 +175,7 @@ function Lamp({ position }) {
   )
 }
 
-function Rug({ position }) {
+function Rug({ position }: { position: [number, number, number] }) {
   return (
     <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[3, 2]} />
@@ -274,18 +274,6 @@ export default function BedroomPage() {
         
     
 
-        <Suspense fallback={null}>
-          <DraggableModel
-            modelId="test-building"
-            url="/asset/city-kit-commercial/Models/GLB format/building-a.glb"
-            texturePath="/asset/city-kit-commercial/Models/Textures/variation-b.png"
-            position={[8, 0, -8]}
-            scale={1}
-            controlsRef={controlsRef}
-            isCityKit={true}
-            type="building"
-          />
-        </Suspense>
 
         <Suspense fallback={null}>
           {loadedModels.map(model => (
