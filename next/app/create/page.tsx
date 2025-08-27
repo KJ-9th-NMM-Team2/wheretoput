@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import FloorPlanEditor from '../components/FloorPlanEditor.jsx'
 
 export default function CreatePage() {
@@ -14,3 +13,4 @@ export default function CreatePage() {
     </div>
   )
 }
+

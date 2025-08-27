@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js 프로젝트
 
-## Getting Started
+## 프로젝트 구조
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+next/
+├── app/                    # Next.js App Router 디렉토리
+├── components/             # 재사용 가능한 React 컴포넌트
+├── public/                # 정적 파일 (이미지, 아이콘 등)
+├── next.config.ts         # Next.js 설정 파일
+├── package.json           # 프로젝트 의존성 및 스크립트
+├── tsconfig.json          # TypeScript 설정
+└── postcss.config.mjs     # PostCSS 설정
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 기술 스택
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 15.5.2 (App Router)
+- **Language**: TypeScript
+- **UI**: React 19.1.0
+- **Styling**: Tailwind CSS v4
+- **3D Graphics**: Three.js, React Three Fiber
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 개발 명령어
 
-## Learn More
+- 도커 사용 안할 시, 아래와 같이 실행하면 됩니다.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# 개발 서버 시작 (Turbopack 사용)
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 프로덕션 빌드 (Turbopack 사용)
+npm run build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 프로덕션 서버 시작
+npm start
+```
 
-## Deploy on Vercel
+## 라우팅 구조
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/` - 메인 페이지
+- `/community` - 커뮤니티 페이지
+- `/create` - 생성 페이지
+- `/follows` - 팔로우 페이지
+- `/login` - 로그인 페이지
+- `/rooms/[id]` - 특정 룸 페이지
+- `/search` - 검색 페이지
+- `/setting` - 설정 페이지
+- `/sim/[id]` - 시뮬레이션 페이지
+- `/users/[id]` - 사용자 프로필 페이지
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 폴더별 상세 설명
+
+각 폴더의 자세한 설명은 해당 폴더 내 README.md 파일을 참조하세요.
