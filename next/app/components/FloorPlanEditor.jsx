@@ -482,12 +482,12 @@ const FloorPlanEditor = () => {
           </div>
 
           {/* 격자 정보 */}
-          <div className="mt-4 text-sm text-orange-600">
+          {/* <div className="mt-4 text-sm text-orange-600">
             <p>격자 크기: 500mm × 500mm</p>
             <p>
               총 벽 개수: {walls.length}개
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* 사이드 패널 */}
