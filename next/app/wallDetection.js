@@ -294,8 +294,8 @@ export class WallDetector {
     }
   }
 
-  // 선분 필터링 (길이, 각도 기준, 디폴트 10)
-  filterLines(lines, minLength = 20, angleThreshold = 5) {
+  // 선분 필터링 (길이, 각도 기준)
+  filterLines(lines, minLength = 80, angleThreshold = 5) {
     return lines.filter(line => {
       const length = Math.sqrt(
         Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2)

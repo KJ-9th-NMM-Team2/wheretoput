@@ -78,27 +78,28 @@ const FloorPlanEditor = () => {
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    // DPR을 고려하지 않고 실제 표시 크기 기준으로 계산
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     return { x, y };
   };
 
-  // 텍스트 그리기 함수
+  // 텍스트 그리기 함수 (선 아래에 작게 표시)
   const drawText = (ctx, text, x, y, angle = 0) => {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
-    ctx.fillStyle = "#000000";
-    ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillStyle = "#333333";
+    ctx.font = "bold 9px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    ctx.textBaseline = "top";
     
     // 텍스트 렌더링 품질 개선
     ctx.textRenderingOptimization = 'optimizeQuality';
+    ctx.imageSmoothingEnabled = true;
     
-    ctx.fillText(text, 0, 0);
+    // 선 아래쪽으로 오프셋 (5px 아래)
+    ctx.fillText(text, 0, 5);
     ctx.restore();
   };
 
@@ -107,33 +108,53 @@ const FloorPlanEditor = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
+    // 고해상도 렌더링 설정
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    // 캔버스 실제 해상도 설정
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // CSS 크기는 원래대로 유지
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    
+    // 컨텍스트 스케일 조정
+    ctx.scale(dpr, dpr);
+
     // 전체 캔버스 클리어
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, rect.width, rect.height);
 
     // 텍스트 렌더링 품질 개선
     ctx.textRenderingOptimization = 'optimizeQuality';
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = false; // 격자는 선명하게
 
-    // 격자 그리기
+    // 격자 그리기 - 픽셀 정렬로 선명하게
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 0.5;
+    ctx.lineWidth = 1;
+    
+    // 픽셀 정렬을 위해 0.5 오프셋
+    ctx.translate(0.5, 0.5);
 
     // 세로선
-    for (let x = 0; x <= CANVAS_WIDTH; x += GRID_SIZE) {
+    for (let x = 0; x <= rect.width; x += GRID_SIZE) {
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, CANVAS_HEIGHT);
+      ctx.moveTo(Math.floor(x), 0);
+      ctx.lineTo(Math.floor(x), rect.height);
       ctx.stroke();
     }
 
     // 가로선
-    for (let y = 0; y <= CANVAS_HEIGHT; y += GRID_SIZE) {
+    for (let y = 0; y <= rect.height; y += GRID_SIZE) {
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(CANVAS_WIDTH, y);
+      ctx.moveTo(0, Math.floor(y));
+      ctx.lineTo(rect.width, Math.floor(y));
       ctx.stroke();
     }
+    
+    // 오프셋 복원
+    ctx.translate(-0.5, -0.5);
 
     // 완성된 벽들 그리기
     ctx.strokeStyle = "#ff6600";
@@ -152,7 +173,7 @@ const FloorPlanEditor = () => {
       ctx.lineTo(wall.end.x, wall.end.y);
       ctx.stroke();
 
-      // 길이 표시
+      // 길이 표시 (선 아래에 작게)
       const midX = (wall.start.x + wall.end.x) / 2;
       const midY = (wall.start.y + wall.end.y) / 2;
       const distance = calculateDistance(wall.start, wall.end);
@@ -160,21 +181,6 @@ const FloorPlanEditor = () => {
         wall.end.y - wall.start.y,
         wall.end.x - wall.start.x
       );
-
-      // 배경 박스
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.strokeStyle = "#ff6600";
-      ctx.lineWidth = 1;
-
-      const textWidth = ctx.measureText(`${distance}mm`).width + 8;
-      const textHeight = 16;
-
-      ctx.save();
-      ctx.translate(midX, midY);
-      ctx.rotate(angle);
-      ctx.fillRect(-textWidth / 2, -textHeight / 2, textWidth, textHeight);
-      ctx.strokeRect(-textWidth / 2, -textHeight / 2, textWidth, textHeight);
-      ctx.restore();
 
       drawText(ctx, `${distance}mm`, midX, midY, angle);
     });
@@ -192,7 +198,7 @@ const FloorPlanEditor = () => {
 
       ctx.setLineDash([]);
 
-      // 현재 그리고 있는 벽의 길이 표시
+      // 현재 그리고 있는 벽의 길이 표시 (선 아래에 작게)
       const midX = (startPoint.x + currentPoint.x) / 2;
       const midY = (startPoint.y + currentPoint.y) / 2;
       const distance = calculateDistance(startPoint, currentPoint);
@@ -201,21 +207,11 @@ const FloorPlanEditor = () => {
         currentPoint.x - startPoint.x
       );
 
-      ctx.fillStyle = "rgba(255, 153, 51, 0.9)";
-      ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 1;
-
-      const textWidth = ctx.measureText(`${distance}mm`).width + 8;
-      const textHeight = 16;
-
+      // 임시 벽의 치수는 조금 다른 색상으로 표시
       ctx.save();
-      ctx.translate(midX, midY);
-      ctx.rotate(angle);
-      ctx.fillRect(-textWidth / 2, -textHeight / 2, textWidth, textHeight);
-      ctx.strokeRect(-textWidth / 2, -textHeight / 2, textWidth, textHeight);
-      ctx.restore();
-
+      ctx.fillStyle = "#ff9933";
       drawText(ctx, `${distance}mm`, midX, midY, angle);
+      ctx.restore();
     }
   };
 
