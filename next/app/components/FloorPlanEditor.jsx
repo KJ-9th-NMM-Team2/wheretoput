@@ -35,12 +35,12 @@ const FloorPlanEditor = () => {
     };
   };
 
-  // 거리 계산 (mm 단위)
+  // 거리 계산 (mm 단위) , 축척 계산 
   const calculateDistance = (p1, p2) => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return Math.round(distance * 20); // px를 mm로 변환 (1px = 20mm, 격자 25px = 500mm)
+    return Math.round(distance * 10); // px를 mm로 변환 (1px = 20mm, 격자 25px = 500mm)
   };
 
   // 점과 선분 사이의 거리 계산
@@ -85,12 +85,13 @@ const FloorPlanEditor = () => {
   };
 
   // 텍스트 그리기 함수 (선 아래에 작게 표시)
+  // 여기서 font-size (폰트크기) 설정
   const drawText = (ctx, text, x, y, angle = 0) => {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
     ctx.fillStyle = "#333333";
-    ctx.font = "bold 9px 'Segoe UI', Arial, sans-serif";
+    ctx.font = "bold 17px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     
