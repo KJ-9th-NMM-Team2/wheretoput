@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)"
+      "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)",
+      "Bash(npm install:*)",
+      "Bash(move:*)",
+      "Bash(robocopy:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
