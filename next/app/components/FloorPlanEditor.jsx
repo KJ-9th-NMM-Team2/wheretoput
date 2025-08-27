@@ -132,8 +132,8 @@ const FloorPlanEditor = () => {
     ctx.imageSmoothingEnabled = false; // 격자는 선명하게
 
     // 격자 그리기 - 픽셀 정렬로 선명하게
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#e0e0e0";
+    ctx.lineWidth = 0.7;
     
     // 픽셀 정렬을 위해 0.5 오프셋
     ctx.translate(0.5, 0.5);
@@ -159,7 +159,7 @@ const FloorPlanEditor = () => {
 
     // 완성된 벽들 그리기
     ctx.strokeStyle = "#ff6600";
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 6;
 
     walls.forEach((wall) => {
       // 선택된 벽인지 확인
@@ -167,7 +167,7 @@ const FloorPlanEditor = () => {
       
       // 벽 그리기 (선택된 벽은 다른 색상)
       ctx.strokeStyle = isSelected ? "#00ff00" : "#ff6600";
-      ctx.lineWidth = isSelected ? 4 : 3;
+      ctx.lineWidth = isSelected ? 8 : 3;
       
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
@@ -189,7 +189,7 @@ const FloorPlanEditor = () => {
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
       ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 8;
       ctx.setLineDash([5, 5]);
 
       ctx.beginPath();
