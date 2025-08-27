@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도면 그리기 - 격자 벽 드래그 에디터</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .toolbar {
+            background-color: #34495e;
+            padding: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tool-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tool-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .tool-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .tool-btn.active {
+            background-color: #e74c3c;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        #drawingCanvas {
+            border: 2px solid #2c3e50;
+            background-color: white;
+            cursor: crosshair;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .info-panel {
+            background-color: #ecf0f1;
+            padding: 10px;
+            border-top: 1px solid #bdc3c7;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        label {
+            color: #ecf0f1;
+            margin-right: 10px;
+        }
+
+        input[type="range"] {
+            width: 100px;
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .grid-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏠 도면 그리기 - 격자 벽 드래그 에디터</h1>
+    </div>
+    
+    <div class="toolbar">
+        <div class="tool-group">
+            <button id="wallTool" class="tool-btn active">🧱 벽 그리기</button>
+            <button id="eraseTool" class="tool-btn">🧹 지우기</button>
+            <button id="clearTool" class="tool-btn">🗑️ 전체 지우기</button>
+        </div>
+        
+        <div class="tool-group">
+            <label for="wallColor">벽 색상:</label>
+            <input type="color" id="wallColor" value="#2c3e50">
+        </div>
+        
+        <div class="tool-group grid-controls">
+            <label for="gridSize">격자 크기:</label>
+            <input type="range" id="gridSize" min="10" max="50" value="20">
+            <span id="gridSizeValue">20px</span>
+        </div>
+        
+        <div class="tool-group">
+            <label for="wallWidth">벽 두께:</label>
+            <input type="range" id="wallWidth" min="2" max="10" value="4">
+            <span id="wallWidthValue">4px</span>
+        </div>
+        
+        <div class="tool-group">
+            <button id="templateBtn" class="tool-btn">📋 템플릿</button>
+            <button id="saveBtn" class="tool-btn">💾 저장</button>
+        </div>
+    </div>
+    
+    <div class="canvas-container">
+        <canvas id="drawingCanvas" width="800" height="600"></canvas>
+    </div>
+    
+    <div class="info-panel">
+        마우스를 드래그하여 벽을 그릴 수 있습니다. 격자에 맞춰 자동으로 정렬됩니다. | 도구: 벽 그리기/지우기 | 컨트롤: 격자 크기, 벽 색상, 벽 두께 조절 가능
+    </div>
+
+    <script>
+        class FloorPlanEditor {
+            constructor() {
+                this.canvas = document.getElementById('drawingCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 20;
+                this.wallWidth = 4;
+                this.wallColor = '#2c3e50';
+                this.currentTool = 'wall';
+                
+                this.isDrawing = false;
+                this.startPoint = null;
+                this.walls = [];
+                this.previewWall = null;
+                
+                this.initializeEventListeners();
+                this.drawGrid();
+            }
+            
+            initializeEventListeners() {
+                // 캔버스 이벤트
+                this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+                this.canvas.addEventListener('mousemove', this.draw.bind(this));
+                this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+                this.canvas.addEventListener('mouseleave', this.stopDrawing.bind(this));
+                
+                // 도구 버튼
+                document.getElementById('wallTool').addEventListener('click', () => this.setTool('wall'));
+                document.getElementById('eraseTool').addEventListener('click', () => this.setTool('erase'));
+                document.getElementById('clearTool').addEventListener('click', () => this.clearCanvas());
+                
+                // 컨트롤
+                document.getElementById('gridSize').addEventListener('input', this.updateGridSize.bind(this));
+                document.getElementById('wallWidth').addEventListener('input', this.updateWallWidth.bind(this));
+                document.getElementById('wallColor').addEventListener('change', this.updateWallColor.bind(this));
+                
+                // 기타 버튼
+                document.getElementById('templateBtn').addEventListener('click', () => this.loadTemplate());
+                document.getElementById('saveBtn').addEventListener('click', () => this.saveDrawing());
+            }
+            
+            snapToGrid(x, y) {
+                return {
+                    x: Math.round(x / this.gridSize) * this.gridSize,
+                    y: Math.round(y / this.gridSize) * this.gridSize
+                };
+            }
+            
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: e.clientX - rect.left,
+                    y: e.clientY - rect.top
+                };
+            }
+            
+            startDrawing(e) {
+                if (this.currentTool === 'wall') {
+                    this.isDrawing = true;
+                    const mousePos = this.getMousePos(e);
+                    this.startPoint = this.snapToGrid(mousePos.x, mousePos.y);
+                } else if (this.currentTool === 'erase') {
+                    const mousePos = this.getMousePos(e);
+                    this.eraseWall(mousePos.x, mousePos.y);
+                }
+            }
+            
+            draw(e) {
+                if (this.currentTool === 'wall' && this.isDrawing && this.startPoint) {
+                    const mousePos = this.getMousePos(e);
+                    const endPoint = this.snapToGrid(mousePos.x, mousePos.y);
+                    
+                    // 수직 또는 수평선만 그리기
+                    if (Math.abs(endPoint.x - this.startPoint.x) > Math.abs(endPoint.y - this.startPoint.y)) {
+                        endPoint.y = this.startPoint.y; // 수평선
+                    } else {
+                        endPoint.x = this.startPoint.x; // 수직선
+                    }
+                    
+                    this.previewWall = {
+                        start: this.startPoint,
+                        end: endPoint,
+                        color: this.wallColor,
+                        width: this.wallWidth
+                    };
+                    
+                    this.redraw();
+                }
+            }
+            
+            stopDrawing() {
+                if (this.isDrawing && this.previewWall) {
+                    // 길이가 있는 벽만 추가
+                    if (this.previewWall.start.x !== this.previewWall.end.x || 
+                        this.previewWall.start.y !== this.previewWall.end.y) {
+                        
+                        // 중복 벽 체크
+                        if (!this.isDuplicateWall(this.previewWall)) {
+                            this.walls.push({...this.previewWall});
+                        }
+                    }
+                }
+                
+                this.isDrawing = false;
+                this.startPoint = null;
+                this.previewWall = null;
+                this.redraw();
+            }
+            
+            eraseWall(x, y) {
+                for (let i = this.walls.length - 1; i >= 0; i--) {
+                    const wall = this.walls[i];
+                    if (this.isPointOnWall(x, y, wall)) {
+                        this.walls.splice(i, 1);
+                        break;
+                    }
+                }
+                this.redraw();
+            }
+            
+            isDuplicateWall(newWall) {
+                return this.walls.some(existingWall => {
+                    // 같은 시작점과 끝점 (양방향 체크)
+                    return (
+                        (existingWall.start.x === newWall.start.x && 
+                         existingWall.start.y === newWall.start.y &&
+                         existingWall.end.x === newWall.end.x && 
+                         existingWall.end.y === newWall.end.y) ||
+                        (existingWall.start.x === newWall.end.x && 
+                         existingWall.start.y === newWall.end.y &&
+                         existingWall.end.x === newWall.start.x && 
+                         existingWall.end.y === newWall.start.y)
+                    );
+                });
+            }
+
+            isPointOnWall(x, y, wall) {
+                const tolerance = this.wallWidth + 5;
+                const dx = wall.end.x - wall.start.x;
+                const dy = wall.end.y - wall.start.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length === 0) return false;
+                
+                const dot = ((x - wall.start.x) * dx + (y - wall.start.y) * dy) / (length * length);
+                
+                if (dot < 0 || dot > 1) return false;
+                
+                const projX = wall.start.x + dot * dx;
+                const projY = wall.start.y + dot * dy;
+                const distance = Math.sqrt((x - projX) * (x - projX) + (y - projY) * (y - projY));
+                
+                return distance <= tolerance;
+            }
+            
+            drawGrid() {
+                // 격자는 오직 화면 표시용이며 walls 배열에는 절대 저장되지 않음
+                this.ctx.save(); // 현재 상태 저장
+                this.ctx.strokeStyle = '#ecf0f1';
+                this.ctx.lineWidth = 0.5;
+                this.ctx.globalAlpha = 0.3; // 격자를 더 연하게
+                
+                // 세로선
+                for (let x = 0; x <= this.canvas.width; x += this.gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                // 가로선
+                for (let y = 0; y <= this.canvas.height; y += this.gridSize) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+                
+                this.ctx.restore(); // 이전 상태 복원
+            }
+            
+            drawWall(wall) {
+                this.ctx.strokeStyle = wall.color;
+                this.ctx.lineWidth = wall.width;
+                this.ctx.lineCap = 'square';
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(wall.start.x, wall.start.y);
+                this.ctx.lineTo(wall.end.x, wall.end.y);
+                this.ctx.stroke();
+            }
+            
+            redraw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.drawGrid();
+                
+                // 기존 벽들 그리기
+                this.walls.forEach(wall => this.drawWall(wall));
+                
+                // 미리보기 벽 그리기
+                if (this.previewWall) {
+                    this.ctx.strokeStyle = this.previewWall.color;
+                    this.ctx.lineWidth = this.previewWall.width;
+                    this.ctx.globalAlpha = 0.7;
+                    this.drawWall(this.previewWall);
+                    this.ctx.globalAlpha = 1.0;
+                }
+            }
+            
+            setTool(tool) {
+                this.currentTool = tool;
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                
+                if (tool === 'wall') {
+                    document.getElementById('wallTool').classList.add('active');
+                    this.canvas.style.cursor = 'crosshair';
+                } else if (tool === 'erase') {
+                    document.getElementById('eraseTool').classList.add('active');
+                    this.canvas.style.cursor = 'pointer';
+                }
+            }
+            
+            updateGridSize(e) {
+                this.gridSize = parseInt(e.target.value);
+                document.getElementById('gridSizeValue').textContent = this.gridSize + 'px';
+                this.redraw();
+            }
+            
+            updateWallWidth(e) {
+                this.wallWidth = parseInt(e.target.value);
+                document.getElementById('wallWidthValue').textContent = this.wallWidth + 'px';
+            }
+            
+            updateWallColor(e) {
+                this.wallColor = e.target.value;
+            }
+            
+            clearCanvas() {
+                if (confirm('모든 그림을 지우시겠습니까?')) {
+                    this.walls = [];
+                    this.redraw();
+                }
+            }
+            
+            loadTemplate() {
+                if (confirm('기본 템플릿을 불러오시겠습니까? (현재 그림은 지워집니다)')) {
+                    this.walls = [];
+                    
+                    // 기본 방 템플릿
+                    const roomTemplate = [
+                        // 외벽
+                        { start: {x: 100, y: 100}, end: {x: 500, y: 100}, color: '#2c3e50', width: 6 },
+                        { start: {x: 500, y: 100}, end: {x: 500, y: 400}, color: '#2c3e50', width: 6 },
+                        { start: {x: 500, y: 400}, end: {x: 100, y: 400}, color: '#2c3e50', width: 6 },
+                        { start: {x: 100, y: 400}, end: {x: 100, y: 100}, color: '#2c3e50', width: 6 },
+                        
+                        // 내벽
+                        { start: {x: 300, y: 100}, end: {x: 300, y: 250}, color: '#34495e', width: 4 },
+                        { start: {x: 100, y: 250}, end: {x: 500, y: 250}, color: '#34495e', width: 4 }
+                    ];
+                    
+                    this.walls = roomTemplate;
+                    this.redraw();
+                }
+            }
+            
+            saveDrawing() {
+                // 별도의 캔버스에 격자 없이 벽만 그리기
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = this.canvas.width;
+                exportCanvas.height = this.canvas.height;
+                const exportCtx = exportCanvas.getContext('2d');
+                
+                // 완전히 깨끗한 흰색 배경
+                exportCtx.fillStyle = '#FFFFFF';
+                exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+                
+                // 안티앨리어싱 끄기 (더 선명한 선)
+                exportCtx.imageSmoothingEnabled = false;
+                
+                // 벽만 그리기 (격자 완전 제외)
+                if (this.walls && this.walls.length > 0) {
+                    this.walls.forEach(wall => {
+                        // 벽 색상이 격자 색상과 다른지 확인
+                        if (wall.color !== '#ecf0f1' && wall.width > 1) {
+                            exportCtx.strokeStyle = wall.color;
+                            exportCtx.lineWidth = wall.width;
+                            exportCtx.lineCap = 'square';
+                            exportCtx.lineJoin = 'miter';
+                            
+                            exportCtx.beginPath();
+                            exportCtx.moveTo(wall.start.x, wall.start.y);
+                            exportCtx.lineTo(wall.end.x, wall.end.y);
+                            exportCtx.stroke();
+                        }
+                    });
+                } else {
+                    console.log('저장할 벽이 없습니다.');
+                }
+                
+                const link = document.createElement('a');
+                link.download = 'floor_plan_clean.png';
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
+                
+                // 디버그: 벽 개수 출력
+                console.log('저장된 벽 개수:', this.walls.length);
+            }
+        }
+        
+        // 앱 시작
+        const editor = new FloorPlanEditor();
+    </script>
+</body>
+</html>
