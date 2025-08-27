@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
