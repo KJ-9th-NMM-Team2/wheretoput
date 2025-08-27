@@ -4,7 +4,8 @@
       "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)",
       "Bash(npm install:*)",
       "Bash(move:*)",
-      "Bash(robocopy:*)"
+      "Bash(robocopy:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

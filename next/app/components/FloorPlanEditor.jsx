@@ -156,20 +156,41 @@ const FloorPlanEditor = ({ onFloorPlanChange }) => {
     
     drawGrid() {
       this.ctx.save();
-      this.ctx.strokeStyle = '#ecf0f1';
-      this.ctx.lineWidth = 0.5;
-      this.ctx.globalAlpha = 0.3;
+      this.ctx.strokeStyle = '#e8e8e8';
+      this.ctx.fillStyle = '#fafafa';
+      this.ctx.lineWidth = 1;
+      this.ctx.globalAlpha = 0.8;
       
-      // 세로선
-      for (let x = 0; x <= this.canvas.width; x += this.gridSize) {
+      // 작은 사각형(mesh) 격자 그리기
+      for (let x = 0; x < this.canvas.width; x += this.gridSize) {
+        for (let y = 0; y < this.canvas.height; y += this.gridSize) {
+          // 사각형 채우기 (번갈아가며 색상 적용)
+          if ((Math.floor(x / this.gridSize) + Math.floor(y / this.gridSize)) % 2 === 0) {
+            this.ctx.fillStyle = '#fafafa';
+          } else {
+            this.ctx.fillStyle = '#f5f5f5';
+          }
+          this.ctx.fillRect(x, y, this.gridSize, this.gridSize);
+          
+          // 사각형 테두리 그리기
+          this.ctx.strokeStyle = '#e0e0e0';
+          this.ctx.strokeRect(x, y, this.gridSize, this.gridSize);
+        }
+      }
+      
+      // 주요 격자선 강조 (5칸마다)
+      this.ctx.strokeStyle = '#d0d0d0';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.globalAlpha = 0.6;
+      
+      for (let x = 0; x <= this.canvas.width; x += this.gridSize * 5) {
         this.ctx.beginPath();
         this.ctx.moveTo(x, 0);
         this.ctx.lineTo(x, this.canvas.height);
         this.ctx.stroke();
       }
       
-      // 가로선
-      for (let y = 0; y <= this.canvas.height; y += this.gridSize) {
+      for (let y = 0; y <= this.canvas.height; y += this.gridSize * 5) {
         this.ctx.beginPath();
         this.ctx.moveTo(0, y);
         this.ctx.lineTo(this.canvas.width, y);
