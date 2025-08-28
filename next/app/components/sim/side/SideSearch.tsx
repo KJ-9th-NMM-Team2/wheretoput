@@ -1,4 +1,6 @@
 const SideSearch = ({collapsed}:{collapsed:boolean}) => {
+
+    
     return <>
         {/* Search */}
         <div className="flex-shrink-0"> {/* 크기 고정 */}

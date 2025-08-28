@@ -18,7 +18,7 @@ export interface BaseItemProps {
 
 // 각 컴포넌트별 필요한 속성만 선택
 export type ItemScrollProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'filteredItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
+    'loading' | 'error' | 'currentPage' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
 >;
 
 export type ItemPagingProps = Pick<BaseItemProps, 

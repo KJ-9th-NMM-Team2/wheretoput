@@ -42,8 +42,6 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
 
                 const data = await response.json();
 
-                // 디버깅: API 응답 구조 확인
-
                 // API 응답이 배열인지 확인하고, 그렇지 않다면 적절히 처리
                 const items = Array.isArray(data) ? data : data.items || data.data || data.furnitures || [];
 
@@ -69,18 +67,11 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
 
     // 카테고리 선택 시 필터링
     useEffect(() => {
-        console.log('Selected Category ID:', selectedCategory);
-        console.log('All Items:', allItems);
-
         if (selectedCategory) {
             const filtered = allItems.filter(item => {
-                // 디버깅: 각 아이템의 category_id 확인
-                console.log(`Item ${item.name} - category_id:`, item.category_id, 'type:', typeof item.category_id);
-
                 // category_id를 숫자로 비교
                 return item.category_id === parseInt(selectedCategory);
             });
-            console.log('Filtered Items:', filtered);
             setFilteredItems(filtered);
         } else {
             // selectedCategory가 없으면 전체 표시
@@ -131,7 +122,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
             <ItemScroll 
                 loading={loading}
                 error={error}
-                filteredItems={filteredItems}
+                currentItems={currentItems}
                 imageErrors={imageErrors}
                 selectedCategory={selectedCategory}
                 handleItemClick={handleItemClick}

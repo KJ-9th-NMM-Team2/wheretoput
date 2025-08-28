@@ -10,9 +10,7 @@ const SimSideView: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const handleCategorySelect = (category: string) => {
-    console.log('선택된 카테고리:', category);
     setSelectedCategory(category);
-    // 여기서 선택된 카테고리로 필터링 등 처리
   }
 
   return (

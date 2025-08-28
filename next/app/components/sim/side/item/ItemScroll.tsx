@@ -5,7 +5,7 @@ import type { ItemScrollProps } from '../types';
 const ItemScroll: React.FC<ItemScrollProps> = ({
     loading,
     error,
-    filteredItems,
+    currentItems,
     imageErrors,
     selectedCategory,
     handleItemClick,
@@ -25,9 +25,9 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                     </p>
                     <p className="text-xs text-gray-500">{error}</p>
                 </div>
-            ) : filteredItems.length > 0 ? (
+            ) : currentItems.length > 0 ? (
                 <div className="space-y-3">
-                    {filteredItems.map((item) => (
+                    {currentItems.map((item) => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item)}
