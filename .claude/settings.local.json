@@ -5,7 +5,8 @@
       "Bash(npm install:*)",
       "Bash(move:*)",
       "Bash(robocopy:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(del \"C:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput\\next\\components\\context\\ThemeContext.tsx\")"
     ],
     "deny": [],
     "ask": []
