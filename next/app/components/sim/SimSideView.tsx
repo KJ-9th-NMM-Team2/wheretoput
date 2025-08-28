@@ -5,6 +5,7 @@ import SideTitle from './side/SideTitle';
 import SideSearch from './side/SideSearch';
 import SideCategories from './side/SideCategories';
 import SideItems from './side/SideItems';
+import BedroomPage from "../../bedroom/page"
 
 const SimSideView: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -31,24 +32,7 @@ const SimSideView: React.FC = () => {
         <SideItems collapsed={collapsed} selectedCategory={selectedCategory}/>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden"> {/* overflow-hidden 추가 */}
-        <header className="h-14 bg-gray-100 flex items-center px-4 shadow flex-shrink-0"> {/* flex-shrink-0 추가 */}
-          <h1 className="text-lg font-semibold">Header</h1>
-        </header>
-        
-        <main className="flex-1 overflow-auto bg-gray-50"> {/* overflow-auto로 스크롤 가능 */}
-          <div className="p-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              Bill is a cat.
-            </div>
-          </div>
-        </main>
-        
-        <footer className="h-12 flex items-center justify-center bg-gray-100 text-sm text-gray-500 flex-shrink-0"> {/* flex-shrink-0 추가 */}
-          Tailwind Layout ©{new Date().getFullYear()}
-        </footer>
-      </div>
+      <BedroomPage></BedroomPage>
     </div>
   );
 };
