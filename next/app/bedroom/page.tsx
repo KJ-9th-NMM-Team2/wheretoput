@@ -193,24 +193,7 @@ export default function BedroomPage() {
 
   return (
     <>
-      <FurnitureLibrary />
-      
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '300px',
-        color: 'white',
-        background: 'rgba(0,0,0,0.7)',
-        padding: '10px',
-        borderRadius: '5px',
-        zIndex: 100,
-        fontSize: '12px'
-      }}>
-        <div>🏠 어따놀래</div>
-        <div>🖱️ 마우스: 회전/줌 | 우클릭: 이동</div>
-        <div>🎯 모델 클릭: 선택 | Shift+드래그: 크기 조정</div>
-      </div>
-      
+
       <ControlPanel />
       <FurnitureEditor />
       <FurnitureLibrary />
@@ -278,9 +261,6 @@ export default function BedroomPage() {
         <Lamp position={[-4, 0.65, -2]} />
         <Rug position={[1, 0.01, 0]} />
         
-    
-
-
         <Suspense fallback={null}>
           {loadedModels.map(model => (
             <DraggableModel
@@ -317,6 +297,7 @@ export default function BedroomPage() {
           maxDistance={20}
         />
       </Canvas>
+      
     </>
   )
 }

@@ -1,6 +1,7 @@
 {
   "dependencies": {
-    "axios": "^1.11.0",
-    "pg": "^8.16.3"
+    "@prisma/client": "^6.15.0",
+    "next-auth": "^4.24.11"
+
   }
 }
