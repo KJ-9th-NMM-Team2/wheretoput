@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Furniture } from '@prisma/client';
 import ItemPaging from './item/ItemPaging';
 import ItemScroll from './item/ItemScroll';
-import ItemHeader from './item/ItemHeader';
 
 interface SideItemsProps {
     collapsed: boolean;
@@ -10,105 +9,99 @@ interface SideItemsProps {
 }
 
 const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) => {
-    const [allItems, setAllItems] = useState<Furniture[]>([]);
-    const [filteredItems, setFilteredItems] = useState<Furniture[]>([]);
+    const [items, setItems] = useState<Furniture[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
     const itemsPerPage = 5;
 
-    // API에서 데이터 가져오기
-    useEffect(() => {
-        const fetchItems = async () => {
-            try {
-                setLoading(true);
-                setError(null);
+    // API에서 데이터 가져오기 함수
+    const fetchItems = useCallback(async (page: number, category: string | null) => {
+        try {
+            setLoading(true);
+            setError(null);
 
-                const response = await fetch('/api/furnitures', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // 인증 토큰이 필요한 경우
-                        // 'Authorization': `Bearer ${token}`,
-                    },
-                    // credentials가 필요한 경우
-                    // credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                // API 응답이 배열인지 확인하고, 그렇지 않다면 적절히 처리
-                const items = Array.isArray(data) ? data : data.items || data.data || data.furnitures || [];
-
-                // is_active가 true인 아이템만 필터링 (선택사항)
-                // const activeItems = items.filter((item: Furniture) =>
-                //     item.is_active === true || item.is_active === undefined
-                // );
-
-                setAllItems(items);
-                setFilteredItems(items);
-            } catch (err) {
-                console.error('Failed to fetch items:', err);
-                setError(err instanceof Error ? err.message : 'Failed to load items');
-                setAllItems([]);
-                setFilteredItems([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchItems();
-    }, []);
-
-    // 카테고리 선택 시 필터링
-    useEffect(() => {
-        if (selectedCategory) {
-            const filtered = allItems.filter(item => {
-                // category_id를 숫자로 비교
-                return item.category_id === parseInt(selectedCategory);
+            // URL 파라미터 구성
+            const params = new URLSearchParams({
+                page: page.toString(),
+                limit: itemsPerPage.toString(),
             });
-            setFilteredItems(filtered);
-        } else {
-            // selectedCategory가 없으면 전체 표시
-            setFilteredItems(allItems);
+
+            // 카테고리가 선택되었다면 파라미터에 추가
+            if (category) {
+                params.append('category', category);
+            }
+
+            const response = await fetch(`/api/sim/furnitures?${params}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            // 개선된 API 응답 구조 처리
+            if (data.items && data.pagination) {
+                // 새로운 API 응답 형식
+                setItems(data.items);
+                setTotalItems(data.pagination.totalItems);
+                setTotalPages(data.pagination.totalPages);
+            }
+            // console.log(`Page ${page}`);
+
+        } catch (err) {
+            console.error('Failed to fetch items:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load items');
+            setItems([]);
+            // setTotalItems(0);
+            setTotalPages(0);
+        } finally {
+            setLoading(false);
         }
-        setCurrentPage(1); // 카테고리 변경 시 첫 페이지로 리셋
-    }, [selectedCategory, allItems]);
+    }, [itemsPerPage]);
 
-    // 페이지네이션 계산
-    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentItems = filteredItems.slice(startIndex, endIndex);
+    // 페이지나 카테고리 변경 시 데이터 가져오기
+    useEffect(() => {
+        fetchItems(currentPage, selectedCategory);
+    }, [currentPage, selectedCategory, fetchItems]);
 
-    // 페이지 변경 핸들러
-    const handlePrevPage = () => {
+    // 카테고리 변경 시 첫 페이지로 리셋
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedCategory]);
+
+    // 페이지 변경 핸들러들
+    const handlePrevPage = useCallback(() => {
         if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+            setCurrentPage(prev => prev - 1);
         }
-    };
+    }, [currentPage]);
 
-    const handleNextPage = () => {
+    const handleNextPage = useCallback(() => {
         if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
+            setCurrentPage(prev => prev + 1);
         }
-    };
+    }, [currentPage, totalPages]);
 
     // 아이템 클릭 핸들러
-    const handleItemClick = (item: Furniture) => {
+    const handleItemClick = useCallback((item: Furniture) => {
         console.log('Selected item:', item);
         // 여기에 아이템 선택 시 처리 로직 추가
-    };
+    }, []);
 
     // 이미지 에러 핸들러
-    const handleImageError = (furnitureId: string) => {
+    const handleImageError = useCallback((furnitureId: string) => {
         setImageErrors(prev => new Set(prev).add(furnitureId));
-    };
+    }, []);
 
     // collapsed 상태일 때는 아무것도 렌더링하지 않음
     if (collapsed) {
@@ -117,12 +110,10 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden border-t border-gray-200">
-            <ItemHeader loading={loading} filteredItems={filteredItems}/>
-            
             <ItemScroll 
                 loading={loading}
                 error={error}
-                currentItems={currentItems}
+                filteredItems={items} // 서버에서 받은 현재 페이지 데이터
                 imageErrors={imageErrors}
                 selectedCategory={selectedCategory}
                 handleItemClick={handleItemClick}
@@ -133,9 +124,9 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
             <ItemPaging
                 loading={loading}
                 error={error}
-                filteredItems={filteredItems}
                 currentPage={currentPage}
                 totalPages={totalPages}
+                totalItems={totalItems}
                 handlePrevPage={handlePrevPage}
                 handleNextPage={handleNextPage}
                 itemsPerPage={itemsPerPage}

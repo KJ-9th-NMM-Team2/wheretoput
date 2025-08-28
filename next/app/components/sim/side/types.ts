@@ -7,6 +7,7 @@ export interface BaseItemProps {
     filteredItems: Furniture[];
     currentPage: number;
     totalPages: number;
+    totalItems: number;
     handlePrevPage: () => void;
     handleNextPage: () => void;
     itemsPerPage: number;
@@ -18,9 +19,9 @@ export interface BaseItemProps {
 
 // 각 컴포넌트별 필요한 속성만 선택
 export type ItemScrollProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'currentPage' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
+    'loading' | 'error' | 'filteredItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
 >;
 
 export type ItemPagingProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'filteredItems' | 'currentPage' | 'totalPages' | 'handlePrevPage' | 'handleNextPage' | 'itemsPerPage'
+    'loading' | 'error' | 'currentPage' | 'totalPages' | 'totalItems' | 'handlePrevPage' | 'handleNextPage' | 'itemsPerPage'
 >;

@@ -5,15 +5,15 @@ import type { ItemPagingProps } from '../types';
 const ItemPaging: React.FC<ItemPagingProps> = ({ 
     loading, 
     error, 
-    filteredItems, 
     currentPage, 
     totalPages, 
+    totalItems,
     handlePrevPage, 
     handleNextPage, 
-    itemsPerPage 
+    itemsPerPage,
 }) => {
     // 페이지네이션을 표시하지 않는 조건
-    if (loading || error || filteredItems.length <= itemsPerPage) {
+    if (loading || error || totalItems <= itemsPerPage) {
         return null;
     }
 

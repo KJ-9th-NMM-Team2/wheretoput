@@ -1,16 +1,19 @@
-import type { Furniture } from '@prisma/client';
+// import type { Furniture } from '@prisma/client';
 import { ImageOff, Loader2 } from 'lucide-react';
 import type { ItemScrollProps } from '../types';
 
 const ItemScroll: React.FC<ItemScrollProps> = ({
     loading,
     error,
-    currentItems,
+    filteredItems,
     imageErrors,
     selectedCategory,
     handleItemClick,
     handleImageError,
 }) => {
+
+    // console.log("currentItems: ",filteredItems);
+
     return <>
         {/* 아이템 목록 - 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -25,11 +28,11 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                     </p>
                     <p className="text-xs text-gray-500">{error}</p>
                 </div>
-            ) : currentItems.length > 0 ? (
+            ) : filteredItems.length > 0 ? (
                 <div className="space-y-3">
-                    {currentItems.map((item) => (
+                    {filteredItems.map((item) => (
                         <div
-                            key={item.id}
+                            key={item.furniture_id}
                             onClick={() => handleItemClick(item)}
                             className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
                         >
