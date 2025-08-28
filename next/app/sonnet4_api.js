@@ -26,8 +26,13 @@ const pool = new Pool({
 });
 
 // Anthropic API 키 설정
+console.log("환경변수 ANTHROPIC_API_KEY:", process.env.ANTHROPIC_API_KEY ? "존재함" : "없음");
+console.log("API 키 전체 길이:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : "undefined");
+console.log("사용할 API 키:", (process.env.ANTHROPIC_API_KEY || "fallback key").substring(0, 20) + "...");
+console.log("API 키가 sk-ant로 시작하는가:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.startsWith('sk-ant') : false);
+
 const anthropic = new Anthropic({
-  apiKey: "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",
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 /**
