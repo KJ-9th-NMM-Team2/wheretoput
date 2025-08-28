@@ -8,6 +8,6 @@ export default async function SimPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;  // /pages/[id]에 해당하는 id 값
-  return <SimSideView></SimSideView>
-  ;
+  // return <div>current sim {id}</div>
+  return <SimSideView></SimSideView>;
 }

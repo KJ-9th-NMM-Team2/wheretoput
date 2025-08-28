@@ -9,14 +9,16 @@ interface SideTitleProps {
 const SideTitle = ({ collapsed, setCollapsed} : SideTitleProps) => {
     return <>
         {/* Logo & Toggle */}
-        <div className="flex items-center justify-between p-4 ">
-          {!collapsed && <span className="text-lg font-bold">어따놀래</span>}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-gray-700"
-          >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-          </button>
+        <div className="flex-shrink-0"> {/* 크기 고정 */}
+          <div className="flex items-center justify-between p-4 ">
+            {!collapsed && <span className="text-lg font-bold">어따놀래</span>}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-1 rounded hover:bg-gray-700"
+            >
+              {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </button>
+          </div>
         </div>
     </>
 }
