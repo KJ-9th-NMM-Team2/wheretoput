@@ -47,7 +47,18 @@ const FloorPlanEditor = () => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return Math.round(distance * pixelToMmRatio); // 사용자 지정 축척으로 변환
+    const result = Math.round(distance * pixelToMmRatio);
+    
+    // 디버깅 정보 (첫 번째 계산에만)
+    if (Math.random() < 0.1) { // 10% 확률로 로그
+      console.log('거리 계산:', {
+        pixelDistance: distance.toFixed(2),
+        pixelToMmRatio: pixelToMmRatio.toFixed(4),
+        resultMm: result
+      });
+    }
+    
+    return result;
   };
 
   // 점과 선분 사이의 거리 계산
@@ -330,15 +341,46 @@ const FloorPlanEditor = () => {
 
     setIsProcessing(true);
     try {
-      // 픽셀 거리 계산
+      // 화면 좌표를 캔버스 좌표계로 변환하기 위한 스케일 계산
+      const popupImg = document.querySelector('img[alt="축척 설정용 이미지"]');
+      const popupRect = popupImg?.getBoundingClientRect();
+      const canvasRect = canvasRef.current?.getBoundingClientRect();
+      
+      // 팝업 이미지에서 캔버스로의 변환 비율
+      const scaleToCanvas = Math.min(
+        canvasRect.width / popupRect.width,
+        canvasRect.height / popupRect.height
+      );
+      
+      // 화면 좌표를 캔버스 좌표로 변환
+      const canvasPoint1 = {
+        x: scalePoints[0].x * scaleToCanvas,
+        y: scalePoints[0].y * scaleToCanvas
+      };
+      const canvasPoint2 = {
+        x: scalePoints[1].x * scaleToCanvas,
+        y: scalePoints[1].y * scaleToCanvas
+      };
+      
+      // 캔버스 좌표계에서의 픽셀 거리 계산
       const pixelDistance = Math.sqrt(
-        Math.pow(scalePoints[1].x - scalePoints[0].x, 2) + 
-        Math.pow(scalePoints[1].y - scalePoints[0].y, 2)
+        Math.pow(canvasPoint2.x - canvasPoint1.x, 2) + 
+        Math.pow(canvasPoint2.y - canvasPoint1.y, 2)
       );
       
       // 축척 비율 계산 (픽셀당 mm)
-      const newPixelToMmRatio = parseFloat(realLength) / pixelDistance;
+      const newPixelToMmRatio = parseFloat(realLength) / pixelDistance/ 1.3;
       setPixelToMmRatio(newPixelToMmRatio);
+
+      // 디버깅 정보
+      console.log('축척 설정 (수정):', {
+        popupPoints: scalePoints,
+        canvasPoints: [canvasPoint1, canvasPoint2],
+        scaleToCanvas,
+        pixelDistance,
+        realLength: parseFloat(realLength),
+        ratio: newPixelToMmRatio
+      });
 
       // WallDetector로 벽 검출
       const detector = new WallDetector();
@@ -442,8 +484,13 @@ const FloorPlanEditor = () => {
                   onClick={(e) => {
                     if (scalePoints.length < 2) {
                       const rect = e.target.getBoundingClientRect();
+                      
+                      // 단순하게 화면 좌표 그대로 사용
                       const x = e.clientX - rect.left;
                       const y = e.clientY - rect.top;
+                      
+                      console.log('클릭 좌표 (화면):', { x, y });
+                      
                       setScalePoints([...scalePoints, { x, y }]);
                     }
                   }}
