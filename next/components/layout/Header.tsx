@@ -1,6 +1,19 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import SignInButton from "@/components/login/SignInButton";
+import SignOutButton from "@/components/login/SignOutButton";
+import { useSession } from "next-auth/react";
+import { auth } from "@/lib/auth";
+
+// 로그인되어 있으면 로그아웃, 로그아웃되어 있으면 로그인 버튼
+export function SignInCheck() {
+  const { data: session} = useSession();
+
+  if (!session?.user) return <SignInButton />;
+  console.log(session.user);
+  return <SignOutButton />;
+}
 
 export default function Header() {
   const [searchInput, setSearchInput] = useState("");
@@ -59,7 +72,7 @@ export default function Header() {
         </nav>
       </div>
 
-      <div className="flex flex-1 justify-end gap-4 items-center">
+      <div className="flex flex-1 justify-end gap-4 items-center mr-5">
         <div className="flex items-center min-w-60 max-w-80">
           <div
             className="
@@ -99,19 +112,21 @@ export default function Header() {
             />
           </div>
         </div>
+      </div>
+      <SignInCheck />
 
-        <div
-          className="
+      {/* <div
+        onClick={() => signIn("google")}
+        className="
             bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
             transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
             ring-amber-200 hover:ring-amber-300
             dark:ring-gray-600 dark:hover:ring-amber-400
           "
-          style={{
-            backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDB_fayd9UBn_M9ukHwpMjnE5Nf6lmNdsA6dryhy2fHrvdtIqk4h1Z-6dDHmKitRTplwMkUzLSI_cLqBwJZjd_dAfiw3Ui98575Y5Paw1PPiVds5WHoUkJMUSKYHAhL5Sk0HUxa9SPVxjp02uZC5IMOZP57cV63yLihWFFHJ_zKZkG263LrvVBEwflolUbuTraAyFZBvEpxOzfPy7P45CLYx84icTrQceH547VrUeOsMKV8ZqWf2S3iWeJZ2HfX84VO-WW78Wtp_0w')`,
-          }}
-        />
-      </div>
+        style={{
+          backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDB_fayd9UBn_M9ukHwpMjnE5Nf6lmNdsA6dryhy2fHrvdtIqk4h1Z-6dDHmKitRTplwMkUzLSI_cLqBwJZjd_dAfiw3Ui98575Y5Paw1PPiVds5WHoUkJMUSKYHAhL5Sk0HUxa9SPVxjp02uZC5IMOZP57cV63yLihWFFHJ_zKZkG263LrvVBEwflolUbuTraAyFZBvEpxOzfPy7P45CLYx84icTrQceH547VrUeOsMKV8ZqWf2S3iWeJZ2HfX84VO-WW78Wtp_0w')`,
+        }}
+      ></div> */}
     </header>
   );
 }
