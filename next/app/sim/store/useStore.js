@@ -6,6 +6,7 @@ export const useStore = create(
     // 모델 관련 상태
     loadedModels: [],
     selectedModelId: null,
+    hoveringModelId: null,
     scaleValue: 1,
 
     // 모델 액션들
@@ -58,9 +59,10 @@ export const useStore = create(
       )
     })),
 
-    // 선택 관련
+    // 선택, 마우스 호버링 관련
     selectModel: (modelId) => set({ selectedModelId: modelId }),
     deselectModel: () => set({ selectedModelId: null }),
+    hoveringModel: (modelId) => set({ hoveringModelId: modelId }),
 
     // 스케일 값 설정
     setScaleValue: (value) => set({ scaleValue: value }),

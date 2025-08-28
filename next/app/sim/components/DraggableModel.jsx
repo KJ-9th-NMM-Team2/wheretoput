@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useObjectControls } from '../../hooks/useObjectControls.js'
+import { useObjectControls } from '../hooks/useObjectControls.js'
 import { useStore } from '../store/useStore.js'
 
 export function DraggableModel({
@@ -21,13 +21,16 @@ export function DraggableModel({
   // Zustand 스토어 사용
   const {
     selectedModelId,
+    hoveringModelId,
     selectModel,
+    hoveringModel,
     updateModelPosition,
     updateModelRotation,
     updateModelScale
   } = useStore()
 
   const isSelected = selectedModelId === modelId
+  const isHovering = hoveringModelId === modelId
 
   // 객체 조작 훅 사용
   const {
@@ -44,6 +47,7 @@ export function DraggableModel({
     updateModelRotation,
     updateModelScale,
     selectModel,
+    hoveringModel,
     controlsRef
   )
 
@@ -108,24 +112,11 @@ export function DraggableModel({
     const boxSize = new THREE.Vector3();
     box.getSize(boxSize);
 
-    return [boxSize.x * scale, boxSize.y * scale, boxSize.z * scale];
+    return [boxSize.x, boxSize.y, boxSize.z];
   }
 
   return (
-    <group>
-      {/* 선택 표시 */}
-      {isSelected && (
-        <mesh position={position}>
-          <boxGeometry args={getSelectionBoxSize()} />
-          <meshBasicMaterial
-            color={"#00ff00"}
-            wireframe
-            transparent
-            opacity={0.5}
-          />
-        </mesh>
-      )}
-
+    <>
       <group
         ref={meshRef}
         position={position}
@@ -137,12 +128,25 @@ export function DraggableModel({
       >
         <primitive object={scene.clone()} />
 
+        {(isSelected || isHovering) && (
+          <mesh>
+            <boxGeometry args={getSelectionBoxSize()} />
+            <meshBasicMaterial
+              color={isSelected ? "#00ff00" : "#0000ff"}
+              wireframe
+              transparent
+              opacity={0.5}
+            />
+          </mesh>
+        )}
+
         {/* 투명한 히트박스 */}
-        <mesh visible={false}>
+        {/* 이 컴포넌트가 클릭 선택 관련 이슈를 일으켜서 주석 처리합니다 */}
+        {/* <mesh visible={false}>
           <boxGeometry args={getSelectionBoxSize()} />
           <meshBasicMaterial transparent opacity={0} />
-        </mesh>
+        </mesh> */}
       </group>
-    </group>
+    </>
   )
 }
