@@ -1,5 +1,14 @@
+import { directPointLight } from 'three/tsl';
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
+import * as THREE from 'three'
+
+function sphericalToCartesian(radius, azimuth, elevation) {
+  const x = radius * Math.cos(THREE.MathUtils.degToRad(elevation)) * Math.cos(THREE.MathUtils.degToRad(azimuth));
+  const y = radius * Math.sin(THREE.MathUtils.degToRad(elevation));
+  const z = radius * Math.cos(THREE.MathUtils.degToRad(elevation)) * Math.sin(THREE.MathUtils.degToRad(azimuth));
+  return [x, y, z];
+}
 
 export const useStore = create(
   subscribeWithSelector((set, get) => ({
@@ -68,13 +77,22 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
-    AmbientLightIntensity: 0.3,
-    directionalLightPosition: [-5, 10, -5],
-    directionalLightIntensity: 1,
+    ambientLightIntensity: 0.4,
+    directionalLightPosition: [26, 15, 0],
+    directionalLightAzimuth: 0,
+    directionalLightElevation: 30,
+    directionalLightIntensity: 0.9,
 
     // 빛 액션
-    setAmbientLightIntensity: (intensity) => set({ AmbientLightIntensity: intensity }),
-    setDirectionalLightPosition: (position) => set({ directionalLightPosition: position }),
+    setAmbientLightIntensity: (intensity) => set({ ambientLightIntensity: intensity }),
+    setDirectionalLightAzimuth: (azimuth) => set({
+      directionalLightAzimuth: azimuth,
+      directionalLightPosition: sphericalToCartesian(30, azimuth, get().directionalLightElevation)
+    }),
+    setDirectionalLightElevation: (elevation) => set({
+      directionalLightElevation: elevation,
+      directionalLightPosition: sphericalToCartesian(30, get().directionalLightAzimuth, elevation)
+    }),
     setDirectionalLightIntensity: (intensity) => set({ directionalLightIntensity: intensity }),
 
     // 카메라 상태

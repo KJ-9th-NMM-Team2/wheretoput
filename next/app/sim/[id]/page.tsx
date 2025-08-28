@@ -25,7 +25,8 @@ import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
 
 type position = [number, number, number]
 
-// 임시 바닥 - BFC 적용중인 planeGeometry
+// [임시] 바닥 - BFC 적용중인 planeGeometry
+// 구현 필요 : 도면 변환 후 벽 내부에만 바닥이 존재하게 하기, 텍스쳐 적용
 function Floor() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -40,7 +41,8 @@ function Floor() {
   )
 }
 
-// 임시 벽 - BFC 적용중인 planeGeometry
+// [임시] 벽 - BFC 적용중인 planeGeometry
+// 구현 필요 : 두께가 있는 벽, 텍스쳐 적용
 function Wall({ width, height, position, rotation = 0 }: { width: number; height: number; position: position; rotation?: number }) {
   return (
     <mesh position={position} rotation={[0, rotation, 0]} receiveShadow castShadow>
@@ -58,10 +60,10 @@ function Wall({ width, height, position, rotation = 0 }: { width: number; height
 
 export default function SimPage() {
   const controlsRef = useRef(null)
-  const { loadedModels, deselectModel, AmbientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraFov } = useStore()
+  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraFov } = useStore()
 
-  const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
-  camera.position.set(10, 6, 10)
+  // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
+  // camera.position.set(10, 6, 10)
 
   return (
     <>
@@ -83,18 +85,18 @@ export default function SimPage() {
 
       <ControlPanel />
       <InfoPanel />
-      {/* <LightControlPanel /> */}
+      <LightControlPanel />
       {/* <CameraControlPanel /> */}
 
       <Canvas
-        camera={{ position: [8, 6, 8], fov: 75 }}
+        camera={{ position: [-20, 15, 0], fov: 60 }}
         shadows
         style={{ width: '100vw', height: '100vh' }}
         frameloop='demand'
       >
         <color attach="background" args={['#87CEEB']} />
 
-        <ambientLight intensity={AmbientLightIntensity} />
+        <ambientLight intensity={ambientLightIntensity} />
         <directionalLight
           position={directionalLightPosition}
           intensity={directionalLightIntensity}

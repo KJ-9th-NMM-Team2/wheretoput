@@ -3,10 +3,13 @@ import { useStore } from '../store/useStore.js'
 
 export function LightControlPanel() {
   const {
-    directionalLightPosition,
+    ambientLightIntensity,
+    directionalLightAzimuth,
+    directionalLightElevation,
     directionalLightIntensity,
     setAmbientLightIntensity,
-    setDirectionalLightPosition,
+    setDirectionalLightAzimuth,
+    setDirectionalLightElevation,
     setDirectionalLightIntensity
   } = useStore()
 
@@ -25,66 +28,89 @@ export function LightControlPanel() {
       maxHeight: '400px',
       overflowY: 'auto'
     }}>
-      <h3 style={{ margin: '0 0 10px 0' }}>☀️ 햇빛 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0' }}>☀️ 빛 세팅</h3>
 
-      <div 
-      style={{
-        background: 'rgba(255,255,255,0.1)',
-        margin: '5px 0',
-        padding: '8px',
-        borderRadius: '3px',
-        border: '1px solid rgba(255,255,255,0.2)',
-        cursor: 'pointer'
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        
-        {/* 위치 조정 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {['X', 'Y', 'Z'].map((axis, index) => (
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.1)',
+          margin: '5px 0',
+          padding: '8px',
+          borderRadius: '3px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          cursor: 'pointer'
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+
+          {/* 위치 조정 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
             <ControlSlider
-              key={axis}
-              label={axis}
-              value={directionalLightPosition[index]}
-              min={axis === 'Y' ? 0 : -15}
-              max={15}
-              step={0.1}
-              onChange={(value) => {
-                const newPosition = [...directionalLightPosition]
-                newPosition[index] = value
-                setDirectionalLightPosition(newPosition)
-              }}
-              displayValue={directionalLightPosition[index].toFixed(1)}
-              compact={true}
+              label="주변광 세기"
+              value={ambientLightIntensity}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={setAmbientLightIntensity}
+              displayValue={`${ambientLightIntensity}`}
+              compact
             />
-          ))}
+            <ControlSlider
+              label="방위각"
+              value={directionalLightAzimuth}
+              min={0}
+              max={360}
+              step={1}
+              onChange={setDirectionalLightAzimuth}
+              displayValue={`${directionalLightAzimuth}°`}
+              compact
+            />
+            <ControlSlider
+              label="고도"
+              value={directionalLightElevation}
+              min={0}
+              max={90}
+              step={1}
+              onChange={setDirectionalLightElevation}
+              displayValue={`${directionalLightElevation}°`}
+              compact
+            />
+            <ControlSlider
+              label="햇빛 세기"
+              value={directionalLightIntensity}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={setDirectionalLightIntensity}
+              displayValue={`${directionalLightIntensity}`}
+              compact
+            />
+          </div>
         </div>
       </div>
-    </div>
-      
+
     </div>
   )
 }
 
-function ControlSlider({ 
-  label, 
-  value, 
-  min, 
-  max, 
-  step, 
-  onChange, 
-  displayValue, 
-  compact = false 
+function ControlSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  displayValue,
+  compact = false
 }) {
   return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: compact ? '3px' : '5px' 
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: compact ? '3px' : '5px'
     }}>
-      <span style={{ 
-        minWidth: compact ? '12px' : '30px', 
-        fontSize: '10px' 
+      <span style={{
+        minWidth: compact ? '12px' : '30px',
+        fontSize: '10px'
       }}>
         {label}:
       </span>
@@ -97,9 +123,9 @@ function ControlSlider({
         onChange={(e) => onChange(parseFloat(e.target.value))}
         style={{ flex: 1 }}
       />
-      <span style={{ 
-        color: '#e6a925ff', 
-        minWidth: '30px', 
+      <span style={{
+        color: '#e6a925ff',
+        minWidth: '30px',
         fontSize: '10px',
         textAlign: 'right'
       }}>
