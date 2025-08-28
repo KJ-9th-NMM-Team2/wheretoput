@@ -4,39 +4,50 @@ import React, { useState } from "react";
 import SideTitle from './side/SideTitle';
 import SideSearch from './side/SideSearch';
 import SideCategories from './side/SideCategories';
-import SideMenu from "./side/SideMenu";
+import SideItems from './side/SideItems';
 
 const SimSideView: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const handleCategorySelect = (category: string) => {
+    console.log('선택된 카테고리:', category);
+    setSelectedCategory(category);
+    // 여기서 선택된 카테고리로 필터링 등 처리
+  }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen overflow-hidden"> {/* min-h-screen → h-screen, overflow-hidden 추가 */}
       {/* Sidebar */}
       <div
         className={`${
           // 접힙: 펼침
           collapsed ? "w-[5%]" : "w-[22%]" 
-        } bg-white text-black transition-all duration-300 flex flex-col`}
+        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200`} // border 추가로 구분선
       >
+        {/* 고정 영역들 */}
+        <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} />
+        <SideSearch collapsed={collapsed} />
+        <SideCategories collapsed={collapsed} onCategorySelect={handleCategorySelect} />
 
-        <SideTitle collapsed={collapsed} setCollapsed={setCollapsed}></SideTitle>
-        <SideSearch collapsed={collapsed}></SideSearch>
-        <SideCategories collapsed={collapsed}></SideCategories>
-        <SideMenu collapsed={collapsed}></SideMenu>
+        {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
+        <SideItems collapsed={collapsed} selectedCategory={selectedCategory}/>
       </div>
 
-      {/* 나중에 수연님 화면으로 대체될 놈 */}
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 bg-gray-100 flex items-center px-4 shadow">
+      <div className="flex-1 flex flex-col overflow-hidden"> {/* overflow-hidden 추가 */}
+        <header className="h-14 bg-gray-100 flex items-center px-4 shadow flex-shrink-0"> {/* flex-shrink-0 추가 */}
           <h1 className="text-lg font-semibold">Header</h1>
         </header>
-        <main className="flex-1 p-6 bg-gray-50">
-          <div className="bg-white p-6 rounded-lg shadow">
-            Bill is a cat.
+        
+        <main className="flex-1 overflow-auto bg-gray-50"> {/* overflow-auto로 스크롤 가능 */}
+          <div className="p-6">
+            <div className="bg-white p-6 rounded-lg shadow">
+              Bill is a cat.
+            </div>
           </div>
         </main>
-        <footer className="h-12 flex items-center justify-center bg-gray-100 text-sm text-gray-500">
+        
+        <footer className="h-12 flex items-center justify-center bg-gray-100 text-sm text-gray-500 flex-shrink-0"> {/* flex-shrink-0 추가 */}
           Tailwind Layout ©{new Date().getFullYear()}
         </footer>
       </div>
