@@ -15,24 +15,19 @@ const SimSideView: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden"> {/* min-h-screen → h-screen, overflow-hidden 추가 */}
-      {/* Sidebar */}
-      <div
-        className={`${
-          // 접힙: 펼침
-          collapsed ? "w-[5%]" : "w-[22%]" 
-        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200`} // border 추가로 구분선
-      >
-        {/* 고정 영역들 */}
-        <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} />
-        <SideSearch collapsed={collapsed} />
-        <SideCategories collapsed={collapsed} onCategorySelect={handleCategorySelect} />
+    <div
+      className={`${
+        // 접힙: 펼침
+        collapsed ? "w-[5%]" : "w-[22%]" 
+      } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 h-screen`} // border 추가로 구분선
+    >
+      {/* 고정 영역들 */}
+      <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} />
+      <SideSearch collapsed={collapsed} />
+      <SideCategories collapsed={collapsed} onCategorySelect={handleCategorySelect} />
 
-        {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
-        <SideItems collapsed={collapsed} selectedCategory={selectedCategory}/>
-      </div>
-
-      {/* <BedroomPage></BedroomPage> */}
+      {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
+      <SideItems collapsed={collapsed} selectedCategory={selectedCategory}/>
     </div>
   );
 };

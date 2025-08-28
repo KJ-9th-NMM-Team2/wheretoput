@@ -73,20 +73,21 @@ export default function SimPage() {
   // camera.position.set(10, 6, 10)
 
   return (
-    <>
-    <SimSideView></SimSideView>
+    <div className="flex h-screen overflow-hidden">
+      <SimSideView />
       
-      <ControlPanel />
-      <InfoPanel />
-      <LightControlPanel />
-      {/* <CameraControlPanel /> */}
+      <div className="flex-1 relative">
+        <ControlPanel />
+        <InfoPanel />
+        <LightControlPanel />
+        {/* <CameraControlPanel /> */}
 
-      <Canvas
-        camera={{ position: [-20, 15, 0], fov: 60 }}
-        shadows
-        style={{ width: '100vw', height: '100vh' }}
-        frameloop='demand'
-      >
+        <Canvas
+          camera={{ position: [-20, 15, 0], fov: 60 }}
+          shadows
+          style={{ width: '100%', height: '100vh' }}
+          frameloop='demand'
+        >
         <color attach="background" args={['#87CEEB']} />
 
         <ambientLight intensity={ambientLightIntensity} />
@@ -149,7 +150,7 @@ export default function SimPage() {
           maxDistance={20}
         />
       </Canvas>
-      
-    </>
+      </div>
+    </div>
   )
 }
