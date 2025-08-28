@@ -9,7 +9,8 @@ import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { FurnitureLibrary } from '../components/FurnitureLibrary.jsx'
-import { FurnitureEditor } from '../components/FurnitureEditor.jsx'
+import { FurnitureEditor } from '../components/FurnitureEditor.tsx'
+import { RightSidebar } from '../components/RightSidebar.jsx'
 
 
 
@@ -213,6 +214,7 @@ export default function BedroomPage() {
       <ControlPanel />
       <FurnitureEditor />
       <FurnitureLibrary />
+      <RightSidebar />
 
       <Canvas
         camera={{ position: [8, 6, 8], fov: 75 }}

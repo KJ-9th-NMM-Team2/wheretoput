@@ -1,53 +1,59 @@
 import { NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs/promises'
+import { convertImageToGLB } from '../../sonnet4_api.js'
 
 export async function POST(request) {
   try {
+    console.log('가구 임포트 API 호출됨')
+    
     const formData = await request.formData()
     const imageFile = formData.get('image')
     
     if (!imageFile) {
+      console.log('이미지 파일이 없음')
       return NextResponse.json(
         { error: '이미지 파일이 없습니다.' },
         { status: 400 }
       )
     }
 
-    // 임시 파일로 저장
-    const bytes = await imageFile.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    
-    const tempDir = path.join(process.cwd(), 'temp')
-    await fs.mkdir(tempDir, { recursive: true })
-    
-    const tempImagePath = path.join(tempDir, `temp_${Date.now()}_${imageFile.name}`)
-    await fs.writeFile(tempImagePath, buffer)
+    console.log('이미지 파일 정보:', imageFile.name, imageFile.size)
 
-    // sonnet4_api.js의 convertImageToGLB 함수 사용
-    const { convertImageToGLB } = require('../../sonnet4_api.js')
+    // 1. 업로드된 이미지를 public/asset에 저장
+    const timestamp = Date.now()
+    const fileExtension = path.extname(imageFile.name)
+    const imageName = `${path.basename(imageFile.name, fileExtension)}_${timestamp}${fileExtension}`
+    const imageUrl = path.join(process.cwd(), 'public', 'asset', imageName)
     
-    const glbFilename = path.join(process.cwd(), 'public/asset', `imported_${Date.now()}.glb`)
+    const imageBuffer = await imageFile.arrayBuffer()
+    await fs.writeFile(imageUrl, Buffer.from(imageBuffer))
+    console.log('이미지 저장 완료:', imageName)
+
+    // 2. GLB 파일명 생성
+    const glbName = `${path.basename(imageFile.name, fileExtension)}_${timestamp}.glb`
+    const glbPath = path.join(process.cwd(), 'public', 'asset', glbName)
     
+    // 3. sonnet4_api를 사용해 이미지를 GLB로 변환
+    console.log('이미지를 GLB로 변환 중...')
     const result = await convertImageToGLB(
-      tempImagePath,
-      glbFilename,
-      [0, 0, 0], // 기본 위치
-      1,         // 기본 크기
-      false      // 로컬 파일
+      imageUrl,
+      glbPath,
+      [0, 0, 0], // position
+      [1, 1, 1], // scale
+      false // 로컬 파일이므로 false
     )
-
-    // 임시 파일 삭제
-    await fs.unlink(tempImagePath)
-
-    // GLB 파일의 웹 경로 반환
-    const webPath = `/asset/${path.basename(glbFilename)}`
     
-    return NextResponse.json({
-      success: true,
-      glbPath: webPath,
-      filename: path.basename(glbFilename)
-    })
+    if (result.success) {
+      console.log('GLB 변환 성공:', glbName)
+      return NextResponse.json({
+        success: true,
+        glbPath: `/asset/${glbName}`,
+        filename: glbName
+      })
+    } else {
+      throw new Error(result.error || 'GLB 변환 실패')
+    }
 
   } catch (error) {
     console.error('가구 임포트 오류:', error)

@@ -13,7 +13,7 @@ export function FurnitureEditor() {
   } = useStore()
 
   // 선택된 모델 가져오기
-  const selectedModel = loadedModels.find(model => model.id === selectedModelId)
+  const selectedModel = loadedModels.find((model: any) => model.id === selectedModelId)
 
   if (!selectedModel) {
     return null // 선택된 가구가 없으면 사이드바 숨김

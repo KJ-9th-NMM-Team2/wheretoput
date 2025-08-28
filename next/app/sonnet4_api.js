@@ -27,7 +27,7 @@ const pool = new Pool({
 
 // Anthropic API 키 설정
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || "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",
+  apiKey: "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",
 });
 
 /**
