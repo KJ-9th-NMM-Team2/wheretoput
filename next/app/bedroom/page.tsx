@@ -9,6 +9,7 @@ import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
 import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
+import { FurnitureLibrary } from '../components/FurnitureLibrary.jsx'
 
 
 function Floor() {
@@ -190,10 +191,12 @@ export default function BedroomPage() {
 
   return (
     <>
+      <FurnitureLibrary />
+      
       <div style={{
         position: 'absolute',
         top: '10px',
-        left: '10px',
+        left: '300px',
         color: 'white',
         background: 'rgba(0,0,0,0.7)',
         padding: '10px',
@@ -201,10 +204,9 @@ export default function BedroomPage() {
         zIndex: 100,
         fontSize: '12px'
       }}>
-        <div>🏠 3D 인테리어 시뮬레이터</div>
+        <div>🏠 어따놀래</div>
         <div>🖱️ 마우스: 회전/줌 | 우클릭: 이동</div>
         <div>🎯 모델 클릭: 선택 | Shift+드래그: 크기 조정</div>
-        <div>🐱 고양이 선택 후 WASD: 키보드 이동</div>
       </div>
       
       <ControlPanel />
