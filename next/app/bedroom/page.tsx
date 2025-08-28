@@ -7,9 +7,10 @@ import * as THREE from 'three'
 
 import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
-import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { FurnitureLibrary } from '../components/FurnitureLibrary.jsx'
+import { FurnitureEditor } from '../components/FurnitureEditor.jsx'
+
 
 
 function Floor() {
@@ -210,7 +211,8 @@ export default function BedroomPage() {
       </div>
       
       <ControlPanel />
-      <InfoPanel />
+      <FurnitureEditor />
+      <FurnitureLibrary />
 
       <Canvas
         camera={{ position: [8, 6, 8], fov: 75 }}
