@@ -6,9 +6,10 @@ import ItemScroll from './item/ItemScroll';
 interface SideItemsProps {
     collapsed: boolean;
     selectedCategory: string | null;
+    furnitures: Furniture[];
 }
 
-const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) => {
+const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furnitures}) => {
     const [items, setItems] = useState<Furniture[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
@@ -16,7 +17,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const itemsPerPage = 5;
+    const itemsPerPage = 8;
 
     // API에서 데이터 가져오기 함수
     const fetchItems = useCallback(async (page: number, category: string | null) => {
@@ -68,6 +69,11 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
             setLoading(false);
         }
     }, [itemsPerPage]);
+
+    // 검색 했을 때 query 실행
+    useEffect(() => {
+        setItems(furnitures);
+    }, [furnitures])
 
     // 페이지나 카테고리 변경 시 데이터 가져오기
     useEffect(() => {

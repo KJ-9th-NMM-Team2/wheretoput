@@ -1,9 +1,4 @@
 'use client'
-// Test용
-import SimSideView from "../../components/sim/SimSideView"
-// import BedroomPage from "../../bedroom/page"
-
-
 // 시뮬레이터 페이지 - 수연, 성진
 // app\sim\[id]\page.tsx 에 있어야 합니다.
 // export default async function SimPage({
@@ -16,7 +11,7 @@ import SimSideView from "../../components/sim/SimSideView"
 // }
 
 
-
+import SimSideView from "@/components/sim/SimSideView"
 import React, { useRef, Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
