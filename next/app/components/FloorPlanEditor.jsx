@@ -23,6 +23,13 @@ const FloorPlanEditor = () => {
   const [selectedWall, setSelectedWall] = useState(null);
   const fileInputRef = useRef(null);
 
+  // 축척 설정 관련 상태
+  const [showScalePopup, setShowScalePopup] = useState(false);
+  const [scaleImage, setScaleImage] = useState(null);
+  const [scalePoints, setScalePoints] = useState([]);
+  const [realLength, setRealLength] = useState('');
+  const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 1픽셀 = 20mm (기본값)
+
   const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
   const CANVAS_WIDTH = 600; // 캔버스 크기 축소
   const CANVAS_HEIGHT = 300;
@@ -35,12 +42,12 @@ const FloorPlanEditor = () => {
     };
   };
 
-  // 거리 계산 (mm 단위) , 축척 계산 
+  // 거리 계산 (mm 단위) - 사용자 지정 축척 사용
   const calculateDistance = (p1, p2) => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
-    return Math.round(distance * 10); // px를 mm로 변환 (1px = 20mm, 격자 25px = 500mm)
+    return Math.round(distance * pixelToMmRatio); // 사용자 지정 축척으로 변환
   };
 
   // 점과 선분 사이의 거리 계산
@@ -306,15 +313,36 @@ const FloorPlanEditor = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // 축척 설정을 위한 팝업 표시
+    const imageUrl = URL.createObjectURL(file);
+    setScaleImage({ file, url: imageUrl });
+    setShowScalePopup(true);
+    setScalePoints([]);
+    setRealLength('');
+  };
+
+  // 축척 설정 완료 후 벽 검출
+  const processImageWithScale = async () => {
+    if (!scaleImage || scalePoints.length !== 2 || !realLength) {
+      alert('축척 설정을 완료해주세요.');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      // 이미지 미리보기용
-      const imageUrl = URL.createObjectURL(file);
-      setUploadedImage(imageUrl);
+      // 픽셀 거리 계산
+      const pixelDistance = Math.sqrt(
+        Math.pow(scalePoints[1].x - scalePoints[0].x, 2) + 
+        Math.pow(scalePoints[1].y - scalePoints[0].y, 2)
+      );
+      
+      // 축척 비율 계산 (픽셀당 mm)
+      const newPixelToMmRatio = parseFloat(realLength) / pixelDistance;
+      setPixelToMmRatio(newPixelToMmRatio);
 
-      // WallDetector로 벽 검출 (최적화된 매개변수)
+      // WallDetector로 벽 검출
       const detector = new WallDetector();
-      const result = await detector.detectWalls(file, {
+      const result = await detector.detectWalls(scaleImage.file, {
         morphType: 0,      // OPEN 연산으로 노이즈 제거
         canny1: 50,        // 낮은 임계값
         canny2: 100,       // 높은 임계값
@@ -353,6 +381,11 @@ const FloorPlanEditor = () => {
       });
       
       setWalls(detectedWalls);
+      setUploadedImage(scaleImage.url);
+      setShowScalePopup(false);
+      
+      alert(`축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)`);
+      
     } catch (error) {
       console.error('Wall detection failed:', error);
       alert('벽 검출에 실패했습니다.');
@@ -393,6 +426,121 @@ const FloorPlanEditor = () => {
 
   return (
     <div className="w-full h-screen bg-orange-50 flex flex-col">
+      {/* 축척 설정 팝업 */}
+      {showScalePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-auto">
+            <h2 className="text-xl font-bold text-orange-800 mb-4">축척 설정</h2>
+            
+            {/* 이미지 표시 */}
+            <div className="mb-4 relative">
+              <div className="border-2 border-orange-200 rounded-lg overflow-hidden bg-white relative">
+                <img
+                  src={scaleImage?.url}
+                  alt="축척 설정용 이미지"
+                  className="w-full max-h-96 object-contain cursor-crosshair block"
+                  onClick={(e) => {
+                    if (scalePoints.length < 2) {
+                      const rect = e.target.getBoundingClientRect();
+                      const x = e.clientX - rect.left;
+                      const y = e.clientY - rect.top;
+                      setScalePoints([...scalePoints, { x, y }]);
+                    }
+                  }}
+                />
+                {/* 선택된 점들 표시 */}
+                {scalePoints.length > 0 && (
+                  <>
+                    {scalePoints.map((point, index) => (
+                      <div
+                        key={index}
+                        className="absolute w-3 h-3 bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"
+                        style={{
+                          left: `${point.x}px`,
+                          top: `${point.y}px`
+                        }}
+                      />
+                    ))}
+                    {scalePoints.length === 2 && (
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none z-5">
+                        <line
+                          x1={scalePoints[0].x}
+                          y1={scalePoints[0].y}
+                          x2={scalePoints[1].x}
+                          y2={scalePoints[1].y}
+                          stroke="red"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* 안내 메시지 */}
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-sm text-blue-700">
+                {scalePoints.length === 0 && "1. 이미지에서 기준이 될 선분의 시작점을 클릭하세요"}
+                {scalePoints.length === 1 && "2. 기준 선분의 끝점을 클릭하세요"}
+                {scalePoints.length === 2 && "3. 아래에 실제 길이를 입력하세요"}
+              </p>
+            </div>
+
+            {/* 실제 길이 입력 */}
+            {scalePoints.length === 2 && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-orange-700 mb-2">
+                  선택한 선분의 실제 길이 (mm):
+                </label>
+                <input
+                  type="number"
+                  value={realLength}
+                  onChange={(e) => setRealLength(e.target.value)}
+                  placeholder="예: 3000"
+                  className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <p className="text-xs text-gray-600 mt-1">
+                  픽셀 거리: {Math.round(Math.sqrt(
+                    Math.pow(scalePoints[1].x - scalePoints[0].x, 2) + 
+                    Math.pow(scalePoints[1].y - scalePoints[0].y, 2)
+                  ))}px
+                </p>
+              </div>
+            )}
+
+            {/* 버튼들 */}
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setScalePoints([])}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                disabled={isProcessing}
+              >
+                다시 선택
+              </button>
+              <button
+                onClick={() => {
+                  setShowScalePopup(false);
+                  setScaleImage(null);
+                  setScalePoints([]);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                disabled={isProcessing}
+              >
+                취소
+              </button>
+              <button
+                onClick={processImageWithScale}
+                disabled={scalePoints.length !== 2 || !realLength || isProcessing}
+                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isProcessing ? '처리 중...' : '축척 설정 완료'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 툴바 */}
       <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
         <div className="flex items-center gap-4">
