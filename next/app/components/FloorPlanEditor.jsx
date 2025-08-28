@@ -1,551 +1,602 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { WallDetector } from '../wallDetection.js';
 
-const FloorPlanEditor = ({ onFloorPlanChange }) => {
+import {
+  Square,
+  MousePointer,
+  Eraser,
+  Check,
+  Upload,
+  Trash2,
+} from "lucide-react";
+
+const FloorPlanEditor = () => {
   const canvasRef = useRef(null);
-  const [editor, setEditor] = useState(null);
-  const [currentTool, setCurrentTool] = useState('wall');
-  const [gridSize, setGridSize] = useState(20);
-  const [wallWidth, setWallWidth] = useState(4);
-  const [wallColor, setWallColor] = useState('#2c3e50');
+  const containerRef = useRef(null);
+  const [tool, setTool] = useState("wall");
+  const [walls, setWalls] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState(null);
+  const [currentPoint, setCurrentPoint] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedWall, setSelectedWall] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // Floor Plan Editor 클래스
-  class FloorPlanEditorClass {
-    constructor(canvas, options = {}) {
-      this.canvas = canvas;
-      this.ctx = canvas.getContext('2d');
-      this.gridSize = options.gridSize || 20;
-      this.wallWidth = options.wallWidth || 4;
-      this.wallColor = options.wallColor || '#2c3e50';
-      this.currentTool = options.currentTool || 'wall';
+  const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
+  const CANVAS_WIDTH = 600; // 캔버스 크기 축소
+  const CANVAS_HEIGHT = 300;
+
+  // 격자에 스냅하는 함수
+  const snapToGrid = (x, y) => {
+    return {
+      x: Math.round(x / GRID_SIZE) * GRID_SIZE,
+      y: Math.round(y / GRID_SIZE) * GRID_SIZE,
+    };
+  };
+
+  // 거리 계산 (mm 단위) , 축척 계산 
+  const calculateDistance = (p1, p2) => {
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    return Math.round(distance * 10); // px를 mm로 변환 (1px = 20mm, 격자 25px = 500mm)
+  };
+
+  // 점과 선분 사이의 거리 계산
+  const getDistanceToWall = (point, wall) => {
+    const A = point.x - wall.start.x;
+    const B = point.y - wall.start.y;
+    const C = wall.end.x - wall.start.x;
+    const D = wall.end.y - wall.start.y;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+    
+    if (lenSq === 0) return Math.sqrt(A * A + B * B);
+
+    let param = dot / lenSq;
+    
+    let xx, yy;
+    if (param < 0) {
+      xx = wall.start.x;
+      yy = wall.start.y;
+    } else if (param > 1) {
+      xx = wall.end.x;
+      yy = wall.end.y;
+    } else {
+      xx = wall.start.x + param * C;
+      yy = wall.start.y + param * D;
+    }
+
+    const dx = point.x - xx;
+    const dy = point.y - yy;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // 마우스 위치를 캔버스 좌표로 변환
+  const getCanvasCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    // DPR을 고려하지 않고 실제 표시 크기 기준으로 계산
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    return { x, y };
+  };
+
+  // 텍스트 그리기 함수 (선 아래에 작게 표시)
+  // 여기서 font-size (폰트크기) 설정
+  const drawText = (ctx, text, x, y, angle = 0) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = "#333333";
+    ctx.font = "bold 17px 'Segoe UI', Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    
+    // 텍스트 렌더링 품질 개선
+    ctx.textRenderingOptimization = 'optimizeQuality';
+    ctx.imageSmoothingEnabled = true;
+    
+    // 선 아래쪽으로 오프셋 (5px 아래)
+    ctx.fillText(text, 0, 5);
+    ctx.restore();
+  };
+
+  // 캔버스 그리기 : 선분 두께 등 수정
+  const drawCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+
+    // 고해상도 렌더링 설정
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    // 캔버스 실제 해상도 설정
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    // CSS 크기는 원래대로 유지
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    
+    // 컨텍스트 스케일 조정
+    ctx.scale(dpr, dpr);
+
+    // 전체 캔버스 클리어
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    // 텍스트 렌더링 품질 개선
+    ctx.textRenderingOptimization = 'optimizeQuality';
+    ctx.imageSmoothingEnabled = false; // 격자는 선명하게
+
+    // 격자 그리기 - 픽셀 정렬로 선명하게
+    ctx.strokeStyle = "#e0e0e0";
+    ctx.lineWidth = 0.7;
+    
+    // 픽셀 정렬을 위해 0.5 오프셋
+    ctx.translate(0.5, 0.5);
+
+    // 세로선
+    for (let x = 0; x <= rect.width; x += GRID_SIZE) {
+      ctx.beginPath();
+      ctx.moveTo(Math.floor(x), 0);
+      ctx.lineTo(Math.floor(x), rect.height);
+      ctx.stroke();
+    }
+
+    // 가로선
+    for (let y = 0; y <= rect.height; y += GRID_SIZE) {
+      ctx.beginPath();
+      ctx.moveTo(0, Math.floor(y));
+      ctx.lineTo(rect.width, Math.floor(y));
+      ctx.stroke();
+    }
+    
+    // 오프셋 복원
+    ctx.translate(-0.5, -0.5);
+
+    // 완성된 벽들 그리기
+    ctx.strokeStyle = "#ff6600";
+    ctx.lineWidth = 6;
+
+    walls.forEach((wall) => {
+      // 선택된 벽인지 확인
+      const isSelected = selectedWall?.id === wall.id;
       
-      this.isDrawing = false;
-      this.startPoint = null;
-      this.walls = [];
-      this.previewWall = null;
+      // 벽 그리기 (선택된 벽은 다른 색상)
+      ctx.strokeStyle = isSelected ? "#00ff00" : "#ff6600";
+      ctx.lineWidth = isSelected ? 8 : 3;
       
-      this.initializeEventListeners();
-      this.drawGrid();
+      ctx.beginPath();
+      ctx.moveTo(wall.start.x, wall.start.y);
+      ctx.lineTo(wall.end.x, wall.end.y);
+      ctx.stroke();
+
+      // 길이 표시 (선 아래에 작게)
+      const midX = (wall.start.x + wall.end.x) / 2;
+      const midY = (wall.start.y + wall.end.y) / 2;
+      const distance = calculateDistance(wall.start, wall.end);
+      const angle = Math.atan2(
+        wall.end.y - wall.start.y,
+        wall.end.x - wall.start.x
+      );
+
+      drawText(ctx, `${distance}mm`, midX, midY, angle);
+    });
+
+    // 현재 그리고 있는 벽 그리기
+    if (isDrawing && startPoint && currentPoint) {
+      ctx.strokeStyle = "#ff9933";
+      ctx.lineWidth = 8;
+      ctx.setLineDash([5, 5]);
+
+      ctx.beginPath();
+      ctx.moveTo(startPoint.x, startPoint.y);
+      ctx.lineTo(currentPoint.x, currentPoint.y);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+
+      // 현재 그리고 있는 벽의 길이 표시 (선 아래에 작게)
+      const midX = (startPoint.x + currentPoint.x) / 2;
+      const midY = (startPoint.y + currentPoint.y) / 2;
+      const distance = calculateDistance(startPoint, currentPoint);
+      const angle = Math.atan2(
+        currentPoint.y - startPoint.y,
+        currentPoint.x - startPoint.x
+      );
+
+      // 임시 벽의 치수는 조금 다른 색상으로 표시
+      ctx.save();
+      ctx.fillStyle = "#ff9933";
+      drawText(ctx, `${distance}mm`, midX, midY, angle);
+      ctx.restore();
     }
-    
-    initializeEventListeners() {
-      this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
-      this.canvas.addEventListener('mousemove', this.draw.bind(this));
-      this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
-      this.canvas.addEventListener('mouseleave', this.stopDrawing.bind(this));
-    }
-    
-    snapToGrid(x, y) {
-      return {
-        x: Math.round(x / this.gridSize) * this.gridSize,
-        y: Math.round(y / this.gridSize) * this.gridSize
-      };
-    }
-    
-    getMousePos(e) {
-      const rect = this.canvas.getBoundingClientRect();
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-    
-    startDrawing(e) {
-      if (this.currentTool === 'wall') {
-        this.isDrawing = true;
-        const mousePos = this.getMousePos(e);
-        this.startPoint = this.snapToGrid(mousePos.x, mousePos.y);
-      } else if (this.currentTool === 'erase') {
-        const mousePos = this.getMousePos(e);
-        this.eraseWall(mousePos.x, mousePos.y);
+  };
+
+  // 마우스 이벤트 핸들러들
+  const handleMouseDown = (e) => {
+    const coords = getCanvasCoordinates(e);
+
+    if (tool === "wall") {
+      const snapped = snapToGrid(coords.x, coords.y);
+      setStartPoint(snapped);
+      setCurrentPoint(snapped);
+      setIsDrawing(true);
+    } else if (tool === "select") {
+      // 선택 도구: 클릭한 위치에서 가장 가까운 벽 선택
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_SELECT_DISTANCE = 30; // 30픽셀 이내의 벽만 선택 가능
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_SELECT_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      if (closestWall) {
+        setSelectedWall(selectedWall?.id === closestWall.id ? null : closestWall);
+      } else {
+        setSelectedWall(null);
+      }
+    } else if (tool === "eraser") {
+      // 클릭 위치에서 가장 가까운 벽 찾기
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_DELETE_DISTANCE = 20; // 20픽셀 이내의 벽만 삭제 가능
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_DELETE_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      // 가장 가까운 벽 삭제
+      if (closestWall) {
+        setWalls((prev) => prev.filter((wall) => wall.id !== closestWall.id));
       }
     }
-    
-    draw(e) {
-      if (this.currentTool === 'wall' && this.isDrawing && this.startPoint) {
-        const mousePos = this.getMousePos(e);
-        const endPoint = this.snapToGrid(mousePos.x, mousePos.y);
-        
-        // 수직 또는 수평선만 그리기
-        if (Math.abs(endPoint.x - this.startPoint.x) > Math.abs(endPoint.y - this.startPoint.y)) {
-          endPoint.y = this.startPoint.y; // 수평선
-        } else {
-          endPoint.x = this.startPoint.x; // 수직선
-        }
-        
-        this.previewWall = {
-          start: this.startPoint,
-          end: endPoint,
-          color: this.wallColor,
-          width: this.wallWidth
+  };
+
+  const handleMouseMove = (e) => {
+    if (isDrawing && tool === "wall") {
+      const coords = getCanvasCoordinates(e);
+      const snapped = snapToGrid(coords.x, coords.y);
+      setCurrentPoint(snapped);
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (isDrawing && tool === "wall" && startPoint) {
+      const coords = getCanvasCoordinates(e);
+      const snapped = snapToGrid(coords.x, coords.y);
+
+      // 시작점과 끝점이 다를 때만 벽 추가
+      if (startPoint.x !== snapped.x || startPoint.y !== snapped.y) {
+        const newWall = {
+          id: Date.now(),
+          start: startPoint,
+          end: snapped,
+        };
+
+        setWalls((prev) => [...prev, newWall]);
+      }
+
+      setIsDrawing(false);
+      setStartPoint(null);
+      setCurrentPoint(null);
+    }
+  };
+
+
+  // 캔버스 다시 그리기
+  useEffect(() => {
+    drawCanvas();
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+
+  // 이미지 업로드 처리
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    try {
+      // 이미지 미리보기용
+      const imageUrl = URL.createObjectURL(file);
+      setUploadedImage(imageUrl);
+
+      // WallDetector로 벽 검출 (최적화된 매개변수)
+      const detector = new WallDetector();
+      const result = await detector.detectWalls(file, {
+        morphType: 0,      // OPEN 연산으로 노이즈 제거
+        canny1: 50,        // 낮은 임계값
+        canny2: 100,       // 높은 임계값
+        houghTh: 60,       // Hough 변환 임계값 낮춤
+        minLen: 25,        // 최소 선분 길이
+        maxGap: 15         // 선분 간 최대 간격
+      });
+      
+      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = rect.width / result.imageWidth;
+      const scaleY = rect.height / result.imageHeight;
+      
+      // 검출된 선분들을 벽으로 변환하고 격자에 스냅
+      const detectedWalls = result.lines.map((line, index) => {
+        // 스케일 적용
+        const scaledStart = {
+          x: line.x1 * scaleX,
+          y: line.y1 * scaleY
+        };
+        const scaledEnd = {
+          x: line.x2 * scaleX,
+          y: line.y2 * scaleY
         };
         
-        this.redraw();
-      }
-    }
-    
-    stopDrawing() {
-      if (this.isDrawing && this.previewWall) {
-        // 길이가 있는 벽만 추가
-        if (this.previewWall.start.x !== this.previewWall.end.x || 
-            this.previewWall.start.y !== this.previewWall.end.y) {
-          
-          // 중복 벽 체크
-          if (!this.isDuplicateWall(this.previewWall)) {
-            this.walls.push({...this.previewWall});
-            // React 부모 컴포넌트에 변경 알림
-            if (this.onWallsChange) {
-              this.onWallsChange(this.walls);
-            }
-          }
-        }
-      }
-      
-      this.isDrawing = false;
-      this.startPoint = null;
-      this.previewWall = null;
-      this.redraw();
-    }
-    
-    eraseWall(x, y) {
-      for (let i = this.walls.length - 1; i >= 0; i--) {
-        const wall = this.walls[i];
-        if (this.isPointOnWall(x, y, wall)) {
-          this.walls.splice(i, 1);
-          if (this.onWallsChange) {
-            this.onWallsChange(this.walls);
-          }
-          break;
-        }
-      }
-      this.redraw();
-    }
-    
-    isDuplicateWall(newWall) {
-      return this.walls.some(existingWall => {
-        return (
-          (existingWall.start.x === newWall.start.x && 
-           existingWall.start.y === newWall.start.y &&
-           existingWall.end.x === newWall.end.x && 
-           existingWall.end.y === newWall.end.y) ||
-          (existingWall.start.x === newWall.end.x && 
-           existingWall.start.y === newWall.end.y &&
-           existingWall.end.x === newWall.start.x && 
-           existingWall.end.y === newWall.start.y)
-        );
-      });
-    }
-
-    isPointOnWall(x, y, wall) {
-      const tolerance = this.wallWidth + 5;
-      const dx = wall.end.x - wall.start.x;
-      const dy = wall.end.y - wall.start.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-      
-      if (length === 0) return false;
-      
-      const dot = ((x - wall.start.x) * dx + (y - wall.start.y) * dy) / (length * length);
-      
-      if (dot < 0 || dot > 1) return false;
-      
-      const projX = wall.start.x + dot * dx;
-      const projY = wall.start.y + dot * dy;
-      const distance = Math.sqrt((x - projX) * (x - projX) + (y - projY) * (y - projY));
-      
-      return distance <= tolerance;
-    }
-    
-    drawGrid() {
-      this.ctx.save();
-      this.ctx.strokeStyle = '#e8e8e8';
-      this.ctx.fillStyle = '#fafafa';
-      this.ctx.lineWidth = 1;
-      this.ctx.globalAlpha = 0.8;
-      
-      // 작은 사각형(mesh) 격자 그리기
-      for (let x = 0; x < this.canvas.width; x += this.gridSize) {
-        for (let y = 0; y < this.canvas.height; y += this.gridSize) {
-          // 사각형 채우기 (번갈아가며 색상 적용)
-          if ((Math.floor(x / this.gridSize) + Math.floor(y / this.gridSize)) % 2 === 0) {
-            this.ctx.fillStyle = '#fafafa';
-          } else {
-            this.ctx.fillStyle = '#f5f5f5';
-          }
-          this.ctx.fillRect(x, y, this.gridSize, this.gridSize);
-          
-          // 사각형 테두리 그리기
-          this.ctx.strokeStyle = '#e0e0e0';
-          this.ctx.strokeRect(x, y, this.gridSize, this.gridSize);
-        }
-      }
-      
-      // 주요 격자선 강조 (5칸마다)
-      this.ctx.strokeStyle = '#d0d0d0';
-      this.ctx.lineWidth = 1.5;
-      this.ctx.globalAlpha = 0.6;
-      
-      for (let x = 0; x <= this.canvas.width; x += this.gridSize * 5) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, 0);
-        this.ctx.lineTo(x, this.canvas.height);
-        this.ctx.stroke();
-      }
-      
-      for (let y = 0; y <= this.canvas.height; y += this.gridSize * 5) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, y);
-        this.ctx.lineTo(this.canvas.width, y);
-        this.ctx.stroke();
-      }
-      
-      this.ctx.restore();
-    }
-    
-    drawWall(wall) {
-      this.ctx.strokeStyle = wall.color;
-      this.ctx.lineWidth = wall.width;
-      this.ctx.lineCap = 'square';
-      
-      this.ctx.beginPath();
-      this.ctx.moveTo(wall.start.x, wall.start.y);
-      this.ctx.lineTo(wall.end.x, wall.end.y);
-      this.ctx.stroke();
-    }
-    
-    redraw() {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      this.drawGrid();
-      
-      // 기존 벽들 그리기
-      this.walls.forEach(wall => this.drawWall(wall));
-      
-      // 미리보기 벽 그리기
-      if (this.previewWall) {
-        this.ctx.strokeStyle = this.previewWall.color;
-        this.ctx.lineWidth = this.previewWall.width;
-        this.ctx.globalAlpha = 0.7;
-        this.drawWall(this.previewWall);
-        this.ctx.globalAlpha = 1.0;
-      }
-    }
-    
-    updateSettings(settings) {
-      if (settings.gridSize) {
-        this.gridSize = settings.gridSize;
-      }
-      if (settings.wallWidth) {
-        this.wallWidth = settings.wallWidth;
-      }
-      if (settings.wallColor) {
-        this.wallColor = settings.wallColor;
-      }
-      if (settings.currentTool) {
-        this.currentTool = settings.currentTool;
-      }
-      this.redraw();
-    }
-    
-    clearCanvas() {
-      this.walls = [];
-      this.redraw();
-      if (this.onWallsChange) {
-        this.onWallsChange(this.walls);
-      }
-    }
-    
-    exportCleanImage() {
-      const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = this.canvas.width;
-      exportCanvas.height = this.canvas.height;
-      const exportCtx = exportCanvas.getContext('2d');
-      
-      // 흰색 배경
-      exportCtx.fillStyle = '#FFFFFF';
-      exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      
-      exportCtx.imageSmoothingEnabled = false;
-      
-      // 벽만 그리기 (격자 완전 제외)
-      if (this.walls && this.walls.length > 0) {
-        this.walls.forEach(wall => {
-          if (wall.color !== '#ecf0f1' && wall.width > 1) {
-            exportCtx.strokeStyle = wall.color;
-            exportCtx.lineWidth = wall.width;
-            exportCtx.lineCap = 'square';
-            exportCtx.lineJoin = 'miter';
-            
-            exportCtx.beginPath();
-            exportCtx.moveTo(wall.start.x, wall.start.y);
-            exportCtx.lineTo(wall.end.x, wall.end.y);
-            exportCtx.stroke();
-          }
-        });
-      }
-      
-      return exportCanvas.toDataURL('image/png');
-    }
-    
-    loadTemplate() {
-      this.walls = [];
-      
-      // 기본 방 템플릿
-      const roomTemplate = [
-        { start: {x: 100, y: 100}, end: {x: 500, y: 100}, color: '#2c3e50', width: 6 },
-        { start: {x: 500, y: 100}, end: {x: 500, y: 400}, color: '#2c3e50', width: 6 },
-        { start: {x: 500, y: 400}, end: {x: 100, y: 400}, color: '#2c3e50', width: 6 },
-        { start: {x: 100, y: 400}, end: {x: 100, y: 100}, color: '#2c3e50', width: 6 },
-        { start: {x: 300, y: 100}, end: {x: 300, y: 250}, color: '#34495e', width: 4 },
-        { start: {x: 100, y: 250}, end: {x: 500, y: 250}, color: '#34495e', width: 4 }
-      ];
-      
-      this.walls = roomTemplate;
-      this.redraw();
-      
-      if (this.onWallsChange) {
-        this.onWallsChange(this.walls);
-      }
-    }
-  }
-
-  // Canvas 초기화
-  useEffect(() => {
-    if (canvasRef.current && !editor) {
-      const newEditor = new FloorPlanEditorClass(canvasRef.current, {
-        gridSize,
-        wallWidth,
-        wallColor,
-        currentTool
+        // 격자에 스냅
+        const snappedStart = snapToGrid(scaledStart.x, scaledStart.y);
+        const snappedEnd = snapToGrid(scaledEnd.x, scaledEnd.y);
+        
+        return {
+          id: Date.now() + index,
+          start: snappedStart,
+          end: snappedEnd
+        };
       });
       
-      // React 상태 변경 콜백 설정
-      newEditor.onWallsChange = (walls) => {
-        if (onFloorPlanChange) {
-          onFloorPlanChange(walls);
-        }
-      };
-      
-      setEditor(newEditor);
-    }
-  }, []);
-
-  // 설정 변경 시 에디터 업데이트
-  useEffect(() => {
-    if (editor) {
-      editor.updateSettings({
-        gridSize,
-        wallWidth,
-        wallColor,
-        currentTool
-      });
-    }
-  }, [editor, gridSize, wallWidth, wallColor, currentTool]);
-
-  const handleToolChange = (tool) => {
-    setCurrentTool(tool);
-  };
-
-  const handleClear = () => {
-    if (editor && window.confirm('모든 그림을 지우시겠습니까?')) {
-      editor.clearCanvas();
+      setWalls(detectedWalls);
+    } catch (error) {
+      console.error('Wall detection failed:', error);
+      alert('벽 검출에 실패했습니다.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleSave = () => {
-    if (editor) {
-      const dataURL = editor.exportCleanImage();
-      const link = document.createElement('a');
-      link.download = 'floor_plan_clean.png';
-      link.href = dataURL;
-      link.click();
+  // 전체 벽 지우기 함수
+  const clearAllWalls = () => {
+    if (walls.length === 0) {
+      alert('지울 벽이 없습니다.');
+      return;
+    }
+    
+    if (window.confirm(`모든 벽을 삭제하시겠습니까? (총 ${walls.length}개)`)) {
+      setWalls([]);
+      setSelectedWall(null);
+      alert('모든 벽이 삭제되었습니다.');
     }
   };
 
-  const handleLoadTemplate = () => {
-    if (editor && window.confirm('기본 템플릿을 불러오시겠습니까? (현재 그림은 지워집니다)')) {
-      editor.loadTemplate();
-    }
+  // PNG 다운로드 함수
+  const downloadAsPNG = () => {
+    const canvas = canvasRef.current;
+    const link = document.createElement('a');
+    link.download = `floor-plan-${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
   };
+
+  // 완성 버튼 핸들러
+  const handleComplete = () => {
+    downloadAsPNG();
+    alert(`도면이 완성되어 PNG 파일로 저장되었습니다! 총 ${walls.length}개의 벽이 그려졌습니다.`);
+  };
+
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      height: '100%',
-      fontFamily: 'Arial, sans-serif' 
-    }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#2c3e50',
-        color: 'white',
-        padding: '15px',
-        textAlign: 'center',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-      }}>
-        <h2 style={{ margin: 0 }}>🏠 도면 그리기 - 격자 벽 드래그 에디터</h2>
-      </div>
-      
-      {/* Toolbar */}
-      <div style={{
-        backgroundColor: '#34495e',
-        padding: '10px',
-        display: 'flex',
-        gap: '15px',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-      }}>
-        {/* Tool Buttons */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={() => handleToolChange('wall')}
-            style={{
-              backgroundColor: currentTool === 'wall' ? '#e74c3c' : '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🧱 벽 그리기
-          </button>
-          <button
-            onClick={() => handleToolChange('erase')}
-            style={{
-              backgroundColor: currentTool === 'erase' ? '#e74c3c' : '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🧹 지우기
-          </button>
-          <button
-            onClick={handleClear}
-            style={{
-              backgroundColor: '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            🗑️ 전체 지우기
-          </button>
-        </div>
-        
-        {/* Controls */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <label style={{ color: '#ecf0f1', marginRight: '10px' }}>벽 색상:</label>
-          <input 
-            type="color" 
-            value={wallColor}
-            onChange={(e) => setWallColor(e.target.value)}
-            style={{
-              width: '40px',
-              height: '30px',
-              border: 'none',
-              borderRadius: '3px',
-              cursor: 'pointer'
-            }}
+    <div className="w-full h-screen bg-orange-50 flex flex-col">
+      {/* 툴바 */}
+      <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-orange-800 mr-6">
+            2D 도면 제작기
+          </h1>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTool("wall")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                tool === "wall"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <Square size={18} />벽 그리기
+            </button>
+
+            <button
+              onClick={() => setTool("select")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                tool === "select"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <MousePointer size={18} />
+              선택
+            </button>
+
+            <button
+              onClick={() => setTool("eraser")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                tool === "eraser"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <Eraser size={18} />
+              지우기
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isProcessing}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
+            >
+              <Upload size={18} />
+              {isProcessing ? '처리중...' : '도면 업로드'}
+            </button>
+
+            <button
+              onClick={clearAllWalls}
+              className="flex items-center gap-2 px-4 py-2 bg-red-200 text-red-700 rounded-lg font-medium hover:bg-red-300 transition-colors"
+            >
+              <Trash2 size={18} />
+              전체 지우기
+            </button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
           />
-        </div>
-        
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <label style={{ color: '#ecf0f1' }}>격자 크기:</label>
-          <input 
-            type="range" 
-            min="10" 
-            max="50" 
-            value={gridSize}
-            onChange={(e) => setGridSize(parseInt(e.target.value))}
-            style={{ width: '100px' }}
-          />
-          <span style={{ color: '#ecf0f1', fontSize: '12px' }}>{gridSize}px</span>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <label style={{ color: '#ecf0f1' }}>벽 두께:</label>
-          <input 
-            type="range" 
-            min="2" 
-            max="10" 
-            value={wallWidth}
-            onChange={(e) => setWallWidth(parseInt(e.target.value))}
-            style={{ width: '100px' }}
-          />
-          <span style={{ color: '#ecf0f1', fontSize: '12px' }}>{wallWidth}px</span>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={handleLoadTemplate}
-            style={{
-              backgroundColor: '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            📋 템플릿
-          </button>
-          <button
-            onClick={handleSave}
-            style={{
-              backgroundColor: '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            💾 저장
-          </button>
+
+
+          <div className="ml-auto">
+            <button
+              onClick={handleComplete}
+              className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-md"
+            >
+              <Check size={18} />
+              완성
+            </button>
+          </div>
         </div>
       </div>
-      
-      {/* Canvas Container */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '20px',
-        overflow: 'auto',
-        backgroundColor: '#f0f0f0'
-      }}>
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          style={{
-            border: '2px solid #2c3e50',
-            backgroundColor: 'white',
-            cursor: currentTool === 'wall' ? 'crosshair' : 'pointer',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-          }}
-        />
-      </div>
-      
-      {/* Info Panel */}
-      <div style={{
-        backgroundColor: '#ecf0f1',
-        padding: '10px',
-        borderTop: '1px solid #bdc3c7',
-        fontSize: '12px',
-        color: '#7f8c8d'
-      }}>
-        마우스를 드래그하여 벽을 그릴 수 있습니다. 격자에 맞춰 자동으로 정렬됩니다. | 도구: 벽 그리기/지우기 | 컨트롤: 격자 크기, 벽 색상, 벽 두께 조절 가능
+
+      {/* 메인 작업 영역 */}
+      <div className="flex-1 flex">
+        {/* 캔버스 영역 */}
+        <div className="flex-1 p-6">
+          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
+            <div
+              ref={containerRef}
+              className="w-full h-full"
+              style={{
+                cursor: tool === "wall" ? "crosshair" : "default"
+              }}
+            >
+              <canvas
+                ref={canvasRef}
+                width={600}
+                height={300}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                className="block"
+                style={{
+                  width: "100%",
+                  height: "100%"
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 격자 정보 */}
+          {/* <div className="mt-4 text-sm text-orange-600">
+            <p>격자 크기: 500mm × 500mm</p>
+            <p>
+              총 벽 개수: {walls.length}개
+            </p>
+          </div> */}
+        </div>
+
+        {/* 사이드 패널 */}
+        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto">
+          <h3 className="text-lg font-semibold text-orange-800 mb-4">
+            도구 정보
+          </h3>
+
+          {tool === "wall" && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-700 mb-2">
+                벽 그리기 모드
+              </h4>
+              <p className="text-sm text-orange-600 mb-3">
+                클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로 맞춰집니다.
+              </p>
+              <p className="text-xs text-orange-500">
+                각 벽에 자동으로 길이가 표시됩니다.
+              </p>
+            </div>
+          )}
+
+          {tool === "select" && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-700 mb-2">선택 모드</h4>
+              <p className="text-sm text-orange-600 mb-3">
+                벽을 클릭하여 선택하고 편집할 수 있습니다.
+              </p>
+              {selectedWall && (
+                <div className="bg-green-50 p-3 rounded border border-green-200">
+                  <h5 className="font-medium text-green-700 mb-1">선택된 벽</h5>
+                  <p className="text-sm text-green-600">
+                    길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
+                  </p>
+                  <button
+                    onClick={() => {
+                      setWalls((prev) => prev.filter((wall) => wall.id !== selectedWall.id));
+                      setSelectedWall(null);
+                    }}
+                    className="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tool === "eraser" && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-700 mb-2">지우기 모드</h4>
+              <p className="text-sm text-orange-600">
+                클릭하여 벽을 삭제할 수 있습니다.
+              </p>
+            </div>
+          )}
+
+          {/* 벽 목록 */}
+          {walls.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-medium text-orange-700 mb-3">
+                그려진 벽 목록
+              </h4>
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {walls.map((wall, index) => (
+                  <div
+                    key={wall.id}
+                    className="bg-white p-3 rounded border border-orange-200"
+                  >
+                    <p className="text-sm font-medium text-orange-700">
+                      벽 {index + 1}
+                    </p>
+                    <p className="text-xs text-orange-600">
+                      길이: {calculateDistance(wall.start, wall.end)}mm
+                    </p>
+                    <p className="text-xs text-orange-500">
+                      ({Math.round(wall.start.x / 2.5)},{" "}
+                      {Math.round(wall.start.y / 2.5)}) → (
+                      {Math.round(wall.end.x / 2.5)}, {Math.round(wall.end.y / 2.5)}
+                      )
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
