@@ -14,7 +14,7 @@ export const useStore = create(
     // 벽 검출 상태
     detectedWalls: [],
     wallDetectionParams: {
-      morphType: 0,
+      morphType: 1,      // CLOSE 연산으로 변경 (bedroom에서 격자 필터링에 더 효과적)
       canny1: 50,
       canny2: 150,
       houghTh: 80,
