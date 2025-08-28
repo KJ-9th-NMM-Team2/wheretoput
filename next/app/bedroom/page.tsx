@@ -190,23 +190,7 @@ export default function BedroomPage() {
 
   return (
     <>
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        color: 'white',
-        background: 'rgba(0,0,0,0.7)',
-        padding: '10px',
-        borderRadius: '5px',
-        zIndex: 100,
-        fontSize: '12px'
-      }}>
-        <div>🏠 3D 인테리어 시뮬레이터</div>
-        <div>🖱️ 마우스: 회전/줌 | 우클릭: 이동</div>
-        <div>🎯 모델 클릭: 선택 | Shift+드래그: 크기 조정</div>
-        <div>🐱 고양이 선택 후 WASD: 키보드 이동</div>
-      </div>
-      
+  
       <ControlPanel />
       <InfoPanel />
 
@@ -272,9 +256,6 @@ export default function BedroomPage() {
         <Lamp position={[-4, 0.65, -2]} />
         <Rug position={[1, 0.01, 0]} />
         
-    
-
-
         <Suspense fallback={null}>
           {loadedModels.map(model => (
             <DraggableModel
@@ -311,6 +292,7 @@ export default function BedroomPage() {
           maxDistance={20}
         />
       </Canvas>
+      
     </>
   )
 }

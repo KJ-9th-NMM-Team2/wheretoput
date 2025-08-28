@@ -32,7 +32,7 @@ const SimSideView: React.FC = () => {
         <SideItems collapsed={collapsed} selectedCategory={selectedCategory}/>
       </div>
 
-      <BedroomPage></BedroomPage>
+      {/* <BedroomPage></BedroomPage> */}
     </div>
   );
 };

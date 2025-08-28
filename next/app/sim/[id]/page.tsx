@@ -1,3 +1,4 @@
+'use client'
 // Test용
 import SimSideView from "../../components/sim/SimSideView"
 // import BedroomPage from "../../bedroom/page"
@@ -14,7 +15,7 @@ import SimSideView from "../../components/sim/SimSideView"
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
 
-'use client'
+
 
 import React, { useRef, Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
@@ -27,6 +28,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
+import BedroomPage from "@/app/bedroom/page"
 
 type position = [number, number, number]
 
@@ -72,22 +74,8 @@ export default function SimPage() {
 
   return (
     <>
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        color: 'white',
-        background: 'rgba(0,0,0,0.7)',
-        padding: '10px',
-        borderRadius: '5px',
-        zIndex: 100,
-        fontSize: '12px'
-      }}>
-        <div>🏠 3D 인테리어 시뮬레이터</div>
-        <div>🖱️ 마우스: 회전/줌 | 우클릭: 이동</div>
-        <div>🎯 모델 클릭: 선택 | Shift+드래그: 크기 조정</div>
-      </div>
-
+    <SimSideView></SimSideView>
+      
       <ControlPanel />
       <InfoPanel />
       <LightControlPanel />
@@ -161,6 +149,7 @@ export default function SimPage() {
           maxDistance={20}
         />
       </Canvas>
+      
     </>
   )
 }
