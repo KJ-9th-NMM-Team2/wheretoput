@@ -8,7 +8,8 @@ export async function GET(request: Request) {
         
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '5');
-        const category = parseInt(searchParams.get('category') || '1'); // 문자열로 받아서 나중에 변환
+        const categoryParam = searchParams.get('category');
+        const category = categoryParam ? parseInt(categoryParam) : null;
         const skip = (page - 1) * limit;
         
         console.log(`Fetching page ${page}, limit ${limit}, category: ${category}`);
@@ -18,42 +19,42 @@ export async function GET(request: Request) {
         let totalCount: number = 0;
 
         try {
-            // 카테고리가 지정된 경우
-            console.log("카테고리 필터링:", category);
-            
-            [furnitures, totalCount] = await Promise.all([
-                prisma.furnitures.findMany({
-                    where: {
-                        category_id: category
-                    },
-                    take: limit,
-                    skip: skip,
-                    orderBy: {
-                        furniture_id: 'asc'
-                    }
-                }),
-                prisma.furnitures.count({
-                    where: {
-                        category_id: category
-                    }
-                })
-            ]);
+            if (category && !isNaN(category)) {
+                // 카테고리가 지정된 경우
+                console.log("카테고리 필터링:", category);
                 
-            // } else {
-            //     // 카테고리 지정 안된 경우 - 전체 가구
-            //     console.log("전체 가구 조회");
+                [furnitures, totalCount] = await Promise.all([
+                    prisma.furnitures.findMany({
+                        where: {
+                            category_id: category
+                        },
+                        take: limit,
+                        skip: skip,
+                        orderBy: {
+                            furniture_id: 'asc'
+                        }
+                    }),
+                    prisma.furnitures.count({
+                        where: {
+                            category_id: category
+                        }
+                    })
+                ]);
+            } else {
+                // 카테고리 지정 안된 경우 - 전체 가구
+                console.log("전체 가구 조회");
                 
-            //     [furnitures, totalCount] = await Promise.all([
-            //         prisma.furnitures.findMany({
-            //             take: limit,
-            //             skip: skip,
-            //             orderBy: {
-            //                 furniture_id: 'asc'
-            //             }
-            //         }),
-            //         prisma.furnitures.count()
-            //     ]);
-            // }
+                [furnitures, totalCount] = await Promise.all([
+                    prisma.furnitures.findMany({
+                        take: limit,
+                        skip: skip,
+                        orderBy: {
+                            furniture_id: 'asc'
+                        }
+                    }),
+                    prisma.furnitures.count()
+                ]);
+            }
             
             console.log(`조회 성공: ${furnitures.length}개 조회, 전체 ${totalCount}개`);
             
