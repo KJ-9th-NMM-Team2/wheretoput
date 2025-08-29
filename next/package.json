@@ -8,11 +8,16 @@
     "start": "next start"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@prisma/client": "^6.15.0",
+    "@react-three/drei": "^10.7.4",
     "@react-three/fiber": "^9.3.0",
     "@types/three": "^0.179.0",
     "chokidar": "^4.0.3",
     "framer-motion": "^12.23.12",
+    "lucide-react": "^0.542.0",
     "next": "15.5.2",
+    "next-auth": "^5.0.0-beta.29",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "sass": "^1.91.0",
@@ -20,8 +25,14 @@
     "three": "^0.179.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@eslint/eslintrc": "^3.3.1",
+    "@types/node": "^20.19.11",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "^15.5.2",
+    "prisma": "^6.15.0",
+    "@tailwindcss/postcss": "^4.1.12",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
