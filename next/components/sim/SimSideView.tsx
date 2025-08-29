@@ -30,7 +30,7 @@ const SimSideView: React.FC = () => {
       <div
         className={`${
           // 접힙: 펼침
-          collapsed ? "w-20px" : "w-300px" 
+          collapsed ? "w-10" : "w-80" 
         } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200`} // border 추가로 구분선
       >
         {/* 고정 영역들 */}
