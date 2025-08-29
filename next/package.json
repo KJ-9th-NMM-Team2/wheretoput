@@ -10,7 +10,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.60.0",
     "@auth/prisma-adapter": "^2.10.0",
-    "@google/model-viewer": "^4.1.0",
     "@prisma/client": "^6.15.0",
     "@react-three/drei": "^10.7.4",
     "@react-three/fiber": "^9.3.0",
