@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import type { Furniture } from '@prisma/client'; // 타입 import 추가
-
+import type { furnitures as Furniture } from '@prisma/client'; // 타입 import 추가
+//import type { Furniture }
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
