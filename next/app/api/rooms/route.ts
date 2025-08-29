@@ -82,7 +82,6 @@ export async function GET(req: NextRequest) {
     const fields = searchParams.get("fields"); // fields 쿼리 파라미터
     const order = searchParams.get("order"); // order 쿼리 파라미터
     const num = searchParams.get("num"); // num 쿼리 파라미터
-    console.log({ fields, order, num });
 
     // users 모델의 display_name을 포함해서 가져오기 위해 include 사용
     const roomsWithUser = await prisma.rooms.findMany({

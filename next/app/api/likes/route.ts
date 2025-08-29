@@ -146,9 +146,11 @@ export async function POST(req: NextRequest) {
  *       500:
  *         description: 서버 오류
  */
-export async function GET({ params }: LikeParams) {
+export async function GET(req: NextRequest) {
   try {
-    const {user_id, room_id} = params;
+    const { searchParams } = new URL(req.url);
+    const room_id = searchParams.get("room_id");
+    const user_id = searchParams.get("user_id");
 
     if (!user_id || !room_id) {
       return Response.json(
