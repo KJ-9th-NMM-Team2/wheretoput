@@ -1,0 +1,72 @@
+```javascript
+function createObjectFromImage(position = [0, 0, 0], scale = 1) {
+    const group = new THREE.Group();
+    
+    // 재질 정의
+    const ceramicMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xf8f8f8,
+        transparent: true,
+        opacity: 0.95
+    });
+    
+    // 메인 변기 몸체 (하부)
+    const bodyGeometry = new THREE.CylinderGeometry(0.25, 0.35, 0.6, 32);
+    const body = new THREE.Mesh(bodyGeometry, ceramicMaterial);
+    body.position.set(0, 0.3, 0);
+    group.add(body);
+    
+    // 변기 상단부 (물탱크 일체형)
+    const topGeometry = new THREE.CylinderGeometry(0.3, 0.25, 0.4, 32);
+    const top = new THREE.Mesh(topGeometry, ceramicMaterial);
+    top.position.set(0, 0.8, 0);
+    group.add(top);
+    
+    // 변기 시트 베이스
+    const seatBaseGeometry = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 32);
+    const seatBase = new THREE.Mesh(seatBaseGeometry, ceramicMaterial);
+    seatBase.position.set(0, 1.04, 0);
+    group.add(seatBase);
+    
+    // 변기 뚜껑
+    const lidShape = new THREE.Shape();
+    lidShape.absarc(0, 0, 0.3, 0, Math.PI * 2, false);
+    const lidHole = new THREE.Path();
+    lidHole.absarc(0, 0, 0.18, 0, Math.PI * 2, true);
+    lidShape.holes.push(lidHole);
+    
+    const lidGeometry = new THREE.ExtrudeGeometry(lidShape, {
+        depth: 0.03,
+        bevelEnabled: true,
+        bevelThickness: 0.01,
+        bevelSize: 0.01,
+        bevelSegments: 8
+    });
+    const lid = new THREE.Mesh(lidGeometry, ceramicMaterial);
+    lid.position.set(0, 1.08, 0);
+    lid.rotation.x = Math.PI;
+    group.add(lid);
+    
+    // 조작 버튼/플레이트 (상단)
+    const buttonGeometry = new THREE.BoxGeometry(0.15, 0.02, 0.08);
+    const buttonMaterial = new THREE.MeshLambertMaterial({ color: 0xe0e0e0 });
+    const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
+    button.position.set(0, 1.02, -0.25);
+    group.add(button);
+    
+    // 베이스 연결부
+    const baseGeometry = new THREE.CylinderGeometry(0.35, 0.4, 0.1, 32);
+    const base = new THREE.Mesh(baseGeometry, ceramicMaterial);
+    base.position.set(0, 0.05, 0);
+    group.add(base);
+    
+    // 전체적인 둥근 처리를 위한 추가 세부사항
+    const backSupportGeometry = new THREE.BoxGeometry(0.5, 0.7, 0.15);
+    const backSupport = new THREE.Mesh(backSupportGeometry, ceramicMaterial);
+    backSupport.position.set(0, 0.65, -0.25);
+    group.add(backSupport);
+    
+    group.position.set(...position);
+    group.scale.setScalar(scale);
+    return group;
+}
+```

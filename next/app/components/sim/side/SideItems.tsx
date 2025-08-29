@@ -93,9 +93,67 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory }) =>
     }, [currentPage, totalPages]);
 
     // 아이템 클릭 핸들러
-    const handleItemClick = useCallback((item: Furniture) => {
+    const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
-        // 여기에 아이템 선택 시 처리 로직 추가
+        
+        try {
+            setLoading(true);
+            
+            // model_url이 있는지 확인
+            if (item.model_url) {
+                console.log('기존 3D 모델 로드 시도:', item.model_url);
+                
+                // 파일 존재 확인
+                const fileCheckResponse = await fetch(item.model_url, { method: 'HEAD' });
+                if (fileCheckResponse.ok) {
+                    // 기존 모델 파일이 있으면 바로 사용
+                    console.log('기존 3D 모델 파일 사용:', item.model_url);
+                    alert(`${item.name}의 기존 3D 모델을 로드했습니다!`);
+                    return;
+                } else {
+                    console.log('기존 파일 없음. 다른 확장자 확인 중...');
+                    // GLB/GLTF 다른 확장자로도 확인
+                    const altExtension = item.model_url.endsWith('.glb') ? '.gltf' : '.glb';
+                    const altModelUrl = item.model_url.replace(/\.(glb|gltf)$/, altExtension);
+                    
+                    const altFileCheckResponse = await fetch(altModelUrl, { method: 'HEAD' });
+                    if (altFileCheckResponse.ok) {
+                        console.log('대체 확장자 파일 발견:', altModelUrl);
+                        alert(`${item.name}의 기존 3D 모델을 로드했습니다! (${altExtension})`);
+                        return;
+                    }
+                }
+            }
+            
+            console.log('3D 모델 생성 중...', item.furniture_id);
+            
+            // 3D 모델 생성 API 호출 (model_url이 없거나 파일이 없는 경우)
+            const response = await fetch('/api/model-upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    furniture_id: item.furniture_id
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('3D 모델 생성 성공:', result);
+            
+            // 성공 메시지 표시 (선택사항)
+            alert(`${item.name}의 3D 모델이 생성되었습니다!`);
+            
+        } catch (error) {
+            console.error('3D 모델 처리 실패:', error);
+            alert('3D 모델 처리에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     // 이미지 에러 핸들러
