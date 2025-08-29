@@ -1,11 +1,41 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-// import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  // adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
   providers: [Google],
+  callbacks: {
+    async session({ session, user }) {
+      const appUser = await prisma.users.findUnique({
+        where: { auth_user_id: user.id },
+        select: { user_id: true },
+      });
+
+      return {
+        ...session,
+        user_id: appUser?.user_id,
+      };
+    },
+    async signIn({ user }) {
+      // 존재하지 않는 user, account인 경우에만 users db에 추가한다.
+      if (user.email) {
+        await prisma.users.upsert({
+          where: { auth_user_id: user.id },
+          update: {},
+          create: {
+            auth_user_id: user.id,
+            email: user.email,
+            username: user.email?.split("@")[0],
+            display_name: user.email?.split("@")[0],
+          },
+        });
+      }
+
+      return true;
+    },
+  },
 });
 
 // import type { AuthOptions } from "next-auth";

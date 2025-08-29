@@ -1,40 +1,48 @@
-// 방 상세 정보 페이지 - 상록
+import LikeButton from "@/components/rooms/LikeButton";
+import { fetchRoomById } from "@/lib/api/rooms";
+import { fetchLike } from "@/lib/api/likes";
+import Link from "next/link";
+import { auth } from "@/lib/auth";
+
 export default async function RoomPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await auth();
   const { id } = await params; // /pages/[id]에 해당하는 id 값
+
+  const room: any = await fetchRoomById(id); // id에 해당하는 집 데이터 가져오기
+
+  // 좋아요를 눌렀는지 확인
+  const liked = session?.user?.id
+    ? (await fetchLike(id, session.user.id))?.liked ?? false
+    : false;
+
   return (
     <>
       <div className="layout-container flex h-full grow flex-col">
         <div className="px-40 flex flex-1 justify-center py-5">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap gap-2 p-4">
-              <a
-                className="text-[#8a7260] dark:text-orange-300 text-base font-medium leading-normal"
-                href="#"
-              >
-                페이지 ID - {id}
-              </a>
-              <span className="text-[#8a7260] dark:text-orange-300 text-base font-medium leading-normal">
-                /
-              </span>
-              <span className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal">
-                Living Room
-              </span>
+              <span className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal"></span>
             </div>
             <div className="@container">
               <div className="@[480px]:px-4 @[480px]:py-3">
                 <div
                   className="bg-cover bg-center flex flex-col justify-end overflow-hidden bg-white dark:bg-gray-800 @[480px]:rounded-xl min-h-80"
                   style={{
-                    backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqgDEg0oHeSFvy3FXVrwPhwix5PEGkDW2OwNfA82YNZhVg8wub5YvgHCxgejnDt-xxpyNRCy9uEVrXDWjUkSHjIa2PaZxtUohhrK51AUQcAm1kjotyFikvQMmc2Z17JzQ9QWIiM2Gr_1k4A9yCKizT4pICeilhQcPdisNb72NR5UNXyZpSWD1Kj3saGmQTF_qcl1nl5ruQ8bvOR6QJHrt0Q9zQqvd9RziXCJXTgnXjaFPiAvbUL-r7D0dsAQlCRfreoTgahohB4RiR")`,
+                    backgroundImage: room?.thumbnail_url
+                      ? `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
+       url("${room.thumbnail_url}"), 
+       url("/placeholder.png")`
+                      : `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
+       url("/placeholder.png")`,
                   }}
                 >
                   <div className="flex p-4">
                     <p className="text-white tracking-light text-[28px] font-bold leading-tight">
-                      Modern Living Room
+                      {room?.title}
                     </p>
                   </div>
                 </div>
@@ -42,25 +50,21 @@ export default async function RoomPage({
             </div>
             <div className="flex justify-stretch">
               <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
-                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
-                  <span className="truncate">View in 3D</span>
-                </button>
-                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
-                  <span className="truncate">Add to favorite</span>
-                </button>
+                <Link href={`/sim/${room.room_id}`}>
+                  <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
+                    <span className="truncate">3D로 보기</span>
+                  </button>
+                </Link>
               </div>
             </div>
             <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Created by Olivia Carter on January 15, 2024
+              {room.users.display_name} on {room.updated_at.slice(0, 10)}
             </p>
             <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              A modern living room design featuring a neutral color palette with
-              pops of blue and green. The room includes a large sectional sofa,
-              a coffee table, and a media console. The walls are adorned with
-              abstract art, and the space is filled with natural light.
+              {room.description}
             </p>
             <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-              Furniture Preview
+              가구 프리뷰
             </h2>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4">
               <div className="flex flex-col gap-3 pb-3">
@@ -109,27 +113,7 @@ export default async function RoomPage({
               </div>
             </div>
             <div className="flex flex-wrap gap-4 px-4 py-2">
-              <div className="flex items-center justify-center gap-2 px-3 py-2">
-                <div
-                  className="text-[#8a7260] dark:text-orange-300"
-                  data-icon="Heart"
-                  data-size="24px"
-                  data-weight="regular"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24px"
-                    height="24px"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                  >
-                    <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
-                  </svg>
-                </div>
-                <p className="text-[#8a7260] dark:text-orange-300 text-[13px] font-bold leading-normal tracking-[0.015em]">
-                  123
-                </p>
-              </div>
+              <LikeButton room={room} liked={liked} />
               <div className="flex items-center justify-center gap-2 px-3 py-2">
                 <div
                   className="text-[#8a7260] dark:text-orange-300"
@@ -148,12 +132,12 @@ export default async function RoomPage({
                   </svg>
                 </div>
                 <p className="text-[#8a7260] dark:text-orange-300 text-[13px] font-bold leading-normal tracking-[0.015em]">
-                  45
+                  {room.num_comments}
                 </p>
               </div>
             </div>
             <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-              Comments
+              댓글
             </h2>
             <div className="flex w-full flex-row items-start justify-start gap-3 p-4">
               <div
