@@ -8,7 +8,7 @@ const path = require("path");
 
 // Anthropic API 키 설정
 const anthropic = new Anthropic({
-  apiKey: "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",
+  apiKey: "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",
 });
 
 /**
@@ -148,12 +148,13 @@ function exportGLB(object3d, filename = "output.glb") {
           if (result instanceof ArrayBuffer) {
             writeFileSync(filename, Buffer.from(result));
             console.log(`✅ GLB 파일 생성 완료: ${filename}`);
+            resolve(filename);
           } else {
             const gltfFilename = filename.replace(".glb", ".gltf");
             writeFileSync(gltfFilename, JSON.stringify(result, null, 2));
             console.log(`✅ GLTF 파일 생성 완료: ${gltfFilename}`);
+            resolve(gltfFilename);
           }
-          resolve(filename);
         } catch (error) {
           reject(error);
         }
@@ -177,6 +178,8 @@ async function convertImageToThreeJS(imagePath, outputPath = null) {
     console.log("이미지 파일을 읽는 중...");
     const { base64Data, mimeType } = imageToBase64(imagePath);
 
+    console.log("환경 변수 API 키:", process.env.ANTHROPIC_API_KEY);
+   
     console.log("Anthropic API 요청 중...");
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -338,8 +341,8 @@ function createFallbackObject(position = [0, 0, 0], scale = 1) {
 async function main() {
   try {
     // 이미지 파일 경로와 출력할 GLTF 파일명 지정
-    const imagePath = "./냉장고장.webp"; // 변환할 이미지 파일
-    const glbFilename = "./냉장고장.gltf"; // 생성할 GLTF 파일명
+    const imagePath = "./public/asset/chiar.jpg"; // 변환할 이미지 파일
+    const glbFilename = "./public/asset/chair.gltf"; // 생성할 GLTF 파일명
 
     // 이미지를 GLB로 변환
     const result = await convertImageToGLB(

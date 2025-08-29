@@ -8,11 +8,15 @@
     "start": "next start"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.60.0",
     "@auth/prisma-adapter": "^2.10.0",
+    "@google/model-viewer": "^4.1.0",
     "@prisma/client": "^6.15.0",
     "@react-three/drei": "^10.7.4",
     "@react-three/fiber": "^9.3.0",
     "@types/three": "^0.179.0",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
     "chokidar": "^4.0.3",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.542.0",
@@ -42,6 +46,6 @@
     "postcss": "^8.5.6",
     "prisma": "^6.15.0",
     "tailwindcss": "^4.1.12",
-    "typescript": "^5"
+    "typescript": "5.9.2"
   }
 }
