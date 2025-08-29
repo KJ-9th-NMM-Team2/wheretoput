@@ -38,22 +38,6 @@ export async function GET(request: Request) {
                     }
                 })
             ]);
-                
-            // } else {
-            //     // 카테고리 지정 안된 경우 - 전체 가구
-            //     console.log("전체 가구 조회");
-                
-            //     [furnitures, totalCount] = await Promise.all([
-            //         prisma.furnitures.findMany({
-            //             take: limit,
-            //             skip: skip,
-            //             orderBy: {
-            //                 furniture_id: 'asc'
-            //             }
-            //         }),
-            //         prisma.furnitures.count()
-            //     ]);
-            // }
             
             console.log(`조회 성공: ${furnitures.length}개 조회, 전체 ${totalCount}개`);
             

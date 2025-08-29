@@ -23,13 +23,13 @@ export const useStore = create(
       loadedModels: [...state.loadedModels, {
         ...model,
         id: Date.now() + Math.random(),
-        position: [
+        position: model.position || [
           (Math.random() - 0.5) * 15,
           0,
           (Math.random() - 0.5) * 15
         ],
-        rotation: [0, 0, 0],
-        scale: state.scaleValue
+        rotation: model.rotation || [0, 0, 0],
+        scale: model.scale || state.scaleValue
       }]
     })),
 

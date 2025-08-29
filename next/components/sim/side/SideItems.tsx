@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { Furniture } from '@prisma/client';
 import ItemPaging from './item/ItemPaging';
 import ItemScroll from './item/ItemScroll';
+import { useStore } from '@/app/sim/store/useStore';
 
 interface SideItemsProps {
     collapsed: boolean;
@@ -17,7 +18,8 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const itemsPerPage = 8;
+    const itemsPerPage = 5;
+    const { addModel } = useStore();
 
     // API에서 데이터 가져오기 함수
     const fetchItems = useCallback(async (page: number, category: string | null) => {
@@ -101,8 +103,22 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     // 아이템 클릭 핸들러
     const handleItemClick = useCallback((item: Furniture) => {
         console.log('Selected item:', item);
-        // 여기에 아이템 선택 시 처리 로직 추가
-    }, []);
+        
+        // 화면 중앙에 아이템 추가
+        const newModel = {
+            url: '/legacy_mesh (1).glb',
+            name: item.name,
+            length_x: item.length_x,
+            length_y: item.length_y,
+            length_z: item.length_z,
+            price: item.price,
+            brand: item.brand,
+            isCityKit: false,
+            texturePath: null,
+            position: [0, 0, 0] // 화면 중앙
+        };
+        addModel(newModel);
+    }, [addModel]);
 
     // 이미지 에러 핸들러
     const handleImageError = useCallback((furnitureId: string) => {

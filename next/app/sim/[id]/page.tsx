@@ -9,9 +9,6 @@
 //   const { id } = await params;  // /pages/[id]에 해당하는 id 값
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
-
-
-import SimSideView from "@/components/sim/SimSideView"
 import React, { useRef, Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
@@ -23,7 +20,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
-import BedroomPage from "@/app/bedroom/page"
+import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
 

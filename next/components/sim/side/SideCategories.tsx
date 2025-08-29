@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface SideCategoriesProps {
   collapsed: boolean;
   onCategorySelect: (category: string) => void;
+  setSearchQuery: (query: string) => void;
 }
 
 interface Category {
@@ -10,7 +11,7 @@ interface Category {
   name: string;
 }
 
-const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect }) => {
+const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery }) => {
   // 카테고리 매핑 (DB의 category_id와 매칭)
   // 실제 DB의 categories 테이블과 일치하도록 수정 필요
   const categories: Category[] = [
@@ -31,6 +32,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
   const handleCategoryClick = (category: Category) => {
     setSelectedCategory(category.id);
     onCategorySelect(category.id.toString());
+    setSearchQuery("");
   };
 
   if (collapsed) {

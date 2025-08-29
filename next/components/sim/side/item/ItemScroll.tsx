@@ -1,18 +1,15 @@
-// import type { Furniture } from '@prisma/client';
-import { ImageOff, Loader2 } from 'lucide-react';
-import type { ItemScrollProps } from '../types';
+import { Loader2 } from 'lucide-react';
+import type { ItemScrollProps } from '@/lib/types';
 
 const ItemScroll: React.FC<ItemScrollProps> = ({
     loading,
     error,
     filteredItems,
-    imageErrors,
+    // imageErrors,
     selectedCategory,
     handleItemClick,
-    handleImageError,
+    // handleImageError,
 }) => {
-
-    // console.log("currentItems: ",filteredItems);
 
     return <>
         {/* 아이템 목록 - 스크롤 영역 */}
@@ -36,9 +33,23 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                             onClick={() => handleItemClick(item)}
                             className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
                         >
+                            
+                            {/* // ItemScroll 이미지 영역 */}
+                            <li
+                                key={item.furniture_id}
+                                // draggable
+                                // onDragStart={(e) => {
+                                //     // DataTransfer에 JSON 데이터 저장
+                                //     e.dataTransfer.setData("application/json", JSON.stringify(item));
+                                // }}
+                                className="list-none cursor-grab active:cursor-grabbing"
+                            >
+                                <img src={item.image_url ?? ""} alt={item.name}/>
+                                {/* <span>{item.name}</span> */}
+                            </li>
                             <div className="flex">
                                 {/* 이미지 영역 */}
-                                <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                                {/* <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
                                     {item.image_url && !imageErrors.has(item.id) ? (
                                         <img
                                             src={item.image_url}
@@ -51,7 +62,7 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                                             <ImageOff className="w-8 h-8 text-gray-400" />
                                         </div>
                                     )}
-                                </div>
+                                </div> */}
 
                                 {/* 정보 영역 */}
                                 <div className="flex-1 p-3">

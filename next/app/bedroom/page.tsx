@@ -1,14 +1,13 @@
 'use client'
 
-import React, { useRef, Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
-
-import { useStore } from '../store/useStore.js'
-import { ControlPanel } from '../components/ControlPanel.jsx'
-import { InfoPanel } from '../components/InfoPanel.jsx'
-import { DraggableModel } from '../components/DraggableModel.jsx'
+import React, { useRef, Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
+import { useStore } from '../store/useStore.js';
+import { ControlPanel } from '../components/ControlPanel.jsx';
+import { InfoPanel } from '../components/InfoPanel.jsx';
+import { DraggableModel } from '../components/DraggableModel.jsx';
 
 
 function Floor() {
@@ -190,7 +189,7 @@ export default function BedroomPage() {
 
   return (
     <>
-  
+      
       <ControlPanel />
       <InfoPanel />
 
