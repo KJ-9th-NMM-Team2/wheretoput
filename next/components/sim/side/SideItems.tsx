@@ -101,7 +101,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     }, [currentPage, totalPages]);
 
     // 아이템 클릭 핸들러
-    const handleItemClick = useCallback((item: Furniture) => {
+    const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
         
         // 화면 중앙에 아이템 추가

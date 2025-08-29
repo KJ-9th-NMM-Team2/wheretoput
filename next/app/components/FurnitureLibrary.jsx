@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore.js'
 
 export function FurnitureLibrary() {
   const furnitureImportRef = useRef()
+  const modelUploadRef = useRef()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { addModel } = useStore()
 
@@ -35,6 +36,49 @@ export function FurnitureLibrary() {
       texturePath: null
     }
     addModel(newModel)
+  }
+
+  // 3D 모델 파일 직접 업로드 처리
+  const handleModelUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    const fileName = file.name.toLowerCase()
+    if (!fileName.endsWith('.glb') && !fileName.endsWith('.gltf')) {
+      alert('GLB 또는 GLTF 파일을 선택해주세요.')
+      return
+    }
+
+    try {
+      // 파일을 public/asset에 저장
+      const formData = new FormData()
+      formData.append('model', file)
+      
+      const response = await fetch('/api/model-upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        const newModel = {
+          url: result.modelPath,
+          name: `업로드된 모델 (${result.filename})`,
+          isCityKit: false,
+          texturePath: null
+        }
+        addModel(newModel)
+        alert('✅ 3D 모델 업로드가 완료되었습니다!')
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      console.error('모델 업로드 오류:', error)
+      alert('❌ 모델 업로드에 실패했습니다:\n' + error.message)
+    } finally {
+      event.target.value = ''
+    }
   }
 
   // 가구 이미지 임포트 처리
@@ -178,7 +222,8 @@ export function FurnitureLibrary() {
                 fontSize: '14px',
                 fontWeight: 'bold',
                 transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
+                marginBottom: '10px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.transform = 'translateY(-1px)'
@@ -194,11 +239,49 @@ export function FurnitureLibrary() {
                 이미지 → 3D 모델
               </div>
             </button>
+            
+            <button
+              onClick={() => modelUploadRef.current?.click()}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'linear-gradient(45deg, #2196F3, #1976D2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 2px 8px rgba(33, 150, 243, 0.3)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-1px)'
+                e.target.style.boxShadow = '0 4px 12px rgba(33, 150, 243, 0.4)'
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)'
+                e.target.style.boxShadow = '0 2px 8px rgba(33, 150, 243, 0.3)'
+              }}
+            >
+              📦 3D 모델 업로드
+              <div style={{ fontSize: '11px', opacity: '0.9', marginTop: '2px' }}>
+                GLB/GLTF 파일
+              </div>
+            </button>
+            
             <input
               ref={furnitureImportRef}
               type="file"
               accept="image/*"
               onChange={handleFurnitureImport}
+              style={{ display: 'none' }}
+            />
+            <input
+              ref={modelUploadRef}
+              type="file"
+              accept=".glb,.gltf"
+              onChange={handleModelUpload}
               style={{ display: 'none' }}
             />
           </div>

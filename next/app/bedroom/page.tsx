@@ -9,7 +9,7 @@ import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { FurnitureLibrary } from '../components/FurnitureLibrary.jsx'
-import { FurnitureEditor } from '../components/FurnitureEditor.tsx'
+import { FurnitureEditor } from '../components/FurnitureEditor'
 import { RightSidebar } from '../components/RightSidebar.jsx'
 
 function Floor() {
