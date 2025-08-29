@@ -2,17 +2,23 @@
 import Link from "next/link";
 import { useState } from "react";
 import SignInButton from "@/components/login/SignInButton";
-import SignOutButton from "@/components/login/SignOutButton";
+import UserBubble from "@/components/login/UserBubble";
 import { useSession } from "next-auth/react";
-import { auth } from "@/lib/auth";
 
 // 로그인되어 있으면 로그아웃, 로그아웃되어 있으면 로그인 버튼
 export function SignInCheck() {
-  const { data: session} = useSession();
-
+  const { data: session, status } = useSession();
+  if (status === "loading") return <div className="w-10 h-10"></div>;
   if (!session?.user) return <SignInButton />;
-  console.log(session.user);
-  return <SignOutButton />;
+  if (session?.user?.name && session?.user?.id && session?.user?.image) {
+    return (
+      <UserBubble
+        name={session.user.name}
+        user_id={session.user.id}
+        image={session.user.image}
+      />
+    );
+  } else return <div className="w-10 h-10"></div>;
 }
 
 export default function Header() {
@@ -47,19 +53,9 @@ export default function Header() {
           >
             집 만들기
           </Link>
+
           <Link
-            href="/follows"
-            className="
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
-              text-gray-700 hover:text-amber-800 hover:bg-amber-50
-              dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700
-            "
-          >
-            이웃집 들리기
-          </Link>
-          <Link
-            href="/community"
+            href="/search"
             className="
               text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95
@@ -114,19 +110,6 @@ export default function Header() {
         </div>
       </div>
       <SignInCheck />
-
-      {/* <div
-        onClick={() => signIn("google")}
-        className="
-            bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
-            transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
-            ring-amber-200 hover:ring-amber-300
-            dark:ring-gray-600 dark:hover:ring-amber-400
-          "
-        style={{
-          backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuDB_fayd9UBn_M9ukHwpMjnE5Nf6lmNdsA6dryhy2fHrvdtIqk4h1Z-6dDHmKitRTplwMkUzLSI_cLqBwJZjd_dAfiw3Ui98575Y5Paw1PPiVds5WHoUkJMUSKYHAhL5Sk0HUxa9SPVxjp02uZC5IMOZP57cV63yLihWFFHJ_zKZkG263LrvVBEwflolUbuTraAyFZBvEpxOzfPy7P45CLYx84icTrQceH547VrUeOsMKV8ZqWf2S3iWeJZ2HfX84VO-WW78Wtp_0w')`,
-        }}
-      ></div> */}
     </header>
   );
 }
