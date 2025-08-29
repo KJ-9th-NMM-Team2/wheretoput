@@ -1,7 +1,48 @@
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 
-// GET /api/rooms/[id] (특정 집 데이터 가져오기)
+/**
+ * @swagger
+ * /api/rooms/{id}:
+ *   get:
+ *     tags:
+ *       - rooms
+ *     summary: 특정 방 정보 조회
+ *     description: 특정 방의 상세 정보를 조회합니다 (사용자, 가구, 댓글 포함)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 방 ID
+ *     responses:
+ *       200:
+ *         description: 방 정보 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 room_id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 thumbnail_url:
+ *                   type: string
+ *                 view_count:
+ *                   type: integer
+ *                 _count:
+ *                   type: object
+ *                 user:
+ *                   type: object
+ *                 room_objects:
+ *                   type: array
+ *                 room_comments:
+ *                   type: array
+ *       500:
+ *         description: 서버 오류
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }

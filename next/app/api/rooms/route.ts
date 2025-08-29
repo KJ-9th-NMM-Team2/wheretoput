@@ -38,7 +38,44 @@ function getSelectOrder(
   else return { view_count: Prisma.SortOrder.desc };
 }
 
-// GET /api/rooms (DB의 집 데이터 가져오기)
+/**
+ * @swagger
+ * /api/rooms:
+ *   get:
+ *     tags:
+ *       - rooms
+ *     summary: Get rooms
+ *     description: Retrieve a list of public rooms with optional filtering
+ *     parameters:
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *           enum: [all]
+ *         description: Select specific fields
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [view, new, like]
+ *         description: Order by criteria
+ *       - in: query
+ *         name: num
+ *         schema:
+ *           type: integer
+ *         description: Limit number of results
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Internal Server Error
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

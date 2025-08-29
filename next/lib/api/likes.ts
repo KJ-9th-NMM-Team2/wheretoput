@@ -8,18 +8,18 @@ type LikeResult = {
   error?: string;
 };
 
-// POST /api/rooms/[id]/likes (좋아요 달기/취소)
+// POST /api/likes (좋아요 달기/취소)
 export async function fetchPostLike(
   room_id: string,
   user_id: string
 ): Promise<LikeResult> {
   try {
-    const response = await fetch(`${BASE_URL}/api/rooms/${room_id}/likes`, {
+    const response = await fetch(`${BASE_URL}/api/likes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ user_id }),
+      body: JSON.stringify({ room_id, user_id }),
       cache: "no-store",
     });
 
@@ -38,14 +38,14 @@ export async function fetchPostLike(
   }
 }
 
-// GET /api/rooms/[id]/likes (좋아요 여부 확인하기)
+// GET /api/likes (좋아요 여부 확인하기)
 export async function fetchLike(
   room_id: string,
-  userId: string
+  user_id: string
 ): Promise<{ liked: boolean }> {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/rooms/${room_id}/likes?userId=${userId}`,
+      `${BASE_URL}/api/likes?room_id=${room_id}?user_id=${user_id}`,
       { cache: "no-store" }
     );
 

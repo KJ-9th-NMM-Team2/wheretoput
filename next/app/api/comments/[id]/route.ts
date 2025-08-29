@@ -1,4 +1,38 @@
-// PUT api/comments/[id] (특정 코멘트 수정)
+/**
+ * @swagger
+ * /api/comments/{id}:
+ *   put:
+ *     tags:
+ *       - comments
+ *     summary: 댓글 수정
+ *     description: 특정 댓글의 내용을 수정합니다
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 댓글 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - content
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: 수정할 댓글 내용
+ *     responses:
+ *       200:
+ *         description: 댓글 수정 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 
@@ -33,7 +67,27 @@ export async function PUT(
   }
 }
 
-// DELETE api/comments/[id] (특정 코멘트 삭제)
+/**
+ * @swagger
+ * /api/comments/{id}:
+ *   delete:
+ *     tags:
+ *       - comments
+ *     summary: 댓글 삭제
+ *     description: 특정 댓글을 삭제합니다
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 댓글 ID
+ *     responses:
+ *       201:
+ *         description: 댓글 삭제 성공
+ *       500:
+ *         description: 서버 오류
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }

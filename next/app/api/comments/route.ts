@@ -1,4 +1,39 @@
-// POST /api/comments (코멘트 작성)
+/**
+ * @swagger
+ * /api/comments:
+ *   post:
+ *     tags:
+ *       - comments
+ *     summary: 댓글 작성
+ *     description: 특정 방에 댓글을 작성합니다
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - room_id
+ *               - user_id
+ *               - content
+ *             properties:
+ *               room_id:
+ *                 type: string
+ *                 description: 방 ID
+ *               user_id:
+ *                 type: string
+ *                 description: 사용자 ID
+ *               content:
+ *                 type: string
+ *                 description: 댓글 내용
+ *     responses:
+ *       201:
+ *         description: 댓글 작성 성공
+ *       400:
+ *         description: 잘못된 요청
+ *       500:
+ *         description: 서버 오류
+ */
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 
