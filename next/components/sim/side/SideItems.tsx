@@ -15,7 +15,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
     const itemsPerPage = 5;
@@ -23,6 +23,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
 
     // API에서 데이터 가져오기 함수
     const fetchItems = useCallback(async (page: number, category: string | null) => {
+        if (loading) return; // 이미 호출 중이면 리턴
         try {
             setLoading(true);
             setError(null);
@@ -59,7 +60,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
                 setTotalItems(data.pagination.totalItems);
                 setTotalPages(data.pagination.totalPages);
             }
-            // console.log(`Page ${page}`);
+            console.log(`data check : ${data}`);
 
         } catch (err) {
             console.error('Failed to fetch items:', err);
@@ -104,6 +105,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
         
+
         // 3D 모델 생성 API 호출
         try {
             const response = await fetch('/api/model-upload', {
@@ -151,6 +153,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             addModel(newModel);
             console.log('fallback 모델 사용');
         }
+
     }, [addModel]);
 
     // 이미지 에러 핸들러
