@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.60.0",
     "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.15.0",
     "@react-three/drei": "^10.7.4",

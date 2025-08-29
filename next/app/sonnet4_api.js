@@ -1,7 +1,3 @@
-
-
-require('dotenv').config();
-
 const { GLTFExporter } = require("three-stdlib");
 const { writeFileSync } = require("fs");
 const THREE = require("three");
@@ -9,110 +5,14 @@ const THREE = require("three");
 const Anthropic = require("@anthropic-ai/sdk");
 const fs = require("fs");
 const path = require("path");
-const { Pool } = require("pg");
-const axios = require("axios");
-
-// PostgreSQL 연결 설정
-// Host : 아마존 RDS
-const pool = new Pool({
-  user: process.env.DB_USER || 'wheretoput_admin',
-  host: process.env.DB_HOST || 'wheretoput-db.chwouasus83g.ap-northeast-2.rds.amazonaws.com',
-  database: process.env.DB_NAME || 'wheretoput_db',
-  password: process.env.DB_PASSWORD || 'trustyourdata',
-  port: process.env.DB_PORT || 5432,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
 
 // Anthropic API 키 설정
-console.log("환경변수 ANTHROPIC_API_KEY:", process.env.ANTHROPIC_API_KEY ? "존재함" : "없음");
-console.log("API 키 전체 길이:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : "undefined");
-console.log("사용할 API 키:", (process.env.ANTHROPIC_API_KEY || "fallback key").substring(0, 20) + "...");
-console.log("API 키가 sk-ant로 시작하는가:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.startsWith('sk-ant') : false);
-
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: "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",
 });
 
 /**
- * PostgreSQL DB에서 image_url 가져오기
- * furniture 스키마 ->furnitures 테이블 -> furniture_id 가져옴
- */
-async function getImageUrlFromDB(furnitureId) {
-  try {
-    const client = await pool.connect();
-    
-    // 스키마 경로 설정
-    await client.query('SET search_path TO furniture, public');
-    
-    const query = 'SELECT image_url, name FROM furnitures WHERE furniture_id = $1';
-    const result = await client.query(query, [furnitureId]);
-    client.release();
-    
-    if (result.rows.length === 0) {
-      throw new Error(`가구 ID ${furnitureId}를 찾을 수 없습니다.`);
-    }
-    
-    const furniture = result.rows[0];
-    console.log(`가구 정보: ${furniture.name}`);
-    
-    return furniture.image_url;
-  } catch (error) {
-    console.error('데이터베이스 조회 오류:', error);
-    throw error;
-  }
-}
-
-/**
- * URL에서 이미지를 다운로드하고 base64로 인코딩
- */
-async function imageUrlToBase64(imageUrl) {
-  try {
-    console.log(`이미지 다운로드 중: ${imageUrl}`);
-    const response = await axios.get(imageUrl, {
-      responseType: 'arraybuffer',
-      timeout: 30000, // 30초 타임아웃
-    });
-
-    const imageBuffer = Buffer.from(response.data);
-    const base64Data = imageBuffer.toString("base64");
-
-    // Content-Type에서 MIME 타입 가져오기
-    let mimeType = response.headers['content-type'];
-    
-    // Content-Type이 없으면 URL 확장자에서 추정
-    if (!mimeType) {
-      const ext = path.extname(new URL(imageUrl).pathname).toLowerCase();
-      switch (ext) {
-        case ".jpg":
-        case ".jpeg":
-          mimeType = "image/jpeg";
-          break;
-        case ".png":
-          mimeType = "image/png";
-          break;
-        case ".gif":
-          mimeType = "image/gif";
-          break;
-        case ".webp":
-          mimeType = "image/webp";
-          break;
-        default:
-          mimeType = "image/jpeg"; // 기본값
-      }
-    }
-
-    console.log(`이미지 다운로드 완료. 타입: ${mimeType}, 크기: ${imageBuffer.length} bytes`);
-    return { base64Data, mimeType };
-  } catch (error) {
-    console.error("이미지 URL 다운로드 오류:", error);
-    throw error;
-  }
-}
-
-/**
- * 이미지 파일을 base64로 인코딩 (로컬 파일용 - 호환성 유지)
+ * 이미지 파일을 base64로 인코딩
  */
 function imageToBase64(imagePath) {
   try {
@@ -245,76 +145,40 @@ function exportGLB(object3d, filename = "output.glb") {
       object3d,
       (result) => {
         try {
-          console.log("Export result type:", typeof result, result.constructor.name);
-          
           if (result instanceof ArrayBuffer) {
-            // GLB 형식 (바이너리)
             writeFileSync(filename, Buffer.from(result));
             console.log(`✅ GLB 파일 생성 완료: ${filename}`);
-            resolve(filename);
           } else {
-            // GLTF 형식 (JSON) - GLB로 변환 시도
-            console.log("GLTF 객체 감지, GLB로 변환 시도 중...");
-            
-            // GLTF JSON을 문자열로 변환
-            const gltfString = JSON.stringify(result);
-            const gltfBuffer = Buffer.from(gltfString, 'utf8');
-            
-            // GLB 헤더 생성 (magic: glTF, version: 2, length)
-            const magic = Buffer.from('glTF', 'ascii');
-            const version = Buffer.alloc(4);
-            version.writeUInt32LE(2, 0);
-            
-            const jsonChunkLength = gltfBuffer.length;
-            const totalLength = 12 + 8 + jsonChunkLength; // header + chunk header + json
-            
-            const length = Buffer.alloc(4);
-            length.writeUInt32LE(totalLength, 0);
-            
-            // JSON chunk header
-            const jsonLength = Buffer.alloc(4);
-            jsonLength.writeUInt32LE(jsonChunkLength, 0);
-            const jsonType = Buffer.from('JSON', 'ascii');
-            
-            // GLB 파일 조립
-            const glbBuffer = Buffer.concat([
-              magic, version, length,  // GLB header
-              jsonLength, jsonType, gltfBuffer  // JSON chunk
-            ]);
-            
-            writeFileSync(filename, glbBuffer);
-            console.log(`✅ GLB 파일 변환 완료: ${filename}`);
-            resolve(filename);
+            const gltfFilename = filename.replace(".glb", ".gltf");
+            writeFileSync(gltfFilename, JSON.stringify(result, null, 2));
+            console.log(`✅ GLTF 파일 생성 완료: ${gltfFilename}`);
           }
+          resolve(filename);
         } catch (error) {
           reject(error);
         }
       },
       {
         binary: true,
-        embedImages: false,
-        includeCustomExtensions: false,
-        forcePowerOfTwoTextures: false,
-        maxTextureSize: 1024,
+        onlyVisible: true,
+        truncateDrawRange: true,
+        embedImages: true,
+        animations: [],
       }
     );
   });
 }
 
 /**
- * 이미지를 Three.js 코드로 변환 (URL 또는 로컬 파일 지원)
+ * 이미지를 Three.js 코드로 변환
  */
-async function convertImageToThreeJS(imageSource, outputPath = null, isUrl = false) {
+async function convertImageToThreeJS(imagePath, outputPath = null) {
   try {
-    console.log("이미지를 읽는 중...");
-    let base64Data, mimeType;
-    
-    if (isUrl) {
-      ({ base64Data, mimeType } = await imageUrlToBase64(imageSource));
-    } else {
-      ({ base64Data, mimeType } = imageToBase64(imageSource));
-    }
+    console.log("이미지 파일을 읽는 중...");
+    const { base64Data, mimeType } = imageToBase64(imagePath);
 
+    console.log("환경 변수 API 키:", process.env.ANTHROPIC_API_KEY);
+   
     console.log("Anthropic API 요청 중...");
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
@@ -343,7 +207,6 @@ async function convertImageToThreeJS(imageSource, outputPath = null, isUrl = fal
 - **각 부품의 위치는 Group 내 상대좌표로 정확히 배치**
 - **연결 부분은 겹치거나 관통하도록 배치하여 완전히 결합**
 - 둥근 모서리나 곡면 처리
-- **재질은 반드시 MeshBasicMaterial 또는 MeshStandardMaterial만 사용**
 - 적절한 색상과 재질 적용
 - position, scale 매개변수 포함
 - 반환값은 생성된 mesh 또는 group
@@ -385,40 +248,19 @@ function createObjectFromImage(position = [0, 0, 0], scale = 1) {
 }
 
 /**
- * DB의 가구 ID로부터 GLB 파일을 생성하는 함수
+ * 이미지에서 GLB 파일로 직접 변환하는 통합 함수
  */
-async function convertFurnitureIdToGLB(
-  furnitureId,
+async function convertImageToGLB(
+  imagePath,
   glbFilename = "output.glb",
   position = [0, 0, 0],
   scale = 1
 ) {
   try {
-    console.log("=== DB에서 가구 이미지 URL 가져오는 중 ===");
-    const imageUrl = await getImageUrlFromDB(furnitureId);
-    
-    return await convertImageToGLB(imageUrl, glbFilename, position, scale, true);
-  } catch (error) {
-    console.error("가구 ID 변환 과정에서 오류 발생:", error);
-    throw error;
-  }
-}
-
-/**
- * 이미지에서 GLB 파일로 직접 변환하는 통합 함수
- */
-async function convertImageToGLB(
-  imageSource,
-  glbFilename = "output.glb",
-  position = [0, 0, 0],
-  scale = 1,
-  isUrl = false
-) {
-  try {
     console.log("=== 이미지를 GLB로 변환 시작 ===");
 
     // 1. 이미지를 Three.js 코드로 변환
-    const generatedCode = await convertImageToThreeJS(imageSource, null, isUrl);
+    const generatedCode = await convertImageToThreeJS(imagePath);
 
     console.log("\n=== 생성된 Three.js 코드 ===");
     console.log(generatedCode);
@@ -459,7 +301,7 @@ const object = 함수명([${position.join(", ")}], ${scale});
     await exportGLB(object3d, glbFilename);
 
     console.log(`\n=== 변환 완료! ===`);
-    console.log(`입력: ${imageSource}`);
+    console.log(`입력: ${imagePath}`);
     console.log(`출력: ${glbFilename}`);
     console.log(`코드: ${codeFilename}`);
 
@@ -494,33 +336,12 @@ function createFallbackObject(position = [0, 0, 0], scale = 1) {
   return group;
 }
 
-// 사용 예시 - DB 가구 ID 사용
-async function mainWithDB() {
-  try {
-    // DB에서 가구 ID로 변환 (UUID 사용)
-    const furnitureId = "0537ef3f-e148-4296-8da3-f9a5acaa9671"; // PostgreSQL의 furniture_id (UUID)
-    const glbFilename = "./furniture_from_db.glb"; // 생성할 GLB 파일명
-
-    // DB 가구 ID를 GLB로 변환
-    const result = await convertFurnitureIdToGLB(
-      furnitureId,
-      glbFilename,
-      [0, 0, 0], // 위치
-      1 // 크기
-    );
-
-    console.log("DB 가구 변환 성공!");
-  } catch (error) {
-    console.error("DB 메인 함수 실행 오류:", error);
-  }
-}
-
-// 사용 예시 - 로컬 파일
+// 사용 예시
 async function main() {
   try {
     // 이미지 파일 경로와 출력할 GLTF 파일명 지정
-    const imagePath = "C:\\Users\\zx546\\Desktop\\wheretoput\\next\\public\\asset\\chair.jpg"; // 변환할 이미지 파일
-    const glbFilename = "C:\\Users\\zx546\\Desktop\\wheretoput\\next\\public\\asset\\chair.glb"; // 생성할 glb 파일명
+    const imagePath = "./public/asset/sofa.jpg"; // 변환할 이미지 파일
+    const glbFilename = "./public/asset/sofa.glb"; // 생성할 GLTF 파일명
 
     // 이미지를 GLB로 변환
     const result = await convertImageToGLB(
@@ -540,17 +361,13 @@ async function main() {
 module.exports = {
   convertImageToThreeJS,
   convertImageToGLB,
-  convertFurnitureIdToGLB,
-  getImageUrlFromDB,
   exportGLB,
   executeGeneratedCode,
   createFallbackObject,
   imageToBase64,
-  imageUrlToBase64,
 };
 
 // 직접 실행 시 main 함수 호출
 if (require.main === module) {
-  // mainWithDB(); // DB를 사용하려면 이 주석을 해제하고 main()을 주석 처리
   main();
 }
