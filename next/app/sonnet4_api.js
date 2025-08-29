@@ -8,7 +8,7 @@ const path = require("path");
 
 // Anthropic API 키 설정
 const anthropic = new Anthropic({
-  apiKey: "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",
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 /**
@@ -178,7 +178,12 @@ async function convertImageToThreeJS(imagePath, outputPath = null) {
     console.log("이미지 파일을 읽는 중...");
     const { base64Data, mimeType } = imageToBase64(imagePath);
 
-    console.log("환경 변수 API 키:", process.env.ANTHROPIC_API_KEY);
+    console.log("환경 변수 API 키:", process.env.ANTHROPIC_API_KEY ? "설정됨" : "설정되지 않음");
+    console.log("API 키 길이:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0);
+    
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === "your_anthropic_api_key_here") {
+      throw new Error("ANTHROPIC_API_KEY가 설정되지 않았거나 유효하지 않습니다. .env.local 파일을 확인하세요.");
+    }
    
     console.log("Anthropic API 요청 중...");
     const response = await anthropic.messages.create({
