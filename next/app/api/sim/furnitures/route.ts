@@ -19,6 +19,7 @@ export async function GET(request: Request) {
         let totalCount: number = 0;
 
         try {
+
             if (category && !isNaN(category)) {
                 // 카테고리가 지정된 경우
                 console.log("카테고리 필터링:", category);
@@ -55,6 +56,7 @@ export async function GET(request: Request) {
                     prisma.furnitures.count()
                 ]);
             }
+
             
             console.log(`조회 성공: ${furnitures.length}개 조회, 전체 ${totalCount}개`);
             

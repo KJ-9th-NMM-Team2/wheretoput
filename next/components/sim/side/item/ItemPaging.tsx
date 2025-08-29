@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { ItemPagingProps } from '../types';
+import type { ItemPagingProps } from '../../../../lib/types';
 
 const ItemPaging: React.FC<ItemPagingProps> = ({ 
     loading, 

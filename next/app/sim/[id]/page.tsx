@@ -1,9 +1,4 @@
 'use client'
-// Test용
-import SimSideView from "../../components/sim/SimSideView"
-// import BedroomPage from "../../bedroom/page"
-
-
 // 시뮬레이터 페이지 - 수연, 성진
 // app\sim\[id]\page.tsx 에 있어야 합니다.
 // export default async function SimPage({
@@ -14,9 +9,6 @@ import SimSideView from "../../components/sim/SimSideView"
 //   const { id } = await params;  // /pages/[id]에 해당하는 id 값
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
-
-
-
 import React, { useRef, Suspense, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
@@ -28,7 +20,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
-import BedroomPage from "@/app/bedroom/page"
+import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
 

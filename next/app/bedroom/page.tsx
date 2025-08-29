@@ -12,8 +12,6 @@ import { FurnitureLibrary } from '../components/FurnitureLibrary.jsx'
 import { FurnitureEditor } from '../components/FurnitureEditor'
 import { RightSidebar } from '../components/RightSidebar.jsx'
 
-
-
 function Floor() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -193,7 +191,6 @@ export default function BedroomPage() {
 
   return (
     <>
-
       <ControlPanel />
       <FurnitureEditor />
       <FurnitureLibrary />

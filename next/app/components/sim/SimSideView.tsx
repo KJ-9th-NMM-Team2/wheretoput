@@ -1,11 +1,10 @@
 'use client';// 클라이언트 컴포넌트라는 것을 명시 // 이거 안하면 렌더링 안됨
 
 import React, { useState } from "react";
-import SideTitle from './side/SideTitle';
-import SideSearch from './side/SideSearch';
-import SideCategories from './side/SideCategories';
-import SideItems from './side/SideItems';
-import BedroomPage from "../../bedroom/page"
+import SideTitle from '@/components/sim/side/SideTitle';
+import SideSearch from '@/components/sim/side/SideSearch';
+import SideCategories from '@/components/sim/side/SideCategories';
+import SideItems from '@/components/sim/side/SideItems';
 
 const SimSideView: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);

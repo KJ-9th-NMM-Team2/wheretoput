@@ -81,7 +81,8 @@ function ModelItem({
       }}>
         {isSelected ? '🎯 ' : ''}{model.name.length > 25 ? model.name.substring(0, 25) + '...' : model.name}
       </div>
-      
+
+      {isSelected && (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         {/* 크기 조정 */}
         <ControlSlider
@@ -156,6 +157,8 @@ function ModelItem({
           🗑️ 제거
         </button>
       </div>
+      )}
+      
     </div>
   )
 }
