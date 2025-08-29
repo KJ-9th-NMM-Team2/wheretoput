@@ -82,7 +82,9 @@ export function ControlPanel() {
       zIndex: 100,
       color: 'white',
       fontSize: '12px',
-      width: '250px'
+      width: '250px',
+      maxHeight: '90vh',
+      overflowY: 'auto'
     }}>
       {/* 평면도 업로드 섹션 */}
       <div style={{ marginBottom: '10px' }}>
