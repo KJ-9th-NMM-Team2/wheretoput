@@ -38,14 +38,50 @@ function getSelectOrder(
   else return { view_count: Prisma.SortOrder.desc };
 }
 
-// GET /api/rooms (DB의 집 데이터 가져오기)
+/**
+ * @swagger
+ * /api/rooms:
+ *   get:
+ *     tags:
+ *       - rooms
+ *     summary: Get rooms
+ *     description: Retrieve a list of public rooms with optional filtering
+ *     parameters:
+ *       - in: query
+ *         name: fields
+ *         schema:
+ *           type: string
+ *           enum: [all]
+ *         description: Select specific fields
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [view, new, like]
+ *         description: Order by criteria
+ *       - in: query
+ *         name: num
+ *         schema:
+ *           type: integer
+ *         description: Limit number of results
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Internal Server Error
+ */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fields = searchParams.get("fields"); // fields 쿼리 파라미터
     const order = searchParams.get("order"); // order 쿼리 파라미터
     const num = searchParams.get("num"); // num 쿼리 파라미터
-    console.log({ fields, order, num });
 
     // users 모델의 display_name을 포함해서 가져오기 위해 include 사용
     const roomsWithUser = await prisma.rooms.findMany({

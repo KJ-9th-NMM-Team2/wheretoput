@@ -16,6 +16,7 @@ export default async function RoomPage({
 
   const room: any = await fetchRoomById(id); // id에 해당하는 집 데이터 가져오기
 
+
   // 좋아요를 눌렀는지 확인
   const liked = session?.user?.id
     ? (await fetchLike(id, session.user.id))?.liked ?? false

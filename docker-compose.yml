@@ -19,6 +19,9 @@ services:
     volumes:
       - ./next:/app
       - /app/node_modules
+    env_file:
+      - ./next/.env
+      - ./next/.env.local
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://socket:3001
