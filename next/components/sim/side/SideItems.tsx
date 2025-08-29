@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Furniture } from '@prisma/client';
+import type { furnitures as Furniture } from '@prisma/client';
 import ItemPaging from './item/ItemPaging';
 import ItemScroll from './item/ItemScroll';
 import { useStore } from '@/app/sim/store/useStore';
@@ -104,20 +104,53 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
         
-        // 화면 중앙에 아이템 추가
-        const newModel = {
-            url: '/legacy_mesh (1).glb',
-            name: item.name,
-            length_x: item.length_x,
-            length_y: item.length_y,
-            length_z: item.length_z,
-            price: item.price,
-            brand: item.brand,
-            isCityKit: false,
-            texturePath: null,
-            position: [0, 0, 0] // 화면 중앙
-        };
-        addModel(newModel);
+        // 3D 모델 생성 API 호출
+        try {
+            const response = await fetch('/api/model-upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ furniture_id: item.furniture_id })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // 생성된 또는 기존 모델 URL 사용
+                const newModel = {
+                    url: result.model_url,
+                    name: item.name,
+                    length_x: item.length_x,
+                    length_y: item.length_y,
+                    length_z: item.length_z,
+                    price: item.price,
+                    brand: item.brand,
+                    isCityKit: false,
+                    texturePath: null,
+                    position: [0, 0, 0] // 화면 중앙
+                };
+                addModel(newModel);
+                console.log('3D 모델 추가 성공:', result.model_url);
+            } else {
+                throw new Error(result.error || '3D 모델 생성 실패');
+            }
+        } catch (error) {
+            console.error('3D 모델 생성 실패:', error);
+            // fallback으로 기존 파일 사용
+            const newModel = {
+                url: '/legacy_mesh (1).glb',
+                name: item.name,
+                length_x: item.length_x,
+                length_y: item.length_y,
+                length_z: item.length_z,
+                price: item.price,
+                brand: item.brand,
+                isCityKit: false,
+                texturePath: null,
+                position: [0, 0, 0] // 화면 중앙
+            };
+            addModel(newModel);
+            console.log('fallback 모델 사용');
+        }
     }, [addModel]);
 
     // 이미지 에러 핸들러

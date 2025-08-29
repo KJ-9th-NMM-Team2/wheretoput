@@ -1,0 +1,71 @@
+```javascript
+function createObjectFromImage(position = [0, 0, 0], scale = 1) {
+    const group = new THREE.Group();
+    
+    // 재질 정의
+    const whiteMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xf5f5f5,
+        roughness: 0.1,
+        metalness: 0.05
+    });
+    
+    const poleMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xe8e8e8,
+        roughness: 0.2,
+        metalness: 0.1
+    });
+    
+    const baseMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0x404040,
+        roughness: 0.3,
+        metalness: 0.8
+    });
+    
+    // 베이스 (검은 원형 베이스)
+    const baseGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.05, 32);
+    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+    base.position.set(0, 0.025, 0);
+    group.add(base);
+    
+    // 메인 기둥 (가장 긴 기둥)
+    const mainPoleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 3.2, 16);
+    const mainPole = new THREE.Mesh(mainPoleGeometry, poleMaterial);
+    mainPole.position.set(0, 1.65, 0);
+    group.add(mainPole);
+    
+    // 왼쪽 짧은 기둥
+    const shortPoleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 2.2, 16);
+    const shortPole = new THREE.Mesh(shortPoleGeometry, poleMaterial);
+    shortPole.position.set(-0.15, 1.15, 0);
+    group.add(shortPole);
+    
+    // 오른쪽 중간 기둥
+    const mediumPoleGeometry = new THREE.CylinderGeometry(0.03, 0.03, 2.6, 16);
+    const mediumPole = new THREE.Mesh(mediumPoleGeometry, poleMaterial);
+    mediumPole.position.set(0.12, 1.35, 0);
+    group.add(mediumPole);
+    
+    // 구체 1 (가장 위, 메인 기둥 끝)
+    const sphere1Geometry = new THREE.SphereGeometry(0.25, 32, 32);
+    const sphere1 = new THREE.Mesh(sphere1Geometry, whiteMaterial);
+    sphere1.position.set(0, 3.05, 0);
+    group.add(sphere1);
+    
+    // 구체 2 (왼쪽, 짧은 기둥 끝)
+    const sphere2Geometry = new THREE.SphereGeometry(0.22, 32, 32);
+    const sphere2 = new THREE.Mesh(sphere2Geometry, whiteMaterial);
+    sphere2.position.set(-0.15, 2.47, 0);
+    group.add(sphere2);
+    
+    // 구체 3 (오른쪽, 중간 기둥 끝)
+    const sphere3Geometry = new THREE.SphereGeometry(0.2, 32, 32);
+    const sphere3 = new THREE.Mesh(sphere3Geometry, whiteMaterial);
+    sphere3.position.set(0.12, 2.57, 0);
+    group.add(sphere3);
+    
+    group.position.set(...position);
+    group.scale.setScalar(scale);
+    
+    return group;
+}
+```
