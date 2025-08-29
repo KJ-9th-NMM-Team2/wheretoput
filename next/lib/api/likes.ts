@@ -11,7 +11,7 @@ type LikeResult = {
 // POST /api/rooms/[id]/likes (좋아요 달기/취소)
 export async function fetchPostLike(
   room_id: string,
-  userId: string
+  user_id: string
 ): Promise<LikeResult> {
   try {
     const response = await fetch(`${BASE_URL}/api/rooms/${room_id}/likes`, {
@@ -19,21 +19,21 @@ export async function fetchPostLike(
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ user_id }),
       cache: "no-store",
     });
 
-    if (response.status === 201) {
+    if (response.ok) {
       const data = await response.json();
       return { success: true, data };
     }
-    
+
     const error = await response.text();
     return { success: false, error };
   } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Unknown error" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -52,7 +52,7 @@ export async function fetchLike(
     if (response.ok) {
       return await response.json();
     }
-    
+
     return { liked: false };
   } catch (error) {
     console.error("Error fetching like status:", error);

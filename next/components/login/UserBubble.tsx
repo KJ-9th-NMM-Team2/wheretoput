@@ -5,9 +5,11 @@ import Link from "next/link";
 
 export default function UserBubble({
   name,
+  user_id,
   image,
 }: {
   name: string;
+  user_id: string;
   image: string;
 }) {
   const [open, setOpen] = useState<boolean>(false);
@@ -31,10 +33,10 @@ export default function UserBubble({
             {name}
           </div>
           <Link
-            href="/setting"
+            href={`/users/${user_id}`}
             className="block w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-none"
           >
-            사용자 설정
+            마이페이지
           </Link>
           <button
             className="block w-full hover:cursor-pointer px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 rounded-none"

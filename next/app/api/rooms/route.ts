@@ -8,7 +8,6 @@ function getSelectFields(fields: string | null) {
     room_id: true,
     user_id: true,
     title: true,
-    description: true,
     thumbnail_url: true,
     view_count: true,
     created_at: true,
@@ -45,6 +44,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const fields = searchParams.get("fields"); // fields 쿼리 파라미터
     const order = searchParams.get("order"); // order 쿼리 파라미터
+    const num = searchParams.get("num"); // num 쿼리 파라미터
+    console.log({ fields, order, num });
 
     // users 모델의 display_name을 포함해서 가져오기 위해 include 사용
     const roomsWithUser = await prisma.rooms.findMany({
@@ -53,13 +54,14 @@ export async function GET(req: NextRequest) {
       },
       select: {
         ...getSelectFields(fields),
-        users: {
+        user: {
           select: {
-            display_name: true,
+            name: true,
           },
         },
       },
       orderBy: getSelectOrder(order),
+      ...(num ? { take: parseInt(num) } : {}),
     });
     return Response.json(roomsWithUser);
   } catch (error) {

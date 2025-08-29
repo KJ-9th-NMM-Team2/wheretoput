@@ -10,12 +10,15 @@ export function SignInCheck() {
   const { data: session, status } = useSession();
   if (status === "loading") return <div className="w-10 h-10"></div>;
   if (!session?.user) return <SignInButton />;
-  return (
-    <UserBubble
-      name={session.user.name ?? "익명"}
-      image={session.user.image ?? "/placeholder.png"}
-    />
-  );
+  if (session?.user?.name && session?.user?.id && session?.user?.image) {
+    return (
+      <UserBubble
+        name={session.user.name}
+        user_id={session.user.id}
+        image={session.user.image}
+      />
+    );
+  } else return <div className="w-10 h-10"></div>;
 }
 
 export default function Header() {
@@ -50,19 +53,9 @@ export default function Header() {
           >
             집 만들기
           </Link>
+
           <Link
-            href="/follows"
-            className="
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
-              text-gray-700 hover:text-amber-800 hover:bg-amber-50
-              dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700
-            "
-          >
-            이웃집 들리기
-          </Link>
-          <Link
-            href="/community"
+            href="/search"
             className="
               text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95

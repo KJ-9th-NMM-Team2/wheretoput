@@ -37,8 +37,9 @@ export async function GET(req: NextRequest, { params }: LikeParams) {
 export async function POST(req: NextRequest, { params }: LikeParams) {
   try {
     const { id } = await params;
-    const { userId: user_id } = await req.json();
+    const { user_id } = await req.json();
 
+    console.log("user_id", user_id, "room_id", id);
     if (!user_id) {
       return Response.json({ error: "user_id가 요구됩니다" }, { status: 400 });
     }

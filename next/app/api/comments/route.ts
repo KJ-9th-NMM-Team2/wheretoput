@@ -1,15 +1,11 @@
-// 작업중
-// POST /api/rooms/[id]/comments (코멘트 작성)
+// POST /api/comments (코멘트 작성)
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest) {
   try {
-    const { id } = params;
-    const { user_id, content } = await req.json();
+    const { room_id, user_id, content } = await req.json();
+    console.log(room_id, user_id, content);
 
     if (!user_id || !content) {
       return new Response("Bad Request: Missing user_id or content", {
@@ -19,16 +15,9 @@ export async function POST(
 
     const newComment = await prisma.room_comments.create({
       data: {
-        room_id: id,
+        room_id,
         user_id,
         content,
-      },
-      include: {
-        users: {
-          select: {
-            display_name: true,
-          },
-        },
       },
     });
 

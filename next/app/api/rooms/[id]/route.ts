@@ -21,23 +21,41 @@ export async function GET(
             room_likes: true,
           },
         },
-        users: {
+        user: {
           select: {
-            display_name: true,
+            name: true,
           },
         },
-        room_comments: {
+        room_objects: {
           include: {
-            users: {
+            furnitures: {
               select: {
-                display_name: true,
+                furniture_id: true,
+                name: true,
+                description: true,
+                image_url: true,
+                price: true,
+                brand: true,
               },
             },
           },
         },
+        room_comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                image: true,
+              },
+            },
+          },
+          orderBy: {
+            created_at: "desc",
+          },
+        },
       },
     });
-    console.log("roomWithUser", roomWithUser);
     return Response.json(roomWithUser);
   } catch (error) {
     console.error("Error fetching rooms:", error);

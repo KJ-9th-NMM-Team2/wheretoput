@@ -23,14 +23,16 @@ export default function LikeButton({
   const handleLikeClick = useCallback(async () => {
     if (isLoading) return;
 
+    // 로그인이 되지 않은 경우
     if (!session?.user?.id) {
       alert("로그인이 필요합니다.");
       return;
     }
 
+    // 일단 대기
     setIsLoading(true);
     try {
-      const result = await fetchPostLike(room.room_id, session.user_id);
+      const result = await fetchPostLike(room.room_id, session.user.id);
       if (result.success) {
         // 성공 시에만 UI 업데이트
         setYouLiked(!youLiked);

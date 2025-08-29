@@ -1,13 +1,12 @@
 "use client";
 
-import { HouseSummary } from "@/types/community/Community";
 import Link from "next/link";
 
-export default function HouseCard({ house }: { house: HouseSummary }) {
+export default function HouseCard({ house }: { house: any }) {
   return (
-    <div className="flex flex-col gap-3 pb-3">
+    <div className="flex flex-col gap-3 pb-3 group">
       <Link href={`/rooms/${house.room_id}`}>
-        <div className="w-full aspect-video rounded-lg overflow-hidden">
+        <div className="mb-2 w-full aspect-video rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
           <img
             src={house.thumbnail_url ?? "/placeholder.png"}
             alt={house.title}
@@ -22,7 +21,7 @@ export default function HouseCard({ house }: { house: HouseSummary }) {
             {house.title}
           </p>
           <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
-            {`By: ${house.display_name}`}
+            {`By: ${house.user.name}`}
           </p>
           <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
             👀 {house.view_count} 👍 {house.num_likes} 💬 {house.num_comments}

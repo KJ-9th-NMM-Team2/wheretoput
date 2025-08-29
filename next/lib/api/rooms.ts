@@ -1,12 +1,19 @@
 // GET "/api/rooms" -> 집 데이터 가져오는 함수
 export async function fetchRooms(
   fields: string = "short",
-  order: string = "view"
+  order: string = "view",
+  num: number | null = null
 ): Promise<any> {
+  const params = new URLSearchParams({
+    fields: fields,
+    order: order,
+    ...(num !== null && { num: num.toString() }),
+  });
+
   const response = await fetch(
     `${
       process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/api/rooms?fields=${fields}&order=${order}`,
+    }/api/rooms?${params.toString()}`,
     {
       cache: "no-store",
     }
@@ -16,7 +23,6 @@ export async function fetchRooms(
     ...room,
     num_likes: room._count?.room_likes ?? 0,
     num_comments: room._count?.room_comments ?? 0,
-    display_name: room.users.display_name,
   }));
   return data;
 }
@@ -33,8 +39,6 @@ export async function fetchRoomById(id: string): Promise<any> {
     ...room,
     num_likes: room._count?.room_likes ?? 0,
     num_comments: room._count?.room_comments ?? 0,
-    display_name: room.users.display_name,
   };
-  console.log("data", data);
   return data;
 }

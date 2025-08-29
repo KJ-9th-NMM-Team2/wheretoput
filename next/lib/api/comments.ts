@@ -1,22 +1,86 @@
-// POST /api/rooms/[id]/comments (코멘트 작성)
-import { prisma } from "@/lib/prisma";
-import type { NextRequest } from "next/server";
+// POST /api/comments (코멘트 작성)
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+
 export async function fetchPostComment(
+  room_id: string,
+  user_id: string,
+  content: string
 ): Promise<any> {
-  const response = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/api/rooms?fields=${fields}&order=${order}`,
-    {
+  try {
+    const response = await fetch(`${BASE_URL}/api/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ room_id, user_id, content }),
       cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return { success: true, data };
     }
-  );
-  const rooms: any[] = await response.json();
-  const data: any[] = rooms.map((room: any) => ({
-    ...room,
-    num_likes: room._count?.room_likes ?? 0,
-    num_comments: room._count?.room_comments ?? 0,
-    display_name: room.users.display_name,
-  }));
-  return data;
+
+    const error = await response.text();
+    return { success: false, error };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// PUT /api/comments/[id] (코멘트 수정)
+export async function fetchEditComment(
+  comment_id: string,
+  content: string
+): Promise<any> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/comments/${comment_id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return { success: true, data };
+    }
+
+    const error = await response.text();
+    return { success: false, error };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+// DELETE /api/comments/[id] (코멘트 삭제)
+export async function fetchDeleteComment(comment_id: string): Promise<any> {
+  try {
+    const response = await fetch(`${BASE_URL}/api/comments/${comment_id}`, {
+      method: "DELETE",
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return { success: true, data };
+    }
+
+    const error = await response.text();
+    return { success: false, error };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
