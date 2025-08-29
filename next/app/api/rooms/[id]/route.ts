@@ -48,7 +48,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     // users 모델의 display_name을 포함해서 가져오기 위해 include 사용
     const roomWithUser = await prisma.rooms.findUnique({
       where: {

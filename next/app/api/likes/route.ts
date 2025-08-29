@@ -149,8 +149,10 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    console.log(searchParams);
     const room_id = searchParams.get("room_id");
     const user_id = searchParams.get("user_id");
+    console.log(room_id, user_id);
 
     if (!user_id || !room_id) {
       return Response.json(

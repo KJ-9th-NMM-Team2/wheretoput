@@ -45,7 +45,7 @@ export async function fetchLike(
 ): Promise<{ liked: boolean }> {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/likes?room_id=${room_id}?user_id=${user_id}`,
+      `${BASE_URL}/api/likes?room_id=${room_id}&user_id=${user_id}`,
       { cache: "no-store" }
     );
 
