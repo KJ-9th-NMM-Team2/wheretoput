@@ -30,30 +30,30 @@ export async function POST(request) {
     await fs.writeFile(imageUrl, Buffer.from(imageBuffer))
     console.log('이미지 저장 완료:', imageName)
 
-    // 2. GLB 파일명 생성
-    const glbName = `${path.basename(imageFile.name, fileExtension)}_${timestamp}.glb`
-    const glbPath = path.join(process.cwd(), 'public', 'asset', glbName)
+    // 2. 3D 파일명 생성 (GLB 또는 GLTF)
+    const baseName = `${path.basename(imageFile.name, fileExtension)}_${timestamp}`
+    const glbPath = path.join(process.cwd(), 'public', 'asset', `${baseName}.glb`)
     
-    // 3. sonnet4_api를 사용해 이미지를 GLB로 변환
-    console.log('이미지를 GLB로 변환 중...')
+    // 3. sonnet4_api를 사용해 이미지를 3D 파일로 변환
+    console.log('이미지를 3D 파일로 변환 중...')
     const result = await convertImageToGLB(
       imageUrl,
       glbPath,
       [0, 0, 0], // position
-      [1, 1, 1], // scale
-      false // 로컬 파일이므로 false
+      1 // scale
     )
     
-    if (result.success) {
-      console.log('GLB 변환 성공:', glbName)
-      return NextResponse.json({
-        success: true,
-        glbPath: `/asset/${glbName}`,
-        filename: glbName
-      })
-    } else {
-      throw new Error(result.error || 'GLB 변환 실패')
-    }
+    // 결과 파일 경로 확인 (GLB 또는 GLTF가 될 수 있음)
+    const actualFilename = path.basename(result.filename || result)
+    const fileExtension3D = path.extname(actualFilename)
+    
+    console.log('3D 변환 성공:', actualFilename)
+    return NextResponse.json({
+      success: true,
+      glbPath: `/asset/${actualFilename}`,
+      filename: actualFilename,
+      type: fileExtension3D === '.glb' ? 'glb' : 'gltf'
+    })
 
   } catch (error) {
     console.error('가구 임포트 오류:', error)

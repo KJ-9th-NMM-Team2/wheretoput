@@ -148,12 +148,13 @@ function exportGLB(object3d, filename = "output.glb") {
           if (result instanceof ArrayBuffer) {
             writeFileSync(filename, Buffer.from(result));
             console.log(`✅ GLB 파일 생성 완료: ${filename}`);
+            resolve(filename);
           } else {
             const gltfFilename = filename.replace(".glb", ".gltf");
             writeFileSync(gltfFilename, JSON.stringify(result, null, 2));
             console.log(`✅ GLTF 파일 생성 완료: ${gltfFilename}`);
+            resolve(gltfFilename);
           }
-          resolve(filename);
         } catch (error) {
           reject(error);
         }
@@ -340,8 +341,8 @@ function createFallbackObject(position = [0, 0, 0], scale = 1) {
 async function main() {
   try {
     // 이미지 파일 경로와 출력할 GLTF 파일명 지정
-    const imagePath = "./public/asset/sofa.jpg"; // 변환할 이미지 파일
-    const glbFilename = "./public/asset/sofa.glb"; // 생성할 GLTF 파일명
+    const imagePath = "./public/asset/chiar.jpg"; // 변환할 이미지 파일
+    const glbFilename = "./public/asset/chair.gltf"; // 생성할 GLTF 파일명
 
     // 이미지를 GLB로 변환
     const result = await convertImageToGLB(
