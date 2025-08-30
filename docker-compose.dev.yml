@@ -1,5 +1,4 @@
 # 개발용 Docker Compose 오버라이드
-version: '3.8'
 
 services:
   socket:
@@ -22,3 +21,4 @@ services:
       - /app/.next
     environment:
       - NODE_ENV=development
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
