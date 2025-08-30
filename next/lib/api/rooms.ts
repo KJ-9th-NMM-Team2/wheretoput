@@ -4,7 +4,7 @@ export async function fetchRooms(
   fields: string = "short",
   order: string = "view",
   num: number | null = null,
-  query: string = "",
+  query: string = ""
 ): Promise<any> {
   const params = new URLSearchParams({
     fields: fields,
@@ -12,20 +12,18 @@ export async function fetchRooms(
     ...(num !== null && { num: num.toString() }),
     q: query,
   });
-  
+
   console.log("fiels check: ", fields);
   console.log("order check: ", order);
   const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  console.log(base_url);
+  const url = query
+    ? `${base_url}/api/rooms/search/?${params.toString()}`
+    : `${base_url}/api/rooms?${params.toString()}`;
 
-  const url = query ? `${base_url}/api/rooms/search/?${params.toString()}`
-    : `${base_url}/api/rooms?${params.toString()}`
-
-  const response = await fetch(
-    url,
-    {
-      cache: "no-store",
-    }
-  );
+  const response = await fetch(url, {
+    cache: "no-store",
+  });
   const rooms: any[] = await response.json();
   const data: any[] = rooms.map((room: any) => ({
     ...room,

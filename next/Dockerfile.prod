@@ -50,13 +50,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Next.js 빌드 결과물 복사
-COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/standalone/ ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# next.config.js 복사 (필요한 경우)
-COPY --from=builder /app/next.config.js ./
-
+# 권한 변경
 USER nextjs
 
 EXPOSE 3000
