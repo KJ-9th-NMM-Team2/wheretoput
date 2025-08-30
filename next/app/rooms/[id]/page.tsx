@@ -1,87 +1,13 @@
-import LikeButton from "@/components/rooms/LikeButton";
 import { fetchRoomById } from "@/lib/api/rooms";
-import { fetchLike } from "@/lib/api/likes";
-import Link from "next/link";
-import { auth } from "@/lib/auth";
-import FurnituresList from "@/components/rooms/FurnituresList";
-import CommentsList from "@/components/rooms/CommentsList";
+import RoomPageClient from "@/components/rooms/RoomPageClient";
 
 export default async function RoomPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
-  const { id } = await params; // /pages/[id]에 해당하는 id 값
+  const { id } = await params;
+  const room: any = await fetchRoomById(id);
 
-  const room: any = await fetchRoomById(id); // id에 해당하는 집 데이터 가져오기
-
-
-  // 좋아요를 눌렀는지 확인
-  const liked = session?.user?.id
-    ? (await fetchLike(id, session.user.id))?.liked ?? false
-    : false;
-
-  return (
-    <>
-      <div className="layout-container flex h-full grow flex-col">
-        <div className="px-40 flex flex-1 justify-center">
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-            <div className="flex flex-wrap gap-2 p-4">
-              <span className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal"></span>
-            </div>
-            <div className="@container">
-              <div className="@[480px]:px-4 @[480px]:py-3">
-                <div
-                  className="bg-cover bg-center flex flex-col justify-end overflow-hidden bg-white dark:bg-gray-800 @[480px]:rounded-xl min-h-80"
-                  style={{
-                    backgroundImage: room?.thumbnail_url
-                      ? `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
-       url("${room.thumbnail_url}"), 
-       url("/placeholder.png")`
-                      : `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
-       url("/placeholder.png")`,
-                  }}
-                >
-                  <div className="flex p-4">
-                    <p className="text-white tracking-light text-[28px] font-bold leading-tight">
-                      {room?.title}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-stretch">
-              <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
-                <Link href={`/sim/${room.room_id}`}>
-                  <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
-                    <span className="truncate">3D로 보기</span>
-                  </button>
-                </Link>
-                <LikeButton room={room} liked={liked} />
-              </div>
-            </div>
-            <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              {room.user.name} on {room.updated_at.slice(0, 10)}
-            </p>
-            <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              {room.description}
-            </p>
-            <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-              가구 프리뷰
-            </h2>
-            <FurnituresList room_objects={room.room_objects} />
-
-            <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-              댓글 ({room.num_comments})
-            </h2>
-            <CommentsList
-              room_comments={room.room_comments}
-              currentUserId={session?.user?.id}
-            />
-          </div>
-        </div>
-      </div>
-    </>
-  );
+  return <RoomPageClient room={room} />;
 }
