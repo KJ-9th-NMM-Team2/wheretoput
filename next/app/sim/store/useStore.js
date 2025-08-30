@@ -140,13 +140,52 @@ export const useStore = create(
           };
         });
 
+        // 임시 room_id인 경우 먼저 방 생성
+        if (state.currentRoomId.startsWith('temp_')) {
+          const floorPlanData = JSON.parse(localStorage.getItem('floorPlanData') || '{}');
+          const roomData = floorPlanData.roomData || {};
+          
+          // 방 생성
+          const createRoomResponse = await fetch('/api/rooms', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: roomData.title || `Room ${new Date().toLocaleString()}`,
+              description: roomData.description || 'Generated room',
+              room_data: floorPlanData,
+              is_public: roomData.is_public || false
+            })
+          });
+
+          if (!createRoomResponse.ok) {
+            throw new Error('방 생성 실패');
+          }
+
+          const roomResult = await createRoomResponse.json();
+          const newRoomId = roomResult.room_id;
+          
+          // 새로운 room_id로 업데이트
+          set({ currentRoomId: newRoomId });
+          
+          // URL도 업데이트 (임시로 현재 URL 수정)
+          if (typeof window !== 'undefined') {
+            window.history.replaceState({}, '', `/sim/${newRoomId}`);
+          }
+          
+          console.log(`새 방 생성 완료: ${newRoomId}`);
+        }
+
+        // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
+        const currentState = get();
         const response = await fetch('/api/sim/save', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            room_id: state.currentRoomId,
+            room_id: currentState.currentRoomId,
             objects: objects
           })
         });

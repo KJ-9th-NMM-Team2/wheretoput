@@ -130,6 +130,7 @@ const FloorPlanEditor = () => {
   // 캔버스 그리기 : 선분 두께 등 수정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
     // 고해상도 렌더링 설정
@@ -557,19 +558,29 @@ const FloorPlanEditor = () => {
       return;
     }
 
-    // 도면 데이터를 localStorage에 저장
+    // 임시 room_id 생성 (실제 DB 저장은 시뮬레이터에서 저장할 때)
+    const tempRoomId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 도면 데이터 준비
     const wallData = {
       walls: walls,
       pixelToMmRatio: pixelToMmRatio,
-      timestamp: new Date().getTime()
+      timestamp: new Date().getTime(),
+      tempRoomId: tempRoomId,
+      roomData: {
+        title: `Floor Plan Room ${new Date().toLocaleString()}`,
+        description: `Generated from floor plan with ${walls.length} walls`,
+        is_public: false
+      }
     };
     
+    // localStorage에 도면 데이터 저장
     localStorage.setItem('floorPlanData', JSON.stringify(wallData));
     
-    // 시뮬레이터 페이지로 이동 (기본 room_id = 1 사용)
-    router.push('/sim/1');
+    // 임시 room_id로 시뮬레이터 페이지 이동
+    router.push(`/sim/${tempRoomId}`);
     
-    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다!`);
+    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다! 저장 버튼을 눌러야 실제 방이 생성됩니다.`);
   };
 
 
