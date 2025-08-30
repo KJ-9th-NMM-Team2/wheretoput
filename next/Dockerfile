@@ -16,7 +16,9 @@ COPY . .
 RUN npx prisma generate
 
 # Next.js 빌드
+RUN rm -rf .next
 RUN npm run build
+
 
 # production 의존성만 재설치 (최적화)
 RUN npm ci --only=production && npm cache clean --force
