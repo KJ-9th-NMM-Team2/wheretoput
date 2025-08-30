@@ -98,19 +98,23 @@ export async function GET(
     console.log(`Loading objects for room: ${room_id}`);
 
     // 1. 방이 존재하는지 확인
+    console.log('Step 1: Checking if room exists...');
     const room = await prisma.rooms.findUnique({
       where: { room_id: room_id }
     });
 
     if (!room) {
+      console.log(`Room not found: ${room_id}`);
       return Response.json(
         { error: "Room not found" },
         { status: 404 }
       );
     }
+    
+    console.log(`Room found: ${room.title}`);
 
     // 2. room_objects와 furniture 정보를 함께 조회
-    // [08.30] 수정
+    console.log('Step 2: Fetching room objects...');
     const roomObjects = await prisma.room_objects.findMany({
       where: { room_id: room_id },
       include: {
@@ -119,7 +123,6 @@ export async function GET(
             furniture_id: true,
             name: true,
             model_url: true,
-            texture_url: true,
             category_id: true
           }
         }
@@ -130,6 +133,11 @@ export async function GET(
     });
 
     console.log(`Found ${roomObjects.length} objects for room ${room_id}`);
+    
+    // 각 객체의 furniture 관계 상태 확인
+    roomObjects.forEach((obj, index) => {
+      console.log(`Object ${index}: furniture_id=${obj.furniture_id}, has_furnitures=${!!obj.furnitures}`);
+    });
 
     // 3. 시뮬레이터에서 사용할 형태로 데이터 변환
     const objects = roomObjects.map((obj) => {
@@ -145,6 +153,7 @@ export async function GET(
         id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
         object_id: obj.object_id, // DB의 객체 ID
         furniture_id: obj.furniture_id,
+        name: hasFurniture ? obj.furnitures.name : 'Custom Object', // InfoPanel에서 사용하는 name 속성
         position: [
           pos?.x || 0,
           pos?.y || 0,
@@ -163,7 +172,7 @@ export async function GET(
         // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
         url: hasFurniture ? obj.furnitures.model_url : '/models/default.glb',
         isCityKit: hasFurniture ? (obj.furnitures.model_url?.includes('citykit') || false) : false,
-        texturePath: hasFurniture ? obj.furnitures.texture_url : null,
+        texturePath: null, // texture_url 필드가 스키마에 없음
         type: hasFurniture ? (obj.furnitures.model_url?.endsWith('.glb') ? 'glb' : 'building') : 'custom',
         // 추가 메타데이터
         furnitureName: hasFurniture ? obj.furnitures.name : 'Custom Object',
@@ -184,11 +193,17 @@ export async function GET(
 
   } catch (error) {
     console.error("Error loading simulator state:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      roomId: room_id
+    });
     return Response.json(
       {
         error: "Internal Server Error",
         message: error.message,
-        details: process.env.NODE_ENV === "development" ? error.stack : "Server error occurred"
+        details: process.env.NODE_ENV === "development" ? error.stack : "Server error occurred",
+        roomId: room_id
       },
       { status: 500 }
     );

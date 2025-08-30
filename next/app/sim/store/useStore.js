@@ -192,6 +192,7 @@ export const useStore = create(
           id: obj.id,
           object_id: obj.object_id,
           furniture_id: obj.furniture_id,
+          name: obj.name, // InfoPanel에서 사용하는 name 속성 추가
           position: obj.position,
           rotation: obj.rotation,
           scale: obj.scale,
