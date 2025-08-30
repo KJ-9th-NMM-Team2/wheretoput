@@ -321,6 +321,40 @@ const FloorPlanEditor = () => {
     drawCanvas();
   }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
 
+  // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
+  useEffect(() => {
+    const handleResize = () => {
+      // 리사이즈 후 잠시 대기 후 캔버스 다시 그리기 (레이아웃 안정화)
+      setTimeout(() => {
+        drawCanvas();
+      }, 100);
+    };
+
+    // 윈도우 리사이즈 이벤트
+    window.addEventListener('resize', handleResize);
+    
+    // ResizeObserver로 컨테이너 크기 변화 직접 감지
+    let resizeObserver;
+    if (containerRef.current) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          // 컨테이너 크기가 변경될 때마다 캔버스 다시 그리기
+          setTimeout(() => {
+            drawCanvas();
+          }, 50);
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+
   // 이미지 업로드 처리
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -491,7 +525,7 @@ const FloorPlanEditor = () => {
 
 
   return (
-    <div className="w-full h-screen bg-orange-50 flex flex-col">
+    <div className="w-full min-h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] bg-orange-50 flex flex-col overflow-hidden">
       {/* 축척 설정 팝업 */}
       {showScalePopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -703,9 +737,9 @@ const FloorPlanEditor = () => {
       </div>
 
       {/* 메인 작업 영역 */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 overflow-hidden">
           <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
             <div
               ref={containerRef}
@@ -740,7 +774,7 @@ const FloorPlanEditor = () => {
         </div>
 
         {/* 사이드 패널 */}
-        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto">
+        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto flex-shrink-0">
           <h3 className="text-lg font-semibold text-orange-800 mb-4">
             도구 정보
           </h3>
