@@ -7,11 +7,13 @@ import SearchBar from "@/components/search/SearchBar";
 
 export default function SortedHouseList({
   data: initialData,
+  query = "",
 }: {
   data: any[];
+  query: string; 
 }) {
   // 검색값
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(query);
 
   // 정렬기준
   const [sortType, setSortType] = useState<"view" | "new" | "like">("view");
@@ -19,20 +21,26 @@ export default function SortedHouseList({
   // 띄울 데이터
   const [data, setData] = useState<any[]>(initialData);
 
+  // 쿼리가 바뀔 때 실행된다.
+  const [inputQuery, setInputQuery] = useState("");
+
+  console.log(data);
   // 정렬기준 바뀔때마다 다시 fetch
   useEffect(() => {
     async function fetchData() {
-      const rooms = await fetchRooms("short", sortType);
+      console.log("fetchData 실행 체크");
+      const rooms = await fetchRooms("short", sortType, undefined, inputQuery);
       setData(rooms);
     }
     fetchData();
-  }, [sortType]);
+    
+  }, [sortType, inputQuery]);
 
   return (
     <>
       <div className="px-40 py-5">
         {/* 검색바 */}
-        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} />
+        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} setInputQuery={setInputQuery} setSortType={setSortType}/>
         <div className="flex gap-3 p-3 flex-wrap pr-4">
           {/* // 정렬버튼 */}
           <button
