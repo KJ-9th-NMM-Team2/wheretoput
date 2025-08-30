@@ -110,10 +110,11 @@ export async function GET(
     }
 
     // 2. room_objects와 furniture 정보를 함께 조회
+    // [08.30] 수정
     const roomObjects = await prisma.room_objects.findMany({
       where: { room_id: room_id },
       include: {
-        furniture: {
+        furnitures: {
           select: {
             furniture_id: true,
             name: true,
@@ -137,6 +138,9 @@ export async function GET(
       const rot = obj.rotation as any;
       const scale = obj.scale as any;
 
+      // furniture_id가 null인 경우 (직접 업로드된 모델) 처리
+      const hasFurniture = obj.furnitures && obj.furniture_id;
+
       return {
         id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
         object_id: obj.object_id, // DB의 객체 ID
@@ -156,14 +160,14 @@ export async function GET(
           scale?.y || 1,
           scale?.z || 1
         ],
-        // furniture 테이블의 정보 활용
-        url: obj.furniture?.model_url || '/models/default.glb',
-        isCityKit: obj.furniture?.model_url?.includes('citykit') || false,
-        texturePath: obj.furniture?.texture_url || null,
-        type: obj.furniture?.model_url?.endsWith('.glb') ? 'glb' : 'building',
+        // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
+        url: hasFurniture ? obj.furnitures.model_url : '/models/default.glb',
+        isCityKit: hasFurniture ? (obj.furnitures.model_url?.includes('citykit') || false) : false,
+        texturePath: hasFurniture ? obj.furnitures.texture_url : null,
+        type: hasFurniture ? (obj.furnitures.model_url?.endsWith('.glb') ? 'glb' : 'building') : 'custom',
         // 추가 메타데이터
-        furnitureName: obj.furniture?.name || 'Unknown',
-        categoryId: obj.furniture?.category_id || null
+        furnitureName: hasFurniture ? obj.furnitures.name : 'Custom Object',
+        categoryId: hasFurniture ? obj.furnitures.category_id : null
       };
     });
 

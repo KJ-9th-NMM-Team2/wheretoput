@@ -110,12 +110,14 @@ export async function POST(req: NextRequest) {
 
       console.log(`Deleted existing objects for room ${room_id}`);
 
-      // 2. 새로운 room_objects 생성
-      if (objects.length > 0) {
-        const roomObjects = objects.map((obj: any) => ({
+      // 2. 새로운 room_objects 생성 (furniture_id가 있는 객체만)
+      const validObjects = objects.filter((obj: any) => obj.furniture_id);
+      
+      if (validObjects.length > 0) {
+        const roomObjects = validObjects.map((obj: any) => ({
           object_id: crypto.randomUUID(), // UUID 생성
           room_id: room_id,
-          furniture_id: obj.furniture_id || crypto.randomUUID(), // null인 경우 임시 UUID 생성
+          furniture_id: obj.furniture_id, // furniture_id는 필수
           position: {
             x: obj.position[0],
             y: obj.position[1], 
@@ -142,6 +144,10 @@ export async function POST(req: NextRequest) {
 
         console.log(`Created ${roomObjects.length} new objects for room ${room_id}`);
       }
+      
+      if (objects.length > validObjects.length) {
+        console.log(`Skipped ${objects.length - validObjects.length} objects without furniture_id`);
+      }
 
       // 3. rooms 테이블의 updated_at 갱신
       await tx.rooms.update({
@@ -150,10 +156,14 @@ export async function POST(req: NextRequest) {
       });
     });
 
+    const validObjectsCount = objects.filter((obj: any) => obj.furniture_id).length;
+    const skippedCount = objects.length - validObjectsCount;
+    
     return Response.json({
       success: true,
-      message: `Successfully saved ${objects.length} objects`,
-      saved_count: objects.length
+      message: `Successfully saved ${validObjectsCount} objects${skippedCount > 0 ? ` (skipped ${skippedCount} without furniture_id)` : ''}`,
+      saved_count: validObjectsCount,
+      skipped_count: skippedCount
     });
 
   } catch (error) {
