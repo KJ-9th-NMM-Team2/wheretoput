@@ -24,6 +24,7 @@ export function SignInCheck() {
 
 export default function Header() {
   const [searchInput, setSearchInput] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -35,8 +36,9 @@ export default function Header() {
   }, [pathname]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-        router.push(`/search?q=${encodeURIComponent(searchInput)}`);
+    if (e.key === 'Enter' && !isComposing) {
+      searchInput ? router.push(`/search?order=view&q=${encodeURIComponent(searchInput)}`) : router.push('/search');
+      setSearchInput("");
     }
   }
 
@@ -112,6 +114,8 @@ export default function Header() {
             </div>
             <input
               onChange={(e) => setSearchInput(e.target.value)}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
               onKeyDown={handleKeyDown}
               placeholder="검색어를 입력하세요"
               className="
