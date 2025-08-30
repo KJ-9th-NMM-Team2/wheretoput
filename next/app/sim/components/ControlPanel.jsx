@@ -1,14 +1,20 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useStore } from '../store/useStore.js'
 
 export function ControlPanel() {
   const fileInputRef = useRef()
+  const [saveMessage, setSaveMessage] = useState('')
   
   const { 
     scaleValue,
     setScaleValue,
     addModel,
-    clearAllModels
+    clearAllModels,
+    saveSimulatorState,
+    isSaving,
+    currentRoomId,
+    lastSavedAt,
+    loadedModels
   } = useStore()
 
 
@@ -38,6 +44,24 @@ export function ControlPanel() {
     })
     
     event.target.value = ''
+  }
+
+  // 저장 처리
+  const handleSave = async () => {
+    if (!currentRoomId) {
+      setSaveMessage('방 ID가 설정되지 않았습니다.')
+      setTimeout(() => setSaveMessage(''), 3000)
+      return
+    }
+
+    try {
+      await saveSimulatorState()
+      setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`)
+      setTimeout(() => setSaveMessage(''), 3000)
+    } catch (error) {
+      setSaveMessage(`저장 실패: ${error.message}`)
+      setTimeout(() => setSaveMessage(''), 5000)
+    }
   }
 
   return (
@@ -72,6 +96,51 @@ export function ControlPanel() {
         </div>
       </div>
       
+      {/* 저장 버튼 */}
+      <div style={{ marginBottom: '10px' }}>
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !currentRoomId}
+          style={{
+            background: currentRoomId ? (isSaving ? '#999' : '#4CAF50') : '#666',
+            color: 'white',
+            border: 'none',
+            padding: '10px 16px',
+            borderRadius: '3px',
+            cursor: currentRoomId && !isSaving ? 'pointer' : 'not-allowed',
+            fontSize: '12px',
+            width: '100%',
+            marginBottom: '5px'
+          }}
+        >
+          {isSaving ? '저장 중...' : `방 상태 저장 (${loadedModels.length}개)`}
+        </button>
+        
+        {/* 저장 상태 메시지 */}
+        {saveMessage && (
+          <div style={{ 
+            fontSize: '10px', 
+            color: saveMessage.includes('실패') ? '#ff4444' : '#4CAF50',
+            textAlign: 'center',
+            marginBottom: '5px'
+          }}>
+            {saveMessage}
+          </div>
+        )}
+        
+        {/* 마지막 저장 시간 */}
+        {lastSavedAt && (
+          <div style={{ 
+            fontSize: '9px', 
+            color: '#aaa',
+            textAlign: 'center',
+            marginBottom: '5px'
+          }}>
+            마지막 저장: {lastSavedAt.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
+
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}

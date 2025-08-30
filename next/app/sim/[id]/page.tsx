@@ -62,10 +62,50 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   )
 }
 
-export default function SimPage() {
+export default function SimPage({ params }: { params: Promise<{ id: string }> }) {
   const controlsRef = useRef(null)
-  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraFov } = useStore()
+  const { 
+    loadedModels, 
+    deselectModel, 
+    ambientLightIntensity, 
+    directionalLightPosition, 
+    directionalLightIntensity, 
+    cameraFov,
+    setCurrentRoomId,
+    loadSimulatorState,
+    isLoading
+  } = useStore()
   const [wallsData, setWallsData] = useState([])
+  const [roomId, setRoomId] = useState(null)
+
+  // URL 파라미터에서 room_id 추출 및 자동 로드
+  useEffect(() => {
+    const initializeSimulator = async () => {
+      try {
+        const resolvedParams = await params
+        const currentRoomId = resolvedParams.id
+        
+        console.log(`시뮬레이터 초기화: room_id = ${currentRoomId}`)
+        
+        setRoomId(currentRoomId)
+        setCurrentRoomId(currentRoomId)
+        
+        // 가구 데이터 로드 시도
+        try {
+          await loadSimulatorState(currentRoomId)
+          console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
+        } catch (loadError) {
+          console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
+          // 저장된 데이터가 없어도 에러로 처리하지 않음
+        }
+        
+      } catch (error) {
+        console.error('시뮬레이터 초기화 실패:', error)
+      }
+    }
+
+    initializeSimulator()
+  }, [params, setCurrentRoomId, loadSimulatorState])
 
   // 컴포넌트 마운트 시 도면 데이터 로드
   useEffect(() => {
@@ -87,6 +127,28 @@ export default function SimPage() {
       <SimSideView />
       
       <div className="flex-1 relative">
+        {/* 로딩 상태 표시 */}
+        {isLoading && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(0,0,0,0.8)',
+            color: 'white',
+            padding: '20px',
+            borderRadius: '10px',
+            zIndex: 1000,
+            textAlign: 'center'
+          }}>
+            <div style={{ marginBottom: '10px' }}>🏠</div>
+            <div>방 데이터 로딩 중...</div>
+            <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
+              Room ID: {roomId}
+            </div>
+          </div>
+        )}
+        
         <ControlPanel />
         <InfoPanel />
         <LightControlPanel />

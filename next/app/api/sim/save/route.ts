@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         const roomObjects = objects.map((obj: any) => ({
           object_id: crypto.randomUUID(), // UUID 생성
           room_id: room_id,
-          furniture_id: obj.furniture_id || null, // UUID 문자열
+          furniture_id: obj.furniture_id || crypto.randomUUID(), // null인 경우 임시 UUID 생성
           position: {
             x: obj.position[0],
             y: obj.position[1], 
