@@ -23,7 +23,7 @@ services:
       - ./next/.env
       - ./next/.env.local
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://socket:3001
     depends_on:
       - socket
