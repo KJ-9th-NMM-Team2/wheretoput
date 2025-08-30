@@ -94,12 +94,20 @@ export function CommentCard({
       }`}
     >
       <Link href={`/users/${comment.user.id}`}>
-        <div
-          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full w-10 shrink-0"
-          style={{
-            backgroundImage: `url("${comment.user.image}")`,
-          }}
-        ></div>
+        {comment.user.image ? (
+          <img
+            src={comment.user.image}
+            alt={comment.user.name}
+            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
+        transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
+        ring-amber-200 hover:ring-amber-300
+        dark:ring-gray-600 dark:hover:ring-amber-400"
+          />
+        ) : (
+          <span className="text-xl font-bold text-amber-700 dark:text-orange-200">
+            {comment.user.name?.[0]?.toUpperCase() || "?"}
+          </span>
+        )}
       </Link>
 
       <div className="flex h-full flex-1 flex-col items-start justify-start">

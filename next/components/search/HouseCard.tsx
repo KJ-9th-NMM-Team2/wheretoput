@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function HouseCard({ house }: { house: any }) {
   return (
-    <div className="flex flex-col gap-3 pb-3 group">
+    <div className="flex flex-col gap-3 pb-3 group w-full max-w-xs">
       <Link href={`/rooms/${house.room_id}`}>
         <div className="mb-2 w-full aspect-video rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
           <img

@@ -3,19 +3,19 @@
 export default function SearchBar({
   searchInput,
   setSearchInput,
-  setInputQuery,
+  onSearch,
   setSortType,
 }: {
   searchInput: string;
   setSearchInput: (input: string) => void;
-  setInputQuery: (input: string) => void;
+  onSearch: (input: string) => void;
   setSortType: (type: "view" | "new" | "like") => void;
 }) {
   
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       console.log("key down enter")
-      setInputQuery(searchInput);
+      onSearch(searchInput);
       setSortType("view");
     }
   }
