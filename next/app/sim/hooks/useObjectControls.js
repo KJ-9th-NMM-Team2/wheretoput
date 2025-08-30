@@ -81,9 +81,7 @@ export function useObjectControls(
           -currentY
         );
         const intersectPoint = new THREE.Vector3();
-        console.log(floorPlane, intersectPoint);
-        raycaster.ray.intersectPlane(floorPlane, intersectPoint);
-        console.log(intersectPoint);
+        // console.log(intersectPoint); // Removed debug log
         if (intersectPoint) {
           const newPosition = intersectPoint.clone().sub(dragOffset);
           onPositionChange(modelId, [
