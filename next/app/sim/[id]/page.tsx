@@ -112,13 +112,17 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         setRoomId(currentRoomId)
         setCurrentRoomId(currentRoomId)
         
-        // 가구 데이터 로드 시도
-        try {
-          await loadSimulatorState(currentRoomId)
-          console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
-        } catch (loadError) {
-          console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
-          // 저장된 데이터가 없어도 에러로 처리하지 않음
+        // 임시 방이 아닌 경우에만 가구 데이터 로드 시도
+        if (!currentRoomId.startsWith('temp_')) {
+          try {
+            await loadSimulatorState(currentRoomId)
+            console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
+          } catch (loadError) {
+            console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
+            // 저장된 데이터가 없어도 에러로 처리하지 않음
+          }
+        } else {
+          console.log(`임시 방 ${currentRoomId}이므로 가구 데이터 로드를 건너뜁니다.`)
         }
         
       } catch (error) {
