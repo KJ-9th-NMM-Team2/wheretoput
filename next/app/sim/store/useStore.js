@@ -1,4 +1,3 @@
-import { directPointLight } from 'three/tsl';
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
@@ -96,11 +95,181 @@ export const useStore = create(
     setDirectionalLightIntensity: (intensity) => set({ directionalLightIntensity: intensity }),
 
     // 카메라 상태
-    cameraFov: 60,
+    cameraFov: 60,    // Perspective
+    // cameraZoom: 50,   // Orthographic
+    // cameraMode: 'perspective', // Perspective | Orthographic
 
     // 카메라 액션
     setCameraFov: (fov) => (
       set({ cameraFov: fov })
-    )
+    ),
+    // setCameraMode: (mode) => set({ cameraMode: mode }),
+
+    // 저장/로드 상태
+    currentRoomId: null,
+    isSaving: false,
+    isLoading: false,
+    lastSavedAt: null,
+
+    // 저장/로드 액션
+    setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
+    
+    setSaving: (saving) => set({ isSaving: saving }),
+    
+    setLoading: (loading) => set({ isLoading: loading }),
+    
+    // 시뮬레이터 상태 저장
+    saveSimulatorState: async () => {
+      const state = get();
+      if (!state.currentRoomId) {
+        throw new Error('방 ID가 설정되지 않았습니다');
+      }
+
+      set({ isSaving: true });
+
+      try {
+        const objects = state.loadedModels.map(model => {
+          // furniture_id가 없는 경우 (직접 업로드한 GLB) 임시 UUID 생성하지 않고 null 유지
+          return {
+            furniture_id: model.furniture_id, // null일 수 있음
+            position: model.position,
+            rotation: model.rotation,
+            scale: Array.isArray(model.scale) ? model.scale : [model.scale, model.scale, model.scale],
+            url: model.url,
+            isCityKit: model.isCityKit || false,
+            texturePath: model.texturePath || null,
+            type: model.type || 'glb'
+          };
+        });
+
+        // 임시 room_id인 경우 먼저 방 생성
+        if (state.currentRoomId.startsWith('temp_')) {
+          const floorPlanData = JSON.parse(localStorage.getItem('floorPlanData') || '{}');
+          const roomData = floorPlanData.roomData || {};
+          
+          // 방 생성
+          const createRoomResponse = await fetch('/api/rooms', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: roomData.title || `Room ${new Date().toLocaleString()}`,
+              description: roomData.description || 'Generated room',
+              room_data: floorPlanData,
+              is_public: roomData.is_public || false
+            })
+          });
+
+          if (!createRoomResponse.ok) {
+            throw new Error('방 생성 실패');
+          }
+
+          const roomResult = await createRoomResponse.json();
+          const newRoomId = roomResult.room_id;
+          
+          // 새로운 room_id로 업데이트
+          set({ currentRoomId: newRoomId });
+          
+          // URL도 업데이트 (임시로 현재 URL 수정)
+          if (typeof window !== 'undefined') {
+            window.history.replaceState({}, '', `/sim/${newRoomId}`);
+          }
+          
+          console.log(`새 방 생성 완료: ${newRoomId}`);
+        }
+
+        // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
+        const currentState = get();
+        const response = await fetch('/api/sim/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            room_id: currentState.currentRoomId,
+            objects: objects
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`저장 실패: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        set({ lastSavedAt: new Date() });
+        console.log('시뮬레이터 상태 저장 완료:', result);
+        return result;
+
+      } catch (error) {
+        console.error('저장 중 오류:', error);
+        throw error;
+      } finally {
+        set({ isSaving: false });
+      }
+    },
+
+    // 시뮬레이터 상태 로드
+    loadSimulatorState: async (roomId) => {
+      set({ isLoading: true });
+
+      try {
+        const response = await fetch(`/api/sim/load/${roomId}`);
+        
+        if (!response.ok) {
+          throw new Error(`로드 실패: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        // 기존 모델들 정리
+        const currentState = get();
+        currentState.loadedModels.forEach(model => {
+          if (model.url) URL.revokeObjectURL(model.url);
+        });
+
+        // 로드된 객체들을 loadedModels에 설정
+        const loadedModels = result.objects.map(obj => ({
+          id: obj.id,
+          object_id: obj.object_id,
+          furniture_id: obj.furniture_id,
+          name: obj.name, // InfoPanel에서 사용하는 name 속성 추가
+          position: obj.position,
+          rotation: obj.rotation,
+          scale: obj.scale,
+          url: obj.url,
+          isCityKit: obj.isCityKit,
+          texturePath: obj.texturePath,
+          type: obj.type,
+          furnitureName: obj.furnitureName,
+          categoryId: obj.categoryId
+        }));
+
+        set({ 
+          loadedModels: loadedModels,
+          currentRoomId: roomId,
+          selectedModelId: null
+        });
+
+        console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체`);
+        console.log('로드된 객체들:', loadedModels);
+        loadedModels.forEach((model, index) => {
+          console.log(`모델 ${index}:`, {
+            id: model.id,
+            name: model.name,
+            position: model.position,
+            scale: model.scale,
+            url: model.url
+          });
+        });
+        return result;
+
+      } catch (error) {
+        console.error('로드 중 오류:', error);
+        throw error;
+      } finally {
+        set({ isLoading: false });
+      }
+    }
   }))
 )

@@ -87,12 +87,12 @@ function ModelItem({
         {/* 크기 조정 */}
         <ControlSlider
           label="크기"
-          value={model.scale}
+          value={Array.isArray(model.scale) ? model.scale[0] : model.scale}
           min={0.1}
           max={5}
           step={0.1}
           onChange={(value) => onScaleChange(model.id, value)}
-          displayValue={model.scale.toFixed(1) + 'x'}
+          displayValue={(Array.isArray(model.scale) ? model.scale[0] : model.scale).toFixed(1) + 'x'}
         />
         
         {/* 위치 조정 */}

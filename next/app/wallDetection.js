@@ -356,5 +356,91 @@ export function useWallDetection() {
   }
 }
 
+// 3D 벽 생성 함수들 추가
+export function createWallsFromFloorPlan() {
+  // localStorage에서 도면 데이터 가져오기
+  const floorPlanData = localStorage.getItem('floorPlanData');
+  
+  if (!floorPlanData) {
+    console.log('저장된 도면 데이터가 없습니다.');
+    return [];
+  }
+  
+  try {
+    const { walls, pixelToMmRatio, timestamp } = JSON.parse(floorPlanData);
+    
+    console.log(`도면 데이터 로드됨: ${walls.length}개 벽, 축척: 1px = ${pixelToMmRatio}mm`);
+    
+    // 2D 벽 데이터를 3D 벽 정보로 변환
+    const walls3D = walls.map((wall, index) => {
+      // 픽셀 좌표를 실제 mm 단위로 변환
+      const startX = wall.start.x * pixelToMmRatio / 1000; // m 단위로 변환
+      const startZ = wall.start.y * pixelToMmRatio / 1000;
+      const endX = wall.end.x * pixelToMmRatio / 1000;
+      const endZ = wall.end.y * pixelToMmRatio / 1000;
+      
+      // 벽의 길이 계산
+      const length = Math.sqrt(
+        Math.pow(endX - startX, 2) + Math.pow(endZ - startZ, 2)
+      );
+      
+      // 벽의 중심점 계산
+      const centerX = (startX + endX) / 2;
+      const centerZ = (startZ + endZ) / 2;
+      
+      // 벽의 회전각 계산 (Y축 기준)
+      const rotation = Math.atan2(endZ - startZ, endX - startX);
+      
+      return {
+        id: `wall-${index}`,
+        position: [centerX, 1.25, centerZ], // Y는 벽 높이의 중간(2.5m 높이 가정)
+        rotation: [0, rotation, 0],
+        dimensions: {
+          width: length,
+          height: 2.5, // 기본 벽 높이 2.5m
+          depth: 0.1   // 벽 두께 10cm
+        },
+        material: 'wall',
+        original2D: wall
+      };
+    });
+    
+    // 생성된 3D 벽 정보를 콘솔에 출력 (디버깅용)
+    console.log('3D 벽 데이터 생성 완료:', walls3D);
+    
+    return walls3D;
+    
+  } catch (error) {
+    console.error('도면 데이터 파싱 실패:', error);
+    return [];
+  }
+}
+
+// Three.js용 벽 지오메트리 생성
+export function createWallGeometry(wallData) {
+  // Three.js BoxGeometry 파라미터 반환
+  return {
+    geometry: {
+      type: 'box',
+      width: wallData.dimensions.width,
+      height: wallData.dimensions.height, 
+      depth: wallData.dimensions.depth
+    },
+    position: wallData.position,
+    rotation: wallData.rotation,
+    material: {
+      color: '#cccccc',
+      roughness: 0.8,
+      metalness: 0.1
+    }
+  };
+}
+
+// 도면 데이터 클리어 함수
+export function clearFloorPlanData() {
+  localStorage.removeItem('floorPlanData');
+  console.log('도면 데이터가 삭제되었습니다.');
+}
+
 // 기본 export (클래스 방식으로 사용 시)
 export default WallDetector

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
 
@@ -103,5 +104,100 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error("Error fetching rooms:", error);
     return new Response("Internal Server Error", { status: 500 });
+  }
+}
+
+/**
+ * @swagger
+ * /api/rooms:
+ *   post:
+ *     tags:
+ *       - rooms
+ *     summary: Create a new room
+ *     description: Create a new room for the authenticated user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Room title
+ *               description:
+ *                 type: string
+ *                 description: Room description
+ *               room_data:
+ *                 type: object
+ *                 description: Floor plan data
+ *               is_public:
+ *                 type: boolean
+ *                 description: Whether the room is public
+ *     responses:
+ *       201:
+ *         description: Room created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 room_id:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal Server Error
+ */
+export async function POST(req: NextRequest) {
+  try {
+    // 인증 확인
+    const session = await auth();
+    if (!session?.user?.id) {
+      return Response.json(
+        { error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { title, description, room_data, is_public = false } = body;
+
+    // 필수 파라미터 확인
+    if (!title) {
+      return Response.json(
+        { error: "Title is required" },
+        { status: 400 }
+      );
+    }
+
+    // 새 방 생성
+    const newRoom = await prisma.rooms.create({
+      data: {
+        user_id: session.user.id,
+        title,
+        description,
+        room_data,
+        is_public,
+        view_count: 0
+      }
+    });
+
+    return Response.json({
+      success: true,
+      room_id: newRoom.room_id,
+      message: "Room created successfully"
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error("Error creating room:", error);
+    return Response.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

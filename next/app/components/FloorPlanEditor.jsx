@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { WallDetector } from '../wallDetection.js';
+import { useRouter } from 'next/navigation';
 
 import {
   Square,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
+  const router = useRouter();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [tool, setTool] = useState("wall");
@@ -28,6 +30,9 @@ const FloorPlanEditor = () => {
   const [scaleImage, setScaleImage] = useState(null);
   const [scalePoints, setScalePoints] = useState([]);
   const [realLength, setRealLength] = useState('');
+  const [isDrawingScale, setIsDrawingScale] = useState(false);
+  const [scaleStartPoint, setScaleStartPoint] = useState(null);
+  const [scaleCurrentPoint, setScaleCurrentPoint] = useState(null);
   const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 1픽셀 = 20mm (기본값)
 
   const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
@@ -125,6 +130,7 @@ const FloorPlanEditor = () => {
   // 캔버스 그리기 : 선분 두께 등 수정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
     // 고해상도 렌더링 설정
@@ -319,6 +325,83 @@ const FloorPlanEditor = () => {
     drawCanvas();
   }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
 
+  // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
+  useEffect(() => {
+    const handleResize = () => {
+      // 리사이즈 후 잠시 대기 후 캔버스 다시 그리기 (레이아웃 안정화)
+      setTimeout(() => {
+        drawCanvas();
+      }, 100);
+    };
+
+    // 윈도우 리사이즈 이벤트
+    window.addEventListener('resize', handleResize);
+    
+    // ResizeObserver로 컨테이너 크기 변화 직접 감지
+    let resizeObserver;
+    if (containerRef.current) {
+      resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          // 컨테이너 크기가 변경될 때마다 캔버스 다시 그리기
+          setTimeout(() => {
+            drawCanvas();
+          }, 50);
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+
+  // 축척 설정용 마우스 이벤트 핸들러들
+  const handleScaleMouseDown = (e) => {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    setScaleStartPoint({ x, y });
+    setScaleCurrentPoint({ x, y });
+    setIsDrawingScale(true);
+    setScalePoints([]);
+  };
+
+  const handleScaleMouseMove = (e) => {
+    if (!isDrawingScale || !scaleStartPoint) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    setScaleCurrentPoint({ x, y });
+  };
+
+  const handleScaleMouseUp = (e) => {
+    if (!isDrawingScale || !scaleStartPoint) return;
+    
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // 최소 거리 체크 (너무 짧은 선분 방지)
+    const distance = Math.sqrt(
+      Math.pow(x - scaleStartPoint.x, 2) + Math.pow(y - scaleStartPoint.y, 2)
+    );
+    
+    if (distance > 10) { // 10픽셀 이상일 때만 선분 생성
+      setScalePoints([scaleStartPoint, { x, y }]);
+    }
+    
+    setIsDrawingScale(false);
+    setScaleStartPoint(null);
+    setScaleCurrentPoint(null);
+  };
+
   // 이미지 업로드 처리
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -330,6 +413,9 @@ const FloorPlanEditor = () => {
     setShowScalePopup(true);
     setScalePoints([]);
     setRealLength('');
+    setIsDrawingScale(false);
+    setScaleStartPoint(null);
+    setScaleCurrentPoint(null);
   };
 
   // 축척 설정 완료 후 벽 검출
@@ -465,9 +551,41 @@ const FloorPlanEditor = () => {
     alert(`도면이 완성되어 PNG 파일로 저장되었습니다! 총 ${walls.length}개의 벽이 그려졌습니다.`);
   };
 
+  // 시뮬레이터로 이동 핸들러
+  const handleGoToSimulator = () => {
+    if (walls.length === 0) {
+      alert('먼저 도면을 그려주세요.');
+      return;
+    }
+
+    // 임시 room_id 생성 (실제 DB 저장은 시뮬레이터에서 저장할 때)
+    const tempRoomId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 도면 데이터 준비
+    const wallData = {
+      walls: walls,
+      pixelToMmRatio: pixelToMmRatio,
+      timestamp: new Date().getTime(),
+      tempRoomId: tempRoomId,
+      roomData: {
+        title: `Floor Plan Room ${new Date().toLocaleString()}`,
+        description: `Generated from floor plan with ${walls.length} walls`,
+        is_public: false
+      }
+    };
+    
+    // localStorage에 도면 데이터 저장
+    localStorage.setItem('floorPlanData', JSON.stringify(wallData));
+    
+    // 임시 room_id로 시뮬레이터 페이지 이동
+    router.push(`/sim/${tempRoomId}`);
+    
+    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다! 저장 버튼을 눌러야 실제 방이 생성됩니다.`);
+  };
+
 
   return (
-    <div className="w-full h-screen bg-orange-50 flex flex-col">
+    <div className="w-full min-h-[calc(100vh-80px)] max-h-[calc(100vh-80px)] bg-orange-50 flex flex-col overflow-hidden">
       {/* 축척 설정 팝업 */}
       {showScalePopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -480,47 +598,72 @@ const FloorPlanEditor = () => {
                 <img
                   src={scaleImage?.url}
                   alt="축척 설정용 이미지"
-                  className="w-full max-h-96 object-contain cursor-crosshair block"
-                  onClick={(e) => {
-                    if (scalePoints.length < 2) {
-                      const rect = e.target.getBoundingClientRect();
-                      
-                      // 단순하게 화면 좌표 그대로 사용
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      
-                      console.log('클릭 좌표 (화면):', { x, y });
-                      
-                      setScalePoints([...scalePoints, { x, y }]);
-                    }
-                  }}
+                  className="w-full max-h-96 object-contain cursor-crosshair block select-none"
+                  style={{ userSelect: 'none' }}
+                  onMouseDown={handleScaleMouseDown}
+                  onMouseMove={handleScaleMouseMove}
+                  onMouseUp={handleScaleMouseUp}
+                  draggable={false}
                 />
-                {/* 선택된 점들 표시 */}
-                {scalePoints.length > 0 && (
+                
+                {/* 완성된 선분 표시 */}
+                {scalePoints.length === 2 && (
                   <>
-                    {scalePoints.map((point, index) => (
-                      <div
-                        key={index}
-                        className="absolute w-3 h-3 bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"
-                        style={{
-                          left: `${point.x}px`,
-                          top: `${point.y}px`
-                        }}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                      <line
+                        x1={scalePoints[0].x}
+                        y1={scalePoints[0].y}
+                        x2={scalePoints[1].x}
+                        y2={scalePoints[1].y}
+                        stroke="#0066ff"
+                        strokeWidth="8"
+                        strokeLinecap="round"
                       />
-                    ))}
-                    {scalePoints.length === 2 && (
-                      <svg className="absolute inset-0 w-full h-full pointer-events-none z-5">
-                        <line
-                          x1={scalePoints[0].x}
-                          y1={scalePoints[0].y}
-                          x2={scalePoints[1].x}
-                          y2={scalePoints[1].y}
-                          stroke="red"
-                          strokeWidth="2"
-                        />
-                      </svg>
-                    )}
+                      {/* 시작점 */}
+                      <circle
+                        cx={scalePoints[0].x}
+                        cy={scalePoints[0].y}
+                        r="4"
+                        fill="#0066ff"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                      {/* 끝점 */}
+                      <circle
+                        cx={scalePoints[1].x}
+                        cy={scalePoints[1].y}
+                        r="4"
+                        fill="#0066ff"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                    </svg>
                   </>
+                )}
+                
+                {/* 그리고 있는 선분 표시 */}
+                {isDrawingScale && scaleStartPoint && scaleCurrentPoint && (
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                    <line
+                      x1={scaleStartPoint.x}
+                      y1={scaleStartPoint.y}
+                      x2={scaleCurrentPoint.x}
+                      y2={scaleCurrentPoint.y}
+                      stroke="#66aaff"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray="5,5"
+                    />
+                    {/* 시작점 */}
+                    <circle
+                      cx={scaleStartPoint.x}
+                      cy={scaleStartPoint.y}
+                      r="3"
+                      fill="#66aaff"
+                      stroke="white"
+                      strokeWidth="1"
+                    />
+                  </svg>
                 )}
               </div>
             </div>
@@ -528,9 +671,9 @@ const FloorPlanEditor = () => {
             {/* 안내 메시지 */}
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
               <p className="text-sm text-blue-700">
-                {scalePoints.length === 0 && "1. 이미지에서 기준이 될 선분의 시작점을 클릭하세요"}
-                {scalePoints.length === 1 && "2. 기준 선분의 끝점을 클릭하세요"}
-                {scalePoints.length === 2 && "3. 아래에 실제 길이를 입력하세요"}
+                {scalePoints.length === 0 && !isDrawingScale && "1. 이미지에서 기준이 될 길이를 드래그하여 선분을 그어주세요"}
+                {isDrawingScale && "드래그하여 기준 선분을 그어주세요..."}
+                {scalePoints.length === 2 && "2. 아래에 그은 선분의 실제 길이를 입력하세요"}
               </p>
             </div>
 
@@ -545,7 +688,8 @@ const FloorPlanEditor = () => {
                   value={realLength}
                   onChange={(e) => setRealLength(e.target.value)}
                   placeholder="예: 3000"
-                  className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400
+                  text-gray-900"
                 />
                 <p className="text-xs text-gray-600 mt-1">
                   픽셀 거리: {Math.round(Math.sqrt(
@@ -559,17 +703,25 @@ const FloorPlanEditor = () => {
             {/* 버튼들 */}
             <div className="flex gap-2 justify-end">
               <button
-                onClick={() => setScalePoints([])}
+                onClick={() => {
+                  setScalePoints([]);
+                  setIsDrawingScale(false);
+                  setScaleStartPoint(null);
+                  setScaleCurrentPoint(null);
+                }}
                 className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
                 disabled={isProcessing}
               >
-                다시 선택
+                다시 그리기
               </button>
               <button
                 onClick={() => {
                   setShowScalePopup(false);
                   setScaleImage(null);
                   setScalePoints([]);
+                  setIsDrawingScale(false);
+                  setScaleStartPoint(null);
+                  setScaleCurrentPoint(null);
                 }}
                 className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
                 disabled={isProcessing}
@@ -658,22 +810,30 @@ const FloorPlanEditor = () => {
           />
 
 
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={handleGoToSimulator}
+              disabled={walls.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Check size={18} />
+              선택된 도면으로 우리 집 꾸미기
+            </button>
             <button
               onClick={handleComplete}
               className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-md"
             >
               <Check size={18} />
-              완성
+              도면 저장
             </button>
           </div>
         </div>
       </div>
 
       {/* 메인 작업 영역 */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-6 overflow-hidden">
           <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
             <div
               ref={containerRef}
@@ -708,7 +868,7 @@ const FloorPlanEditor = () => {
         </div>
 
         {/* 사이드 패널 */}
-        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto">
+        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto flex-shrink-0">
           <h3 className="text-lg font-semibold text-orange-800 mb-4">
             도구 정보
           </h3>
