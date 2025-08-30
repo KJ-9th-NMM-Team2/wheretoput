@@ -28,27 +28,28 @@ export default function SortedHouseList({
 
   // 쿼리가 바뀔 때 실행된다.
   const [inputQuery, setInputQuery] = useState("");
-  const [parameterQuery, setParameterQuery] = useState(query);
 
-  // inputQuery가 설정되면 currentQuery를 빈 문자열로 변경
+  // query 변경 시 fetch (초기 로드)
   useEffect(() => {
-    if (parameterQuery === '') return;
-    
-    if (inputQuery) {
-      setParameterQuery("");
-    }
-  }, [inputQuery]);
-
-  console.log(data);
-  // 정렬기준 바뀔때마다 다시 fetch
-  useEffect(() => {
+    if (!query) return;
     async function fetchData() {
-      console.log("fetchData 실행 체크");
-      const rooms = await fetchRooms("short", sortType, undefined, inputQuery || parameterQuery);
+      console.log("query fetchData 실행");
+      const rooms = await fetchRooms("short", sortType, undefined, query);
       setData(rooms);
     }
     fetchData();
-  }, [sortType, inputQuery]);
+  }, [query, sortType]);
+
+  // inputQuery 변경 시 fetch (검색바 입력)
+  useEffect(() => {
+    if (!inputQuery) return;
+    async function fetchData() {
+      console.log("inputQuery fetchData 실행");
+      const rooms = await fetchRooms("short", sortType, undefined, inputQuery);
+      setData(rooms);
+    }
+    fetchData();
+  }, [inputQuery, sortType]);
 
   return (
     <>
@@ -66,7 +67,7 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("view");
-              router.push(`/search?order=view${query ? `&q=${query}` : ''}`);
+              router.push(`/search?order=view${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);
             }}
           >
             <span className="text-sm">조회수 순</span>
@@ -80,7 +81,7 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("new");
-              router.push(`/search?order=new${query ? `&q=${query}` : ''}`);
+              router.push(`/search?order=new${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);
             }}
           >
             <span className="text-sm">최신 순</span>
@@ -94,8 +95,8 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("like");
-              router.push(`/search?order=like${query ? `&q=${query}` : ''}`);
-            }}
+              router.push(`/search?order=like${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);}
+            }
           >
             <span className="text-sm">좋아요 순</span>
           </button>
