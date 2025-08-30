@@ -211,6 +211,16 @@ export const useStore = create(
         });
 
         console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체`);
+        console.log('로드된 객체들:', loadedModels);
+        loadedModels.forEach((model, index) => {
+          console.log(`모델 ${index}:`, {
+            id: model.id,
+            name: model.name,
+            position: model.position,
+            scale: model.scale,
+            url: model.url
+          });
+        });
         return result;
 
       } catch (error) {
