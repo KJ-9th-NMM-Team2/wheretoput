@@ -48,8 +48,7 @@ export function DraggableModel({
     updateModelScale,
     selectModel,
     hoveringModel,
-    controlsRef,
-    position
+    controlsRef
   )
 
   // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)

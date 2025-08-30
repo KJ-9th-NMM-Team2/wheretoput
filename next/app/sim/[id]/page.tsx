@@ -9,8 +9,9 @@
 //   const { id } = await params;  // /pages/[id]에 해당하는 id 값
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
+
 import React, { useRef, Suspense, useState, useEffect } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -20,6 +21,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
+import { KeyboardControls } from '../hooks/KeyboardControls.jsx'
 import { createWallsFromFloorPlan } from '../../wallDetection.js'
 import SimSideView from "@/components/sim/SimSideView"
 
@@ -60,6 +62,19 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
       />
     </mesh>
   )
+}
+
+function CameraUpdater() {
+  const fov = useStore((state) => state.cameraFov);
+  const { camera } = useThree();
+  const perspectiveCamera = camera as THREE.PerspectiveCamera;
+
+  useEffect(() => {
+    perspectiveCamera.fov = fov;
+    perspectiveCamera.updateProjectionMatrix();
+  }, [fov, perspectiveCamera]);
+
+  return null;
 }
 
 export default function SimPage({ params }: { params: Promise<{ id: string }> }) {
@@ -125,7 +140,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
   return (
     <div className="flex h-screen overflow-hidden">
       <SimSideView />
-      
+
       <div className="flex-1 relative">
         {/* 로딩 상태 표시 */}
         {isLoading && (
@@ -152,7 +167,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         <ControlPanel />
         <InfoPanel />
         <LightControlPanel />
-        {/* <CameraControlPanel /> */}
+        <CameraControlPanel />
 
         <Canvas
           camera={{ position: [-20, 15, 0], fov: 60 }}
@@ -160,6 +175,15 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           style={{ width: '100%', height: '100vh' }}
           frameloop='demand'
         >
+
+          {/* {cameraMode == "perspective" ? (
+            <PerspectiveCamera makeDefault fov={cameraFov} position={[-20, 15, 0]} />
+          ) : (
+            <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
+          )} */}
+          
+        <CameraUpdater />
+        
         <color attach="background" args={['#87CEEB']} />
 
         <ambientLight intensity={ambientLightIntensity} />

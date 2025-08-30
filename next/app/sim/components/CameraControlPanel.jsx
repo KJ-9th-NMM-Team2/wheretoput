@@ -5,13 +5,18 @@ import { useStore } from '../store/useStore.js'
 export function CameraControlPanel() {
   const {
     cameraFov,
-    setCameraFov
+    cameraZoom,
+    cameraMode,
+    setCameraFov,
+    setCameraZoom,
+    setCameraMode,
   } = useStore();
 
   return (
     <div style={{
       position: 'absolute',
-      bottom: '10px',
+      top: '50%',
+      transform: 'translateY(-50%)',
       left: '10px',
       background: 'rgba(0,0,0,0.7)',
       padding: '15px',
@@ -19,7 +24,7 @@ export function CameraControlPanel() {
       zIndex: 100,
       color: 'white',
       fontSize: '12px',
-      width: '350px',
+      width: '250px',
       maxHeight: '400px',
       overflowY: 'auto'
     }}>
@@ -39,13 +44,17 @@ export function CameraControlPanel() {
           <ControlSlider
             label="시야각"
             value={cameraFov}
-            min={30}
-            max={90}
+            min={5}
+            max={120}
             step={1}
             onChange={setCameraFov}
             displayValue={cameraFov}
           />
         </div>
+
+        {/* <button onClick={() => setCameraMode(cameraMode === "perspective" ? "orthographic" : "perspective")}>
+          {cameraMode === "perspective" ? "직교" : "투시"} 모드로 변경하기
+        </button> */}
       </div>
 
     </div>
