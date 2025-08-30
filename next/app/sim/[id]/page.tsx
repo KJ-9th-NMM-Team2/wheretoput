@@ -51,15 +51,22 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   position: position; 
   rotation?: [number, number, number] 
 }) {
+  // 각 면에 다른 재질 적용
+  const materials = [
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
+    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면 (검은색)
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 아랫면
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 앞면
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 })  // 뒷면
+  ];
+
   return (
     <mesh position={position} rotation={rotation} receiveShadow castShadow>
       <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        color="#F0F0F0"
-        roughness={0.8}
-        metalness={0.1}
-        normalScale={[0.5, 0.5]}
-      />
+      {materials.map((material, index) => (
+        <primitive key={index} object={material} attach={`material-${index}`} />
+      ))}
     </mesh>
   )
 }
@@ -105,13 +112,17 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         setRoomId(currentRoomId)
         setCurrentRoomId(currentRoomId)
         
-        // 가구 데이터 로드 시도
-        try {
-          await loadSimulatorState(currentRoomId)
-          console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
-        } catch (loadError) {
-          console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
-          // 저장된 데이터가 없어도 에러로 처리하지 않음
+        // 임시 방이 아닌 경우에만 가구 데이터 로드 시도
+        if (!currentRoomId.startsWith('temp_')) {
+          try {
+            await loadSimulatorState(currentRoomId)
+            console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
+          } catch (loadError) {
+            console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
+            // 저장된 데이터가 없어도 에러로 처리하지 않음
+          }
+        } else {
+          console.log(`임시 방 ${currentRoomId}이므로 가구 데이터 로드를 건너뜁니다.`)
         }
         
       } catch (error) {
@@ -122,17 +133,28 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     initializeSimulator()
   }, [params, setCurrentRoomId, loadSimulatorState])
 
-  // 컴포넌트 마운트 시 도면 데이터 로드
+  // 컴포넌트 마운트 시 도면 데이터 로드 (roomId가 설정된 후)
   useEffect(() => {
-    const walls3D = createWallsFromFloorPlan()
-    setWallsData(walls3D)
+    if (!roomId) return; // roomId가 설정될 때까지 대기
     
-    if (walls3D.length > 0) {
-      console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
-    } else {
-      console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
+    const loadWallsData = async () => {
+      try {
+        const walls3D = await createWallsFromFloorPlan(roomId)
+        setWallsData(walls3D)
+        
+        if (walls3D.length > 0) {
+          console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
+        } else {
+          console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
+        }
+      } catch (error) {
+        console.error('벽 데이터 로드 실패:', error)
+        setWallsData([]) // 에러 시 기본 벽 사용
+      }
     }
-  }, [])
+    
+    loadWallsData()
+  }, [roomId]) // roomId 변경 시 도면 데이터 다시 로드
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)

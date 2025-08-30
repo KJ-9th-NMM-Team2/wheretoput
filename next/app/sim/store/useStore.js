@@ -177,10 +177,66 @@ export const useStore = create(
           }
           
           console.log(`새 방 생성 완료: ${newRoomId}`);
+          
+          // 벽 데이터가 있으면 room_walls 테이블에 저장
+          if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
+            try {
+              const wallsResponse = await fetch(`/api/room-walls/${newRoomId}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  walls: floorPlanData.walls,
+                  pixelToMmRatio: floorPlanData.pixelToMmRatio
+                })
+              });
+
+              if (wallsResponse.ok) {
+                const wallsResult = await wallsResponse.json();
+                console.log(`벽 데이터 저장 완료: ${wallsResult.saved_count}개 벽`);
+              } else {
+                console.error('벽 데이터 저장 실패:', wallsResponse.statusText);
+              }
+            } catch (wallError) {
+              console.error('벽 데이터 저장 중 오류:', wallError);
+            }
+          }
+        }
+
+        // 벽 데이터 저장 (모든 방에 대해 실행)
+        const currentState = get();
+        const floorPlanData = JSON.parse(localStorage.getItem('floorPlanData') || '{}');
+        
+        // localStorage에 벽 데이터가 있으면 room_walls 테이블에 저장
+        if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
+          try {
+            console.log(`방 ${currentState.currentRoomId}에 벽 데이터 저장 시도`);
+            const wallsResponse = await fetch(`/api/room-walls/${currentState.currentRoomId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                walls: floorPlanData.walls,
+                pixelToMmRatio: floorPlanData.pixelToMmRatio
+              })
+            });
+
+            if (wallsResponse.ok) {
+              const wallsResult = await wallsResponse.json();
+              console.log(`벽 데이터 저장 완료: ${wallsResult.saved_count}개 벽`);
+            } else {
+              console.error('벽 데이터 저장 실패:', wallsResponse.statusText);
+            }
+          } catch (wallError) {
+            console.error('벽 데이터 저장 중 오류:', wallError);
+          }
+        } else {
+          console.log('저장할 벽 데이터가 없습니다 (localStorage에 floorPlanData 없음)');
         }
 
         // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
-        const currentState = get();
         const response = await fetch('/api/sim/save', {
           method: 'POST',
           headers: {

@@ -5,6 +5,39 @@ import path from 'path'
 import fs from 'fs/promises'
 import https from 'https'
 import { createWriteStream } from 'fs'
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { readFileSync } from 'fs'
+
+// S3 클라이언트 설정
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+// S3에 파일 업로드 함수
+async function uploadToS3(filePath, key, contentType) {
+  try {
+    const fileContent = readFileSync(filePath);
+    
+    const command = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      Body: fileContent,
+      ContentType: contentType,
+    });
+    
+    await s3Client.send(command);
+    
+    // S3 URL 반환
+    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  } catch (error) {
+    console.error('S3 업로드 실패:', error);
+    throw error;
+  }
+}
 
 // URL에서 이미지를 다운로드하는 함수
 async function downloadImage(imageUrl, localPath) {
@@ -59,50 +92,34 @@ export async function POST(request) {
       )
     }
 
-    // 이미 model_url이 있는 경우 기존 파일 사용
+    // 이미 model_url이 있는 경우 기존 URL 사용 (S3 또는 로컬)
     if (furniture.model_url) {
       console.log('기존 model_url 발견:', furniture.model_url)
       
-      // 파일이 실제로 존재하는지 확인
-      const modelPath = path.join(process.cwd(), 'public', furniture.model_url)
-      try {
-        await fs.access(modelPath)
-        console.log('기존 3D 모델 파일 존재 확인:', furniture.model_url)
+      // S3 URL인지 확인
+      if (furniture.model_url.startsWith('https://') && furniture.model_url.includes('s3')) {
+        console.log('기존 S3 URL 사용:', furniture.model_url)
         return NextResponse.json({
           success: true,
           furniture_id: furniture_id,
           model_url: furniture.model_url,
-          message: '기존 3D 모델을 사용합니다.'
+          message: '기존 S3 3D 모델을 사용합니다.'
+        })
+      }
+      
+      // 로컬 파일인 경우 존재 확인 후 S3로 업로드할지 결정
+      const modelPath = path.join(process.cwd(), 'public', furniture.model_url)
+      try {
+        await fs.access(modelPath)
+        console.log('기존 로컬 파일 발견. S3로 마이그레이션하지 않고 기존 URL 사용:', furniture.model_url)
+        return NextResponse.json({
+          success: true,
+          furniture_id: furniture_id,
+          model_url: furniture.model_url,
+          message: '기존 로컬 3D 모델을 사용합니다.'
         })
       } catch (error) {
-        console.log('기존 파일이 없음. 다른 확장자도 확인...')
-        
-        // GLB/GLTF 양쪽 확장자로 확인
-        const modelDir = path.dirname(modelPath)
-        const baseName = path.basename(modelPath, path.extname(modelPath))
-        const altExtension = furniture.model_url.endsWith('.glb') ? '.gltf' : '.glb'
-        const altModelPath = path.join(modelDir, baseName + altExtension)
-        const altModelUrl = furniture.model_url.replace(path.extname(furniture.model_url), altExtension)
-        
-        try {
-          await fs.access(altModelPath)
-          console.log('대체 확장자 파일 발견:', altModelUrl)
-          
-          // DB에서 model_url을 올바른 확장자로 업데이트
-          await prisma.furnitures.update({
-            where: { furniture_id: furniture_id },
-            data: { model_url: altModelUrl }
-          })
-          
-          return NextResponse.json({
-            success: true,
-            furniture_id: furniture_id,
-            model_url: altModelUrl,
-            message: '기존 3D 모델을 사용합니다 (확장자 수정됨).'
-          })
-        } catch (altError) {
-          console.log('대체 확장자 파일도 없음. 새로 생성합니다.')
-        }
+        console.log('기존 로컬 파일이 없음. 새로 생성합니다.')
       }
     }
 
@@ -133,19 +150,20 @@ export async function POST(request) {
     await downloadImage(furniture.image_url, localImagePath)
     console.log('이미지 다운로드 완료:', localImageName)
 
-    // 3. model_url 폴더 생성 (없으면)
-    const modelDir = path.join(process.cwd(), 'public', 'model_url')
+    // 3. 임시 폴더 생성 (3D 모델 변환용)
+    const tempModelDir = path.join(process.cwd(), 'temp')
     try {
-      await fs.access(modelDir)
+      await fs.access(tempModelDir)
     } catch {
-      await fs.mkdir(modelDir, { recursive: true })
-      console.log('model_url 폴더 생성됨')
+      await fs.mkdir(tempModelDir, { recursive: true })
+      console.log('temp 폴더 생성됨')
     }
 
-    // 4. 깔끔한 3D 모델 파일명 생성 (확장자는 나중에 결정)
+    // 4. 깔끔한 3D 모델 파일명 생성 (S3 업로드용)
     const cleanName = furniture.name.replace(/[^a-zA-Z0-9가-힣]/g, '').substring(0, 20) // 특수문자 제거, 20자 제한
+    const randomId = Math.random().toString(36).substring(2, 15)
     const modelBaseName = `${cleanName}_${furniture_id.substring(0, 8)}` // furniture_id 앞 8자리만 사용
-    const tempModelPath = path.join(modelDir, `${modelBaseName}.temp`) // 임시 경로
+    const tempModelPath = path.join(tempModelDir, `${modelBaseName}.temp`) // 임시 경로
     
     // 5. sonnet4_api를 사용해 3D 모델로 변환
     console.log('이미지를 3D 모델로 변환 중...')
@@ -156,76 +174,74 @@ export async function POST(request) {
       1 // scale
     )
     
-    // 6. 실제 생성된 파일의 확장자를 확인하고 적절한 파일명으로 변경
-    let finalModelPath
+    // 6. 실제 생성된 파일을 S3에 업로드
+    let s3Url
     let finalFilename
-    let modelUrl
     
     if (result.filename) {
       const resultPath = result.filename
       const resultExt = path.extname(resultPath)
       
-      // 실제 생성된 확장자를 사용
+      // S3 키 생성 (uploads/ 폴더에 저장)
       if (resultExt === '.gltf') {
-        finalFilename = `${modelBaseName}.gltf`
-        finalModelPath = path.join(modelDir, finalFilename)
-        modelUrl = `/model_url/${finalFilename}`
-        console.log(`GLTF 파일 생성됨: ${finalFilename}`)
+        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.gltf`
+        const s3Key = `uploads/${finalFilename}`
+        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf+json')
+        console.log(`GLTF 파일 S3 업로드 완료: ${finalFilename}`)
       } else if (resultExt === '.glb') {
-        finalFilename = `${modelBaseName}.glb`
-        finalModelPath = path.join(modelDir, finalFilename)
-        modelUrl = `/model_url/${finalFilename}`
-        console.log(`GLB 파일 생성됨: ${finalFilename}`)
+        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.glb`
+        const s3Key = `uploads/${finalFilename}`
+        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf-binary')
+        console.log(`GLB 파일 S3 업로드 완료: ${finalFilename}`)
       } else {
         // 기본값은 GLB로 설정
-        finalFilename = `${modelBaseName}.glb`
-        finalModelPath = path.join(modelDir, finalFilename)
-        modelUrl = `/model_url/${finalFilename}`
-        console.log(`기본 GLB 확장자 사용: ${finalFilename}`)
+        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.glb`
+        const s3Key = `uploads/${finalFilename}`
+        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf-binary')
+        console.log(`기본 GLB 확장자로 S3 업로드: ${finalFilename}`)
       }
       
-      // 파일을 model_url 폴더로 이동 (필요한 경우만)
-      if (resultPath !== finalModelPath) {
-        await fs.rename(resultPath, finalModelPath)
-        console.log(`파일 이동: ${path.basename(resultPath)} → ${finalFilename}`)
+      // 임시 파일 삭제
+      try {
+        await fs.unlink(resultPath)
+        console.log('임시 3D 모델 파일 삭제 완료')
+      } catch (err) {
+        console.warn('임시 3D 모델 파일 삭제 실패:', err.message)
       }
     } else {
-      // result.filename이 없는 경우 기본값
-      finalFilename = `${modelBaseName}.glb`
-      finalModelPath = path.join(modelDir, finalFilename)
-      modelUrl = `/model_url/${finalFilename}`
+      throw new Error('3D 모델 변환 결과 파일이 없습니다.')
     }
     
     console.log('3D 변환 성공:', finalFilename)
 
-    // 7. DB의 model_url 컬럼 업데이트
+    // 7. DB의 model_url 컬럼을 S3 URL로 업데이트
     const updatedFurniture = await prisma.furnitures.update({
       where: { furniture_id: furniture_id },
-      data: { model_url: modelUrl }
+      data: { model_url: s3Url }
     })
 
-    // 6. 임시 파일 정리
+    // 8. 임시 파일 정리
     try {
       await fs.unlink(localImagePath)
       console.log('임시 이미지 파일 삭제 완료')
     } catch (err) {
-      console.warn('임시 파일 삭제 실패:', err.message)
+      console.warn('임시 이미지 파일 삭제 실패:', err.message)
     }
 
-    console.log('DB 업데이트 완료:', updatedFurniture.model_url)
+    console.log('S3 업로드 및 DB 업데이트 완료:', s3Url)
 
     return NextResponse.json({
       success: true,
       furniture_id: furniture_id,
-      model_url: modelUrl,
+      model_url: s3Url,
       filename: finalFilename,
-      message: '3D 모델 생성 및 DB 업데이트 완료'
+      message: 'S3에 3D 모델 업로드 및 DB 업데이트 완료'
     })
 
   } catch (error) {
-    console.error('3D 모델 생성 오류:', error)
+    console.error('3D 모델 생성/업로드 오류:', error)
     return NextResponse.json(
-      { error: '3D 모델 생성에 실패했습니다: ' + error.message },
+      { error: 'S3에 3D 모델 업로드에 실패했습니다: ' + error.message },
       { status: 500 }
     )
   }
