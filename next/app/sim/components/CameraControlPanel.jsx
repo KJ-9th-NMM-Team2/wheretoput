@@ -5,7 +5,11 @@ import { useStore } from '../store/useStore.js'
 export function CameraControlPanel() {
   const {
     cameraFov,
-    setCameraFov
+    cameraZoom,
+    cameraMode,
+    setCameraFov,
+    setCameraZoom,
+    setCameraMode,
   } = useStore();
 
   return (
@@ -47,6 +51,10 @@ export function CameraControlPanel() {
             displayValue={cameraFov}
           />
         </div>
+
+        {/* <button onClick={() => setCameraMode(cameraMode === "perspective" ? "orthographic" : "perspective")}>
+          {cameraMode === "perspective" ? "직교" : "투시"} 모드로 변경하기
+        </button> */}
       </div>
 
     </div>

@@ -11,7 +11,7 @@
 // }
 import React, { useRef, Suspense, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei'
 import * as THREE from 'three'
 
 import { useStore } from '../store/useStore.js'
@@ -72,7 +72,7 @@ function CameraUpdater() {
 
 export default function SimPage() {
   const controlsRef = useRef(null)
-  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity } = useStore()
+  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraMode } = useStore()
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -90,6 +90,12 @@ export default function SimPage() {
           style={{ width: '100%', height: '100vh' }}
           frameloop='demand'
         >
+          {/* {cameraMode == "perspective" ? (
+            <PerspectiveCamera makeDefault fov={cameraFov} position={[-20, 15, 0]} />
+          ) : (
+            <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
+          )} */}
+
           <color attach="background" args={['#87CEEB']} />
           <CameraUpdater />
 
