@@ -129,17 +129,28 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     initializeSimulator()
   }, [params, setCurrentRoomId, loadSimulatorState])
 
-  // 컴포넌트 마운트 시 도면 데이터 로드
+  // 컴포넌트 마운트 시 도면 데이터 로드 (roomId가 설정된 후)
   useEffect(() => {
-    const walls3D = createWallsFromFloorPlan()
-    setWallsData(walls3D)
+    if (!roomId) return; // roomId가 설정될 때까지 대기
     
-    if (walls3D.length > 0) {
-      console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
-    } else {
-      console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
+    const loadWallsData = async () => {
+      try {
+        const walls3D = await createWallsFromFloorPlan(roomId)
+        setWallsData(walls3D)
+        
+        if (walls3D.length > 0) {
+          console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
+        } else {
+          console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
+        }
+      } catch (error) {
+        console.error('벽 데이터 로드 실패:', error)
+        setWallsData([]) // 에러 시 기본 벽 사용
+      }
     }
-  }, [])
+    
+    loadWallsData()
+  }, [roomId]) // roomId 변경 시 도면 데이터 다시 로드
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)

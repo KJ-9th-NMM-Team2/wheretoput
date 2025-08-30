@@ -357,17 +357,37 @@ export function useWallDetection() {
 }
 
 // 3D 벽 생성 함수들 추가
-export function createWallsFromFloorPlan() {
-  // localStorage에서 도면 데이터 가져오기
-  const floorPlanData = localStorage.getItem('floorPlanData');
+export async function createWallsFromFloorPlan(roomId = null) {
+  // room_id가 제공되면 room_walls 테이블에서 가져오기
+  if (roomId && !roomId.startsWith('temp_')) {
+    try {
+      console.log(`room_walls 테이블에서 방 ${roomId}의 벽 데이터를 가져옵니다.`);
+      const response = await fetch(`/api/room-walls/${roomId}`);
+      if (response.ok) {
+        const wallsResult = await response.json();
+        if (wallsResult.success && wallsResult.walls && wallsResult.walls.length > 0) {
+          console.log(`room_walls에서 ${wallsResult.wall_count}개의 벽을 가져왔습니다.`);
+          return wallsResult.walls;
+        }
+      } else if (response.status !== 404) {
+        console.log(`room_walls API 호출 실패: ${response.status}`);
+      }
+    } catch (error) {
+      console.log('room_walls에서 벽 데이터 가져오기 실패:', error.message);
+    }
+  }
   
+  // room_walls에서 가져오지 못했거나 temp_ roomId인 경우 localStorage 사용
+  console.log('localStorage에서 도면 데이터를 가져옵니다.');
+  const floorPlanData = localStorage.getItem('floorPlanData');
   if (!floorPlanData) {
     console.log('저장된 도면 데이터가 없습니다.');
     return [];
   }
   
   try {
-    const { walls, pixelToMmRatio, timestamp } = JSON.parse(floorPlanData);
+    const wallData = JSON.parse(floorPlanData);
+    const { walls, pixelToMmRatio, timestamp } = wallData;
     
     console.log(`도면 데이터 로드됨: ${walls.length}개 벽, 축척: 1px = ${pixelToMmRatio}mm`);
     
