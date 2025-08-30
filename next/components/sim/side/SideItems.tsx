@@ -104,8 +104,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     // 아이템 클릭 핸들러
     const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
-        
-
+    
         // 3D 모델 생성 API 호출
         try {
             const response = await fetch('/api/model-upload', {

@@ -9,7 +9,7 @@
 //   const { id } = await params;  // /pages/[id]에 해당하는 id 값
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
-import React, { useRef, Suspense, useState } from 'react'
+import React, { useRef, Suspense, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -20,6 +20,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
+import { createWallsFromFloorPlan } from '../../wallDetection.js'
 import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
@@ -40,17 +41,21 @@ function Floor() {
   )
 }
 
-// [임시] 벽 - BFC 적용중인 planeGeometry
-// 구현 필요 : 두께가 있는 벽, 텍스쳐 적용
-function Wall({ width, height, position, rotation = 0 }: { width: number; height: number; position: position; rotation?: number }) {
+// 도면 기반 3D 벽 컴포넌트
+function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: { 
+  width: number; 
+  height: number; 
+  depth?: number;
+  position: position; 
+  rotation?: [number, number, number] 
+}) {
   return (
-    <mesh position={position} rotation={[0, rotation, 0]} receiveShadow castShadow>
-      <planeGeometry args={[width, height]} />
+    <mesh position={position} rotation={rotation} receiveShadow castShadow>
+      <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial
         color="#F0F0F0"
         roughness={0.8}
         metalness={0.1}
-        // side={THREE.DoubleSide}
         normalScale={[0.5, 0.5]}
       />
     </mesh>
@@ -60,6 +65,19 @@ function Wall({ width, height, position, rotation = 0 }: { width: number; height
 export default function SimPage() {
   const controlsRef = useRef(null)
   const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraFov } = useStore()
+  const [wallsData, setWallsData] = useState([])
+
+  // 컴포넌트 마운트 시 도면 데이터 로드
+  useEffect(() => {
+    const walls3D = createWallsFromFloorPlan()
+    setWallsData(walls3D)
+    
+    if (walls3D.length > 0) {
+      console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
+    } else {
+      console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
+    }
+  }, [])
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)
@@ -98,15 +116,29 @@ export default function SimPage() {
         />
 
         <Floor />
-        // Walls
-        {
+        
+        {/* 도면 기반 벽들 또는 기본 벽들 */}
+        {wallsData.length > 0 ? (
+          // 도면 데이터 기반 벽들
+          wallsData.map((wall) => (
+            <Wall
+              key={wall.id}
+              width={wall.dimensions.width}
+              height={wall.dimensions.height}
+              depth={wall.dimensions.depth}
+              position={wall.position}
+              rotation={wall.rotation}
+            />
+          ))
+        ) : (
+          // 기본 벽들 (도면 데이터가 없을 때)
           <>
-            <Wall width={20} height={5} position={[0, 2.5, -10]} rotation={0} />
-            <Wall width={20} height={5} position={[-10, 2.5, 0]} rotation={Math.PI / 2} />
-            <Wall width={20} height={5} position={[10, 2.5, 0]} rotation={-Math.PI / 2} />
-            <Wall width={20} height={5} position={[0, 2.5, 10]} rotation={Math.PI} />
+            <Wall width={20} height={5} position={[0, 2.5, -10]} rotation={[0, 0, 0]} />
+            <Wall width={20} height={5} position={[-10, 2.5, 0]} rotation={[0, Math.PI / 2, 0]} />
+            <Wall width={20} height={5} position={[10, 2.5, 0]} rotation={[0, -Math.PI / 2, 0]} />
+            <Wall width={20} height={5} position={[0, 2.5, 10]} rotation={[0, Math.PI, 0]} />
           </>
-        }
+        )}
 
         <Suspense fallback={null}>
           {loadedModels.map((model: any) => (

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { WallDetector } from '../wallDetection.js';
+import { useRouter } from 'next/navigation';
 
 import {
   Square,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
+  const router = useRouter();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [tool, setTool] = useState("wall");
@@ -465,6 +467,28 @@ const FloorPlanEditor = () => {
     alert(`도면이 완성되어 PNG 파일로 저장되었습니다! 총 ${walls.length}개의 벽이 그려졌습니다.`);
   };
 
+  // 시뮬레이터로 이동 핸들러
+  const handleGoToSimulator = () => {
+    if (walls.length === 0) {
+      alert('먼저 도면을 그려주세요.');
+      return;
+    }
+
+    // 도면 데이터를 localStorage에 저장
+    const wallData = {
+      walls: walls,
+      pixelToMmRatio: pixelToMmRatio,
+      timestamp: new Date().getTime()
+    };
+    
+    localStorage.setItem('floorPlanData', JSON.stringify(wallData));
+    
+    // 시뮬레이터 페이지로 이동 (기본 room_id = 1 사용)
+    router.push('/sim/1');
+    
+    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다!`);
+  };
+
 
   return (
     <div className="w-full h-screen bg-orange-50 flex flex-col">
@@ -658,7 +682,15 @@ const FloorPlanEditor = () => {
           />
 
 
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={handleGoToSimulator}
+              disabled={walls.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Check size={18} />
+              선택된 도면으로 우리 집 꾸미기
+            </button>
             <button
               onClick={handleComplete}
               className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-md"
