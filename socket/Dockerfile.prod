@@ -24,39 +24,34 @@ WORKDIR /app
 COPY --from=dev-deps /app/node_modules ./node_modules
 COPY . .
 
-# .dockerignore에 추가할 것들을 여기서 제외
-# COPY 시점에서 불필요한 파일들 제외되도록 .dockerignore 설정 필수
-
 # 환경 변수 및 빌드
-ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-RUN npx prisma generate
+# TypeScript 빌드
 RUN npm run build
 
-# 실행 단계 (가장 중요한 최적화 포인트)
+# 실행 단계 (최적화된 프로덕션 이미지)
 FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 
 # 보안을 위해 비특권 사용자 생성
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 nestjs
 
 # 프로덕션 의존성만 복사
 COPY --from=deps /app/node_modules ./node_modules
 
-# Prisma 클라이언트 복사
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# 빌드된 애플리케이션 복사
+COPY --from=builder /app/dist ./dist
 
-# public 폴더 복사
-COPY --from=builder /app/public ./public
+# package.json 복사 (실행 시 필요)
+COPY --from=builder /app/package.json ./
 
-USER nextjs
+USER nestjs
 
-EXPOSE 3000
-ENV PORT=3000
+EXPOSE 3001
+ENV PORT=3001
 
-CMD ["node", "server.js"]
+CMD ["npm", "run", "start:prod"]

@@ -1,0 +1,14 @@
+# 배포용 Docker Compose 오버라이드
+version: '3.8'
+
+services:
+  socket:
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  next:
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
