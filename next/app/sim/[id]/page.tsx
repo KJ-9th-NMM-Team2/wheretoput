@@ -20,6 +20,7 @@ import { InfoPanel } from '../components/InfoPanel.jsx'
 import { DraggableModel } from '../components/DraggableModel.jsx'
 import { LightControlPanel } from '../components/LightControlPanel.jsx'
 import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
+import { KeyboardControls } from '../hooks/KeyboardControls.jsx'
 import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
@@ -151,6 +152,9 @@ export default function SimPage() {
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
 
+          <KeyboardControls
+            controlsRef={controlsRef}
+          />
           <OrbitControls
             ref={controlsRef}
             enableZoom={true}

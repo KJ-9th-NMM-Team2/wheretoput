@@ -44,8 +44,8 @@ export function CameraControlPanel() {
           <ControlSlider
             label="시야각"
             value={cameraFov}
-            min={30}
-            max={90}
+            min={5}
+            max={120}
             step={1}
             onChange={setCameraFov}
             displayValue={cameraFov}
