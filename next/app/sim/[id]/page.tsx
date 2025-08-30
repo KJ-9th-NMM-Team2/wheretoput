@@ -9,8 +9,8 @@
 //   const { id } = await params;  // /pages/[id]에 해당하는 id 값
 //   return <h1>시뮬레이터 페이지 - id {id}</h1>;
 // }
-import React, { useRef, Suspense, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import React, { useRef, Suspense, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -57,22 +57,32 @@ function Wall({ width, height, position, rotation = 0 }: { width: number; height
   )
 }
 
+function CameraUpdater() {
+  const fov = useStore((state) => state.cameraFov);
+  const { camera } = useThree();
+  const perspectiveCamera = camera as THREE.PerspectiveCamera;
+
+  useEffect(() => {
+    perspectiveCamera.fov = fov;
+    perspectiveCamera.updateProjectionMatrix();
+  }, [fov, perspectiveCamera]);
+
+  return null;
+}
+
 export default function SimPage() {
   const controlsRef = useRef(null)
-  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity, cameraFov } = useStore()
-
-  // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
-  // camera.position.set(10, 6, 10)
+  const { loadedModels, deselectModel, ambientLightIntensity, directionalLightPosition, directionalLightIntensity } = useStore()
 
   return (
     <div className="flex h-screen overflow-hidden">
       <SimSideView />
-      
+
       <div className="flex-1 relative">
         <ControlPanel />
         <InfoPanel />
         <LightControlPanel />
-        {/* <CameraControlPanel /> */}
+        <CameraControlPanel />
 
         <Canvas
           camera={{ position: [-20, 15, 0], fov: 60 }}
@@ -80,68 +90,69 @@ export default function SimPage() {
           style={{ width: '100%', height: '100vh' }}
           frameloop='demand'
         >
-        <color attach="background" args={['#87CEEB']} />
+          <color attach="background" args={['#87CEEB']} />
+          <CameraUpdater />
 
-        <ambientLight intensity={ambientLightIntensity} />
-        <directionalLight
-          position={directionalLightPosition}
-          intensity={directionalLightIntensity}
-          castShadow
-          shadow-camera-near={0.1}
-          shadow-camera-far={50}
-          shadow-camera-left={-15}
-          shadow-camera-right={15}
-          shadow-camera-top={15}
-          shadow-camera-bottom={-15}
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
-        />
+          <ambientLight intensity={ambientLightIntensity} />
+          <directionalLight
+            position={directionalLightPosition}
+            intensity={directionalLightIntensity}
+            castShadow
+            shadow-camera-near={0.1}
+            shadow-camera-far={50}
+            shadow-camera-left={-15}
+            shadow-camera-right={15}
+            shadow-camera-top={15}
+            shadow-camera-bottom={-15}
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+          />
 
-        <Floor />
+          <Floor />
         // Walls
-        {
-          <>
-            <Wall width={20} height={5} position={[0, 2.5, -10]} rotation={0} />
-            <Wall width={20} height={5} position={[-10, 2.5, 0]} rotation={Math.PI / 2} />
-            <Wall width={20} height={5} position={[10, 2.5, 0]} rotation={-Math.PI / 2} />
-            <Wall width={20} height={5} position={[0, 2.5, 10]} rotation={Math.PI} />
-          </>
-        }
+          {
+            <>
+              <Wall width={20} height={5} position={[0, 2.5, -10]} rotation={0} />
+              <Wall width={20} height={5} position={[-10, 2.5, 0]} rotation={Math.PI / 2} />
+              <Wall width={20} height={5} position={[10, 2.5, 0]} rotation={-Math.PI / 2} />
+              <Wall width={20} height={5} position={[0, 2.5, 10]} rotation={Math.PI} />
+            </>
+          }
 
-        <Suspense fallback={null}>
-          {loadedModels.map((model: any) => (
-            <DraggableModel
-              key={model.id}
-              modelId={model.id}
-              url={model.url}
-              position={model.position}
-              rotation={model.rotation}
-              scale={model.scale}
-              controlsRef={controlsRef}
-              isCityKit={model.isCityKit}
-              texturePath={model.texturePath}
-              type={model.isCityKit ? "building" : "glb"}
-            />
-          ))}
-        </Suspense>
+          <Suspense fallback={null}>
+            {loadedModels.map((model: any) => (
+              <DraggableModel
+                key={model.id}
+                modelId={model.id}
+                url={model.url}
+                position={model.position}
+                rotation={model.rotation}
+                scale={model.scale}
+                controlsRef={controlsRef}
+                isCityKit={model.isCityKit}
+                texturePath={model.texturePath}
+                type={model.isCityKit ? "building" : "glb"}
+              />
+            ))}
+          </Suspense>
 
-        <mesh
-          position={[0, -0.01, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          onPointerDown={deselectModel}
-        >
-          <planeGeometry args={[200, 200]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
+          <mesh
+            position={[0, -0.01, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            onPointerDown={deselectModel}
+          >
+            <planeGeometry args={[200, 200]} />
+            <meshBasicMaterial transparent opacity={0} />
+          </mesh>
 
-        <OrbitControls
-          ref={controlsRef}
-          enableZoom={true}
-          enableRotate={true}
-          minDistance={5}
-          maxDistance={20}
-        />
-      </Canvas>
+          <OrbitControls
+            ref={controlsRef}
+            enableZoom={true}
+            enableRotate={true}
+            minDistance={5}
+            maxDistance={20}
+          />
+        </Canvas>
       </div>
     </div>
   )

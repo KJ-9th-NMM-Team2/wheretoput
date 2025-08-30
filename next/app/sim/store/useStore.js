@@ -1,4 +1,3 @@
-import { directPointLight } from 'three/tsl';
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'

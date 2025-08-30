@@ -48,8 +48,7 @@ export function DraggableModel({
     updateModelScale,
     selectModel,
     hoveringModel,
-    controlsRef,
-    position
+    controlsRef
   )
 
   // GLB 모델 로드

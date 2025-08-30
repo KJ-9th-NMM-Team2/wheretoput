@@ -11,7 +11,8 @@ export function CameraControlPanel() {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '10px',
+      top: '50%',
+      transform: 'translateY(-50%)',
       left: '10px',
       background: 'rgba(0,0,0,0.7)',
       padding: '15px',
@@ -19,7 +20,7 @@ export function CameraControlPanel() {
       zIndex: 100,
       color: 'white',
       fontSize: '12px',
-      width: '350px',
+      width: '250px',
       maxHeight: '400px',
       overflowY: 'auto'
     }}>
