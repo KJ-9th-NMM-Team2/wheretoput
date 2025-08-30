@@ -1,14 +1,20 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useStore } from '../store/useStore.js'
 
 export function ControlPanel() {
   const fileInputRef = useRef()
+  const [saveMessage, setSaveMessage] = useState('')
   
   const { 
     scaleValue,
     setScaleValue,
     addModel,
-    clearAllModels
+    clearAllModels,
+    saveSimulatorState,
+    isSaving,
+    currentRoomId,
+    lastSavedAt,
+    loadedModels
   } = useStore()
 
 
@@ -40,6 +46,24 @@ export function ControlPanel() {
     event.target.value = ''
   }
 
+  // 저장 처리
+  const handleSave = async () => {
+    if (!currentRoomId) {
+      setSaveMessage('방 ID가 설정되지 않았습니다.')
+      setTimeout(() => setSaveMessage(''), 3000)
+      return
+    }
+
+    try {
+      await saveSimulatorState()
+      setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`)
+      setTimeout(() => setSaveMessage(''), 3000)
+    } catch (error) {
+      setSaveMessage(`저장 실패: ${error.message}`)
+      setTimeout(() => setSaveMessage(''), 5000)
+    }
+  }
+
   return (
     <div style={{
       position: 'absolute',
@@ -54,30 +78,10 @@ export function ControlPanel() {
       width: '250px'
     }}>
 
-      {/* GLB 파일 업로드 섹션 */}
-      <div style={{ marginBottom: '10px' }}>
-        <label>GLB 파일 선택:</label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".glb"
-          multiple
-          onChange={handleFileUpload}
-          style={{
-            color: 'white',
-            background: '#333',
-            border: '1px solid #555',
-            padding: '5px',
-            borderRadius: '3px',
-            width: '100%',
-            marginTop: '5px'
-          }}
-        />
-      </div>
       
       {/* 기본 스케일 설정 */}
       <div style={{ marginBottom: '10px' }}>
-        <label>새 모델 기본 크기:</label>
+        <label>새 가구 기본 크기:</label>
         <input
           type="range"
           min="0.1"
@@ -92,6 +96,51 @@ export function ControlPanel() {
         </div>
       </div>
       
+      {/* 저장 버튼 */}
+      <div style={{ marginBottom: '10px' }}>
+        <button
+          onClick={handleSave}
+          disabled={isSaving || !currentRoomId}
+          style={{
+            background: currentRoomId ? (isSaving ? '#999' : '#4CAF50') : '#666',
+            color: 'white',
+            border: 'none',
+            padding: '10px 16px',
+            borderRadius: '3px',
+            cursor: currentRoomId && !isSaving ? 'pointer' : 'not-allowed',
+            fontSize: '12px',
+            width: '100%',
+            marginBottom: '5px'
+          }}
+        >
+          {isSaving ? '저장 중...' : `방 상태 저장 (${loadedModels.length}개)`}
+        </button>
+        
+        {/* 저장 상태 메시지 */}
+        {saveMessage && (
+          <div style={{ 
+            fontSize: '10px', 
+            color: saveMessage.includes('실패') ? '#ff4444' : '#4CAF50',
+            textAlign: 'center',
+            marginBottom: '5px'
+          }}>
+            {saveMessage}
+          </div>
+        )}
+        
+        {/* 마지막 저장 시간 */}
+        {lastSavedAt && (
+          <div style={{ 
+            fontSize: '9px', 
+            color: '#aaa',
+            textAlign: 'center',
+            marginBottom: '5px'
+          }}>
+            마지막 저장: {lastSavedAt.toLocaleTimeString()}
+          </div>
+        )}
+      </div>
+
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}
@@ -106,7 +155,7 @@ export function ControlPanel() {
           width: '100%'
         }}
       >
-        모든 모델 제거
+        모든 가구 제거
       </button>
     </div>
   )

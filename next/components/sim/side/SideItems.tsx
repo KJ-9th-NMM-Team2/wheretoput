@@ -104,8 +104,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     // 아이템 클릭 핸들러
     const handleItemClick = useCallback(async (item: Furniture) => {
         console.log('Selected item:', item);
-        
-
+    
         // 3D 모델 생성 API 호출
         try {
             const response = await fetch('/api/model-upload', {
@@ -119,6 +118,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             if (result.success) {
                 // 생성된 또는 기존 모델 URL 사용
                 const newModel = {
+                    furniture_id: item.furniture_id, // 중요: furniture_id 추가
                     url: result.model_url,
                     name: item.name,
                     length_x: item.length_x,
@@ -139,6 +139,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             console.error('3D 모델 생성 실패:', error);
             // fallback으로 기존 파일 사용
             const newModel = {
+                furniture_id: item.furniture_id, // 중요: furniture_id 추가
                 url: '/legacy_mesh (1).glb',
                 name: item.name,
                 length_x: item.length_x,

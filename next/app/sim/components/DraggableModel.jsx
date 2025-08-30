@@ -52,8 +52,9 @@ export function DraggableModel({
     position
   )
 
-  // GLB 모델 로드
-  const { scene, animations } = useGLTF(url)
+  // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
+  const validUrl = url && typeof url === 'string' ? url : '/legacy_mesh (1).glb'
+  const { scene, animations } = useGLTF(validUrl)
   const texture = texturePath ? useTexture(texturePath) : null
 
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
