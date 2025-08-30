@@ -170,7 +170,7 @@ export async function GET(
           scale?.z || 1
         ],
         // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
-        url: hasFurniture ? obj.furnitures.model_url : '/models/default.glb',
+        url: (hasFurniture && obj.furnitures.model_url) ? obj.furnitures.model_url : '/legacy_mesh (1).glb',
         isCityKit: hasFurniture ? (obj.furnitures.model_url?.includes('citykit') || false) : false,
         texturePath: null, // texture_url 필드가 스키마에 없음
         type: hasFurniture ? (obj.furnitures.model_url?.endsWith('.glb') ? 'glb' : 'building') : 'custom',
