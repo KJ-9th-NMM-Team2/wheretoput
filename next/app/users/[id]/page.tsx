@@ -11,7 +11,6 @@ export default async function UserPage({
   try {
     const user = await fetchUserById(id);
     const userRooms = await fetchUserRooms(id, "short", "new");
-    console.log("user", user.profile_image);
 
     return (
       <div className="px-40 py-5">

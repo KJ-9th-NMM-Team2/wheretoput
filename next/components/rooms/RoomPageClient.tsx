@@ -73,9 +73,27 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 {!loading && <LikeButton room={room} liked={liked} />}
               </div>
             </div>
-            <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              {room.user.name} on {room.updated_at.slice(0, 10)}
-            </p>
+            <div className="flex items-center gap-3 px-4 py-2">
+              <Link href={`/users/${room.user.id}`}>
+                {room.user.image ? (
+                  <img
+                    src={room.user.image}
+                    alt={room.user.name}
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
+        transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
+        ring-amber-200 hover:ring-amber-300
+        dark:ring-gray-600 dark:hover:ring-amber-400"
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-amber-700 dark:text-orange-200">
+                    {room.user.name?.[0]?.toUpperCase() || "?"}
+                  </span>
+                )}
+              </Link>
+              <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal">
+                {room.user.name} on {room.updated_at.slice(0, 10)}
+              </span>
+            </div>
             <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
               {room.description}
             </p>
