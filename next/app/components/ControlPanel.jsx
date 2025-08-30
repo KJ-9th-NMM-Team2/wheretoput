@@ -202,30 +202,10 @@ export function ControlPanel() {
         </div>
       )}
 
-      {/* GLB 파일 업로드 섹션 */}
-      <div style={{ marginBottom: '10px' }}>
-        <label>GLB 파일 선택:</label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".glb"
-          multiple
-          onChange={handleFileUpload}
-          style={{
-            color: 'white',
-            background: '#333',
-            border: '1px solid #555',
-            padding: '5px',
-            borderRadius: '3px',
-            width: '100%',
-            marginTop: '5px'
-          }}
-        />
-      </div>
-      
+    
       {/* 기본 스케일 설정 */}
       <div style={{ marginBottom: '10px' }}>
-        <label>새 모델 기본 크기:</label>
+        <label>새 가구 기본 크기:</label>
         <input
           type="range"
           min="0.1"
@@ -254,7 +234,7 @@ export function ControlPanel() {
           width: '100%'
         }}
       >
-        모든 모델 제거
+        모든 가구 제거
       </button>
     </div>
   )
