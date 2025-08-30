@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import SignInButton from "@/components/login/SignInButton";
 import UserBubble from "@/components/login/UserBubble";
 import { useSession } from "next-auth/react";
-import { Handler } from '@/lib/handler';
+// import { Handler } from '@/lib/handler';
 // 로그인되어 있으면 로그아웃, 로그아웃되어 있으면 로그인 버튼
 export function SignInCheck() {
   const { data: session, status } = useSession();
@@ -25,7 +25,7 @@ export function SignInCheck() {
 export default function Header() {
   const [searchInput, setSearchInput] = useState("");
   const pathname = usePathname();
-  const handler = Handler();
+  const router = useRouter();
 
   // page 이동 시 검색어 Reset
   useEffect(() => {
@@ -33,6 +33,12 @@ export default function Header() {
       setSearchInput("");
     }
   }, [pathname]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+        router.push(`/search?q=${encodeURIComponent(searchInput)}`);
+    }
+  }
 
   return (
     <header
@@ -106,7 +112,7 @@ export default function Header() {
             </div>
             <input
               onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => handler.useKeyDown(searchInput, e)}
+              onKeyDown={handleKeyDown}
               placeholder="검색어를 입력하세요"
               className="
                 flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full 
