@@ -51,15 +51,22 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   position: position; 
   rotation?: [number, number, number] 
 }) {
+  // 각 면에 다른 재질 적용
+  const materials = [
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
+    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면 (검은색)
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 아랫면
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 앞면
+    new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 })  // 뒷면
+  ];
+
   return (
     <mesh position={position} rotation={rotation} receiveShadow castShadow>
       <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        color="#F0F0F0"
-        roughness={0.8}
-        metalness={0.1}
-        normalScale={[0.5, 0.5]}
-      />
+      {materials.map((material, index) => (
+        <primitive key={index} object={material} attach={`material-${index}`} />
+      ))}
     </mesh>
   )
 }

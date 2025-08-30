@@ -405,6 +405,20 @@ export function createWallsFromFloorPlan() {
       };
     });
     
+    // 벽들의 중심점을 계산하여 전체 구조를 원점 중심으로 이동
+    if (walls3D.length > 0) {
+      const centerX = walls3D.reduce((sum, wall) => sum + wall.position[0], 0) / walls3D.length;
+      const centerZ = walls3D.reduce((sum, wall) => sum + wall.position[2], 0) / walls3D.length;
+      
+      // 모든 벽의 위치를 중심점 기준으로 조정
+      walls3D.forEach(wall => {
+        wall.position[0] -= centerX;
+        wall.position[2] -= centerZ;
+      });
+      
+      console.log(`벽 중심점 조정: centerX=${centerX.toFixed(2)}, centerZ=${centerZ.toFixed(2)}`);
+    }
+    
     // 생성된 3D 벽 정보를 콘솔에 출력 (디버깅용)
     console.log('3D 벽 데이터 생성 완료:', walls3D);
     
