@@ -24,17 +24,15 @@ WORKDIR /app
 COPY --from=dev-deps /app/node_modules ./node_modules
 COPY . .
 
-# .dockerignore에 추가할 것들을 여기서 제외
-# COPY 시점에서 불필요한 파일들 제외되도록 .dockerignore 설정 필수
-
 # 환경 변수 및 빌드
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Prisma 클라이언트 생성 후 빌드
 RUN npx prisma generate
 RUN npm run build
 
-# 실행 단계 (가장 중요한 최적화 포인트)
+# 실행 단계 (최적화된 프로덕션 이미지)
 FROM base AS runner
 WORKDIR /app
 
@@ -51,8 +49,13 @@ COPY --from=deps /app/node_modules ./node_modules
 # Prisma 클라이언트 복사
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# public 폴더 복사
+# Next.js 빌드 결과물 복사
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+
+# next.config.js 복사 (필요한 경우)
+COPY --from=builder /app/next.config.js ./
 
 USER nextjs
 
