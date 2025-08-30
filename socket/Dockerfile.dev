@@ -1,0 +1,20 @@
+# Node.js 22 Alpine 개발용 이미지
+FROM node:22-alpine
+
+WORKDIR /app
+
+# package.json 복사 및 의존성 설치
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# 소스 코드 복사
+COPY . .
+
+# 개발 환경 변수
+ENV NODE_ENV=development
+
+# 포트 노출
+EXPOSE 3001
+
+# 개발 서버 실행 (watch 모드)
+CMD ["npm", "run", "start:dev"]
