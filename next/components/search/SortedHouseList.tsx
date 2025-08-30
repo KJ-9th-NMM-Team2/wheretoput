@@ -8,54 +8,58 @@ import SearchBar from "@/components/search/SearchBar";
 
 export default function SortedHouseList({
   data: initialData,
-  query = "",
+  initQuery = "",
 }: {
   data: any[];
-  query: string; 
+  initQuery: string; 
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const urlSortType = searchParams.get('order') as "view" | "new" | "like" | null;
+  // 쿼리가 바뀔 때 실행된다.
+  const [currentQuery, setCurrentQuery] = useState(initQuery);
   
   // 검색값
-  const [searchInput, setSearchInput] = useState(query);
+  const [searchInput, setSearchInput] = useState(initQuery);
 
   // 정렬기준 - URL에서 읽어오거나 기본값 사용
   const [sortType, setSortType] = useState<"view" | "new" | "like">(urlSortType || "view");
 
   // 띄울 데이터
-  const [data, setData] = useState<any[]>(initialData);
+  const [data, setData] = useState<any[]>(initialData);  
 
-  // 쿼리가 바뀔 때 실행된다.
-  const [inputQuery, setInputQuery] = useState("");
-
-  // query 변경 시 fetch (초기 로드)
+  // currentQuery 변경 시 fetch (초기 로드)
   useEffect(() => {
-    if (!query) return;
-    async function fetchData() {
-      console.log("query fetchData 실행");
-      const rooms = await fetchRooms("short", sortType, undefined, query);
+    const fetchData = async () => {
+      const rooms = await fetchRooms("short", sortType, undefined, currentQuery);
       setData(rooms);
     }
     fetchData();
-  }, [query, sortType]);
+  }, [currentQuery, sortType]);
 
-  // inputQuery 변경 시 fetch (검색바 입력)
+  // initQuery 변경 시 ex) header 이용
   useEffect(() => {
-    if (!inputQuery) return;
-    async function fetchData() {
-      console.log("inputQuery fetchData 실행");
-      const rooms = await fetchRooms("short", sortType, undefined, inputQuery);
+    const fetchData = async () => {
+      const rooms = await fetchRooms("short", sortType, undefined, initQuery);
       setData(rooms);
     }
     fetchData();
-  }, [inputQuery, sortType]);
+    setCurrentQuery(initQuery);
+    setSearchInput(initQuery);
+    setSortType("view");
+  }, [initQuery]);
+
+  // 검색 실행 함수
+  const handlerSearch = (newQuery: string) => {
+    setCurrentQuery(newQuery);
+    newQuery ? router.push(`/search?order=${sortType}&q=${newQuery}`) : router.push('/search');
+  }
 
   return (
     <>
       <div className="px-40 py-5">
         {/* 검색바 */}
-        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} setInputQuery={setInputQuery} setSortType={setSortType}/>
+        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} onSearch={handlerSearch} setSortType={setSortType}/>
         <div className="flex gap-3 p-3 flex-wrap pr-4">
           {/* // 정렬버튼 */}
           <button
@@ -67,7 +71,7 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("view");
-              router.push(`/search?order=view${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);
+              router.push(`/search?order=view${(currentQuery) ? `&q=${currentQuery}` : ''}`);
             }}
           >
             <span className="text-sm">조회수 순</span>
@@ -81,7 +85,7 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("new");
-              router.push(`/search?order=new${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);
+              router.push(`/search?order=new${(currentQuery) ? `&q=${currentQuery}` : ''}`);
             }}
           >
             <span className="text-sm">최신 순</span>
@@ -95,7 +99,7 @@ export default function SortedHouseList({
             }`}
             onClick={() => {
               setSortType("like");
-              router.push(`/search?order=like${(inputQuery || query) ? `&q=${inputQuery || query}` : ''}`);}
+              router.push(`/search?order=like${(currentQuery) ? `&q=${currentQuery}` : ''}`);}
             }
           >
             <span className="text-sm">좋아요 순</span>

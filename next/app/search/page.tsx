@@ -16,7 +16,7 @@ export default async function SearchPage({searchParams} : {searchParams: Promise
   }
   return (
     <>
-      <SortedHouseList data={data} query={query || ""} />
+      <SortedHouseList data={data} initQuery={query || ""} />
     </>
   );
 }
