@@ -94,6 +94,8 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             name: true,
+            id: true,
+            image: true,
           },
         },
       },
@@ -169,10 +171,7 @@ export async function POST(req: NextRequest) {
 
     // 필수 파라미터 확인
     if (!title) {
-      return Response.json(
-        { error: "Title is required" },
-        { status: 400 }
-      );
+      return Response.json({ error: "Title is required" }, { status: 400 });
     }
 
     // 새 방 생성
@@ -183,21 +182,20 @@ export async function POST(req: NextRequest) {
         description,
         room_data,
         is_public,
-        view_count: 0
-      }
+        view_count: 0,
+      },
     });
 
-    return Response.json({
-      success: true,
-      room_id: newRoom.room_id,
-      message: "Room created successfully"
-    }, { status: 201 });
-
+    return Response.json(
+      {
+        success: true,
+        room_id: newRoom.room_id,
+        message: "Room created successfully",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating room:", error);
-    return Response.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
