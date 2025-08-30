@@ -99,14 +99,14 @@ export async function GET(req: NextRequest) {
         OR: [
           {
             title: {
-              startsWith: query,
+              contains: query,
               mode: 'insensitive'
             }
           },
           {
             user: {
               name: {
-                startsWith: query,
+                contains: query,
                 mode: 'insensitive'
               }
             }
