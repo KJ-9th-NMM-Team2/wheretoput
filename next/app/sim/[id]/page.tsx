@@ -252,6 +252,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
+        <KeyboardControls 
+          controlsRef={controlsRef}
+        />
         <OrbitControls
           ref={controlsRef}
           enableZoom={true}
