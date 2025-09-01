@@ -14,7 +14,10 @@ export function ControlPanel() {
     isSaving,
     currentRoomId,
     lastSavedAt,
-    loadedModels
+    loadedModels,
+    wallScaleFactor,
+    setWallScaleFactor,
+    loadSimulatorState
   } = useStore()
 
 
@@ -93,6 +96,30 @@ export function ControlPanel() {
         />
         <div style={{ color: '#4CAF50', textAlign: 'center' }}>
           {scaleValue.toFixed(1)}x
+        </div>
+      </div>
+      
+      {/* 벽 스케일 설정 */}
+      <div style={{ marginBottom: '10px' }}>
+        <label>벽 크기 조정:</label>
+        <input
+          type="range"
+          min="0.5"
+          max="5.0"
+          step="0.1"
+          value={wallScaleFactor}
+          onChange={(e) => {
+            const newFactor = parseFloat(e.target.value);
+            setWallScaleFactor(newFactor);
+            // 현재 방 데이터를 다시 로드하여 새로운 스케일 적용
+            if (currentRoomId) {
+              loadSimulatorState(currentRoomId);
+            }
+          }}
+          style={{ width: '100%', margin: '5px 0' }}
+        />
+        <div style={{ color: '#FF9800', textAlign: 'center' }}>
+          {wallScaleFactor.toFixed(1)}x
         </div>
       </div>
       

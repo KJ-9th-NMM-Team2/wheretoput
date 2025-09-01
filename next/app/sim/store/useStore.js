@@ -105,16 +105,18 @@ export const useStore = create(
     ),
     // setCameraMode: (mode) => set({ cameraMode: mode }),
 
-    // 저장/로드 상태
+    // 저장/로드 상태 [09.01] wallscale
     currentRoomId: null,
     isSaving: false,
     isLoading: false,
     lastSavedAt: null,
     wallsData: [],
+    wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
     // 저장/로드 액션
     setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
     setWallsData: (walls) => set({ wallsData: walls }),
+    setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
     
     setSaving: (saving) => set({ isSaving: saving }),
     
@@ -277,14 +279,19 @@ loadSimulatorState: async (roomId) => {
     // 벽 데이터 처리
     let wallsData = [];
     if (result.walls && result.walls.length > 0) {
+      const scaleFactor = get().wallScaleFactor;
       wallsData = result.walls.map(wall => ({
         id: wall.id,
         dimensions: {
-          width: wall.length,
+          width: wall.length * scaleFactor,
           height: wall.height,
           depth: wall.depth
         },
-        position: wall.position,
+        position: [
+          wall.position[0] * scaleFactor,
+          wall.position[1],
+          wall.position[2] * scaleFactor
+        ],
         rotation: wall.rotation
       }));
     }
