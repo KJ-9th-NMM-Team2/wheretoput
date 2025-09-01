@@ -87,6 +87,8 @@ function CameraUpdater() {
 export default function SimPage({ params }: { params: Promise<{ id: string }> }) {
   const controlsRef = useRef(null)
   const { 
+    viewOnly,
+    setViewOnly,
     loadedModels, 
     deselectModel, 
     ambientLightIntensity, 
@@ -161,7 +163,11 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <SimSideView />
+      {!viewOnly && (
+          <>
+            <SimSideView />
+          </>
+        )}
 
       <div className="flex-1 relative">
         {/* 로딩 상태 표시 */}
@@ -185,9 +191,40 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
             </div>
           </div>
         )}
-        
-        <ControlPanel />
-        <InfoPanel />
+
+        {/* 보기/편집 전환 버튼 (임시) */}
+        {/* 실 적용 시 서버에서 권한이 있는지 확인 후 표시 또는 숨기기 */}
+        {
+          <div 
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.7)',
+            padding: '15px',
+            borderRadius: '5px',
+            zIndex: 100,
+            color: 'white',
+            fontSize: '12px',
+            width: '100px',
+            maxHeight: '400px',
+            overflowY: 'auto'
+          }}>
+            <button
+            onClick={() => setViewOnly(!viewOnly)}>
+            {viewOnly ? "편집" : "보기"} 모드로 변경
+            </button>
+          </div>
+        }
+
+        {!viewOnly && (
+          <>
+            <ControlPanel />
+            <InfoPanel />
+          </>
+        )}
+
         <LightControlPanel />
         <CameraControlPanel />
 
