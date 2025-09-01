@@ -153,6 +153,51 @@ export async function GET(
       console.log(`Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`);
     });
 
+    // 4. room_walls에 데이터가 없으면 rooms.room_data에서 fallback 시도
+    let legacyWallsData = [];
+    if (roomWalls.length === 0 && room.room_data) {
+      console.log('room_walls 테이블에 데이터가 없음. room_data에서 fallback 시도...');
+      const roomData = room.room_data as any;
+      if (roomData.walls && Array.isArray(roomData.walls)) {
+        console.log(`room_data에서 ${roomData.walls.length}개의 벽 발견`);
+        
+        // legacy 데이터를 room_walls 형식으로 변환
+        const pixelToMmRatio = (roomData.pixelToMmRatio || 20) / 50;
+        legacyWallsData = roomData.walls.map((wall: any, index: number) => {
+          const startX = wall.start.x * pixelToMmRatio;
+          const startY = wall.start.y * pixelToMmRatio;
+          const endX = wall.end.x * pixelToMmRatio;
+          const endY = wall.end.y * pixelToMmRatio;
+          
+          const length = Math.sqrt(
+            Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
+          );
+          
+          const positionX = (startX + endX) / 2;
+          const positionZ = (startY + endY) / 2;
+          const rotationY = Math.atan2(endY - startY, endX - startX);
+
+          return {
+            wall_id: `legacy-${index}`,
+            start_x: startX,
+            start_y: startY,
+            end_x: endX,
+            end_y: endY,
+            length: length,
+            height: 2.5,
+            depth: 0.2,
+            position_x: positionX,
+            position_y: 1.25,
+            position_z: positionZ,
+            rotation_x: 0,
+            rotation_y: rotationY,
+            rotation_z: 0,
+            wall_order: index,
+          };
+        });
+      }
+    }
+
     // 4. 시뮬레이터에서 사용할 형태로 데이터 변환
     const objects = roomObjects.map((obj) => {
       // position JSON에서 값 추출
@@ -194,8 +239,9 @@ export async function GET(
       };
     });
 
-    // 5. 벽 정보를 시뮬레이터 형태로 변환
-    const walls = roomWalls.map((wall) => ({
+    // 5. 벽 정보를 시뮬레이터 형태로 변환 (room_walls 또는 legacy data 사용)
+    const wallsToProcess = roomWalls.length > 0 ? roomWalls : legacyWallsData;
+    const walls = wallsToProcess.map((wall) => ({
       id: `wall-${wall.wall_id}`,
       wall_id: wall.wall_id,
       start: { x: Number(wall.start_x), y: Number(wall.start_y) },
@@ -207,6 +253,8 @@ export async function GET(
       rotation: [Number(wall.rotation_x), Number(wall.rotation_y), Number(wall.rotation_z)],
       wall_order: wall.wall_order
     }));
+    
+    console.log(`최종 변환된 벽 개수: ${walls.length}`);
 
     return Response.json({
       success: true,
@@ -217,6 +265,8 @@ export async function GET(
       walls_count: walls.length,
       room_info: {
         title: room.title,
+        description: room.description,
+        is_public: room.is_public,
         updated_at: room.updated_at
       }
     });

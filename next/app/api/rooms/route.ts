@@ -190,60 +190,40 @@ export async function POST(req: NextRequest) {
 
       // 벽 정보가 있으면 room_walls 테이블에 저장
       if (room_data?.walls && Array.isArray(room_data.walls)) {
-        // 먼저 모든 벽의 좌표를 변환하고 중심점을 계산 
-        // [09.01] 여기서 나누는값 증가시킬수록 벽 간격 좁아짐
-        const pixelToMmRatio = (room_data.pixelToMmRatio || 20) / 250;
-        const wallPositions: Array<{x: number, z: number}> = [];
+        // 실제 축척 비율을 사용 (고정값 제거)
+        const pixelToMmRatio = room_data.pixelToMmRatio || 1;
         
-        // 모든 벽의 중점들을 수집
-        room_data.walls.forEach((wall: any) => {
-          const startX = wall.start.x * pixelToMmRatio;
-          const startY = wall.start.y * pixelToMmRatio;
-          const endX = wall.end.x * pixelToMmRatio;
-          const endY = wall.end.y * pixelToMmRatio;
-          
-          const centerX = (startX + endX) / 2;
-          const centerZ = (startY + endY) / 2;
-          
-          wallPositions.push({ x: centerX, z: centerZ });
-        });
+        // 축척을 1000배로 줄여서 적당한 크기로 조정
+        const scaleAdjustment = pixelToMmRatio / 1000;
         
-        // 전체 벽들의 중심점 계산
-        const overallCenterX = wallPositions.reduce((sum, pos) => sum + pos.x, 0) / wallPositions.length;
-        const overallCenterZ = wallPositions.reduce((sum, pos) => sum + pos.z, 0) / wallPositions.length;
-        
-        console.log(`벽들의 중심점: (${overallCenterX.toFixed(2)}, ${overallCenterZ.toFixed(2)})`);
+        console.log(`Using pixelToMmRatio: ${pixelToMmRatio}, scaleAdjustment: ${scaleAdjustment}`);
         
         const wallsData = room_data.walls.map((wall: any, index: number) => {
-          const startX = wall.start.x * pixelToMmRatio;
-          const startY = wall.start.y * pixelToMmRatio;
-          const endX = wall.end.x * pixelToMmRatio;
-          const endY = wall.end.y * pixelToMmRatio;
-          
-          // 중심점을 원점으로 이동시키기 위한 오프셋 적용
-          const adjustedStartX = startX - overallCenterX;
-          const adjustedStartY = startY - overallCenterZ;
-          const adjustedEndX = endX - overallCenterX;
-          const adjustedEndY = endY - overallCenterZ;
+          const startX = wall.start.x * scaleAdjustment;
+          const startY = wall.start.y * scaleAdjustment;
+          const endX = wall.end.x * scaleAdjustment;
+          const endY = wall.end.y * scaleAdjustment;
           
           // 벽의 길이 계산
           const length = Math.sqrt(
-            Math.pow(adjustedEndX - adjustedStartX, 2) + Math.pow(adjustedEndY - adjustedStartY, 2)
+            Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
           );
           
-          // 벽의 중점 계산 (중심 조정 후)
-          const positionX = (adjustedStartX + adjustedEndX) / 2;
-          const positionZ = (adjustedStartY + adjustedEndY) / 2;
+          // 벽의 중점 계산 (원본 좌표 유지)
+          const positionX = (startX + endX) / 2;
+          const positionZ = (startY + endY) / 2;
           
           // 벽의 회전 계산 (Y축 회전)
-          const rotationY = Math.atan2(adjustedEndY - adjustedStartY, adjustedEndX - adjustedStartX);
+          const rotationY = Math.atan2(endY - startY, endX - startX);
+
+          console.log(`Wall ${index}: start(${startX.toFixed(2)}, ${startY.toFixed(2)}) end(${endX.toFixed(2)}, ${endY.toFixed(2)}) length=${length.toFixed(2)}`);
 
           return {
             room_id: newRoom.room_id,
-            start_x: adjustedStartX,
-            start_y: adjustedStartY,
-            end_x: adjustedEndX,
-            end_y: adjustedEndY,
+            start_x: startX,
+            start_y: startY,
+            end_x: endX,
+            end_y: endY,
             length: length,
             height: 2.5, // 기본 높이 2.5m (그대로 유지)
             depth: 0.2,  // 기본 두께 20cm (두껍게)

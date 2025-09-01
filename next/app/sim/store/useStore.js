@@ -304,6 +304,7 @@ export const useStore = create(
         }));
 
         // 벽 데이터 처리 (이미 적절한 크기로 저장되어 있음)
+        console.log('API에서 받은 벽 데이터:', result.walls);
         const wallsData = result.walls ? result.walls.map(wall => ({
           id: wall.id,
           dimensions: {
@@ -318,12 +319,28 @@ export const useStore = create(
           ],
           rotation: wall.rotation
         })) : [];
+        console.log('변환된 벽 데이터:', wallsData);
+        
+        // 첫 번째 벽의 상세 정보 확인
+        if (wallsData.length > 0) {
+          console.log('첫 번째 벽 상세:', {
+            id: wallsData[0].id,
+            dimensions: wallsData[0].dimensions,
+            position: wallsData[0].position,
+            rotation: wallsData[0].rotation
+          });
+        }
 
         set({ 
           loadedModels: loadedModels,
           wallsData: wallsData,
           currentRoomId: roomId,
-          selectedModelId: null
+          selectedModelId: null,
+          currentRoomInfo: {
+            title: result.room_info?.title || '',
+            description: result.room_info?.description || '',
+            is_public: result.room_info?.is_public || false
+          }
         });
 
         console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${result.walls_count || 0}개 벽`);

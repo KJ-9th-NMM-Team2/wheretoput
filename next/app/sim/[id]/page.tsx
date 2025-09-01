@@ -71,11 +71,16 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   position: position; 
   rotation?: [number, number, number] 
 }) {
+  // 벽 렌더링 로그 (한 번만)
+  React.useEffect(() => {
+    console.log('벽 렌더링:', { width, height, depth, position, rotation });
+  }, []);
+
   // 각 면에 다른 재질 적용
   const materials = [
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
-    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면 (검은색)
+    new THREE.MeshStandardMaterial({ color: '#FF0000', roughness: 0.8, metalness: 0.1 }), // 윗면 (빨간색으로 변경)
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 아랫면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 앞면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 })  // 뒷면
@@ -230,9 +235,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           wallsData.map((wall) => (
             <Wall
               key={wall.id}
-              width={wall.dimensions.width}
-              height={wall.dimensions.height}
-              depth={wall.dimensions.depth}
+              width={Math.max(wall.dimensions.width, 0.5)} // 최소 0.5m 보장
+              height={Math.max(wall.dimensions.height, 2.5)} // 최소 2.5m 보장
+              depth={Math.max(wall.dimensions.depth, 0.2)} // 최소 0.2m 보장
               position={wall.position}
               rotation={wall.rotation}
             />
