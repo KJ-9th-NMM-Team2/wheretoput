@@ -105,7 +105,7 @@ export const useStore = create(
     ),
     // setCameraMode: (mode) => set({ cameraMode: mode }),
 
-    // 저장/로드 상태 [09.01] wallscale
+    //[09.01] wallscalefactor 로 벽 조정 가능합니다.
     currentRoomId: null,
     isSaving: false,
     isLoading: false,
