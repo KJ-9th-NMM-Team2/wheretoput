@@ -85,7 +85,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                         )}
                                         {(item.length_x && item.length_y && item.length_z) && (
                                             <span className="text-gray-500">
-                                                {item.length_x}×{item.length_y}×{item.length_z}cm
+                                                {item.length_x}×{item.length_y}×{item.length_z}mm
                                             </span>
                                         )}
                                     </div>

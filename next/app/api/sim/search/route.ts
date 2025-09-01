@@ -29,7 +29,12 @@ import { searchFurnitures } from '@/lib/api/furSearch';
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query') || '';
+    const selectedCategory = searchParams.get('category') || '';
+    const response = await searchFurnitures(query, selectedCategory);
     
-    const results = await searchFurnitures(query);
+    // Response 객체에서 JSON 데이터 추출
+    const results = await response.json();
+    console.log("extracted results:", results);
+    
     return Response.json(results);
 }

@@ -1,21 +1,19 @@
 import React from 'react'
 import { useStore } from '../store/useStore.js'
-
 export function InfoPanel() {
-  const { 
-    loadedModels, 
-    selectedModelId, 
-    selectModel, 
-    removeModel, 
-    updateModelPosition, 
-    updateModelRotation, 
-    updateModelScale 
+  const {
+    loadedModels,
+    selectedModelId,
+    selectModel,
+    removeModel,
+    updateModelPosition,
+    updateModelRotation,
+    updateModelScale
   } = useStore()
 
   if (loadedModels.length === 0) {
     return null
   }
-
   return (
     <div style={{
       position: 'absolute',
@@ -32,7 +30,7 @@ export function InfoPanel() {
       overflowY: 'auto'
     }}>
       <h3 style={{ margin: '0 0 10px 0' }}>📦 로드된 모델들 ({loadedModels.length}개)</h3>
-      
+
       <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
         {loadedModels.map(model => (
           <ModelItem
@@ -44,6 +42,7 @@ export function InfoPanel() {
             onPositionChange={updateModelPosition}
             onRotationChange={updateModelRotation}
             onScaleChange={updateModelScale}
+            furnitures={result.furnitures}
           />
         ))}
       </div>
@@ -51,18 +50,18 @@ export function InfoPanel() {
   )
 }
 
-function ModelItem({ 
-  model, 
-  isSelected, 
-  onSelect, 
-  onRemove, 
-  onPositionChange, 
-  onRotationChange, 
-  onScaleChange 
+function ModelItem({
+  model,
+  isSelected,
+  onSelect,
+  onRemove,
+  onPositionChange,
+  onRotationChange,
+  onScaleChange,
 }) {
   return (
-    <div 
-      key={model.id} 
+    <div
+      key={model.id}
       style={{
         background: isSelected ? 'rgba(0,255,0,0.2)' : 'rgba(255,255,255,0.1)',
         margin: '5px 0',
@@ -74,26 +73,26 @@ function ModelItem({
       onClick={() => onSelect(model.id)}
     >
       {/* 모델 이름 */}
-      <div style={{ 
-        marginBottom: '5px', 
-        wordBreak: 'break-all', 
-        fontWeight: isSelected ? 'bold' : 'normal' 
+      <div style={{
+        marginBottom: '5px',
+        wordBreak: 'break-all',
+        fontWeight: isSelected ? 'bold' : 'normal'
       }}>
         {isSelected ? '🎯 ' : ''}{model.name.length > 25 ? model.name.substring(0, 25) + '...' : model.name}
       </div>
-      
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
         {/* 크기 조정 */}
         <ControlSlider
           label="크기"
           value={model.scale}
-          min={0.1}
-          max={5}
-          step={0.1}
+          min={0.0005} // 1m = 0.05mm (2000:1 축소)
+          max={0.005} // 1m = 5mm (200:1 축소, 기준값)
+          step={0.0005} 
           onChange={(value) => onScaleChange(model.id, value)}
-          displayValue={model.scale.toFixed(1) + 'x'}
+          displayValue={`1m :${(model.scale * 1000).toFixed(2)}mm`} // model.scale.toFixed(1) + 'x'
         />
-        
+
         {/* 위치 조정 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
           {['X', 'Y', 'Z'].map((axis, index) => (
@@ -114,7 +113,7 @@ function ModelItem({
             />
           ))}
         </div>
-        
+
         {/* 회전 조정 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
           {['RX', 'RY', 'RZ'].map((axis, index) => (
@@ -135,7 +134,7 @@ function ModelItem({
             />
           ))}
         </div>
-        
+
         {/* 제거 버튼 */}
         <button
           onClick={(e) => {
@@ -160,25 +159,25 @@ function ModelItem({
   )
 }
 
-function ControlSlider({ 
-  label, 
-  value, 
-  min, 
-  max, 
-  step, 
-  onChange, 
-  displayValue, 
-  compact = false 
+function ControlSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onChange,
+  displayValue,
+  compact = false
 }) {
   return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: compact ? '3px' : '5px' 
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: compact ? '3px' : '5px'
     }}>
-      <span style={{ 
-        minWidth: compact ? '12px' : '30px', 
-        fontSize: '10px' 
+      <span style={{
+        minWidth: compact ? '12px' : '30px',
+        fontSize: '10px'
       }}>
         {label}:
       </span>
@@ -191,9 +190,9 @@ function ControlSlider({
         onChange={(e) => onChange(parseFloat(e.target.value))}
         style={{ flex: 1 }}
       />
-      <span style={{ 
-        color: '#4CAF50', 
-        minWidth: '30px', 
+      <span style={{
+        color: '#4CAF50',
+        minWidth: '30px',
         fontSize: '10px',
         textAlign: 'right'
       }}>

@@ -67,7 +67,7 @@ const SimSideView: React.FC<string> = (roomId) => {
       >
         {/* 고정 영역들 */}
         <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} />
-        <SideSearch collapsed={collapsed} onSearchResults={handleSearchResults} resetQuery={searchQuery} />
+        <SideSearch collapsed={collapsed} onSearchResults={handleSearchResults} resetQuery={searchQuery} selectedCategory={selectedCategory} />
         <SideCategories 
           collapsed={collapsed}
           onCategorySelect={handleCategorySelect}

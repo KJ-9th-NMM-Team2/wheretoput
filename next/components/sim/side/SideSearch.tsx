@@ -4,10 +4,12 @@ const SideSearch = ({
   collapsed, 
   onSearchResults,
   resetQuery,
+  selectedCategory
 }: {
   collapsed: boolean;
   onSearchResults?: (results: any[], loading: boolean) => void;
   resetQuery?: string;
+  selectedCategory: string | null;
 }) => {
     const [query, setQuery] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
@@ -25,13 +27,12 @@ const SideSearch = ({
         onSearchResults?.([], true);
         
         try {
-          const response = await fetch(`/api/sim/search?query=${searchQuery}`);
+          const response = await fetch(`/api/sim/search?query=${searchQuery}&category=${selectedCategory}`);
           if (response.ok) {
             const data = await response.json();
-            // setResults(data);
             onSearchResults?.(data, false);
           } else {
-            console.error("Search API error:", response.statusText);
+            console.error('Search API error:', response.status, response.statusText);
             onSearchResults?.([], false);
           }
         } catch (error) {
