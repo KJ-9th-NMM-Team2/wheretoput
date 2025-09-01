@@ -18,9 +18,8 @@ export function ControlPanel() {
     setShouldCapture,
     wallScaleFactor,
     setWallScaleFactor,
-    loadSimulatorState
-  } = useStore()
-
+    loadSimulatorState,
+  } = useStore();
 
   // GLB 파일 업로드 처리
   const handleFileUpload = (event) => {
@@ -66,7 +65,7 @@ export function ControlPanel() {
 
       // 저장 완료 후 캔버스 캡처 트리거
       setShouldCapture(true);
-      
+
       setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`);
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -108,7 +107,7 @@ export function ControlPanel() {
       </div>
 
       {/* 벽 스케일 설정 */}
-      <div style={{ marginBottom: '10px' }}>
+      <div style={{ marginBottom: "10px" }}>
         <label>벽 크기 조정:</label>
         <input
           type="range"
@@ -124,13 +123,12 @@ export function ControlPanel() {
               loadSimulatorState(currentRoomId);
             }
           }}
-          style={{ width: '100%', margin: '5px 0' }}
+          style={{ width: "100%", margin: "5px 0" }}
         />
-        <div style={{ color: '#FF9800', textAlign: 'center' }}>
+        <div style={{ color: "#FF9800", textAlign: "center" }}>
           {wallScaleFactor.toFixed(1)}x
         </div>
       </div>
-      
 
       {/* 저장 버튼 */}
       <div style={{ marginBottom: "10px" }}>
