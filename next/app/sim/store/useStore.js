@@ -29,22 +29,34 @@ export const useStore = create(
 
     // 모델 액션들
     addModel: (model) =>
-      set((state) => ({
-        loadedModels: [
-          ...state.loadedModels,
-          {
-            ...model,
-            id: Date.now() + Math.random(),
-            position: model.position || [
-              (Math.random() - 0.5) * 15,
-              0,
-              (Math.random() - 0.5) * 15,
-            ],
-            rotation: model.rotation || [0, 0, 0],
-            scale: model.scale || state.scaleValue,
-          },
-        ],
-      })),
+      set((state) => {
+        // scale 값 검증 및 최소값 보장
+        let scale = model.scale || state.scaleValue;
+        if (Array.isArray(scale)) {
+          scale = scale.map(s => (s <= 0 || s < 0.01) ? 1 : s);
+        } else if (typeof scale === 'number') {
+          scale = (scale <= 0 || scale < 0.01) ? 1 : scale;
+        } else {
+          scale = 1;
+        }
+
+        return {
+          loadedModels: [
+            ...state.loadedModels,
+            {
+              ...model,
+              id: Date.now() + Math.random(),
+              position: model.position || [
+                (Math.random() - 0.5) * 15,
+                0,
+                (Math.random() - 0.5) * 15,
+              ],
+              rotation: model.rotation || [0, 0, 0],
+              scale: scale,
+            },
+          ],
+        };
+      }),
 
     removeModel: (modelId) =>
       set((state) => {
@@ -80,11 +92,23 @@ export const useStore = create(
       })),
 
     updateModelScale: (modelId, newScale) =>
-      set((state) => ({
-        loadedModels: state.loadedModels.map((model) =>
-          model.id === modelId ? { ...model, scale: newScale } : model
-        ),
-      })),
+      set((state) => {
+        // scale 값 검증 및 최소값 보장
+        let scale = newScale;
+        if (Array.isArray(scale)) {
+          scale = scale.map(s => (s <= 0 || s < 0.01) ? 0.01 : s);
+        } else if (typeof scale === 'number') {
+          scale = (scale <= 0 || scale < 0.01) ? 0.01 : scale;
+        } else {
+          scale = 1;
+        }
+
+        return {
+          loadedModels: state.loadedModels.map((model) =>
+            model.id === modelId ? { ...model, scale: scale } : model
+          ),
+        };
+      }),
 
     // 선택, 마우스 호버링 관련
     selectModel: (modelId) => set({ selectedModelId: modelId }),
@@ -300,21 +324,36 @@ export const useStore = create(
         });
 
         // 로드된 객체들을 loadedModels에 설정
-        const loadedModels = result.objects.map((obj) => ({
-          id: obj.id,
-          object_id: obj.object_id,
-          furniture_id: obj.furniture_id,
-          name: obj.name,
-          position: obj.position,
-          rotation: obj.rotation,
-          scale: obj.scale,
-          url: obj.url,
-          isCityKit: obj.isCityKit,
-          texturePath: obj.texturePath,
-          type: obj.type,
-          furnitureName: obj.furnitureName,
-          categoryId: obj.categoryId,
-        }));
+        const loadedModels = result.objects.map((obj) => {
+          // scale 값 검증 및 최소값 보장
+          let scale = obj.scale;
+          if (Array.isArray(scale)) {
+            // 배열 형태의 scale에서 0이나 매우 작은 값들을 1로 대체
+            scale = scale.map(s => (s <= 0 || s < 0.01) ? 1 : s);
+          } else if (typeof scale === 'number') {
+            // 단일 숫자 scale에서 0이나 매우 작은 값을 1로 대체
+            scale = (scale <= 0 || scale < 0.01) ? 1 : scale;
+          } else {
+            // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
+            scale = 1;
+          }
+
+          return {
+            id: obj.id,
+            object_id: obj.object_id,
+            furniture_id: obj.furniture_id,
+            name: obj.name,
+            position: obj.position,
+            rotation: obj.rotation,
+            scale: scale,
+            url: obj.url,
+            isCityKit: obj.isCityKit,
+            texturePath: obj.texturePath,
+            type: obj.type,
+            furnitureName: obj.furnitureName,
+            categoryId: obj.categoryId,
+          };
+        });
 
         // 벽 데이터 처리
         let wallsData = [];
