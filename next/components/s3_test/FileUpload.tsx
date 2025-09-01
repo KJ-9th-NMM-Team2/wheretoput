@@ -118,7 +118,6 @@ export default function FileUpload() {
             <p className="text-sm text-gray-600 mb-2">업로드된 파일 URL:</p>
             <a
               href={`https://wheretoput-bucket.s3.ap-northeast-2.amazonaws.com/${uploadedKey}`}
-              target="_blank"
               rel="noopener noreferrer"
               className="inline-block px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors break-all"
             >
@@ -142,7 +141,7 @@ export default function FileUpload() {
           >
             다운로드 링크 생성
           </button>
-          
+
           {downloadUrl && (
             <div className="mt-3 p-3 bg-gray-50 border rounded-lg">
               <p className="text-sm text-gray-600 mb-2">다운로드 링크:</p>

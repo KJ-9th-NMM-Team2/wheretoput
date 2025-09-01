@@ -1,19 +1,25 @@
-'use client'
-import React, { useRef, Suspense, useState, useEffect } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import * as THREE from 'three'
-import { useStore } from '../store/useStore.js'
-import { ControlPanel } from '../components/ControlPanel.jsx'
-import { InfoPanel } from '../components/InfoPanel.jsx'
-import { DraggableModel } from '../components/DraggableModel.jsx'
-import { LightControlPanel } from '../components/LightControlPanel.jsx'
-import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
-import { KeyboardControls } from '../hooks/KeyboardControls.jsx'
-import { createWallsFromFloorPlan } from '../../wallDetection.js'
-import SimSideView from "@/components/sim/SimSideView"
 
-type position = [number, number, number]
+"use client";
+
+import React, { useRef, Suspense, useState, useEffect } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import * as THREE from "three";
+
+import { useStore } from "../store/useStore.js";
+import { ControlPanel } from "../components/ControlPanel.jsx";
+import { InfoPanel } from "../components/InfoPanel.jsx";
+import { DraggableModel } from "../components/DraggableModel.jsx";
+import { LightControlPanel } from "../components/LightControlPanel.jsx";
+import { CameraControlPanel } from "../components/CameraControlPanel.jsx";
+import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
+import { createWallsFromFloorPlan } from "../../wallDetection.js";
+import SimSideView from "@/components/sim/SimSideView";
+import CanvasImageLogger from "@/components/sim/CanvasCapture";
+
+
+
+type position = [number, number, number];
 
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
@@ -74,16 +80,22 @@ function Floor({ wallsData }: { wallsData: any[] }) {
         metalness={0.0}
       />
     </mesh>
-  )
+  );
 }
 
 // 도면 기반 3D 벽 컴포넌트
-function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: { 
-  width: number; 
-  height: number; 
+function Wall({
+  width,
+  height,
+  depth = 0.1,
+  position,
+  rotation = [0, 0, 0],
+}: {
+  width: number;
+  height: number;
   depth?: number;
-  position: position; 
-  rotation?: [number, number, number] 
+  position: position;
+  rotation?: [number, number, number];
 }) {
   // 벽 렌더링 로그 (한 번만)
   React.useEffect(() => {
@@ -92,6 +104,7 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
 
   // 각 면에 다른 재질 적용
   const materials = [
+
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
     new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면
@@ -107,7 +120,7 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
         <primitive key={index} object={material} attach={`material-${index}`} />
       ))}
     </mesh>
-  )
+  );
 }
 
 function CameraUpdater() {
@@ -123,14 +136,18 @@ function CameraUpdater() {
   return null;
 }
 
-export default function SimPage({ params }: { params: Promise<{ id: string }> }) {
-  const controlsRef = useRef(null)
-  const { 
-    loadedModels, 
-    deselectModel, 
-    ambientLightIntensity, 
-    directionalLightPosition, 
-    directionalLightIntensity, 
+export default function SimPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const controlsRef = useRef(null);
+  const {
+    loadedModels,
+    deselectModel,
+    ambientLightIntensity,
+    directionalLightPosition,
+    directionalLightIntensity,
     cameraFov,
     setCurrentRoomId,
     loadSimulatorState,
@@ -143,6 +160,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
   useEffect(() => {
     const initializeSimulator = async () => {
       try {
+
         const resolvedParams = await params
         const currentRoomId = resolvedParams.id
         
@@ -162,17 +180,19 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           }
         } else {
           console.log(`임시 방 ${currentRoomId}이므로 데이터 로드를 건너뜁니다.`)
-        }
-        
-      } catch (error) {
-        console.error('시뮬레이터 초기화 실패:', error)
-      }
-    }
 
-    initializeSimulator()
-  }, [params, setCurrentRoomId, loadSimulatorState])
+        }
+      } catch (error) {
+        console.error("시뮬레이터 초기화 실패:", error);
+      }
+    };
+
+    initializeSimulator();
+  }, [params, setCurrentRoomId, loadSimulatorState]);
+
 
   // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
+
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)
@@ -184,26 +204,28 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
       <div className="flex-1 relative">
         {/* 로딩 상태 표시 */}
         {isLoading && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
-            padding: '20px',
-            borderRadius: '10px',
-            zIndex: 1000,
-            textAlign: 'center'
-          }}>
-            <div style={{ marginBottom: '10px' }}>🏠</div>
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              background: "rgba(0,0,0,0.8)",
+              color: "white",
+              padding: "20px",
+              borderRadius: "10px",
+              zIndex: 1000,
+              textAlign: "center",
+            }}
+          >
+            <div style={{ marginBottom: "10px" }}>🏠</div>
             <div>방 데이터 로딩 중...</div>
-            <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
+            <div style={{ fontSize: "12px", marginTop: "5px", opacity: 0.7 }}>
               Room ID: {roomId}
             </div>
           </div>
         )}
-        
+
         <ControlPanel />
         <InfoPanel />
         <LightControlPanel />
@@ -212,15 +234,15 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         <Canvas
           camera={{ position: [-30, 20, 0], fov: 60 }}
           shadows
-          style={{ width: '100%', height: '100vh' }}
-          frameloop='demand'
+          style={{ width: "100%", height: "100vh" }}
+          frameloop="demand"
         >
-
           {/* {cameraMode == "perspective" ? (
             <PerspectiveCamera makeDefault fov={cameraFov} position={[-20, 15, 0]} />
           ) : (
             <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
           )} */}
+
           
         <CameraUpdater />
         
@@ -302,8 +324,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           minDistance={8}
           maxDistance={50}
         />
+          <CanvasImageLogger />
       </Canvas>
       </div>
     </div>
-  )
+  );
 }

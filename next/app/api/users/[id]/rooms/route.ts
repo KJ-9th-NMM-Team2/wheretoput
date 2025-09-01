@@ -11,6 +11,7 @@ function getSelectFields(fields: string | null) {
     view_count: true,
     created_at: true,
     updated_at: true,
+    is_public: true,
     _count: {
       select: {
         room_comments: true,
@@ -130,11 +131,12 @@ export async function GET(
     const fields = searchParams.get("fields");
     const order = searchParams.get("order");
     const num = searchParams.get("num");
+    const showPrivate = searchParams.get("showPrivate") === "true";
 
     const roomsWithUser = await prisma.rooms.findMany({
       where: {
         user_id: userId,
-        is_public: true,
+        is_public: showPrivate ? undefined : true,
       },
       select: {
         ...getSelectFields(fields),

@@ -8,7 +8,7 @@ export function HomeCard({ room }: { room: any }) {
         <div
           className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex flex-col"
           style={{
-            backgroundImage: `url('${room.thumbnail_url}'), url('/placeholder.png')`,
+            backgroundImage: `url('${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}'), url('/placeholder.png')`,
           }}
         ></div>
         <p className="text-[#1c140d] dark:text-gray-100 text-base font-medium leading-normal">

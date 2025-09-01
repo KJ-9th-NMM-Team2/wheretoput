@@ -13,6 +13,7 @@ function getSelectFields(fields: string | null) {
     view_count: true,
     created_at: true,
     updated_at: true,
+    is_public: true,
     _count: {
       select: {
         room_comments: true,
