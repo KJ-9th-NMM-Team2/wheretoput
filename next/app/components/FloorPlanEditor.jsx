@@ -25,6 +25,7 @@ const FloorPlanEditor = () => {
   const [selectedWall, setSelectedWall] = useState(null);
   const [editingWallLength, setEditingWallLength] = useState('');
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
+  const [cachedBackgroundImage, setCachedBackgroundImage] = useState(null);
   const fileInputRef = useRef(null);
 
   // 축척 설정 관련 상태
@@ -188,9 +189,44 @@ const FloorPlanEditor = () => {
     ctx.clearRect(0, 0, rect.width, rect.height);
 
     // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
-    if (uploadedImage) {
+    if (uploadedImage && cachedBackgroundImage) {
+      // 캐시된 이미지 사용
+      const img = cachedBackgroundImage;
+      
+      // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+      const imgAspect = img.width / img.height;
+      const canvasAspect = rect.width / rect.height;
+      
+      let drawWidth, drawHeight, drawX, drawY;
+      
+      if (imgAspect > canvasAspect) {
+        // 이미지가 캔버스보다 가로로 긴 경우
+        drawWidth = rect.width;
+        drawHeight = rect.width / imgAspect;
+        drawX = 0;
+        drawY = (rect.height - drawHeight) / 2;
+      } else {
+        // 이미지가 캔버스보다 세로로 긴 경우
+        drawHeight = rect.height;
+        drawWidth = rect.height * imgAspect;
+        drawX = (rect.width - drawWidth) / 2;
+        drawY = 0;
+      }
+      
+      // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
+      ctx.globalAlpha = backgroundOpacity;
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      ctx.globalAlpha = 1.0;
+      
+      // 격자와 벽 그리기
+      drawGridAndWalls(ctx, rect);
+    } else if (uploadedImage && !cachedBackgroundImage) {
+      // 처음 로드하는 경우에만 새 이미지 객체 생성
       const img = new Image();
       img.onload = () => {
+        // 이미지를 캐시에 저장
+        setCachedBackgroundImage(img);
+        
         // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
         const imgAspect = img.width / img.height;
         const canvasAspect = rect.width / rect.height;
@@ -407,7 +443,7 @@ const FloorPlanEditor = () => {
   // 캔버스 다시 그리기
   useEffect(() => {
     drawCanvas();
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity]);
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity, cachedBackgroundImage]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
@@ -888,6 +924,7 @@ const FloorPlanEditor = () => {
               <button
                 onClick={() => {
                   setUploadedImage(null);
+                  setCachedBackgroundImage(null);
                   alert('배경 이미지가 제거되었습니다.');
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
@@ -989,6 +1026,7 @@ const FloorPlanEditor = () => {
               <button
                 onClick={() => {
                   setUploadedImage(null);
+                  setCachedBackgroundImage(null);
                   alert('배경 이미지가 제거되었습니다.');
                 }}
                 className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
