@@ -1,6 +1,5 @@
 services:
   socket:
-    build: ./socket
     ports:
       - "${BACKEND_PORT}:3001"
     environment:
@@ -9,7 +8,6 @@ services:
       - app-network
 
   next:
-    build: ./next
     ports:
       - "${FRONTEND_PORT}:3000"
     environment:
