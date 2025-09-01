@@ -1,5 +1,5 @@
 // tailwind.config.js
-module.exports = {
+export default {
   darkMode: "class",
   theme: {
     extend: {},
