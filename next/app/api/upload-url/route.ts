@@ -52,11 +52,11 @@ const s3Client = new S3Client({
  *                 uploadUrl:
  *                   type: string
  *                   description: S3 업로드용 presigned URL
- *                   example: "https://bucket.s3.amazonaws.com/uploads/123456789-abc123-example.jpg?..."
+ *                   example: "https://bucket.s3.amazonaws.com/uploads/example.jpg?..."
  *                 key:
  *                   type: string
  *                   description: S3 객체 키
- *                   example: "uploads/123456789-abc123-example.jpg"
+ *                   example: "uploads/example.jpg"
  *       400:
  *         description: 잘못된 요청 (필수 파라미터 누락)
  *         content:
@@ -89,9 +89,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 15);
-    const key = `uploads/${timestamp}-${randomId}-${fileName}`;
+    const key = `uploads/${fileName}`;
 
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME!,

@@ -60,7 +60,8 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
                 
                 if (result) {
                     setSelectedItems(result.furnitures);
-                    setTotalPrice(result.totalPrice);
+                    setTotalPrice(result.totalPrice['_sum']['price']);
+                    // console.log(result.totalPrice['_sum']);
                 }
             } else {
                 fetchItems(currentPage, selectedCategory);
@@ -101,7 +102,6 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             if (result.success) {
                 const newModel = createNewModel(item, result.model_url);
                 addModel(newModel);
-                // newModel.furniture_id
             } else {
                 throw new Error(result.error || '3D 모델 생성 실패');
             }

@@ -48,6 +48,7 @@ const SimSideView: React.FC<string> = (roomId) => {
   const handleCategorySelect = (category: string) => {
     setSearchResults([]);
     setSelectedCategory(category);
+    console.log("totalPrice: ",totalPrice);
   }
 
   const handleSearchResults = (results: Furniture[]) => {

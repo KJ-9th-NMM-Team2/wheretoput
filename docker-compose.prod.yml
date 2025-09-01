@@ -8,6 +8,7 @@ services:
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+    image: wheretoput-socket-prod
 
   next:
     build:
@@ -18,3 +19,4 @@ services:
       - NEXT_PUBLIC_BASE_URL=http://next:3000
       - NEXT_TELEMETRY_DISABLED=1
     restart: unless-stopped
+    image: wheretoput-next-prod

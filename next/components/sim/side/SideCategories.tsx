@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TotalPrice } from './price/TotalPrice';
 
 interface SideCategoriesProps {
   collapsed: boolean;
@@ -20,7 +21,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
     { id: 16, name: "욕실용품" },
     { id: 7, name: "조명" },
     { id: 6, name: "데코" },
-    { id: -1, name: "선택된 항목" },
+    { id: -1, name: "선택된 가구" },
   ];
 
   const [selectedCategory, setSelectedCategory] = useState<number>(categories[0].id);
@@ -59,12 +60,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
               {cat.name}
             </button>
           ))}
-          <div>
-              {totalPrice > 0 && (
-                  <div>총 가격: {totalPrice}원</div>
-              )}
-          </div>
-          
+          <TotalPrice totalPrice={totalPrice}></TotalPrice>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+    image: wheretoput-socket-dev
 
   next:
     build:
@@ -18,7 +19,7 @@ services:
     volumes:
       - ./next:/app
       - /app/node_modules
-      - /app/.next
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    image: wheretoput-next-dev

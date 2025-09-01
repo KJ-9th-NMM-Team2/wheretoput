@@ -3,6 +3,7 @@ export async function fetchUserRooms(
   userId: string,
   fields: string = "short",
   order: string = "view",
+  showPrivate: boolean = false,
   num: number | null = null
 ): Promise<any> {
   const params = new URLSearchParams({
@@ -12,7 +13,7 @@ export async function fetchUserRooms(
   });
 
   const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const url = `${base_url}/api/users/${userId}/rooms?${params.toString()}`;
+  const url = `${base_url}/api/users/${userId}/rooms?${params.toString()}&showPrivate=${showPrivate}`;
 
   const response = await fetch(url, {
     cache: "no-store",
