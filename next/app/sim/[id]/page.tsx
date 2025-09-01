@@ -24,7 +24,6 @@ import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
 import { KeyboardControls } from '../hooks/KeyboardControls.jsx'
 import { createWallsFromFloorPlan } from '../../wallDetection.js'
 import SimSideView from "@/components/sim/SimSideView"
-import { useSession } from 'next-auth/react'
 
 type position = [number, number, number]
 

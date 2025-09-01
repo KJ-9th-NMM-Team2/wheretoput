@@ -2,7 +2,6 @@ import type { furnitures as Furniture } from '@prisma/client';
 
 export const createNewModel = (
     item: Furniture, 
-    count: number, 
     modelUrl?: string
 ) => ({
     furniture_id: item.furniture_id,
@@ -11,7 +10,6 @@ export const createNewModel = (
     length_x: item.length_x,
     length_y: item.length_y,
     length_z: item.length_z,
-    count,
     price: item.price,
     brand: item.brand,
     isCityKit: false,

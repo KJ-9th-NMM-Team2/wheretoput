@@ -4,6 +4,7 @@ interface SideCategoriesProps {
   collapsed: boolean;
   onCategorySelect: (category: string) => void;
   setSearchQuery: (query: string) => void;
+  totalPrice: number;
 }
 
 interface Category {
@@ -11,7 +12,7 @@ interface Category {
   name: string;
 }
 
-const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery }) => {
+const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery, totalPrice}) => {
   // 카테고리 매핑 (DB의 category_id와 매칭)
   // 실제 DB의 categories 테이블과 일치하도록 수정 필요
   const categories: Category[] = [
@@ -58,6 +59,12 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
               {cat.name}
             </button>
           ))}
+          <div>
+              {totalPrice > 0 && (
+                  <div>총 가격: {totalPrice}원</div>
+              )}
+          </div>
+          
         </div>
       </div>
     </div>

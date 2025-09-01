@@ -1,10 +1,11 @@
-import type { Furnitures } from '@prisma/client';
+import type { furnitures as Furniture } from '@prisma/client';
 
 // 공통 베이스 인터페이스
 export interface BaseItemProps {
     loading: boolean;
     error: string | null;
-    filteredItems: Furnitures[];
+    filteredItems: Furniture[];
+    selectedItems: Furniture[];
     currentPage: number;
     totalPages: number;
     totalItems: number;
@@ -13,13 +14,13 @@ export interface BaseItemProps {
     itemsPerPage: number;
     imageErrors: Set<string>;
     selectedCategory: string | null;
-    handleItemClick: (item: Furnitures, delta: number) => void;
+    handleItemClick: (item: Furniture, delta: number) => void;
     handleImageError: (itemId: string) => void;
 }
 
 // 각 컴포넌트별 필요한 속성만 선택
-export type ItemScrollProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'filteredItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
+export type ItemSectionProps = Pick<BaseItemProps, 
+    'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
 >;
 
 export type ItemPagingProps = Pick<BaseItemProps, 
