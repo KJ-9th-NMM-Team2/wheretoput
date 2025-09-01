@@ -36,7 +36,7 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
   useEffect(() => {
     const loadRoomInfo = async () => {
       if (!currentRoomId) return;
-      
+
       setLoading(true);
       try {
         const info = await fetchRoomInfo(currentRoomId);
@@ -84,17 +84,21 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
         {/* 크기 고정 */}
         <div className="flex items-center justify-between p-4 ">
           {!collapsed && (
-            <span className="text-lg font-bold">
-              {loading ? "로딩 중..." : (roomInfo.title || "어따놀래")}
+            <span
+              className="text-lg font-bold truncate max-w-xs"
+              title={roomInfo.title}
+              style={{ display: "inline-block", verticalAlign: "middle" }}
+            >
+              {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
             </span>
           )}
           {!collapsed && (
             <button
               type="button"
               onClick={handleSettingsClick}
-              className="ml-4 px-3 py-1 rounded-md bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm"
+              className="ml-4 px-2 py-1 rounded-md bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm"
             >
-              설정
+              ⚙️
             </button>
           )}
           <button

@@ -68,11 +68,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
             </div>
             <div className="flex justify-stretch">
               <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
-                <Link
-                  href={`/sim/${room.room_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">
                   <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
                     <span className="truncate">3D로 보기</span>
                   </button>
@@ -100,11 +96,11 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal">
                 {room.user.name} on {room.updated_at.slice(0, 10)}
               </span>
-                {!room.is_public && (
-                  <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+              {!room.is_public && (
+                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
-                  </span>
-                )}
+                </span>
+              )}
             </div>
             <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
               {room.description}

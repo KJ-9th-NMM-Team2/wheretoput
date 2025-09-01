@@ -68,7 +68,7 @@ const INITIAL_CHATS: ChatListItem[] = [
   },
 ];
 
-export default function ChatPage() {
+export default function ChatButton() {
   const [open, setOpen] = useState(false); // 팝업창 on off
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체"); // 필터
   const [selectedChatId, setselectedChatId] = useState<string | null>(null); // null이면 리스트, string이면 방
@@ -344,7 +344,7 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="p-10">
+    <>
       {/* 채팅 버튼 */}
       <motion.button
         className={styles.button}
@@ -366,7 +366,7 @@ export default function ChatPage() {
           })
         }
       >
-        채팅
+        💬
       </motion.button>
       <AnimatePresence>
         {open && (
@@ -581,6 +581,6 @@ export default function ChatPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </main>
+    </>
   );
 }

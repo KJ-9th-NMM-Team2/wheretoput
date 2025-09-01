@@ -3,7 +3,7 @@ import { SessionProvider } from "next-auth/react";
 import { auth } from "@/lib/auth";
 import ConditionalHeader from "../components/layout/ConditionalHeader";
 import "./globals.css";
-import localFont from "next/font/local";
+import ChatButton from "@/components/chat/ChatButton";
 
 export const metadata: Metadata = {
   title: "어따놀래",
@@ -25,6 +25,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ConditionalHeader />
           {children}
+          <ChatButton />
         </SessionProvider>
       </body>
     </html>

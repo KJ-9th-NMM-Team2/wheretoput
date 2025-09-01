@@ -64,7 +64,6 @@ export default function Header() {
         <nav className="flex items-center gap-8">
           <Link
             href="/create"
-            target="_blank"
             rel="noopener noreferrer"
             className="
               text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
