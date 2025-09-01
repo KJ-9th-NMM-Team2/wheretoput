@@ -27,9 +27,9 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                     </p>
                     <p className="text-xs text-gray-500">{error}</p>
                 </div>
-            ) : (selectedItems && itemsToRender).length > 0 ? (
+            ) : itemsToRender && itemsToRender.length > 0 ? (
                 <div className="space-y-3">
-                    {(selectedItems && itemsToRender).map((item) => (
+                    {itemsToRender.map((item) => (
                         <div
                             key={item.furniture_id}
                             onClick={!isSelectedCategory ? () => handleItemClick(item) : undefined}

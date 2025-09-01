@@ -15,13 +15,13 @@ const SimSideView: React.FC<string> = (roomId) => {
   const [searchResults, setSearchResults] = useState<Furniture[]>([]); // 검색 결과 상태 추가
   const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const checkOwnRoomOfUser = async () => {
-      const { data: session, status } = useSession();
+      
       if (status === "loading") return;
       if (!session?.user) return;
-
       if (session?.user?.name && session?.user?.id && session?.user?.image) {
         try {
           const response = await fetch(`/api/rooms/user?roomId=${roomId}&userId=${session.user.id}`)
