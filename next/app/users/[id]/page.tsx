@@ -1,5 +1,6 @@
 import { fetchUserById, fetchUserRooms } from "@/lib/api/users";
 import HouseCard from "@/components/search/HouseCard";
+import { auth } from "@/lib/auth";
 
 export default async function UserPage({
   params,
@@ -10,8 +11,13 @@ export default async function UserPage({
 
   try {
     const user = await fetchUserById(id);
-    const userRooms = await fetchUserRooms(id, "short", "new");
 
+    const session = await auth();
+
+    const isOwner = session?.user?.id === id;
+
+    // 접속한 사용자가 본인 페이지일 경우 비공개 방도 포함하여 조회
+    const userRooms = await fetchUserRooms(id, "short", "new", isOwner);
     return (
       <div className="px-40 py-5">
         <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">

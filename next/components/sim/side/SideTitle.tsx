@@ -1,4 +1,15 @@
-import { ChevronLeft, ChevronRight } from "lucide-react"
+"use client";
+
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import EditPopup from "./EditPopup";
+import { useStore } from "@/app/sim/store/useStore";
+import {
+  fetchRoomInfo,
+  updateRoomInfo,
+  deleteRoom,
+  type RoomInfo,
+} from "@/lib/roomService";
 
 // React 컴포넌트는 반드시 props 객체 하나만 받아야 하기 때문에 interface로 정의
 interface SideTitleProps {
@@ -7,22 +18,114 @@ interface SideTitleProps {
 }
 
 const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
-  return <>
-    {/* Logo & Toggle */}
-    <div className="flex-shrink-0"> {/* 크기 고정 */}
-      <div className="flex items-center justify-between p-4 ">
-        {!collapsed && <span className="text-lg font-bold">어따놀래</span>}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={`text-gray-500 hover:text-gray-700 transition-all duration-300 
-            ${collapsed ? "" : "ml-auto"  // 접혔을 때 안쪽으로
+  // 팝업창 뜨기 여부
+  const [showPopup, setShowPopup] = useState(false);
+  // 현재 방 정보
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
+    title: "",
+    description: "",
+    is_public: false,
+  });
+  // 로딩 상태
+  const [loading, setLoading] = useState(false);
+
+  // Zustand store에서 현재 방 ID 가져오기
+  const { currentRoomId } = useStore();
+
+  // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
+  useEffect(() => {
+    const loadRoomInfo = async () => {
+      if (!currentRoomId) return;
+
+      setLoading(true);
+      try {
+        const info = await fetchRoomInfo(currentRoomId);
+        setRoomInfo(info);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRoomInfo();
+  }, [currentRoomId]);
+
+  // 설정 버튼 클릭 시 바로 팝업 열기
+  const handleSettingsClick = () => {
+    setShowPopup(true);
+  };
+
+  // 방 정보 저장
+  const handleSave = async (
+    title: string,
+    description: string,
+    isPublic: boolean
+  ) => {
+    const newRoomInfo = { title, description, is_public: isPublic };
+    const success = await updateRoomInfo(currentRoomId || "", newRoomInfo);
+
+    if (success) {
+      setRoomInfo(newRoomInfo);
+    }
+
+    setShowPopup(false);
+  };
+
+  // 방 삭제
+  const handleDelete = async () => {
+    await deleteRoom(currentRoomId || "");
+    setShowPopup(false);
+  };
+
+  return (
+    <>
+      {/* Logo & Toggle */}
+      <div className="flex-shrink-0">
+        {" "}
+        {/* 크기 고정 */}
+        <div className="flex items-center justify-between p-4 ">
+          {!collapsed && (
+            <span
+              className="text-lg font-bold truncate max-w-xs"
+              title={roomInfo.title}
+              style={{ display: "inline-block", verticalAlign: "middle" }}
+            >
+              {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
+            </span>
+          )}
+          {!collapsed && (
+            <button
+              type="button"
+              onClick={handleSettingsClick}
+              className="ml-4 px-2 py-1 rounded-md bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm"
+            >
+              ⚙️
+            </button>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={`text-gray-500 hover:text-gray-700 transition-all duration-300 
+            ${
+              collapsed ? "" : "ml-auto" // 접혔을 때 안쪽으로
             }`}
-        >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        </div>
       </div>
-    </div>
-  </>
-}
+
+      {/* 팝업 모달 */}
+      {showPopup && (
+        <EditPopup
+          initialTitle={roomInfo.title}
+          initialDescription={roomInfo.description}
+          initialIsPublic={roomInfo.is_public}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
+    </>
+  );
+};
 
 export default SideTitle;
