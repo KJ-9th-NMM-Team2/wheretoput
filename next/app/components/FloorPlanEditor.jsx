@@ -123,7 +123,11 @@ const FloorPlanEditor = () => {
     setScaleRealLength("");
     setTool("wall"); // 벽 그리기 모드로 변경
 
-    alert(`축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)\n이제 벽을 그려보세요.`);
+    alert(
+      `축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(
+        2
+      )}mm)\n이제 벽을 그려보세요.`
+    );
   };
 
   // 벽 길이 조정 함수 (축척 설정 후에만 동작)
@@ -267,12 +271,16 @@ const FloorPlanEditor = () => {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // 마우스 위치를 캔버스 좌표로 변환 (뷰포트 변환 포함)
+  // 마우스 위치를 캔버스 좌표로 변환 (중앙 기준 좌표계, 뷰포트 변환 포함)
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const canvasX = (e.clientX - rect.left) / viewScale - viewOffset.x;
-    const canvasY = (e.clientY - rect.top) / viewScale - viewOffset.y;
+    const FIXED_WIDTH = 1200;
+    const FIXED_HEIGHT = 800;
+    
+    // 캔버스 중앙을 원점(0,0)으로 하는 좌표계로 변환
+    const canvasX = ((e.clientX - rect.left) - rect.width / 2) / viewScale - viewOffset.x;
+    const canvasY = ((e.clientY - rect.top) - rect.height / 2) / viewScale - viewOffset.y;
     return { x: canvasX, y: canvasY };
   };
 
@@ -344,8 +352,9 @@ const FloorPlanEditor = () => {
       cachedBackgroundImage &&
       cachedBackgroundImage.complete
     ) {
-      // 뷰포트 변환 적용 (배경 이미지도 패닝/줌과 함께 움직이도록)
+      // 캔버스 중앙 기준으로 변환한 후 배경 이미지 그리기
       ctx.save();
+      ctx.translate(rect.width / 2, rect.height / 2);
       ctx.scale(viewScale, viewScale);
       ctx.translate(viewOffset.x, viewOffset.y);
 
@@ -362,14 +371,14 @@ const FloorPlanEditor = () => {
         // 이미지가 캔버스보다 가로로 긴 경우
         drawWidth = rect.width;
         drawHeight = rect.width / imgAspect;
-        drawX = 0;
-        drawY = (rect.height - drawHeight) / 2;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       } else {
         // 이미지가 캔버스보다 세로로 긴 경우
         drawHeight = rect.height;
         drawWidth = rect.height * imgAspect;
-        drawX = (rect.width - drawWidth) / 2;
-        drawY = 0;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       }
 
       // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
@@ -389,8 +398,9 @@ const FloorPlanEditor = () => {
         // 이미지를 캐시에 저장
         setCachedBackgroundImage(img);
 
-        // 뷰포트 변환 적용 (배경 이미지도 패닝/줌과 함께 움직이도록)
+        // 캔버스 중앙 기준으로 변환한 후 배경 이미지 그리기
         ctx.save();
+        ctx.translate(rect.width / 2, rect.height / 2);
         ctx.scale(viewScale, viewScale);
         ctx.translate(viewOffset.x, viewOffset.y);
 
@@ -404,14 +414,14 @@ const FloorPlanEditor = () => {
           // 이미지가 캔버스보다 가로로 긴 경우
           drawWidth = rect.width;
           drawHeight = rect.width / imgAspect;
-          drawX = 0;
-          drawY = (rect.height - drawHeight) / 2;
+          drawX = -drawWidth / 2;
+          drawY = -drawHeight / 2;
         } else {
           // 이미지가 캔버스보다 세로로 긴 경우
           drawHeight = rect.height;
           drawWidth = rect.height * imgAspect;
-          drawX = (rect.width - drawWidth) / 2;
-          drawY = 0;
+          drawX = -drawWidth / 2;
+          drawY = -drawHeight / 2;
         }
 
         // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
@@ -436,8 +446,11 @@ const FloorPlanEditor = () => {
 
   // 격자와 벽 그리기 함수 분리
   const drawGridAndWalls = (ctx, rect) => {
-    // 뷰포트 변환 적용
+    // 캔버스 중앙을 원점으로 변환
     ctx.save();
+    ctx.translate(rect.width / 2, rect.height / 2);
+    
+    // 뷰포트 변환 적용
     ctx.scale(viewScale, viewScale);
     ctx.translate(viewOffset.x, viewOffset.y);
 
@@ -448,13 +461,16 @@ const FloorPlanEditor = () => {
     // 고정 격자 크기 사용 (500mm x 500mm = 25px x 25px)
     const gridSize = GRID_SIZE_PX;
 
-    // 뷰포트 영역 계산 (어떤 격자를 그릴지 결정)
-    const startX = Math.floor(-viewOffset.x / gridSize) * gridSize;
-    const endX =
-      Math.ceil((rect.width / viewScale - viewOffset.x) / gridSize) * gridSize;
-    const startY = Math.floor(-viewOffset.y / gridSize) * gridSize;
-    const endY =
-      Math.ceil((rect.height / viewScale - viewOffset.y) / gridSize) * gridSize;
+    // 뷰포트 영역 계산 (중앙 기준 좌표계에서 격자 범위 결정)
+    const centerX = -viewOffset.x;
+    const centerY = -viewOffset.y;
+    const viewWidth = rect.width / (2 * viewScale);
+    const viewHeight = rect.height / (2 * viewScale);
+    
+    const startX = Math.floor((centerX - viewWidth) / gridSize) * gridSize;
+    const endX = Math.ceil((centerX + viewWidth) / gridSize) * gridSize;
+    const startY = Math.floor((centerY - viewHeight) / gridSize) * gridSize;
+    const endY = Math.ceil((centerY + viewHeight) / gridSize) * gridSize;
 
     // 격자 그리기 - 픽셀 정렬로 선명하게
     ctx.strokeStyle = "#e0e0e0";
@@ -977,20 +993,20 @@ const FloorPlanEditor = () => {
       if (imgAspect > canvasAspect) {
         drawWidth = containerRect.width;
         drawHeight = containerRect.width / imgAspect;
-        drawX = 0;
-        drawY = (containerRect.height - drawHeight) / 2;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       } else {
         drawHeight = containerRect.height;
         drawWidth = containerRect.height * imgAspect;
-        drawX = (containerRect.width - drawWidth) / 2;
-        drawY = 0;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       }
 
-      // 검출된 좌표를 캔버스 좌표로 변환
+      // 검출된 좌표를 중앙 기준 캔버스 좌표로 변환
       const scaleX = drawWidth / result.imageWidth;
       const scaleY = drawHeight / result.imageHeight;
 
-      // 검출된 선분들을 벽으로 변환 (임시 축척으로)
+      // 검출된 선분들을 벽으로 변환 (중앙 기준 좌표계로)
       const detectedWalls = result.lines.map((line, index) => {
         const canvasStartX = line.x1 * scaleX + drawX;
         const canvasStartY = line.y1 * scaleY + drawY;
@@ -1143,339 +1159,6 @@ const FloorPlanEditor = () => {
 
   return (
     <div className="w-full h-screen bg-orange-50 flex flex-col overflow-hidden">
-      {/* 축척 설정 팝업 */}
-      {showScalePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex">
-            {/* 왼쪽: 도면 미리보기 */}
-            <div className="flex-1 p-6 border-r border-gray-200">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4">
-                검출된 벽 확인
-              </h3>
-
-              <div
-                className="relative bg-gray-50 rounded-lg border-2 border-gray-200 overflow-hidden"
-                style={{ height: "500px" }}
-              >
-                {scaleImage && (
-                  <div className="relative w-full h-full">
-                    {/* 배경 이미지 */}
-                    <img
-                      src={scaleImage.url}
-                      alt="도면 이미지"
-                      className="absolute inset-0 w-full h-full object-contain opacity-70"
-                    />
-
-                    {/* 검출된 벽들을 SVG로 오버레이 */}
-                    <svg className="absolute inset-0 w-full h-full">
-                      {imageTransform &&
-                        walls.map((wall, index) => {
-                          const isSelected = selectedScaleWall?.id === wall.id;
-                          const isHovered = hoveredScaleWall?.id === wall.id;
-
-                          // 저장된 이미지 변환 정보를 사용하여 정확한 좌표 계산
-                          const {
-                            drawWidth,
-                            drawHeight,
-                            drawX,
-                            drawY,
-                            containerWidth,
-                            containerHeight,
-                          } = imageTransform;
-
-                          // 팝업에서 이미지가 실제로 렌더링되는 영역 계산
-                          // CSS object-contain으로 인한 실제 렌더링 크기 계산
-                          const popupContainer = document.querySelector(
-                            ".relative.bg-gray-50"
-                          );
-                          if (!popupContainer) return null;
-
-                          const popupRect =
-                            popupContainer.getBoundingClientRect();
-                          const popupImg = popupContainer.querySelector("img");
-                          if (!popupImg) return null;
-
-                          // 팝업 이미지의 실제 렌더링 크기 및 위치
-                          const imgAspect = drawWidth / drawHeight;
-                          const containerAspect =
-                            popupRect.width / popupRect.height;
-
-                          let actualImgWidth,
-                            actualImgHeight,
-                            imgOffsetX,
-                            imgOffsetY;
-
-                          if (imgAspect > containerAspect) {
-                            // 이미지가 더 넓음 - 가로에 맞춤
-                            actualImgWidth = popupRect.width;
-                            actualImgHeight = popupRect.width / imgAspect;
-                            imgOffsetX = 0;
-                            imgOffsetY =
-                              (popupRect.height - actualImgHeight) / 2;
-                          } else {
-                            // 이미지가 더 높음 - 세로에 맞춤
-                            actualImgHeight = popupRect.height;
-                            actualImgWidth = popupRect.height * imgAspect;
-                            imgOffsetX = (popupRect.width - actualImgWidth) / 2;
-                            imgOffsetY = 0;
-                          }
-
-                          // 1. 캔버스 좌표에서 이미지 영역 내 상대 좌표로 변환 (0~1)
-                          const relativeX1 = (wall.start.x - drawX) / drawWidth;
-                          const relativeY1 =
-                            (wall.start.y - drawY) / drawHeight;
-                          const relativeX2 = (wall.end.x - drawX) / drawWidth;
-                          const relativeY2 = (wall.end.y - drawY) / drawHeight;
-
-                          // 2. 팝업에서 실제 이미지 영역 내 좌표로 변환
-                          const svgX1 =
-                            imgOffsetX + relativeX1 * actualImgWidth;
-                          const svgY1 =
-                            imgOffsetY + relativeY1 * actualImgHeight;
-                          const svgX2 =
-                            imgOffsetX + relativeX2 * actualImgWidth;
-                          const svgY2 =
-                            imgOffsetY + relativeY2 * actualImgHeight;
-                          return (
-                            <g key={wall.id}>
-                              {/* 벽 선분 */}
-                              <line
-                                x1={svgX1}
-                                y1={svgY1}
-                                x2={svgX2}
-                                y2={svgY2}
-                                stroke={
-                                  isSelected
-                                    ? "#0066ff"
-                                    : isHovered
-                                    ? "#00aa00"
-                                    : "#ff6600"
-                                }
-                                strokeWidth={
-                                  isSelected ? "4" : isHovered ? "3" : "2"
-                                }
-                                strokeLinecap="round"
-                              />
-
-                              {/* 벽 번호 라벨 */}
-                              <circle
-                                cx={(svgX1 + svgX2) / 2}
-                                cy={(svgY1 + svgY2) / 2}
-                                r="12"
-                                fill={
-                                  isSelected
-                                    ? "#0066ff"
-                                    : isHovered
-                                    ? "#00aa00"
-                                    : "#ff6600"
-                                }
-                                stroke="white"
-                                strokeWidth="2"
-                              />
-                              <text
-                                x={(svgX1 + svgX2) / 2}
-                                y={(svgY1 + svgY2) / 2}
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fill="white"
-                                fontSize="10"
-                                fontWeight="bold"
-                              >
-                                {index + 1}
-                              </text>
-                            </g>
-                          );
-                        })}
-                    </svg>
-                  </div>
-                )}
-
-                {/* 범례 */}
-                <div className="absolute top-2 left-2 bg-white bg-opacity-90 p-2 rounded text-xs">
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className="w-3 h-1 bg-orange-500"></div>
-                    <span>일반 벽</span>
-                  </div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className="w-3 h-1 bg-green-500"></div>
-                    <span>미리보기</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-1 bg-blue-500"></div>
-                    <span>선택됨</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 오른쪽: 벽 선택 및 설정 */}
-            <div className="w-80 p-6">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4">
-                벽 선택 및 축척 설정
-              </h3>
-
-              {/* 벽 선택 목록 */}
-              <div className="mb-4">
-                <h4 className="font-medium mb-2">검출된 벽 목록:</h4>
-                <div className="max-h-48 overflow-y-auto space-y-1">
-                  {walls.map((wall, index) => (
-                    <div
-                      key={wall.id}
-                      onClick={() => setSelectedScaleWall(wall)}
-                      onMouseEnter={() => setHoveredScaleWall(wall)}
-                      onMouseLeave={() => setHoveredScaleWall(null)}
-                      className={`p-2 border rounded cursor-pointer transition-colors text-sm ${
-                        selectedScaleWall?.id === wall.id
-                          ? "bg-blue-100 border-blue-500"
-                          : hoveredScaleWall?.id === wall.id
-                          ? "bg-green-50 border-green-400"
-                          : "bg-gray-50 border-gray-300 hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`inline-block w-3 h-3 rounded border ${
-                            selectedScaleWall?.id === wall.id
-                              ? "bg-blue-500 border-blue-500"
-                              : hoveredScaleWall?.id === wall.id
-                              ? "bg-green-500 border-green-500"
-                              : "bg-orange-500 border-orange-500"
-                          }`}
-                        ></span>
-                        <span className="font-medium">벽 {index + 1}</span>
-                        {selectedScaleWall?.id === wall.id && (
-                          <span className="text-xs text-blue-600">✓</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-gray-600 ml-5">
-                        길이:{" "}
-                        {Math.round(
-                          calculateDistance(wall.start, wall.end) /
-                            pixelToMmRatio
-                        )}
-                        px
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* 선택된 벽 정보 */}
-              {selectedScaleWall && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-300 rounded">
-                  <h4 className="font-medium text-blue-800 mb-2">선택된 벽:</h4>
-                  <p className="text-sm text-blue-600">
-                    벽{" "}
-                    {walls.findIndex((w) => w.id === selectedScaleWall.id) + 1}
-                  </p>
-                  <p className="text-xs text-blue-600">
-                    픽셀 길이:{" "}
-                    {Math.round(
-                      calculateDistance(
-                        selectedScaleWall.start,
-                        selectedScaleWall.end
-                      ) / pixelToMmRatio
-                    )}
-                    px
-                  </p>
-                </div>
-              )}
-
-              {/* 실제 길이 입력 */}
-              {selectedScaleWall && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-orange-700 mb-2">
-                    실제 길이 (mm):
-                  </label>
-                  <input
-                    type="number"
-                    value={realLength}
-                    onChange={(e) => setRealLength(e.target.value)}
-                    placeholder="예: 3000"
-                    className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400 text-gray-900"
-                  />
-                </div>
-              )}
-
-              {/* 안내 메시지 */}
-              <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded text-sm">
-                {!selectedScaleWall &&
-                  "왼쪽 도면에서 기준이 될 벽을 확인하고 오른쪽 목록에서 선택하세요"}
-                {selectedScaleWall &&
-                  !realLength &&
-                  "선택한 벽의 실제 길이를 입력하세요"}
-                {selectedScaleWall &&
-                  realLength &&
-                  "설정을 완료하면 모든 벽의 축척이 조정됩니다"}
-              </div>
-
-              {/* 버튼들 */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    if (selectedScaleWall && realLength) {
-                      const selectedWallPixelLength =
-                        calculateDistance(
-                          selectedScaleWall.start,
-                          selectedScaleWall.end
-                        ) / pixelToMmRatio;
-
-                      const newRatio =
-                        parseFloat(realLength) / selectedWallPixelLength;
-                      setPixelToMmRatio(newRatio);
-
-                      setShowScalePopup(false);
-                      setSelectedScaleWall(null);
-                      setHoveredScaleWall(null);
-                      setImageTransform(null);
-                      setRealLength("");
-
-                      alert(
-                        `축척이 설정되었습니다! (1픽셀 = ${newRatio.toFixed(
-                          2
-                        )}mm)`
-                      );
-                    }
-                  }}
-                  disabled={!selectedScaleWall || !realLength || isProcessing}
-                  className="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isProcessing ? "처리 중..." : "축척 설정 완료"}
-                </button>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setSelectedScaleWall(null);
-                      setHoveredScaleWall(null);
-                      setRealLength("");
-                    }}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
-                    disabled={isProcessing}
-                  >
-                    다시 선택
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowScalePopup(false);
-                      setScaleImage(null);
-                      setSelectedScaleWall(null);
-                      setHoveredScaleWall(null);
-                      setImageTransform(null);
-                      setRealLength("");
-                    }}
-                    className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm"
-                    disabled={isProcessing}
-                  >
-                    취소
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 툴바 */}
       <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
         <div className="flex items-center gap-4">
@@ -1650,7 +1333,9 @@ const FloorPlanEditor = () => {
           {/* 축척 설정 도구 */}
           {tool === "scale" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
-              <h4 className="font-medium text-orange-700 mb-2">축척 설정 도구</h4>
+              <h4 className="font-medium text-orange-700 mb-2">
+                축척 설정 도구
+              </h4>
               {!scaleWall ? (
                 <p className="text-sm text-orange-600 mb-3">
                   기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)

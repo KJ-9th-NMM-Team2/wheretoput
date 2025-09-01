@@ -145,51 +145,11 @@ function CameraUpdater() {
   const fov = useStore((state) => state.cameraFov);
   const { camera } = useThree();
   const perspectiveCamera = camera as THREE.PerspectiveCamera;
-  const controlsRef = useRef(null);
 
   useEffect(() => {
     perspectiveCamera.fov = fov;
     perspectiveCamera.updateProjectionMatrix();
   }, [fov, perspectiveCamera]);
-
-  return null;
-}
-
-function CameraLogger() {
-  const { camera, controls } = useThree();
-  
-  useEffect(() => {
-    const logCameraInfo = () => {
-      console.log("=== 카메라 정보 ===");
-      console.log("카메라 위치:", camera.position.toArray());
-      
-      if (controls && (controls as any).target) {
-        console.log("카메라가 바라보는 원점:", (controls as any).target.toArray());
-      } else {
-        // OrbitControls가 없는 경우 카메라가 바라보는 방향 계산
-        const lookAtTarget = new THREE.Vector3();
-        camera.getWorldDirection(lookAtTarget);
-        lookAtTarget.multiplyScalar(10); // 10 단위 앞의 점
-        lookAtTarget.add(camera.position);
-        console.log("카메라가 바라보는 방향 (추정):", lookAtTarget.toArray());
-      }
-      
-      console.log("카메라 회전:", camera.rotation.toArray().slice(0, 3));
-      console.log("================");
-    };
-
-    // 초기 로그
-    logCameraInfo();
-
-    // OrbitControls의 change 이벤트 리스너 추가
-    if (controls) {
-      (controls as any).addEventListener('change', logCameraInfo);
-      
-      return () => {
-        (controls as any).removeEventListener('change', logCameraInfo);
-      };
-    }
-  }, [camera, controls]);
 
   return null;
 }
