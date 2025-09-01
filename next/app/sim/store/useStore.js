@@ -273,8 +273,43 @@ export const useStore = create(
           }
         }
 
-        // 벽 데이터는 /create에서 이미 저장되었으므로 /sim에서는 저장하지 않음
         const currentState = get();
+
+        // 벽 스케일 팩터가 1이 아닌 경우, 벽 데이터도 DB에 업데이트
+        if (currentState.wallScaleFactor !== 1.0 && currentState.wallsData.length > 0) {
+          try {
+            // 현재 스케일 팩터가 적용된 벽 데이터를 DB 형식으로 변환
+            const scaledWalls = currentState.wallsData.map(wall => ({
+              start: {
+                x: wall.position[0] - (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y: wall.position[2] - (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
+              },
+              end: {
+                x: wall.position[0] + (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y: wall.position[2] + (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
+              }
+            }));
+
+            const updateWallsResponse = await fetch(`/api/room-walls/${currentState.currentRoomId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                walls: scaledWalls,
+                pixelToMmRatio: 1000 // 이미 미터 단위로 변환된 값이므로 1000으로 설정
+              }),
+            });
+
+            if (updateWallsResponse.ok) {
+              console.log("벽 데이터 업데이트 완료");
+            } else {
+              console.warn("벽 데이터 업데이트 실패:", updateWallsResponse.statusText);
+            }
+          } catch (wallUpdateError) {
+            console.error("벽 데이터 업데이트 중 오류:", wallUpdateError);
+          }
+        }
 
         // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
         const response = await fetch("/api/sim/save", {
