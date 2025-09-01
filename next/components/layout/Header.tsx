@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import SignInButton from "@/components/login/SignInButton";
 import UserBubble from "@/components/login/UserBubble";
 import { useSession } from "next-auth/react";
-
+// import { Handler } from '@/lib/handler';
 // 로그인되어 있으면 로그아웃, 로그아웃되어 있으면 로그인 버튼
 export function SignInCheck() {
   const { data: session, status } = useSession();
@@ -23,6 +24,25 @@ export function SignInCheck() {
 
 export default function Header() {
   const [searchInput, setSearchInput] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // page 이동 시 검색어 Reset
+  useEffect(() => {
+    if (!pathname.startsWith("/search")) {
+      setSearchInput("");
+    }
+  }, [pathname]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isComposing) {
+      searchInput
+        ? router.push(`/search?order=view&q=${encodeURIComponent(searchInput)}`)
+        : router.push("/search");
+      setSearchInput("");
+    }
+  };
 
   return (
     <header
@@ -44,6 +64,7 @@ export default function Header() {
         <nav className="flex items-center gap-8">
           <Link
             href="/create"
+            rel="noopener noreferrer"
             className="
               text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95
@@ -96,6 +117,9 @@ export default function Header() {
             </div>
             <input
               onChange={(e) => setSearchInput(e.target.value)}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              onKeyDown={handleKeyDown}
               placeholder="검색어를 입력하세요"
               className="
                 flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full 

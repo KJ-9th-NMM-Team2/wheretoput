@@ -1,46 +1,46 @@
 .button {
-    position: fixed;
-    /* 화면에 고정 */
-    right: 24px;
-    /* 오른쪽에서 24px 떨어짐 */
-    bottom: 24px;
-    /* 아래에서 24px 떨어짐 */
-    z-index: 1000;
-    /* 다른 요소 위에 보이게함 */
+  position: fixed;
+  /* 화면에 고정 */
+  right: 24px;
+  /* 오른쪽에서 24px 떨어짐 */
+  bottom: 24px;
+  /* 아래에서 24px 떨어짐 */
+  z-index: 1000;
+  /* 다른 요소 위에 보이게함 */
 
-    width: 140px;
-    height: 45px;
-    font-family: 'Roboto', sans-serif;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 2.5px;
-    font-weight: 500;
-    color: #000;
-    background-color: #fff;
-    border: none;
-    border-radius: 45px;
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease 0s;
-    cursor: pointer;
-    outline: none;
+  width: 55px;
+  height: 55px;
+  font-size: 30px;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  font-weight: 500;
+  color: #000;
+  background-color: #fff;
+  border: none;
+  border-radius: 45px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
 }
 
 .button:hover {
-    background-color: rgb(255, 165, 0, 1.0);
-    box-shadow: 0px 15px 20px rgba(255, 165, 0);
-    color: #020000;
-    transform: translateY(-7px);
+  background-color: rgb(255, 165, 0, 1);
+  box-shadow: 0px 15px 20px rgba(255, 165, 0);
+  color: #020000;
+  transform: translateY(-7px);
 }
 
 .search {
-    position: relative;
-    width: 300px;
+  position: relative;
+  width: 300px;
 }
 
 .input {
-    width: 100%;
-    border: 1px solid #bbb;
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 14px;
+  width: 100%;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
 }
+>>>>>>> dev

@@ -1,16 +1,18 @@
-import { Loader2 } from 'lucide-react';
-import type { ItemScrollProps } from '@/lib/types';
+import { ImageOff, Loader2 } from 'lucide-react';
+import type { ItemSectionProps } from '@/lib/types';
 
-const ItemScroll: React.FC<ItemScrollProps> = ({
+const ItemSection: React.FC<ItemSectionProps> = ({
     loading,
     error,
     filteredItems,
-    // imageErrors,
+    selectedItems,
+    imageErrors,
     selectedCategory,
     handleItemClick,
-    // handleImageError,
+    handleImageError,
 }) => {
-
+    const itemsToRender = selectedItems?.length > 0 ? selectedItems : filteredItems;
+    const isSelectedCategory = selectedItems?.length > 0;
     return <>
         {/* 아이템 목록 - 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -25,31 +27,21 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                     </p>
                     <p className="text-xs text-gray-500">{error}</p>
                 </div>
-            ) : filteredItems.length > 0 ? (
+            ) : itemsToRender && itemsToRender.length > 0 ? (
                 <div className="space-y-3">
-                    {filteredItems.map((item) => (
+                    {itemsToRender.map((item) => (
                         <div
                             key={item.furniture_id}
-                            onClick={() => handleItemClick(item)}
-                            className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                            onClick={!isSelectedCategory ? () => handleItemClick(item) : undefined}
+                            className={`bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden ${
+                                isSelectedCategory 
+                                    ? 'cursor-not-allowed opacity-60' 
+                                    : 'cursor-pointer'
+                            }`}
                         >
-                            
-                            {/* // ItemScroll 이미지 영역 */}
-                            <li
-                                key={item.furniture_id}
-                                // draggable
-                                // onDragStart={(e) => {
-                                //     // DataTransfer에 JSON 데이터 저장
-                                //     e.dataTransfer.setData("application/json", JSON.stringify(item));
-                                // }}
-                                className="list-none cursor-grab active:cursor-grabbing"
-                            >
-                                <img src={item.image_url ?? ""} alt={item.name}/>
-                                {/* <span>{item.name}</span> */}
-                            </li>
                             <div className="flex">
                                 {/* 이미지 영역 */}
-                                {/* <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                                <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
                                     {item.image_url && !imageErrors.has(item.id) ? (
                                         <img
                                             src={item.image_url}
@@ -62,7 +54,7 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                                             <ImageOff className="w-8 h-8 text-gray-400" />
                                         </div>
                                     )}
-                                </div> */}
+                                </div>
 
                                 {/* 정보 영역 */}
                                 <div className="flex-1 p-3">
@@ -115,4 +107,4 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
     </>
 }
 
-export default ItemScroll;
+export default ItemSection;

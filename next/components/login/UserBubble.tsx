@@ -1,6 +1,6 @@
 "use client";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function UserBubble({
@@ -13,18 +13,35 @@ export default function UserBubble({
   image: string;
 }) {
   const [open, setOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
+
   return (
-    <div className="relative inline-block">
+    <div ref={dropdownRef} className="relative inline-block">
       <div
         onClick={() => setOpen((prev) => !prev)}
         className="
         bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
         transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
         ring-amber-200 hover:ring-amber-300
-        dark:ring-gray-600 dark:hover:ring-amber-400
-        "
+        dark:ring-gray-600 dark:hover:ring-amber-400"
         style={{
-          backgroundImage: image ? `url('${image}')` : "none",
+          backgroundImage: `url("${image}")`,
         }}
       ></div>
       {open && (

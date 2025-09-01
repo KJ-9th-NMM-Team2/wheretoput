@@ -24,7 +24,7 @@ export function LightControlPanel() {
       zIndex: 100,
       color: 'white',
       fontSize: '12px',
-      width: '350px',
+      width: '250px',
       maxHeight: '400px',
       overflowY: 'auto'
     }}>
@@ -43,48 +43,46 @@ export function LightControlPanel() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
 
           {/* 위치 조정 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-            <ControlSlider
-              label="주변광 세기"
-              value={ambientLightIntensity}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={setAmbientLightIntensity}
-              displayValue={`${ambientLightIntensity}`}
-              compact
-            />
-            <ControlSlider
-              label="방위각"
-              value={directionalLightAzimuth}
-              min={0}
-              max={360}
-              step={1}
-              onChange={setDirectionalLightAzimuth}
-              displayValue={`${directionalLightAzimuth}°`}
-              compact
-            />
-            <ControlSlider
-              label="고도"
-              value={directionalLightElevation}
-              min={0}
-              max={90}
-              step={1}
-              onChange={setDirectionalLightElevation}
-              displayValue={`${directionalLightElevation}°`}
-              compact
-            />
-            <ControlSlider
-              label="햇빛 세기"
-              value={directionalLightIntensity}
-              min={0}
-              max={1}
-              step={0.01}
-              onChange={setDirectionalLightIntensity}
-              displayValue={`${directionalLightIntensity}`}
-              compact
-            />
-          </div>
+          <ControlSlider
+            label="주변광 세기"
+            value={ambientLightIntensity}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={setAmbientLightIntensity}
+            displayValue={`${ambientLightIntensity}`}
+            compact
+          />
+          <ControlSlider
+            label="방위각"
+            value={directionalLightAzimuth}
+            min={0}
+            max={360}
+            step={1}
+            onChange={setDirectionalLightAzimuth}
+            displayValue={`${directionalLightAzimuth}°`}
+            compact
+          />
+          <ControlSlider
+            label="고도"
+            value={directionalLightElevation}
+            min={0}
+            max={90}
+            step={1}
+            onChange={setDirectionalLightElevation}
+            displayValue={`${directionalLightElevation}°`}
+            compact
+          />
+          <ControlSlider
+            label="햇빛 세기"
+            value={directionalLightIntensity}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={setDirectionalLightIntensity}
+            displayValue={`${directionalLightIntensity}`}
+            compact
+          />
         </div>
       </div>
 
@@ -109,10 +107,11 @@ function ControlSlider({
       gap: compact ? '3px' : '5px'
     }}>
       <span style={{
-        minWidth: compact ? '12px' : '30px',
-        fontSize: '10px'
+        minWidth: '50px',
+        fontSize: '10px',
+        whiteSpace: 'nowrap'
       }}>
-        {label}:
+        {label}
       </span>
       <input
         type="range"
@@ -124,8 +123,8 @@ function ControlSlider({
         style={{ flex: 1 }}
       />
       <span style={{
-        color: '#e6a925ff',
-        minWidth: '30px',
+        color: '#ffffffff',
+        minWidth: '20px',
         fontSize: '10px',
         textAlign: 'right'
       }}>

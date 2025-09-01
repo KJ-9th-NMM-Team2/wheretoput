@@ -58,12 +58,12 @@
  */
 import { prisma } from "@/lib/prisma";
 import type { furnitures as Furniture } from "@prisma/client";
+import { calculatePagination } from "@/lib/paginagtion";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     console.log("Search params:", searchParams.toString());
-
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "5");
     const categoryParam = searchParams.get("category");
@@ -125,14 +125,7 @@ export async function GET(request: Request) {
     // 응답 데이터 구성
     const response = {
       items: furnitures,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalCount / limit),
-        totalItems: totalCount,
-        itemsPerPage: limit,
-        hasNext: page * limit < totalCount,
-        hasPrev: page > 1,
-      },
+      pagination: calculatePagination(page, limit, totalCount),
       debug: {
         searchParams: searchParams.toString(),
         appliedCategory: category,

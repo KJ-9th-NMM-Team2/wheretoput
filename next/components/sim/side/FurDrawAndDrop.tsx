@@ -13,6 +13,7 @@ export default function FurnitureDrop(e: React.DragEvent<HTMLDivElement>, addMod
 
     // 가구를 3D 씬에 추가
     const newModel = {
+        furniture_id: furnitureData.furniture_id, // 중요: furniture_id 추가
         url: '/legacy_mesh (1).glb', // 테스트용 나중에 furnitureData.model_url 수정
         name: furnitureData.name,
         length_x: furnitureData.length_x,

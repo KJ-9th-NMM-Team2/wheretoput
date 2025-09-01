@@ -1,38 +1,65 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import HouseCard from "@/components/search/HouseCard";
 import { fetchRooms } from "@/lib/api/rooms";
 import SearchBar from "@/components/search/SearchBar";
 
 export default function SortedHouseList({
   data: initialData,
+  initQuery = "",
 }: {
   data: any[];
+  initQuery: string; 
 }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const urlSortType = searchParams.get('order') as "view" | "new" | "like" | null;
+  // 쿼리가 바뀔 때 실행된다.
+  const [currentQuery, setCurrentQuery] = useState(initQuery);
+  
   // 검색값
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(initQuery);
 
-  // 정렬기준
-  const [sortType, setSortType] = useState<"view" | "new" | "like">("view");
+  // 정렬기준 - URL에서 읽어오거나 기본값 사용
+  const [sortType, setSortType] = useState<"view" | "new" | "like">(urlSortType || "view");
 
   // 띄울 데이터
-  const [data, setData] = useState<any[]>(initialData);
+  const [data, setData] = useState<any[]>(initialData);  
 
-  // 정렬기준 바뀔때마다 다시 fetch
+  // currentQuery 변경 시 fetch (초기 로드)
   useEffect(() => {
-    async function fetchData() {
-      const rooms = await fetchRooms("short", sortType);
+    const fetchData = async () => {
+      const rooms = await fetchRooms("short", sortType, undefined, currentQuery);
       setData(rooms);
     }
     fetchData();
-  }, [sortType]);
+  }, [currentQuery, sortType]);
+
+  // initQuery 변경 시 ex) header 이용
+  useEffect(() => {
+    const fetchData = async () => {
+      const rooms = await fetchRooms("short", sortType, undefined, initQuery);
+      setData(rooms);
+    }
+    fetchData();
+    setCurrentQuery(initQuery);
+    setSearchInput(initQuery);
+    setSortType("view");
+  }, [initQuery]);
+
+  // 검색 실행 함수
+  const handlerSearch = (newQuery: string) => {
+    setCurrentQuery(newQuery);
+    newQuery ? router.push(`/search?order=${sortType}&q=${newQuery}`) : router.push('/search');
+  }
 
   return (
     <>
       <div className="px-40 py-5">
         {/* 검색바 */}
-        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} />
+        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} onSearch={handlerSearch} setSortType={setSortType}/>
         <div className="flex gap-3 p-3 flex-wrap pr-4">
           {/* // 정렬버튼 */}
           <button
@@ -42,7 +69,10 @@ export default function SortedHouseList({
                 ? "bg-amber-300 dark:bg-orange-800"
                 : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
             }`}
-            onClick={() => setSortType("view")}
+            onClick={() => {
+              setSortType("view");
+              router.push(`/search?order=view${(currentQuery) ? `&q=${currentQuery}` : ''}`);
+            }}
           >
             <span className="text-sm">조회수 순</span>
           </button>
@@ -53,7 +83,10 @@ export default function SortedHouseList({
                 ? "bg-amber-300 dark:bg-orange-800"
                 : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
             }`}
-            onClick={() => setSortType("new")}
+            onClick={() => {
+              setSortType("new");
+              router.push(`/search?order=new${(currentQuery) ? `&q=${currentQuery}` : ''}`);
+            }}
           >
             <span className="text-sm">최신 순</span>
           </button>
@@ -64,7 +97,10 @@ export default function SortedHouseList({
                 ? "bg-amber-300 dark:bg-orange-800"
                 : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
             }`}
-            onClick={() => setSortType("like")}
+            onClick={() => {
+              setSortType("like");
+              router.push(`/search?order=like${(currentQuery) ? `&q=${currentQuery}` : ''}`);}
+            }
           >
             <span className="text-sm">좋아요 순</span>
           </button>

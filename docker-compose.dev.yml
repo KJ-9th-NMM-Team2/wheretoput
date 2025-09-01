@@ -1,0 +1,25 @@
+# 개발용 Docker Compose 오버라이드
+
+services:
+  socket:
+    build:
+      context: ./socket
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./socket:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    image: wheretoput-socket-dev
+
+  next:
+    build:
+      context: ./next
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./next:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_BASE_URL=http://localhost:3000
+    image: wheretoput-next-dev
