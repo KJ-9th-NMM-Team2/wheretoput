@@ -99,7 +99,7 @@ export const useStore = create(
     setDirectionalLightIntensity: (intensity) => set({ directionalLightIntensity: intensity }),
 
     // 카메라 상태
-    cameraFov: 60,    // Perspective
+    cameraFov: 30,    // Perspective
     // cameraZoom: 50,   // Orthographic
     // cameraMode: 'perspective', // Perspective | Orthographic
 
