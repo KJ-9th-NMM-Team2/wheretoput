@@ -1,20 +1,8 @@
 'use client'
-// 시뮬레이터 페이지 - 수연, 성진
-// app\sim\[id]\page.tsx 에 있어야 합니다.
-// export default async function SimPage({
-//   params,
-// }: {
-//   params: Promise<{ id: string }>;
-// }) {
-//   const { id } = await params;  // /pages/[id]에 해당하는 id 값
-//   return <h1>시뮬레이터 페이지 - id {id}</h1>;
-// }
-
 import React, { useRef, Suspense, useState, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-
 import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
 import { InfoPanel } from '../components/InfoPanel.jsx'
@@ -27,17 +15,63 @@ import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
 
-// [임시] 바닥 - BFC 적용중인 planeGeometry
-// 구현 필요 : 도면 변환 후 벽 내부에만 바닥이 존재하게 하기, 텍스쳐 적용
-function Floor() {
+// 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
+function Floor({ wallsData }: { wallsData: any[] }) {
+  // 벽 데이터가 없으면 기본 바닥 렌더링
+  if (!wallsData || wallsData.length === 0) {
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[20, 20]} />
+        <meshStandardMaterial
+          color="#D2B48C"
+          roughness={0.9}
+          metalness={0.0}
+        />
+      </mesh>
+    )
+  }
+
+  // 벽들의 2D 좌표를 추출하여 내부 영역 계산
+  const wallLines = wallsData.map(wall => {
+    const { position, rotation, dimensions } = wall
+    const length = dimensions.width
+    const angle = rotation[1] // Y축 회전각
+    
+    // 벽의 시작점과 끝점 계산
+    const halfLength = length / 2
+    const startX = position[0] - Math.cos(angle) * halfLength
+    const startZ = position[2] - Math.sin(angle) * halfLength
+    const endX = position[0] + Math.cos(angle) * halfLength
+    const endZ = position[2] + Math.sin(angle) * halfLength
+    
+    return { startX, startZ, endX, endZ }
+  })
+
+  // 경계 상자 계산
+  const allX = [...wallLines.map(w => w.startX), ...wallLines.map(w => w.endX)]
+  const allZ = [...wallLines.map(w => w.startZ), ...wallLines.map(w => w.endZ)]
+  const minX = Math.min(...allX)
+  const maxX = Math.max(...allX)
+  const minZ = Math.min(...allZ)
+  const maxZ = Math.max(...allZ)
+  
+  // 내부 영역 크기 계산 (벽 두께 고려하여 약간 작게)
+  const width = maxX - minX - 0.2 // 벽 두께만큼 빼기
+  const height = maxZ - minZ - 0.2
+  const centerX = (minX + maxX) / 2
+  const centerZ = (minZ + maxZ) / 2
+
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[20, 20]} />
+    <mesh 
+      position={[centerX, -0.01, centerZ]} 
+      rotation={[-Math.PI / 2, 0, 0]} 
+      receiveShadow
+    >
+      <planeGeometry args={[width, height]} />
       <meshStandardMaterial
         color="#D2B48C"
         roughness={0.9}
         metalness={0.0}
-        normalScale={[1, 1]}
       />
     </mesh>
   )
@@ -51,11 +85,16 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   position: position; 
   rotation?: [number, number, number] 
 }) {
+  // 벽 렌더링 로그 (한 번만)
+  React.useEffect(() => {
+    console.log('벽 렌더링:', { width, height, depth, position, rotation });
+  }, []);
+
   // 각 면에 다른 재질 적용
   const materials = [
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
-    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면 (검은색)
+    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 아랫면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 앞면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 })  // 뒷면
@@ -95,9 +134,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     cameraFov,
     setCurrentRoomId,
     loadSimulatorState,
-    isLoading
+    isLoading,
+    wallsData
   } = useStore()
-  const [wallsData, setWallsData] = useState([])
   const [roomId, setRoomId] = useState(null)
 
   // URL 파라미터에서 room_id 추출 및 자동 로드
@@ -112,17 +151,17 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         setRoomId(currentRoomId)
         setCurrentRoomId(currentRoomId)
         
-        // 임시 방이 아닌 경우에만 가구 데이터 로드 시도
+        // 임시 방이 아닌 경우에만 데이터 로드 시도
         if (!currentRoomId.startsWith('temp_')) {
           try {
             await loadSimulatorState(currentRoomId)
-            console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
+            console.log(`방 ${currentRoomId}의 데이터 로드 완료`)
           } catch (loadError) {
-            console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
+            console.log(`방 ${currentRoomId}의 저장된 데이터 없음:`, loadError.message)
             // 저장된 데이터가 없어도 에러로 처리하지 않음
           }
         } else {
-          console.log(`임시 방 ${currentRoomId}이므로 가구 데이터 로드를 건너뜁니다.`)
+          console.log(`임시 방 ${currentRoomId}이므로 데이터 로드를 건너뜁니다.`)
         }
         
       } catch (error) {
@@ -133,28 +172,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     initializeSimulator()
   }, [params, setCurrentRoomId, loadSimulatorState])
 
-  // 컴포넌트 마운트 시 도면 데이터 로드 (roomId가 설정된 후)
-  useEffect(() => {
-    if (!roomId) return; // roomId가 설정될 때까지 대기
-    
-    const loadWallsData = async () => {
-      try {
-        const walls3D = await createWallsFromFloorPlan(roomId)
-        setWallsData(walls3D)
-        
-        if (walls3D.length > 0) {
-          console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
-        } else {
-          console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
-        }
-      } catch (error) {
-        console.error('벽 데이터 로드 실패:', error)
-        setWallsData([]) // 에러 시 기본 벽 사용
-      }
-    }
-    
-    loadWallsData()
-  }, [roomId]) // roomId 변경 시 도면 데이터 다시 로드
+  // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)
@@ -192,7 +210,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         <CameraControlPanel />
 
         <Canvas
-          camera={{ position: [-20, 15, 0], fov: 60 }}
+          camera={{ position: [-30, 20, 0], fov: 60 }}
           shadows
           style={{ width: '100%', height: '100vh' }}
           frameloop='demand'
@@ -223,7 +241,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           shadow-mapSize-height={2048}
         />
 
-        <Floor />
+        <Floor wallsData={wallsData} />
         
         {/* 도면 기반 벽들 또는 기본 벽들 */}
         {wallsData.length > 0 ? (
@@ -231,9 +249,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           wallsData.map((wall) => (
             <Wall
               key={wall.id}
-              width={wall.dimensions.width}
-              height={wall.dimensions.height}
-              depth={wall.dimensions.depth}
+              width={Math.max(wall.dimensions.width, 0.5)} // 최소 0.5m 보장
+              height={Math.max(wall.dimensions.height, 2.5)} // 최소 2.5m 보장
+              depth={Math.max(wall.dimensions.depth, 0.2)} // 최소 0.2m 보장
               position={wall.position}
               rotation={wall.rotation}
             />
@@ -281,8 +299,8 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           ref={controlsRef}
           enableZoom={true}
           enableRotate={true}
-          minDistance={5}
-          maxDistance={20}
+          minDistance={8}
+          maxDistance={50}
         />
       </Canvas>
       </div>

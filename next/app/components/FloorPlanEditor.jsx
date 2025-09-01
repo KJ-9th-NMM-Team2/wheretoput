@@ -9,6 +9,7 @@ import {
   Check,
   Upload,
   Trash2,
+  Scissors,
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
@@ -23,7 +24,18 @@ const FloorPlanEditor = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedWall, setSelectedWall] = useState(null);
+  const [editingWallLength, setEditingWallLength] = useState('');
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
+  const [cachedBackgroundImage, setCachedBackgroundImage] = useState(null);
+  
+  // 부분 지우기 관련 상태
+  const [partialEraserSelectedWall, setPartialEraserSelectedWall] = useState(null);
+  const [isSelectingEraseArea, setIsSelectingEraseArea] = useState(false);
+  const [eraseAreaStart, setEraseAreaStart] = useState(null);
+  const [eraseAreaEnd, setEraseAreaEnd] = useState(null);
+  
   const fileInputRef = useRef(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   // 축척 설정 관련 상태
   const [showScalePopup, setShowScalePopup] = useState(false);
@@ -36,8 +48,6 @@ const FloorPlanEditor = () => {
   const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 1픽셀 = 20mm (기본값)
 
   const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
-  const CANVAS_WIDTH = 600; // 캔버스 크기 축소
-  const CANVAS_HEIGHT = 300;
 
   // 격자에 스냅하는 함수
   const snapToGrid = (x, y) => {
@@ -64,6 +74,112 @@ const FloorPlanEditor = () => {
     }
     
     return result;
+  };
+
+  // 벽 길이 조정 함수
+  const adjustWallLength = (wallId, newLengthMm) => {
+    setWalls(prevWalls => {
+      return prevWalls.map(wall => {
+        if (wall.id === wallId) {
+          const currentLength = calculateDistance(wall.start, wall.end);
+          if (currentLength === 0) return wall;
+          
+          // 현재 벡터 계산
+          const dx = wall.end.x - wall.start.x;
+          const dy = wall.end.y - wall.start.y;
+          const currentPixelLength = Math.sqrt(dx * dx + dy * dy);
+          
+          // 새로운 픽셀 길이 계산
+          const newPixelLength = newLengthMm / pixelToMmRatio;
+          const scale = newPixelLength / currentPixelLength;
+          
+          // 새로운 끝점 계산 (시작점 고정)
+          const newEnd = {
+            x: wall.start.x + dx * scale,
+            y: wall.start.y + dy * scale
+          };
+          
+          // 격자에 스냅
+          const snappedEnd = snapToGrid(newEnd.x, newEnd.y);
+          
+          return {
+            ...wall,
+            end: snappedEnd
+          };
+        }
+        return wall;
+      });
+    });
+  };
+
+  // 선분을 부분적으로 잘라내는 함수
+  const partialEraseWall = (wallId, eraseStart, eraseEnd) => {
+    setWalls(prevWalls => {
+      return prevWalls.reduce((newWalls, wall) => {
+        if (wall.id !== wallId) {
+          return [...newWalls, wall];
+        }
+
+        // 선분 위의 점을 선분의 매개변수 t로 변환 (0 <= t <= 1)
+        const getParameterOnLine = (point, lineStart, lineEnd) => {
+          const dx = lineEnd.x - lineStart.x;
+          const dy = lineEnd.y - lineStart.y;
+          const lineLengthSq = dx * dx + dy * dy;
+          
+          if (lineLengthSq === 0) return 0;
+          
+          const t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lineLengthSq;
+          return Math.max(0, Math.min(1, t)); // 0과 1 사이로 제한
+        };
+
+        // 지울 영역의 시작과 끝 매개변수 계산
+        const t1 = getParameterOnLine(eraseStart, wall.start, wall.end);
+        const t2 = getParameterOnLine(eraseEnd, wall.start, wall.end);
+        
+        // t1이 t2보다 작도록 정렬
+        const tStart = Math.min(t1, t2);
+        const tEnd = Math.max(t1, t2);
+
+        // 잘라낼 영역이 너무 작으면 무시
+        if (tEnd - tStart < 0.05) {
+          return [...newWalls, wall];
+        }
+
+        const resultWalls = [];
+
+        // 첫 번째 부분 (시작점부터 지울 영역 시작까지)
+        if (tStart > 0.05) {
+          const newEnd = {
+            x: wall.start.x + (wall.end.x - wall.start.x) * tStart,
+            y: wall.start.y + (wall.end.y - wall.start.y) * tStart
+          };
+          const snappedEnd = snapToGrid(newEnd.x, newEnd.y);
+          
+          resultWalls.push({
+            id: Date.now() + Math.random(),
+            start: wall.start,
+            end: snappedEnd
+          });
+        }
+
+        // 두 번째 부분 (지울 영역 끝부터 끝점까지)
+        if (tEnd < 0.95) {
+          const newStart = {
+            x: wall.start.x + (wall.end.x - wall.start.x) * tEnd,
+            y: wall.start.y + (wall.end.y - wall.start.y) * tEnd
+          };
+          const snappedStart = snapToGrid(newStart.x, newStart.y);
+          
+          resultWalls.push({
+            id: Date.now() + Math.random() + 1,
+            start: snappedStart,
+            end: wall.end
+          });
+        }
+
+        return [...newWalls, ...resultWalls];
+      }, []);
+    });
   };
 
   // 점과 선분 사이의 거리 계산
@@ -112,7 +228,14 @@ const FloorPlanEditor = () => {
   const drawText = (ctx, text, x, y, angle = 0) => {
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(angle);
+    
+    // 텍스트가 거꾸로 보이지 않도록 각도 조정
+    let adjustedAngle = angle;
+    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+      adjustedAngle = angle + Math.PI;
+    }
+    
+    ctx.rotate(adjustedAngle);
     ctx.fillStyle = "#333333";
     ctx.font = "bold 17px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
@@ -130,27 +253,115 @@ const FloorPlanEditor = () => {
   // 캔버스 그리기 : 선분 두께 등 수정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    
     const ctx = canvas.getContext("2d");
 
+    // 컨테이너의 현재 실제 크기를 매번 새로 측정
+    const containerRect = container.getBoundingClientRect();
+    
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
     
-    // 캔버스 실제 해상도 설정
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    // 캔버스 실제 해상도 설정 (현재 컨테이너 크기 기준)
+    canvas.width = containerRect.width * dpr;
+    canvas.height = containerRect.height * dpr;
     
-    // CSS 크기는 원래대로 유지
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
+    // CSS 크기는 현재 컨테이너에 맞춤
+    canvas.style.width = containerRect.width + 'px';
+    canvas.style.height = containerRect.height + 'px';
     
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
-    // 전체 캔버스 클리어
-    ctx.clearRect(0, 0, rect.width, rect.height);
+    // 전체 캔버스 클리어 (현재 크기 기준)
+    ctx.clearRect(0, 0, containerRect.width, containerRect.height);
 
+    // 현재 컨테이너 크기를 기준으로 모든 계산 수행
+    const rect = {
+      width: containerRect.width,
+      height: containerRect.height
+    };
+
+    // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
+    if (uploadedImage && cachedBackgroundImage && cachedBackgroundImage.complete) {
+      // 캐시된 이미지 사용 (완전히 로드된 경우에만)
+      const img = cachedBackgroundImage;
+      
+      // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+      const imgAspect = img.width / img.height;
+      const canvasAspect = rect.width / rect.height;
+      
+      let drawWidth, drawHeight, drawX, drawY;
+      
+      if (imgAspect > canvasAspect) {
+        // 이미지가 캔버스보다 가로로 긴 경우
+        drawWidth = rect.width;
+        drawHeight = rect.width / imgAspect;
+        drawX = 0;
+        drawY = (rect.height - drawHeight) / 2;
+      } else {
+        // 이미지가 캔버스보다 세로로 긴 경우
+        drawHeight = rect.height;
+        drawWidth = rect.height * imgAspect;
+        drawX = (rect.width - drawWidth) / 2;
+        drawY = 0;
+      }
+      
+      // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
+      ctx.globalAlpha = backgroundOpacity;
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+      ctx.globalAlpha = 1.0;
+      
+      // 격자와 벽 그리기
+      drawGridAndWalls(ctx, rect);
+    } else if (uploadedImage && !cachedBackgroundImage) {
+      // 처음 로드하는 경우에만 새 이미지 객체 생성
+      const img = new Image();
+      img.onload = () => {
+        // 이미지를 캐시에 저장
+        setCachedBackgroundImage(img);
+        
+        // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+        const imgAspect = img.width / img.height;
+        const canvasAspect = rect.width / rect.height;
+        
+        let drawWidth, drawHeight, drawX, drawY;
+        
+        if (imgAspect > canvasAspect) {
+          // 이미지가 캔버스보다 가로로 긴 경우
+          drawWidth = rect.width;
+          drawHeight = rect.width / imgAspect;
+          drawX = 0;
+          drawY = (rect.height - drawHeight) / 2;
+        } else {
+          // 이미지가 캔버스보다 세로로 긴 경우
+          drawHeight = rect.height;
+          drawWidth = rect.height * imgAspect;
+          drawX = (rect.width - drawWidth) / 2;
+          drawY = 0;
+        }
+        
+        // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
+        ctx.globalAlpha = backgroundOpacity;
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.globalAlpha = 1.0;
+        
+        // 이미지 그리기 완료 후 격자와 벽 다시 그리기
+        drawGridAndWalls(ctx, rect);
+        
+        // 이미지 로드 완료 후 추가 렌더링은 제거 (깜빡임 방지)
+      };
+      img.src = uploadedImage;
+    } else {
+      // 배경 이미지가 없는 경우 바로 격자와 벽 그리기
+      drawGridAndWalls(ctx, rect);
+    }
+  };
+
+  // 격자와 벽 그리기 함수 분리
+  const drawGridAndWalls = (ctx, rect) => {
     // 텍스트 렌더링 품질 개선
     ctx.textRenderingOptimization = 'optimizeQuality';
     ctx.imageSmoothingEnabled = false; // 격자는 선명하게
@@ -188,10 +399,19 @@ const FloorPlanEditor = () => {
     walls.forEach((wall) => {
       // 선택된 벽인지 확인
       const isSelected = selectedWall?.id === wall.id;
+      const isPartialEraserSelected = partialEraserSelectedWall?.id === wall.id;
       
       // 벽 그리기 (선택된 벽은 다른 색상)
-      ctx.strokeStyle = isSelected ? "#00ff00" : "#ff6600";
-      ctx.lineWidth = isSelected ? 8 : 3;
+      if (isPartialEraserSelected) {
+        ctx.strokeStyle = "#ff0000"; // 부분 지우기 선택된 벽은 빨간색
+        ctx.lineWidth = 5;
+      } else if (isSelected) {
+        ctx.strokeStyle = "#00ff00";
+        ctx.lineWidth = 8;
+      } else {
+        ctx.strokeStyle = "#ff6600";
+        ctx.lineWidth = 3;
+      }
       
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
@@ -209,6 +429,22 @@ const FloorPlanEditor = () => {
 
       drawText(ctx, `${distance}mm`, midX, midY, angle);
     });
+
+    // 부분 지우기 영역 표시 , 컬러설정
+    if (isSelectingEraseArea && eraseAreaStart && eraseAreaEnd) {
+      ctx.strokeStyle = "#0004ffff";
+      ctx.lineWidth = 8;
+      ctx.setLineDash([10, 10]);
+      ctx.globalAlpha = 0.7;
+      
+      ctx.beginPath();
+      ctx.moveTo(eraseAreaStart.x, eraseAreaStart.y);
+      ctx.lineTo(eraseAreaEnd.x, eraseAreaEnd.y);
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1.0;
+    }
 
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
@@ -264,9 +500,16 @@ const FloorPlanEditor = () => {
       });
 
       if (closestWall) {
-        setSelectedWall(selectedWall?.id === closestWall.id ? null : closestWall);
+        const newSelectedWall = selectedWall?.id === closestWall.id ? null : closestWall;
+        setSelectedWall(newSelectedWall);
+        if (newSelectedWall) {
+          setEditingWallLength(calculateDistance(newSelectedWall.start, newSelectedWall.end).toString());
+        } else {
+          setEditingWallLength('');
+        }
       } else {
         setSelectedWall(null);
+        setEditingWallLength('');
       }
     } else if (tool === "eraser") {
       // 클릭 위치에서 가장 가까운 벽 찾기
@@ -286,6 +529,30 @@ const FloorPlanEditor = () => {
       if (closestWall) {
         setWalls((prev) => prev.filter((wall) => wall.id !== closestWall.id));
       }
+    } else if (tool === "partial_eraser") {
+      if (!partialEraserSelectedWall) {
+        // 1단계: 벽 선택
+        let closestWall = null;
+        let closestDistance = Infinity;
+        const MAX_SELECT_DISTANCE = 30;
+
+        walls.forEach((wall) => {
+          const distance = getDistanceToWall(coords, wall);
+          if (distance < closestDistance && distance < MAX_SELECT_DISTANCE) {
+            closestDistance = distance;
+            closestWall = wall;
+          }
+        });
+
+        if (closestWall) {
+          setPartialEraserSelectedWall(closestWall);
+        }
+      } else {
+        // 2단계: 지울 영역 선택 시작
+        setIsSelectingEraseArea(true);
+        setEraseAreaStart(coords);
+        setEraseAreaEnd(coords);
+      }
     }
   };
 
@@ -294,6 +561,9 @@ const FloorPlanEditor = () => {
       const coords = getCanvasCoordinates(e);
       const snapped = snapToGrid(coords.x, coords.y);
       setCurrentPoint(snapped);
+    } else if (isSelectingEraseArea && tool === "partial_eraser") {
+      const coords = getCanvasCoordinates(e);
+      setEraseAreaEnd(coords);
     }
   };
 
@@ -316,22 +586,63 @@ const FloorPlanEditor = () => {
       setIsDrawing(false);
       setStartPoint(null);
       setCurrentPoint(null);
+    } else if (isSelectingEraseArea && tool === "partial_eraser" && partialEraserSelectedWall) {
+      // 부분 지우기 실행
+      if (eraseAreaStart && eraseAreaEnd) {
+        partialEraseWall(partialEraserSelectedWall.id, eraseAreaStart, eraseAreaEnd);
+      }
+      
+      // 상태 초기화
+      setIsSelectingEraseArea(false);
+      setPartialEraserSelectedWall(null);
+      setEraseAreaStart(null);
+      setEraseAreaEnd(null);
     }
   };
 
 
-  // 캔버스 다시 그리기
+  // []안의 값이 달라졌다면, 캔버스 다시 그리기
   useEffect(() => {
     drawCanvas();
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity, cachedBackgroundImage, partialEraserSelectedWall, isSelectingEraseArea, eraseAreaStart, eraseAreaEnd]);
+
+  // 초기 캔버스 설정
+  useEffect(() => {
+    // 컴포넌트 마운트 후 캔버스 초기화
+    const initCanvas = () => {
+      drawCanvas();
+    };
+    
+    // 다음 프레임에서 실행하여 DOM이 완전히 렌더링된 후 처리
+    const timeoutId = setTimeout(initCanvas, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
+
+  // 디바운스된 캔버스 리렌더링 함수
+  const debouncedRedraw = useCallback(() => {
+    // 캐시를 건드리지 않고 단순히 캔버스만 다시 그리기
+    drawCanvas();
+  }, [walls, uploadedImage, backgroundOpacity, cachedBackgroundImage]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
+    let resizeTimeout;
+    let resizeObserverTimeout;
+    
     const handleResize = () => {
-      // 리사이즈 후 잠시 대기 후 캔버스 다시 그리기 (레이아웃 안정화)
-      setTimeout(() => {
-        drawCanvas();
-      }, 100);
+      // 이전 타이머 취소
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      
+      // 즉시 캔버스 다시 그리기 (디바운스 없이)
+      debouncedRedraw();
+      
+      // 추가적인 디바운스된 렌더링 (안정성을 위해)
+      resizeTimeout = setTimeout(() => {
+        debouncedRedraw();
+      }, 50);
     };
 
     // 윈도우 리사이즈 이벤트
@@ -341,12 +652,18 @@ const FloorPlanEditor = () => {
     let resizeObserver;
     if (containerRef.current) {
       resizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          // 컨테이너 크기가 변경될 때마다 캔버스 다시 그리기
-          setTimeout(() => {
-            drawCanvas();
-          }, 50);
+        // 이전 타이머 취소
+        if (resizeObserverTimeout) {
+          clearTimeout(resizeObserverTimeout);
         }
+        
+        // 즉시 캔버스 다시 그리기 (크기 변경 즉시 반응)
+        debouncedRedraw();
+        
+        // 추가적인 디바운스된 렌더링 (연속적인 크기 변경에 대비)
+        resizeObserverTimeout = setTimeout(() => {
+          debouncedRedraw();
+        }, 20);
       });
       resizeObserver.observe(containerRef.current);
     }
@@ -356,8 +673,14 @@ const FloorPlanEditor = () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      if (resizeObserverTimeout) {
+        clearTimeout(resizeObserverTimeout);
+      }
     };
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+  }, [debouncedRedraw]); // debouncedRedraw 의존성 추가
 
   // 축척 설정용 마우스 이벤트 핸들러들
   const handleScaleMouseDown = (e) => {
@@ -512,6 +835,11 @@ const FloorPlanEditor = () => {
       setUploadedImage(scaleImage.url);
       setShowScalePopup(false);
       
+      // 축척 설정 완료 후 단순 리렌더링 (깜빡임 방지)
+      setTimeout(() => {
+        drawCanvas();
+      }, 50);
+      
       alert(`축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)`);
       
     } catch (error) {
@@ -552,35 +880,79 @@ const FloorPlanEditor = () => {
   };
 
   // 시뮬레이터로 이동 핸들러
-  const handleGoToSimulator = () => {
+  const handleGoToSimulator = async () => {
     if (walls.length === 0) {
       alert('먼저 도면을 그려주세요.');
       return;
     }
 
-    // 임시 room_id 생성 (실제 DB 저장은 시뮬레이터에서 저장할 때)
-    const tempRoomId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setIsCreatingRoom(true);
     
-    // 도면 데이터 준비
-    const wallData = {
-      walls: walls,
-      pixelToMmRatio: pixelToMmRatio,
-      timestamp: new Date().getTime(),
-      tempRoomId: tempRoomId,
-      roomData: {
+    try {
+      // 도면 데이터 준비 (API 스키마에 맞춤)
+      const roomData = {
         title: `Floor Plan Room ${new Date().toLocaleString()}`,
         description: `Generated from floor plan with ${walls.length} walls`,
-        is_public: false
+        is_public: false,
+        room_data: {
+          walls: walls,
+          pixelToMmRatio: pixelToMmRatio
+        }
+      };
+      
+      // 서버에 룸 생성 요청
+      const response = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(roomData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Room creation failed:', response.status, errorData);
+        throw new Error(`룸 생성에 실패했습니다. (${response.status})`);
       }
-    };
-    
-    // localStorage에 도면 데이터 저장
-    localStorage.setItem('floorPlanData', JSON.stringify(wallData));
-    
-    // 임시 room_id로 시뮬레이터 페이지 이동
-    router.push(`/sim/${tempRoomId}`);
-    
-    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다! 저장 버튼을 눌러야 실제 방이 생성됩니다.`);
+
+      const createdRoom = await response.json();
+      
+      // API 응답 구조 확인을 위한 디버깅
+      console.log('Created room response:', createdRoom);
+      
+      // 응답 성공 여부 확인
+      if (!createdRoom.success) {
+        console.error('Room creation was not successful:', createdRoom);
+        throw new Error('룸 생성이 실패했습니다.');
+      }
+      
+      // API 응답에서 room_id 필드 사용
+      const roomId = createdRoom.room_id;
+      
+      if (!roomId) {
+        console.error('No valid room ID found in response:', createdRoom);
+        throw new Error('생성된 방의 ID를 찾을 수 없습니다.');
+      }
+      
+      // UUID 형식 검증 (기본적인 체크)
+      if (typeof roomId !== 'string' || roomId.length < 10) {
+        console.error('Invalid room ID format:', roomId);
+        throw new Error('올바르지 않은 방 ID입니다.');
+      }
+      
+      console.log('Using room ID for navigation:', roomId);
+      
+      // 생성된 정식 room_id로 시뮬레이터 페이지 이동
+      router.push(`/sim/${roomId}`);
+      
+      alert(`${walls.length}개의 벽으로 구성된 방이 생성되었습니다! 시뮬레이터에서 꾸며보세요.`);
+      
+    } catch (error) {
+      console.error('Room creation failed:', error);
+      alert('방 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsCreatingRoom(false);
+    }
   };
 
 
@@ -784,6 +1156,24 @@ const FloorPlanEditor = () => {
             </button>
 
             <button
+              onClick={() => {
+                setTool("partial_eraser");
+                setPartialEraserSelectedWall(null);
+                setIsSelectingEraseArea(false);
+                setEraseAreaStart(null);
+                setEraseAreaEnd(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                tool === "partial_eraser"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <Scissors size={18} />
+              부분 지우기
+            </button>
+
+            <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
               className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
@@ -799,6 +1189,20 @@ const FloorPlanEditor = () => {
               <Trash2 size={18} />
               전체 지우기
             </button>
+
+            {uploadedImage && (
+              <button
+                onClick={() => {
+                  setUploadedImage(null);
+                  setCachedBackgroundImage(null);
+                  alert('배경 이미지가 제거되었습니다.');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                <Trash2 size={18} />
+                배경 제거
+              </button>
+            )}
           </div>
 
           <input
@@ -813,11 +1217,11 @@ const FloorPlanEditor = () => {
           <div className="ml-auto flex gap-2">
             <button
               onClick={handleGoToSimulator}
-              disabled={walls.length === 0}
+              disabled={walls.length === 0 || isCreatingRoom}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check size={18} />
-              선택된 도면으로 우리 집 꾸미기
+              {isCreatingRoom ? '방 생성 중...' : '선택된 도면으로 우리 집 꾸미기'}
             </button>
             <button
               onClick={handleComplete}
@@ -844,8 +1248,6 @@ const FloorPlanEditor = () => {
             >
               <canvas
                 ref={canvasRef}
-                width={600}
-                height={300}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -873,6 +1275,37 @@ const FloorPlanEditor = () => {
             도구 정보
           </h3>
 
+          {/* 배경 이미지 투명도 조정 */}
+          {uploadedImage && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
+              <h4 className="font-medium text-orange-700 mb-2">배경 이미지 설정</h4>
+              <div className="mb-2">
+                <label className="block text-sm text-orange-600 mb-1">
+                  투명도: {Math.round(backgroundOpacity * 100)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={backgroundOpacity}
+                  onChange={(e) => setBackgroundOpacity(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setUploadedImage(null);
+                  setCachedBackgroundImage(null);
+                  alert('배경 이미지가 제거되었습니다.');
+                }}
+                className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+              >
+                배경 이미지 제거
+              </button>
+            </div>
+          )}
+
           {tool === "wall" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <h4 className="font-medium text-orange-700 mb-2">
@@ -895,16 +1328,44 @@ const FloorPlanEditor = () => {
               </p>
               {selectedWall && (
                 <div className="bg-green-50 p-3 rounded border border-green-200">
-                  <h5 className="font-medium text-green-700 mb-1">선택된 벽</h5>
-                  <p className="text-sm text-green-600">
-                    길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
+                  <h5 className="font-medium text-green-700 mb-2">선택된 벽</h5>
+                  <p className="text-sm text-green-600 mb-2">
+                    현재 길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
                   </p>
+                  
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-green-700 mb-1">
+                      길이 조정 (mm):
+                    </label>
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        value={editingWallLength}
+                        onChange={(e) => setEditingWallLength(e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        placeholder="길이 입력"
+                      />
+                      <button
+                        onClick={() => {
+                          const newLength = parseFloat(editingWallLength);
+                          if (newLength && newLength > 0) {
+                            adjustWallLength(selectedWall.id, newLength);
+                          }
+                        }}
+                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                      >
+                        적용
+                      </button>
+                    </div>
+                  </div>
+                  
                   <button
                     onClick={() => {
                       setWalls((prev) => prev.filter((wall) => wall.id !== selectedWall.id));
                       setSelectedWall(null);
+                      setEditingWallLength('');
                     }}
-                    className="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                    className="w-full px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                   >
                     삭제
                   </button>
@@ -919,6 +1380,34 @@ const FloorPlanEditor = () => {
               <p className="text-sm text-orange-600">
                 클릭하여 벽을 삭제할 수 있습니다.
               </p>
+            </div>
+          )}
+
+          {tool === "partial_eraser" && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-700 mb-2">부분 지우기 모드</h4>
+              {!partialEraserSelectedWall ? (
+                <p className="text-sm text-orange-600">
+                  1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로 표시됩니다)
+                </p>
+              ) : (
+                <div>
+                  <p className="text-sm text-orange-600 mb-2">
+                    2단계: 지울 영역을 드래그하여 선택하세요.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setPartialEraserSelectedWall(null);
+                      setIsSelectingEraseArea(false);
+                      setEraseAreaStart(null);
+                      setEraseAreaEnd(null);
+                    }}
+                    className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  >
+                    선택 취소
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

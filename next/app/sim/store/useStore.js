@@ -105,14 +105,18 @@ export const useStore = create(
     ),
     // setCameraMode: (mode) => set({ cameraMode: mode }),
 
-    // 저장/로드 상태
+    //[09.01] wallscalefactor 로 벽 조정 가능합니다.
     currentRoomId: null,
     isSaving: false,
     isLoading: false,
     lastSavedAt: null,
+    wallsData: [],
+    wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
     // 저장/로드 액션
     setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
+    setWallsData: (walls) => set({ wallsData: walls }),
+    setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
     
     setSaving: (saving) => set({ isSaving: saving }),
     
@@ -204,37 +208,8 @@ export const useStore = create(
           }
         }
 
-        // 벽 데이터 저장 (모든 방에 대해 실행)
+        // 벽 데이터는 /create에서 이미 저장되었으므로 /sim에서는 저장하지 않음
         const currentState = get();
-        const floorPlanData = JSON.parse(localStorage.getItem('floorPlanData') || '{}');
-        
-        // localStorage에 벽 데이터가 있으면 room_walls 테이블에 저장
-        if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
-          try {
-            console.log(`방 ${currentState.currentRoomId}에 벽 데이터 저장 시도`);
-            const wallsResponse = await fetch(`/api/room-walls/${currentState.currentRoomId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                walls: floorPlanData.walls,
-                pixelToMmRatio: floorPlanData.pixelToMmRatio
-              })
-            });
-
-            if (wallsResponse.ok) {
-              const wallsResult = await wallsResponse.json();
-              console.log(`벽 데이터 저장 완료: ${wallsResult.saved_count}개 벽`);
-            } else {
-              console.error('벽 데이터 저장 실패:', wallsResponse.statusText);
-            }
-          } catch (wallError) {
-            console.error('벽 데이터 저장 중 오류:', wallError);
-          }
-        } else {
-          console.log('저장할 벽 데이터가 없습니다 (localStorage에 floorPlanData 없음)');
-        }
 
         // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
         const response = await fetch('/api/sim/save', {
@@ -266,66 +241,82 @@ export const useStore = create(
     },
 
     // 시뮬레이터 상태 로드
-    loadSimulatorState: async (roomId) => {
-      set({ isLoading: true });
+loadSimulatorState: async (roomId) => {
+  set({ isLoading: true });
 
-      try {
-        const response = await fetch(`/api/sim/load/${roomId}`);
-        
-        if (!response.ok) {
-          throw new Error(`로드 실패: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        
-        // 기존 모델들 정리
-        const currentState = get();
-        currentState.loadedModels.forEach(model => {
-          if (model.url) URL.revokeObjectURL(model.url);
-        });
-
-        // 로드된 객체들을 loadedModels에 설정
-        const loadedModels = result.objects.map(obj => ({
-          id: obj.id,
-          object_id: obj.object_id,
-          furniture_id: obj.furniture_id,
-          name: obj.name, // InfoPanel에서 사용하는 name 속성 추가
-          position: obj.position,
-          rotation: obj.rotation,
-          scale: obj.scale,
-          url: obj.url,
-          isCityKit: obj.isCityKit,
-          texturePath: obj.texturePath,
-          type: obj.type,
-          furnitureName: obj.furnitureName,
-          categoryId: obj.categoryId
-        }));
-
-        set({ 
-          loadedModels: loadedModels,
-          currentRoomId: roomId,
-          selectedModelId: null
-        });
-
-        console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체`);
-        console.log('로드된 객체들:', loadedModels);
-        loadedModels.forEach((model, index) => {
-          console.log(`모델 ${index}:`, {
-            id: model.id,
-            name: model.name,
-            position: model.position,
-            scale: model.scale,
-            url: model.url
-          });
-        });
-        return result;
-
-      } catch (error) {
-        console.error('로드 중 오류:', error);
-        throw error;
-      } finally {
-        set({ isLoading: false });
-      }
+  try {
+    const response = await fetch(`/api/sim/load/${roomId}`);
+    
+    if (!response.ok) {
+      throw new Error(`로드 실패: ${response.statusText}`);
     }
+
+    const result = await response.json();
+    
+    // 기존 모델들 정리
+    const currentState = get();
+    currentState.loadedModels.forEach(model => {
+      if (model.url) URL.revokeObjectURL(model.url);
+    });
+
+    // 로드된 객체들을 loadedModels에 설정
+    const loadedModels = result.objects.map(obj => ({
+      id: obj.id,
+      object_id: obj.object_id,
+      furniture_id: obj.furniture_id,
+      name: obj.name,
+      position: obj.position,
+      rotation: obj.rotation,
+      scale: obj.scale,
+      url: obj.url,
+      isCityKit: obj.isCityKit,
+      texturePath: obj.texturePath,
+      type: obj.type,
+      furnitureName: obj.furnitureName,
+      categoryId: obj.categoryId
+    }));
+
+    // 벽 데이터 처리
+    let wallsData = [];
+    if (result.walls && result.walls.length > 0) {
+      const scaleFactor = get().wallScaleFactor;
+      wallsData = result.walls.map(wall => ({
+        id: wall.id,
+        dimensions: {
+          width: wall.length * scaleFactor,
+          height: wall.height,
+          depth: wall.depth
+        },
+        position: [
+          wall.position[0] * scaleFactor,
+          wall.position[1],
+          wall.position[2] * scaleFactor
+        ],
+        rotation: wall.rotation
+      }));
+    }
+
+    set({ 
+      loadedModels: loadedModels,
+      wallsData: wallsData,
+      currentRoomId: roomId,
+      selectedModelId: null,
+      currentRoomInfo: {
+        title: result.room_info?.title || '',
+        description: result.room_info?.description || '',
+        is_public: result.room_info?.is_public || false
+      }
+    });
+
+    console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`);
+    return result;
+
+  } catch (error) {
+    console.error('로드 중 오류:', error);
+    throw error;
+  } finally {
+    set({ isLoading: false });
+  }
+}
   }))
 )
