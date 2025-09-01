@@ -251,32 +251,35 @@ const FloorPlanEditor = () => {
     
     const ctx = canvas.getContext("2d");
 
-    // 컨테이너의 실제 크기를 기준으로 캔버스 크기 설정
+    // 컨테이너의 현재 실제 크기를 매번 새로 측정
     const containerRect = container.getBoundingClientRect();
     
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
     
-    // 캔버스 실제 해상도 설정 (컨테이너 크기 기준)
+    // 캔버스 실제 해상도 설정 (현재 컨테이너 크기 기준)
     canvas.width = containerRect.width * dpr;
     canvas.height = containerRect.height * dpr;
     
-    // CSS 크기는 컨테이너에 맞춤
+    // CSS 크기는 현재 컨테이너에 맞춤
     canvas.style.width = containerRect.width + 'px';
     canvas.style.height = containerRect.height + 'px';
     
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
-    // 전체 캔버스 클리어
+    // 전체 캔버스 클리어 (현재 크기 기준)
     ctx.clearRect(0, 0, containerRect.width, containerRect.height);
 
-    // rect를 containerRect로 업데이트
-    const rect = containerRect;
+    // 현재 컨테이너 크기를 기준으로 모든 계산 수행
+    const rect = {
+      width: containerRect.width,
+      height: containerRect.height
+    };
 
     // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
-    if (uploadedImage && cachedBackgroundImage) {
-      // 캐시된 이미지 사용
+    if (uploadedImage && cachedBackgroundImage && cachedBackgroundImage.complete) {
+      // 캐시된 이미지 사용 (완전히 로드된 경우에만)
       const img = cachedBackgroundImage;
       
       // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
@@ -340,6 +343,8 @@ const FloorPlanEditor = () => {
         
         // 이미지 그리기 완료 후 격자와 벽 다시 그리기
         drawGridAndWalls(ctx, rect);
+        
+        // 이미지 로드 완료 후 추가 렌더링은 제거 (깜빡임 방지)
       };
       img.src = uploadedImage;
     } else {
@@ -607,6 +612,12 @@ const FloorPlanEditor = () => {
     return () => clearTimeout(timeoutId);
   }, []); // 컴포넌트 마운트 시 한 번만 실행
 
+  // 디바운스된 캔버스 리렌더링 함수
+  const debouncedRedraw = useCallback(() => {
+    // 캐시를 건드리지 않고 단순히 캔버스만 다시 그리기
+    drawCanvas();
+  }, [walls, uploadedImage, backgroundOpacity, cachedBackgroundImage]);
+
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
     let resizeTimeout;
@@ -618,17 +629,13 @@ const FloorPlanEditor = () => {
         clearTimeout(resizeTimeout);
       }
       
-      // 캔버스 크기를 즉시 업데이트
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-      }
+      // 즉시 캔버스 다시 그리기 (디바운스 없이)
+      debouncedRedraw();
       
-      // 디바운스된 캔버스 다시 그리기
+      // 추가적인 디바운스된 렌더링 (안정성을 위해)
       resizeTimeout = setTimeout(() => {
-        drawCanvas();
-      }, 100);
+        debouncedRedraw();
+      }, 50);
     };
 
     // 윈도우 리사이즈 이벤트
@@ -643,19 +650,13 @@ const FloorPlanEditor = () => {
           clearTimeout(resizeObserverTimeout);
         }
         
-        for (let entry of entries) {
-          // 컨테이너 크기가 변경될 때마다 캔버스 크기 강제 업데이트
-          const canvas = canvasRef.current;
-          if (canvas) {
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-          }
-        }
+        // 즉시 캔버스 다시 그리기 (크기 변경 즉시 반응)
+        debouncedRedraw();
         
-        // 디바운스된 캔버스 다시 그리기
+        // 추가적인 디바운스된 렌더링 (연속적인 크기 변경에 대비)
         resizeObserverTimeout = setTimeout(() => {
-          drawCanvas();
-        }, 50);
+          debouncedRedraw();
+        }, 20);
       });
       resizeObserver.observe(containerRef.current);
     }
@@ -672,7 +673,7 @@ const FloorPlanEditor = () => {
         clearTimeout(resizeObserverTimeout);
       }
     };
-  }, []); // 의존성을 빈 배열로 변경하여 불필요한 재생성 방지
+  }, [debouncedRedraw]); // debouncedRedraw 의존성 추가
 
   // 축척 설정용 마우스 이벤트 핸들러들
   const handleScaleMouseDown = (e) => {
@@ -826,6 +827,11 @@ const FloorPlanEditor = () => {
       setWalls(detectedWalls);
       setUploadedImage(scaleImage.url);
       setShowScalePopup(false);
+      
+      // 축척 설정 완료 후 단순 리렌더링 (깜빡임 방지)
+      setTimeout(() => {
+        drawCanvas();
+      }, 50);
       
       alert(`축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)`);
       
