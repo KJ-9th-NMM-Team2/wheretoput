@@ -190,8 +190,9 @@ export async function POST(req: NextRequest) {
 
       // 벽 정보가 있으면 room_walls 테이블에 저장
       if (room_data?.walls && Array.isArray(room_data.walls)) {
-        // 먼저 모든 벽의 좌표를 변환하고 중심점을 계산
-        const pixelToMmRatio = (room_data.pixelToMmRatio || 20) / 1000;
+        // 먼저 모든 벽의 좌표를 변환하고 중심점을 계산 
+        // [09.01] 여기서 나누는값 증가시킬수록 벽 간격 좁아짐
+        const pixelToMmRatio = (room_data.pixelToMmRatio || 20) / 250;
         const wallPositions: Array<{x: number, z: number}> = [];
         
         // 모든 벽의 중점들을 수집
@@ -244,8 +245,8 @@ export async function POST(req: NextRequest) {
             end_x: adjustedEndX,
             end_y: adjustedEndY,
             length: length,
-            height: 2.5, // 기본 높이 2.5m
-            depth: 0.1,  // 기본 두께 10cm
+            height: 2.5, // 기본 높이 2.5m (그대로 유지)
+            depth: 0.2,  // 기본 두께 20cm (두껍게)
             position_x: positionX,
             position_y: 1.25, // 벽 높이의 중점
             position_z: positionZ,

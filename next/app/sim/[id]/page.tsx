@@ -43,11 +43,11 @@ function Floor({ wallsData }: { wallsData: any[] }) {
     const minZ = Math.min(...zCoords);
     const maxZ = Math.max(...zCoords);
     
-    // 여유공간을 포함하여 바닥 크기 결정
+    // 여유공간을 포함하여 바닥 크기 결정 (집 느낌을 위해 여유공간 증가)
     const rangeX = maxX - minX;
     const rangeZ = maxZ - minZ;
-    floorSize = Math.max(rangeX, rangeZ) + 4; // 2m 여유공간 추가
-    floorSize = Math.max(floorSize, 10); // 최소 10m 보장
+    floorSize = Math.max(rangeX, rangeZ) + 8; // 4m 여유공간 추가 (기존 2m에서 증가)
+    floorSize = Math.max(floorSize, 15); // 최소 15m 보장 (기존 10m에서 증가)
   }
   
   return (
@@ -191,7 +191,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         <CameraControlPanel />
 
         <Canvas
-          camera={{ position: [-20, 15, 0], fov: 60 }}
+          camera={{ position: [-30, 20, 0], fov: 60 }}
           shadows
           style={{ width: '100%', height: '100vh' }}
           frameloop='demand'
@@ -280,8 +280,8 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           ref={controlsRef}
           enableZoom={true}
           enableRotate={true}
-          minDistance={5}
-          maxDistance={20}
+          minDistance={8}
+          maxDistance={50}
         />
       </Canvas>
       </div>
