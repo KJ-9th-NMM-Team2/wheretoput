@@ -69,11 +69,12 @@ export class ChatService {
     content: string;
   }): Promise<ChatMessageDTO> {
     try {
-      // 입력 검증
+      // 비어있는지 확인
       if (!params.content?.trim()) {
         throw new BadRequestException('Message content cannot be empty');
       }
 
+      // 글자수 1000자 제한
       if (params.content.length > 1000) {
         throw new BadRequestException('Message too long (max 1000 characters)');
       }
@@ -88,12 +89,14 @@ export class ChatService {
         },
       });
 
+      // 방에 아무도 없으면 에러처리
       if (!participant) {
         throw new ForbiddenException('Not a member of this room');
       }
 
       const now = new Date();
       const created = await this.prisma.chat_messages.create({
+        // 저장할 데이터
         data: {
           chat_room_id: params.roomId,
           user_id: params.userId,
@@ -103,6 +106,7 @@ export class ChatService {
           created_at: now,
           updated_at: now,
         },
+        // 저장 후 가져올 필드
         select: {
           message_id: true,
           chat_room_id: true,
@@ -132,7 +136,7 @@ export class ChatService {
     }
   }
 
-  // 메시지 조회 (권한 체크 포함)
+  // 채팅방 입장시 메시지 조회 (권한 체크 포함)
   async getRecentMessages(params: {
     roomId: string;
     userId: string;
@@ -183,7 +187,7 @@ export class ChatService {
         id: r.message_id,
         roomId: r.chat_room_id,
         senderId: r.user_id,
-        senderName: '', // 필요시 JOIN으로 채울 수 있음
+        senderName: '',
         content: r.content,
         createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
         status: 'sent',

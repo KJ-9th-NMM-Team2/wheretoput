@@ -5,6 +5,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import FurnituresList from "@/components/rooms/FurnituresList";
 import CommentsList from "@/components/rooms/CommentsList";
+import ChatRoomClient from "@/components/rooms/ChatRoomClient";
 
 export default async function RoomPage({
   params,
@@ -21,7 +22,7 @@ export default async function RoomPage({
   const liked = session?.user?.id
     ? (await fetchLike(id, session.user.id))?.liked ?? false
     : false;
-
+  const jwt = process.env.NEXT_PUBLIC_APP_JWT ?? "";
   return (
     <>
       <div className="layout-container flex h-full grow flex-col">
@@ -79,6 +80,10 @@ export default async function RoomPage({
               room_comments={room.room_comments}
               currentUserId={session?.user?.id}
             />
+            <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+              채팅
+            </h2>
+            <ChatRoomClient roomId={id} jwt={jwt} /> {/* 추가 */}
           </div>
         </div>
       </div>

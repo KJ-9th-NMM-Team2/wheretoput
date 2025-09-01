@@ -1,4 +1,3 @@
-// src/chat/chat.controller.ts
 import {
   Controller,
   Get,
@@ -10,17 +9,19 @@ import {
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+// JWT 로그인한 사용자만 접근
 @Controller('rooms')
 @UseGuards(JwtAuthGuard)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
+  // 채팅방 입장시 메시지 가져오기
   @Get(':roomId/messages')
   async list(
     @Param('roomId') roomId: string,
     @Query('limit') limit = '50',
-    @Request() req: any, // ← required를 앞으로
-    @Query('before') before?: string, // ← optional은 뒤로
+    @Request() req: any,
+    @Query('before') before?: string,
   ) {
     const n = Number(limit) || 50;
     const messages = await this.chatService.getRecentMessages({

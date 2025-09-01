@@ -14,6 +14,7 @@ import { RoomService } from './room.service';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
+  // 채팅 방 생성
   @Post()
   async createRoom(
     @Body() body: { name: string; description?: string; isPrivate?: boolean },
@@ -28,6 +29,7 @@ export class RoomController {
     });
   }
 
+  // 내가 속한 채팅방 목록을 불러오기
   @Get()
   async getUserRooms(@Request() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument
