@@ -882,13 +882,15 @@ const FloorPlanEditor = () => {
     setIsCreatingRoom(true);
     
     try {
-      // 도면 데이터 준비
+      // 도면 데이터 준비 (API 스키마에 맞춤)
       const roomData = {
         title: `Floor Plan Room ${new Date().toLocaleString()}`,
         description: `Generated from floor plan with ${walls.length} walls`,
         is_public: false,
-        walls: walls,
-        pixelToMmRatio: pixelToMmRatio
+        room_data: {
+          walls: walls,
+          pixelToMmRatio: pixelToMmRatio
+        }
       };
       
       // 서버에 룸 생성 요청
@@ -901,13 +903,40 @@ const FloorPlanEditor = () => {
       });
 
       if (!response.ok) {
-        throw new Error('룸 생성에 실패했습니다.');
+        const errorData = await response.json().catch(() => null);
+        console.error('Room creation failed:', response.status, errorData);
+        throw new Error(`룸 생성에 실패했습니다. (${response.status})`);
       }
 
       const createdRoom = await response.json();
       
+      // API 응답 구조 확인을 위한 디버깅
+      console.log('Created room response:', createdRoom);
+      
+      // 응답 성공 여부 확인
+      if (!createdRoom.success) {
+        console.error('Room creation was not successful:', createdRoom);
+        throw new Error('룸 생성이 실패했습니다.');
+      }
+      
+      // API 응답에서 room_id 필드 사용
+      const roomId = createdRoom.room_id;
+      
+      if (!roomId) {
+        console.error('No valid room ID found in response:', createdRoom);
+        throw new Error('생성된 방의 ID를 찾을 수 없습니다.');
+      }
+      
+      // UUID 형식 검증 (기본적인 체크)
+      if (typeof roomId !== 'string' || roomId.length < 10) {
+        console.error('Invalid room ID format:', roomId);
+        throw new Error('올바르지 않은 방 ID입니다.');
+      }
+      
+      console.log('Using room ID for navigation:', roomId);
+      
       // 생성된 정식 room_id로 시뮬레이터 페이지 이동
-      router.push(`/sim/${createdRoom.id}`);
+      router.push(`/sim/${roomId}`);
       
       alert(`${walls.length}개의 벽으로 구성된 방이 생성되었습니다! 시뮬레이터에서 꾸며보세요.`);
       

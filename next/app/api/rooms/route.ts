@@ -174,22 +174,101 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Title is required" }, { status: 400 });
     }
 
-    // 새 방 생성
-    const newRoom = await prisma.rooms.create({
-      data: {
-        user_id: session.user.id,
-        title,
-        description,
-        room_data,
-        is_public,
-        view_count: 0,
-      },
+    // 트랜잭션을 사용하여 방과 벽 정보를 함께 저장
+    const result = await prisma.$transaction(async (tx) => {
+      // 새 방 생성
+      const newRoom = await tx.rooms.create({
+        data: {
+          user_id: session.user.id,
+          title,
+          description,
+          room_data: room_data ? { pixelToMmRatio: room_data.pixelToMmRatio } : null,
+          is_public,
+          view_count: 0,
+        },
+      });
+
+      // 벽 정보가 있으면 room_walls 테이블에 저장
+      if (room_data?.walls && Array.isArray(room_data.walls)) {
+        // 먼저 모든 벽의 좌표를 변환하고 중심점을 계산
+        const pixelToMmRatio = (room_data.pixelToMmRatio || 20) / 1000;
+        const wallPositions: Array<{x: number, z: number}> = [];
+        
+        // 모든 벽의 중점들을 수집
+        room_data.walls.forEach((wall: any) => {
+          const startX = wall.start.x * pixelToMmRatio;
+          const startY = wall.start.y * pixelToMmRatio;
+          const endX = wall.end.x * pixelToMmRatio;
+          const endY = wall.end.y * pixelToMmRatio;
+          
+          const centerX = (startX + endX) / 2;
+          const centerZ = (startY + endY) / 2;
+          
+          wallPositions.push({ x: centerX, z: centerZ });
+        });
+        
+        // 전체 벽들의 중심점 계산
+        const overallCenterX = wallPositions.reduce((sum, pos) => sum + pos.x, 0) / wallPositions.length;
+        const overallCenterZ = wallPositions.reduce((sum, pos) => sum + pos.z, 0) / wallPositions.length;
+        
+        console.log(`벽들의 중심점: (${overallCenterX.toFixed(2)}, ${overallCenterZ.toFixed(2)})`);
+        
+        const wallsData = room_data.walls.map((wall: any, index: number) => {
+          const startX = wall.start.x * pixelToMmRatio;
+          const startY = wall.start.y * pixelToMmRatio;
+          const endX = wall.end.x * pixelToMmRatio;
+          const endY = wall.end.y * pixelToMmRatio;
+          
+          // 중심점을 원점으로 이동시키기 위한 오프셋 적용
+          const adjustedStartX = startX - overallCenterX;
+          const adjustedStartY = startY - overallCenterZ;
+          const adjustedEndX = endX - overallCenterX;
+          const adjustedEndY = endY - overallCenterZ;
+          
+          // 벽의 길이 계산
+          const length = Math.sqrt(
+            Math.pow(adjustedEndX - adjustedStartX, 2) + Math.pow(adjustedEndY - adjustedStartY, 2)
+          );
+          
+          // 벽의 중점 계산 (중심 조정 후)
+          const positionX = (adjustedStartX + adjustedEndX) / 2;
+          const positionZ = (adjustedStartY + adjustedEndY) / 2;
+          
+          // 벽의 회전 계산 (Y축 회전)
+          const rotationY = Math.atan2(adjustedEndY - adjustedStartY, adjustedEndX - adjustedStartX);
+
+          return {
+            room_id: newRoom.room_id,
+            start_x: adjustedStartX,
+            start_y: adjustedStartY,
+            end_x: adjustedEndX,
+            end_y: adjustedEndY,
+            length: length,
+            height: 2.5, // 기본 높이 2.5m
+            depth: 0.1,  // 기본 두께 10cm
+            position_x: positionX,
+            position_y: 1.25, // 벽 높이의 중점
+            position_z: positionZ,
+            rotation_x: 0,
+            rotation_y: rotationY,
+            rotation_z: 0,
+            wall_order: index,
+          };
+        });
+
+        // 벽 정보 일괄 삽입
+        await tx.room_walls.createMany({
+          data: wallsData,
+        });
+      }
+
+      return newRoom;
     });
 
     return Response.json(
       {
         success: true,
-        room_id: newRoom.room_id,
+        room_id: result.room_id,
         message: "Room created successfully",
       },
       { status: 201 }

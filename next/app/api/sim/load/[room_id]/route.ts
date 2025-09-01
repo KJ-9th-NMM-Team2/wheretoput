@@ -113,8 +113,8 @@ export async function GET(
     
     console.log(`Room found: ${room.title}`);
 
-    // 2. room_objects와 furniture 정보를 함께 조회
-    console.log('Step 2: Fetching room objects...');
+    // 2. room_objects와 furniture 정보, 그리고 벽 정보를 함께 조회
+    console.log('Step 2: Fetching room objects and walls...');
     const roomObjects = await prisma.room_objects.findMany({
       where: { room_id: room_id },
       include: {
@@ -132,14 +132,28 @@ export async function GET(
       }
     });
 
-    console.log(`Found ${roomObjects.length} objects for room ${room_id}`);
+    // 3. 벽 정보 조회
+    console.log('Step 3: Fetching room walls...');
+    const roomWalls = await prisma.room_walls.findMany({
+      where: { room_id: room_id },
+      orderBy: {
+        wall_order: 'asc'
+      }
+    });
+
+    console.log(`Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`);
     
     // 각 객체의 furniture 관계 상태 확인
     roomObjects.forEach((obj, index) => {
       console.log(`Object ${index}: furniture_id=${obj.furniture_id}, has_furnitures=${!!obj.furnitures}`);
     });
 
-    // 3. 시뮬레이터에서 사용할 형태로 데이터 변환
+    // 벽 정보 로그
+    roomWalls.forEach((wall, index) => {
+      console.log(`Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`);
+    });
+
+    // 4. 시뮬레이터에서 사용할 형태로 데이터 변환
     const objects = roomObjects.map((obj) => {
       // position JSON에서 값 추출
       const pos = obj.position as any;
@@ -180,11 +194,27 @@ export async function GET(
       };
     });
 
+    // 5. 벽 정보를 시뮬레이터 형태로 변환
+    const walls = roomWalls.map((wall) => ({
+      id: `wall-${wall.wall_id}`,
+      wall_id: wall.wall_id,
+      start: { x: Number(wall.start_x), y: Number(wall.start_y) },
+      end: { x: Number(wall.end_x), y: Number(wall.end_y) },
+      length: Number(wall.length),
+      height: Number(wall.height),
+      depth: Number(wall.depth),
+      position: [Number(wall.position_x), Number(wall.position_y), Number(wall.position_z)],
+      rotation: [Number(wall.rotation_x), Number(wall.rotation_y), Number(wall.rotation_z)],
+      wall_order: wall.wall_order
+    }));
+
     return Response.json({
       success: true,
       room_id: room_id,
       objects: objects,
+      walls: walls,
       loaded_count: objects.length,
+      walls_count: walls.length,
       room_info: {
         title: room.title,
         updated_at: room.updated_at

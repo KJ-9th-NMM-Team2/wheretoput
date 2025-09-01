@@ -110,9 +110,11 @@ export const useStore = create(
     isSaving: false,
     isLoading: false,
     lastSavedAt: null,
+    wallsData: [],
 
     // 저장/로드 액션
     setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
+    setWallsData: (walls) => set({ wallsData: walls }),
     
     setSaving: (saving) => set({ isSaving: saving }),
     
@@ -301,13 +303,30 @@ export const useStore = create(
           categoryId: obj.categoryId
         }));
 
+        // 벽 데이터 처리 (이미 적절한 크기로 저장되어 있음)
+        const wallsData = result.walls ? result.walls.map(wall => ({
+          id: wall.id,
+          dimensions: {
+            width: wall.length,
+            height: wall.height,
+            depth: wall.depth
+          },
+          position: [
+            wall.position[0],
+            wall.position[1],
+            wall.position[2]
+          ],
+          rotation: wall.rotation
+        })) : [];
+
         set({ 
           loadedModels: loadedModels,
+          wallsData: wallsData,
           currentRoomId: roomId,
           selectedModelId: null
         });
 
-        console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체`);
+        console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${result.walls_count || 0}개 벽`);
         console.log('로드된 객체들:', loadedModels);
         loadedModels.forEach((model, index) => {
           console.log(`모델 ${index}:`, {

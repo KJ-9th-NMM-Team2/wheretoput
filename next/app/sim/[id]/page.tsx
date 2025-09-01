@@ -27,12 +27,32 @@ import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
 
-// [임시] 바닥 - BFC 적용중인 planeGeometry
-// 구현 필요 : 도면 변환 후 벽 내부에만 바닥이 존재하게 하기, 텍스쳐 적용
-function Floor() {
+// 동적 바닥 - 벽 데이터에 따라 크기 조정
+function Floor({ wallsData }: { wallsData: any[] }) {
+  // 벽 데이터가 있으면 벽 영역에 맞게 바닥 크기 계산, 없으면 기본 크기 사용
+  let floorSize = 20; // 기본 크기
+  
+  if (wallsData && wallsData.length > 0) {
+    // 모든 벽의 위치에서 최대/최소값을 찾아 바닥 크기 계산
+    const positions = wallsData.map(wall => wall.position);
+    const xCoords = positions.map(pos => pos[0]);
+    const zCoords = positions.map(pos => pos[2]);
+    
+    const minX = Math.min(...xCoords);
+    const maxX = Math.max(...xCoords);
+    const minZ = Math.min(...zCoords);
+    const maxZ = Math.max(...zCoords);
+    
+    // 여유공간을 포함하여 바닥 크기 결정
+    const rangeX = maxX - minX;
+    const rangeZ = maxZ - minZ;
+    floorSize = Math.max(rangeX, rangeZ) + 4; // 2m 여유공간 추가
+    floorSize = Math.max(floorSize, 10); // 최소 10m 보장
+  }
+  
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[20, 20]} />
+      <planeGeometry args={[floorSize, floorSize]} />
       <meshStandardMaterial
         color="#D2B48C"
         roughness={0.9}
@@ -95,9 +115,9 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     cameraFov,
     setCurrentRoomId,
     loadSimulatorState,
-    isLoading
+    isLoading,
+    wallsData
   } = useStore()
-  const [wallsData, setWallsData] = useState([])
   const [roomId, setRoomId] = useState(null)
 
   // URL 파라미터에서 room_id 추출 및 자동 로드
@@ -112,17 +132,17 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
         setRoomId(currentRoomId)
         setCurrentRoomId(currentRoomId)
         
-        // 임시 방이 아닌 경우에만 가구 데이터 로드 시도
+        // 임시 방이 아닌 경우에만 데이터 로드 시도
         if (!currentRoomId.startsWith('temp_')) {
           try {
             await loadSimulatorState(currentRoomId)
-            console.log(`방 ${currentRoomId}의 가구 데이터 로드 완료`)
+            console.log(`방 ${currentRoomId}의 데이터 로드 완료`)
           } catch (loadError) {
-            console.log(`방 ${currentRoomId}의 저장된 가구 데이터 없음:`, loadError.message)
+            console.log(`방 ${currentRoomId}의 저장된 데이터 없음:`, loadError.message)
             // 저장된 데이터가 없어도 에러로 처리하지 않음
           }
         } else {
-          console.log(`임시 방 ${currentRoomId}이므로 가구 데이터 로드를 건너뜁니다.`)
+          console.log(`임시 방 ${currentRoomId}이므로 데이터 로드를 건너뜁니다.`)
         }
         
       } catch (error) {
@@ -133,28 +153,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     initializeSimulator()
   }, [params, setCurrentRoomId, loadSimulatorState])
 
-  // 컴포넌트 마운트 시 도면 데이터 로드 (roomId가 설정된 후)
-  useEffect(() => {
-    if (!roomId) return; // roomId가 설정될 때까지 대기
-    
-    const loadWallsData = async () => {
-      try {
-        const walls3D = await createWallsFromFloorPlan(roomId)
-        setWallsData(walls3D)
-        
-        if (walls3D.length > 0) {
-          console.log(`${walls3D.length}개의 3D 벽이 로드되었습니다.`)
-        } else {
-          console.log('저장된 도면 데이터가 없습니다. 기본 벽을 사용합니다.')
-        }
-      } catch (error) {
-        console.error('벽 데이터 로드 실패:', error)
-        setWallsData([]) // 에러 시 기본 벽 사용
-      }
-    }
-    
-    loadWallsData()
-  }, [roomId]) // roomId 변경 시 도면 데이터 다시 로드
+  // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)
@@ -223,7 +222,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
           shadow-mapSize-height={2048}
         />
 
-        <Floor />
+        <Floor wallsData={wallsData} />
         
         {/* 도면 기반 벽들 또는 기본 벽들 */}
         {wallsData.length > 0 ? (
