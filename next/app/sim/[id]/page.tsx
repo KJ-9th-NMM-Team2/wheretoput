@@ -62,7 +62,7 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   ];
 
   return (
-    <mesh position={position} rotation={rotation} receiveShadow castShadow>
+    <mesh position={position} rotation={rotation} receiveShadow>
       <boxGeometry args={[width, height, depth]} />
       {materials.map((material, index) => (
         <primitive key={index} object={material} attach={`material-${index}`} />
