@@ -93,47 +93,113 @@ function Wall({
   position: position;
   rotation?: [number, number, number];
 }) {
-  // 벽 렌더링 로그 (한 번만)
-  React.useEffect(() => {
-    console.log("벽 렌더링:", { width, height, depth, position, rotation });
-  }, []);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const { camera } = useThree();
+  const [opacity, setOpacity] = useState(1.0);
 
-  // 각 면에 다른 재질 적용
-  const materials = [
-    new THREE.MeshStandardMaterial({
-      color: "#FFFFFF",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 오른쪽
-    new THREE.MeshStandardMaterial({
-      color: "#FFFFFF",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 왼쪽
-    new THREE.MeshStandardMaterial({
-      color: "#000000",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 윗면
-    new THREE.MeshStandardMaterial({
-      color: "#FFFFFF",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 아랫면
-    new THREE.MeshStandardMaterial({
-      color: "#FFFFFF",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 앞면
-    new THREE.MeshStandardMaterial({
-      color: "#FFFFFF",
-      roughness: 0.8,
-      metalness: 0.1,
-    }), // 뒷면
-  ];
+  // 벽 렌더링 로그 (한 번만)
+  // React.useEffect(() => {
+  //   console.log('벽 렌더링:', { width, height, depth, position, rotation });
+  // }, []);
+
+  // 카메라 방향과 벽의 법선 벡터 계산하여 투명도 조절
+  React.useEffect(() => {
+    const updateTransparency = () => {
+      if (!meshRef.current) return;
+
+      // 벽의 월드 위치와 회전 가져오기
+      const wallWorldPosition = new THREE.Vector3();
+      meshRef.current.getWorldPosition(wallWorldPosition);
+
+      const wallWorldQuaternion = new THREE.Quaternion();
+      meshRef.current.getWorldQuaternion(wallWorldQuaternion);
+
+      // 벽의 법선 벡터 (벽의 앞면 방향, Z축 기준)
+      const wallNormal = new THREE.Vector3(0, 0, 1);
+      wallNormal.applyQuaternion(wallWorldQuaternion);
+
+      // 카메라에서 벽으로의 방향 벡터
+      let cameraToWall = new THREE.Vector3()
+        .subVectors(wallWorldPosition, camera.position);
+      cameraToWall.y = 0;
+      cameraToWall.normalize();
+
+      // 벽의 법선과 카메라 방향 간의 내적 계산
+      const dotProduct = wallNormal.dot(cameraToWall);
+
+      // 내적이 양수면 벽을 정면으로 보고 있음 (투명)
+      // 내적이 음수면 벽을 뒤에서 보고 있음 (반투명)
+      // 부드러운 전환을 위해 절댓값 사용
+      const facingRatio = Math.abs(dotProduct);
+
+      const startDot = 0.5;
+      const endOpacity = 0.2;
+
+      const newOpacity = facingRatio > 0.8 ? 4.2 - 4 * facingRatio : 1;
+      setOpacity(newOpacity);
+    };
+
+    // 애니메이션 프레임마다 투명도 업데이트
+    const animate = () => {
+      updateTransparency();
+      requestAnimationFrame(animate);
+    };
+
+    const animationId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationId);
+  }, [camera]);
+
+  // 각 면에 다른 재질 적용 (투명도 포함)
+  const materials = React.useMemo(() => {
+    return [
+      new THREE.MeshStandardMaterial({
+        color: "#FFFFFF",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 오른쪽
+      new THREE.MeshStandardMaterial({
+        color: "#FFFFFF",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 왼쪽
+      new THREE.MeshStandardMaterial({
+        color: "#DDDDDD",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 윗면
+      new THREE.MeshStandardMaterial({
+        color: "#FFFFFF",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 아랫면
+      new THREE.MeshStandardMaterial({
+        color: "#FFFFFF",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 앞면
+      new THREE.MeshStandardMaterial({
+        color: "#FFFFFF",
+        roughness: 0.8,
+        metalness: 0.1,
+        transparent: true,
+        opacity: opacity,
+      }), // 뒷면
+    ];
+  }, [opacity]);
 
   return (
-    <mesh position={position} rotation={rotation} receiveShadow>
+    <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
       <boxGeometry args={[width, height, depth]} />
       {materials.map((material, index) => (
         <primitive key={index} object={material} attach={`material-${index}`} />
