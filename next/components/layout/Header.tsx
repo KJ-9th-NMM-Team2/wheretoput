@@ -30,17 +30,19 @@ export default function Header() {
 
   // page 이동 시 검색어 Reset
   useEffect(() => {
-    if (!pathname.startsWith('/search')) {
+    if (!pathname.startsWith("/search")) {
       setSearchInput("");
     }
   }, [pathname]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !isComposing) {
-      searchInput ? router.push(`/search?order=view&q=${encodeURIComponent(searchInput)}`) : router.push('/search');
+    if (e.key === "Enter" && !isComposing) {
+      searchInput
+        ? router.push(`/search?order=view&q=${encodeURIComponent(searchInput)}`)
+        : router.push("/search");
       setSearchInput("");
     }
-  }
+  };
 
   return (
     <header
@@ -62,6 +64,8 @@ export default function Header() {
         <nav className="flex items-center gap-8">
           <Link
             href="/create"
+            target="_blank"
+            rel="noopener noreferrer"
             className="
               text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95
