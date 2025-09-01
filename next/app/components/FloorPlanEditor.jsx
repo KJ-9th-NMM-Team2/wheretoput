@@ -25,6 +25,11 @@ const FloorPlanEditor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedWall, setSelectedWall] = useState(null);
   const [editingWallLength, setEditingWallLength] = useState("");
+
+  // 축척 설정 관련 상태
+  const [isScaleSet, setIsScaleSet] = useState(false); // 축척이 설정되었는지 확인
+  const [scaleWall, setScaleWall] = useState(null);
+  const [scaleRealLength, setScaleRealLength] = useState("");
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
   const [cachedBackgroundImage, setCachedBackgroundImage] = useState(null);
 
@@ -38,61 +43,109 @@ const FloorPlanEditor = () => {
   const fileInputRef = useRef(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
-  // 축척 설정 관련 상태
+  // 축척 설정 관련 상태 (이미지 업로드 후 벽 선택 방식으로 변경)
   const [showScalePopup, setShowScalePopup] = useState(false);
   const [scaleImage, setScaleImage] = useState(null);
-  const [scalePoints, setScalePoints] = useState([]);
+  const [selectedScaleWall, setSelectedScaleWall] = useState(null);
   const [realLength, setRealLength] = useState("");
-  const [isDrawingScale, setIsDrawingScale] = useState(false);
-  const [scaleStartPoint, setScaleStartPoint] = useState(null);
-  const [scaleCurrentPoint, setScaleCurrentPoint] = useState(null);
-  const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 1픽셀 = 20mm (기본값)
+  const [hoveredScaleWall, setHoveredScaleWall] = useState(null); // 팝업에서 호버된 벽
+  const [imageTransform, setImageTransform] = useState(null); // 이미지 변환 정보 저장
+  // 고정 격자 설정: 500mm x 500mm
+  const GRID_SIZE_MM = 500; // 500mm x 500mm 고정
+  const GRID_SIZE_PX = 25; // 픽셀 크기는 25px (500mm = 25px, 즉 1px = 20mm)
+  const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 초기값 20mm/px, 후에 조정 가능
 
-  const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
+  // 뷰포트 패닝 및 줌 상태
+  const [viewOffset, setViewOffset] = useState({ x: 0, y: 0 });
+  const [viewScale, setViewScale] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState(null);
 
+  // 수평/수직 제한 및 자유로운 위치 스냅 함수
+  const snapToOrthogonal = (startPoint, currentPoint) => {
+    if (!startPoint) return currentPoint;
 
-  // 격자에 스냅하는 함수
+    const dx = Math.abs(currentPoint.x - startPoint.x);
+    const dy = Math.abs(currentPoint.y - startPoint.y);
+
+    // 더 긴 방향으로 제한 (수평 또는 수직)
+    if (dx > dy) {
+      // 수평선
+      return {
+        x: currentPoint.x,
+        y: startPoint.y,
+      };
+    } else {
+      // 수직선
+      return {
+        x: startPoint.x,
+        y: currentPoint.y,
+      };
+    }
+  };
+
+  // 격자에 스냅하는 함수 (기존 함수 유지)
   const snapToGrid = (x, y) => {
     return {
-      x: Math.round(x / GRID_SIZE) * GRID_SIZE,
-      y: Math.round(y / GRID_SIZE) * GRID_SIZE,
+      x: Math.round(x / GRID_SIZE_PX) * GRID_SIZE_PX,
+      y: Math.round(y / GRID_SIZE_PX) * GRID_SIZE_PX,
     };
   };
 
-  // 거리 계산 (mm 단위) - 사용자 지정 축척 사용
+  // 거리 계산 - 항상 mm 단위로 표시 (기본값 또는 설정된 축척 사용)
   const calculateDistance = (p1, p2) => {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const result = Math.round(distance * pixelToMmRatio);
+    const pixelDistance = Math.sqrt(dx * dx + dy * dy);
 
-    // 디버깅 정보 (첫 번째 계산에만)
-    if (Math.random() < 0.1) {
-      // 10% 확률로 로그
-      console.log("거리 계산:", {
-        pixelDistance: distance.toFixed(2),
-        pixelToMmRatio: pixelToMmRatio.toFixed(4),
-        resultMm: result,
-      });
-    }
-
-    return result;
+    // 항상 mm 단위로 표시 (기본 축척 또는 설정된 축척 사용)
+    return {
+      value: Math.round(pixelDistance * pixelToMmRatio),
+      unit: "mm",
+    };
   };
 
-  // 벽 길이 조정 함수
+  // 축척 설정 함수
+  const applyScale = () => {
+    if (!scaleWall || !scaleRealLength) return;
+
+    const pixelDistance = Math.sqrt(
+      Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
+        Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
+    );
+
+    const realLengthMm = parseFloat(scaleRealLength);
+    const newPixelToMmRatio = realLengthMm / pixelDistance;
+
+    setPixelToMmRatio(newPixelToMmRatio);
+    setIsScaleSet(true); // 축척 설정 완료 표시
+    setScaleWall(null);
+    setScaleRealLength("");
+    setTool("wall"); // 벽 그리기 모드로 변경
+
+    alert(
+      `축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(
+        2
+      )}mm)\n이제 벽을 그려보세요.`
+    );
+  };
+
+  // 벽 길이 조정 함수 (축척 설정 후에만 동작)
   const adjustWallLength = (wallId, newLengthMm) => {
+    if (!isScaleSet) return; // 축척 미설정 시 조정 불가
+
     setWalls((prevWalls) => {
       return prevWalls.map((wall) => {
         if (wall.id === wallId) {
           const currentLength = calculateDistance(wall.start, wall.end);
-          if (currentLength === 0) return wall;
+          if (currentLength.value === 0) return wall;
 
           // 현재 벡터 계산
           const dx = wall.end.x - wall.start.x;
           const dy = wall.end.y - wall.start.y;
           const currentPixelLength = Math.sqrt(dx * dx + dy * dy);
 
-          // 새로운 픽셀 길이 계산
+          // 새로운 픽셀 길이 계산 (동적 축척 사용)
           const newPixelLength = newLengthMm / pixelToMmRatio;
           const scale = newPixelLength / currentPixelLength;
 
@@ -218,12 +271,16 @@ const FloorPlanEditor = () => {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // 마우스 위치를 캔버스 좌표로 변환
+  // 마우스 위치를 캔버스 좌표로 변환 (중앙 기준 좌표계, 뷰포트 변환 포함)
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
+    const FIXED_WIDTH = 1200;
+    const FIXED_HEIGHT = 800;
+    
+    // 캔버스 중앙을 원점(0,0)으로 하는 좌표계로 변환
+    const canvasX = ((e.clientX - rect.left) - rect.width / 2) / viewScale - viewOffset.x;
+    const canvasY = ((e.clientY - rect.top) - rect.height / 2) / viewScale - viewOffset.y;
     return { x: canvasX, y: canvasY };
   };
 
@@ -262,30 +319,31 @@ const FloorPlanEditor = () => {
 
     const ctx = canvas.getContext("2d");
 
-    // 컨테이너의 현재 실제 크기를 매번 새로 측정
-    const containerRect = container.getBoundingClientRect();
+    // 캔버스 크기 고정 (브라우저 줌과 무관하게 항상 동일)
+    const FIXED_WIDTH = 1200;
+    const FIXED_HEIGHT = 800;
 
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
 
-    // 캔버스 실제 해상도 설정 (현재 컨테이너 크기 기준)
-    canvas.width = containerRect.width * dpr;
-    canvas.height = containerRect.height * dpr;
+    // 캔버스 실제 해상도 설정 (고정 크기 기준)
+    canvas.width = FIXED_WIDTH * dpr;
+    canvas.height = FIXED_HEIGHT * dpr;
 
-    // CSS 크기는 현재 컨테이너에 맞춤
-    canvas.style.width = containerRect.width + "px";
-    canvas.style.height = containerRect.height + "px";
+    // CSS 크기를 고정값으로 설정 (브라우저 줌 영향 없음)
+    canvas.style.width = FIXED_WIDTH + "px";
+    canvas.style.height = FIXED_HEIGHT + "px";
 
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
     // 전체 캔버스 클리어
-    ctx.clearRect(0, 0, containerRect.width, containerRect.height);
+    ctx.clearRect(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
 
-    // 현재 컨테이너 크기 사용
+    // 고정된 캔버스 크기 사용
     const rect = {
-      width: containerRect.width,
-      height: containerRect.height,
+      width: FIXED_WIDTH,
+      height: FIXED_HEIGHT,
     };
 
     // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
@@ -294,6 +352,12 @@ const FloorPlanEditor = () => {
       cachedBackgroundImage &&
       cachedBackgroundImage.complete
     ) {
+      // 캔버스 중앙 기준으로 변환한 후 배경 이미지 그리기
+      ctx.save();
+      ctx.translate(rect.width / 2, rect.height / 2);
+      ctx.scale(viewScale, viewScale);
+      ctx.translate(viewOffset.x, viewOffset.y);
+
       // 캐시된 이미지 사용 (완전히 로드된 경우에만)
       const img = cachedBackgroundImage;
 
@@ -307,20 +371,23 @@ const FloorPlanEditor = () => {
         // 이미지가 캔버스보다 가로로 긴 경우
         drawWidth = rect.width;
         drawHeight = rect.width / imgAspect;
-        drawX = 0;
-        drawY = (rect.height - drawHeight) / 2;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       } else {
         // 이미지가 캔버스보다 세로로 긴 경우
         drawHeight = rect.height;
         drawWidth = rect.height * imgAspect;
-        drawX = (rect.width - drawWidth) / 2;
-        drawY = 0;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       }
 
       // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
       ctx.globalAlpha = backgroundOpacity;
       ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
       ctx.globalAlpha = 1.0;
+
+      // 뷰포트 변환 복원
+      ctx.restore();
 
       // 격자와 벽 그리기
       drawGridAndWalls(ctx, rect);
@@ -330,6 +397,12 @@ const FloorPlanEditor = () => {
       img.onload = () => {
         // 이미지를 캐시에 저장
         setCachedBackgroundImage(img);
+
+        // 캔버스 중앙 기준으로 변환한 후 배경 이미지 그리기
+        ctx.save();
+        ctx.translate(rect.width / 2, rect.height / 2);
+        ctx.scale(viewScale, viewScale);
+        ctx.translate(viewOffset.x, viewOffset.y);
 
         // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
         const imgAspect = img.width / img.height;
@@ -341,20 +414,23 @@ const FloorPlanEditor = () => {
           // 이미지가 캔버스보다 가로로 긴 경우
           drawWidth = rect.width;
           drawHeight = rect.width / imgAspect;
-          drawX = 0;
-          drawY = (rect.height - drawHeight) / 2;
+          drawX = -drawWidth / 2;
+          drawY = -drawHeight / 2;
         } else {
           // 이미지가 캔버스보다 세로로 긴 경우
           drawHeight = rect.height;
           drawWidth = rect.height * imgAspect;
-          drawX = (rect.width - drawWidth) / 2;
-          drawY = 0;
+          drawX = -drawWidth / 2;
+          drawY = -drawHeight / 2;
         }
 
         // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
         ctx.globalAlpha = backgroundOpacity;
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
+
+        // 뷰포트 변환 복원
+        ctx.restore();
 
         // 이미지 그리기 완료 후 격자와 벽 다시 그리기
         drawGridAndWalls(ctx, rect);
@@ -370,58 +446,115 @@ const FloorPlanEditor = () => {
 
   // 격자와 벽 그리기 함수 분리
   const drawGridAndWalls = (ctx, rect) => {
+    // 캔버스 중앙을 원점으로 변환
+    ctx.save();
+    ctx.translate(rect.width / 2, rect.height / 2);
+    
+    // 뷰포트 변환 적용
+    ctx.scale(viewScale, viewScale);
+    ctx.translate(viewOffset.x, viewOffset.y);
+
     // 텍스트 렌더링 품질 개선
     ctx.textRenderingOptimization = "optimizeQuality";
     ctx.imageSmoothingEnabled = false; // 격자는 선명하게
 
-    // 격자 크기 사용
-    const gridSize = GRID_SIZE;
+    // 고정 격자 크기 사용 (500mm x 500mm = 25px x 25px)
+    const gridSize = GRID_SIZE_PX;
+
+    // 뷰포트 영역 계산 (중앙 기준 좌표계에서 격자 범위 결정)
+    const centerX = -viewOffset.x;
+    const centerY = -viewOffset.y;
+    const viewWidth = rect.width / (2 * viewScale);
+    const viewHeight = rect.height / (2 * viewScale);
+    
+    const startX = Math.floor((centerX - viewWidth) / gridSize) * gridSize;
+    const endX = Math.ceil((centerX + viewWidth) / gridSize) * gridSize;
+    const startY = Math.floor((centerY - viewHeight) / gridSize) * gridSize;
+    const endY = Math.ceil((centerY + viewHeight) / gridSize) * gridSize;
 
     // 격자 그리기 - 픽셀 정렬로 선명하게
     ctx.strokeStyle = "#e0e0e0";
-    ctx.lineWidth = 0.7;
-
-    // 픽셀 정렬을 위해 0.5 오프셋
-    ctx.translate(0.5, 0.5);
+    ctx.lineWidth = 0.5 / viewScale; // 줌에 따라 선 두께 조정
 
     // 세로선
-    for (let x = 0; x <= rect.width; x += gridSize) {
+    for (let x = startX; x <= endX; x += gridSize) {
       ctx.beginPath();
-      ctx.moveTo(Math.floor(x), 0);
-      ctx.lineTo(Math.floor(x), rect.height);
+      ctx.moveTo(x, startY);
+      ctx.lineTo(x, endY);
       ctx.stroke();
     }
 
     // 가로선
-    for (let y = 0; y <= rect.height; y += gridSize) {
+    for (let y = startY; y <= endY; y += gridSize) {
       ctx.beginPath();
-      ctx.moveTo(0, Math.floor(y));
-      ctx.lineTo(rect.width, Math.floor(y));
+      ctx.moveTo(startX, y);
+      ctx.lineTo(endX, y);
       ctx.stroke();
     }
 
-    // 오프셋 복원
-    ctx.translate(-0.5, -0.5);
+    // 축척 설정용 벽 그리기 (임시)
+    if (scaleWall && tool === "scale") {
+      ctx.strokeStyle = "#9900ff"; // 축척 설정용 벽은 보라색
+      ctx.lineWidth = 4 / viewScale;
+      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
+
+      ctx.beginPath();
+      ctx.moveTo(scaleWall.start.x, scaleWall.start.y);
+      ctx.lineTo(scaleWall.end.x, scaleWall.end.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 축척 설정용 벽의 길이 표시
+      const midX = (scaleWall.start.x + scaleWall.end.x) / 2;
+      const midY = (scaleWall.start.y + scaleWall.end.y) / 2;
+      const pixelDistance = Math.sqrt(
+        Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
+          Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
+      );
+      const angle = Math.atan2(
+        scaleWall.end.y - scaleWall.start.y,
+        scaleWall.end.x - scaleWall.start.x
+      );
+
+      ctx.save();
+      ctx.translate(midX, midY);
+      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+        ctx.rotate(angle + Math.PI);
+      } else {
+        ctx.rotate(angle);
+      }
+      ctx.fillStyle = "#9900ff";
+      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(`${Math.round(pixelDistance)}px`, 0, 3 / viewScale);
+      ctx.restore();
+    }
 
     // 완성된 벽들 그리기
-    ctx.strokeStyle = "#ff6600";
-    ctx.lineWidth = 6;
-
     walls.forEach((wall) => {
       // 선택된 벽인지 확인
       const isSelected = selectedWall?.id === wall.id;
       const isPartialEraserSelected = partialEraserSelectedWall?.id === wall.id;
+      const isScaleSelected = selectedScaleWall?.id === wall.id;
+      const isScaleHovered = hoveredScaleWall?.id === wall.id;
 
       // 벽 그리기 (선택된 벽은 다른 색상)
-      if (isPartialEraserSelected) {
+      if (isScaleSelected) {
+        ctx.strokeStyle = "#0066ff"; // 축척 설정용 선택된 벽은 파란색
+        ctx.lineWidth = 5 / viewScale;
+      } else if (isScaleHovered) {
+        ctx.strokeStyle = "#00aa00"; // 호버된 벽은 초록색
+        ctx.lineWidth = 4 / viewScale;
+      } else if (isPartialEraserSelected) {
         ctx.strokeStyle = "#ff0000"; // 부분 지우기 선택된 벽은 빨간색
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 3 / viewScale;
       } else if (isSelected) {
         ctx.strokeStyle = "#00ff00";
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 4 / viewScale;
       } else {
         ctx.strokeStyle = "#ff6600";
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2 / viewScale;
       }
 
       ctx.beginPath();
@@ -438,14 +571,27 @@ const FloorPlanEditor = () => {
         wall.end.x - wall.start.x
       );
 
-      drawText(ctx, `${distance}mm`, midX, midY, angle);
+      // 텍스트 크기도 줌에 따라 조정
+      ctx.save();
+      ctx.translate(midX, midY);
+      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+        ctx.rotate(angle + Math.PI);
+      } else {
+        ctx.rotate(angle);
+      }
+      ctx.fillStyle = "#333333";
+      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
+      ctx.restore();
     });
 
-    // 부분 지우기 영역 표시 , 컬러설정
+    // 부분 지우기 영역 표시
     if (isSelectingEraseArea && eraseAreaStart && eraseAreaEnd) {
       ctx.strokeStyle = "#0004ffff";
-      ctx.lineWidth = 8;
-      ctx.setLineDash([10, 10]);
+      ctx.lineWidth = 4 / viewScale;
+      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
       ctx.globalAlpha = 0.7;
 
       ctx.beginPath();
@@ -460,8 +606,8 @@ const FloorPlanEditor = () => {
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
       ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 8;
-      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 3 / viewScale;
+      ctx.setLineDash([3 / viewScale, 3 / viewScale]);
 
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
@@ -470,7 +616,7 @@ const FloorPlanEditor = () => {
 
       ctx.setLineDash([]);
 
-      // 현재 그리고 있는 벽의 길이 표시 (선 아래에 작게)
+      // 현재 그리고 있는 벽의 길이 표시
       const midX = (startPoint.x + currentPoint.x) / 2;
       const midY = (startPoint.y + currentPoint.y) / 2;
       const distance = calculateDistance(startPoint, currentPoint);
@@ -479,22 +625,94 @@ const FloorPlanEditor = () => {
         currentPoint.x - startPoint.x
       );
 
-      // 임시 벽의 치수는 조금 다른 색상으로 표시
+      // 임시 벽의 치수 표시
       ctx.save();
+      ctx.translate(midX, midY);
+      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+        ctx.rotate(angle + Math.PI);
+      } else {
+        ctx.rotate(angle);
+      }
       ctx.fillStyle = "#ff9933";
-      drawText(ctx, `${distance}mm`, midX, midY, angle);
+      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
       ctx.restore();
+    }
+
+    // 뷰포트 변환 복원
+    ctx.restore();
+  };
+
+  // 패닝을 위한 마우스 이벤트 핸들러들
+  const handlePanStart = (e) => {
+    if (e.ctrlKey || e.button === 1) {
+      // Ctrl + 클릭 또는 마우스 휠 클릭으로 패닝
+      setIsDragging(true);
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      e.preventDefault();
+      return true;
+    }
+    return false;
+  };
+
+  const handlePanMove = (e) => {
+    if (isDragging && lastPanPoint) {
+      const deltaX = e.clientX - lastPanPoint.x;
+      const deltaY = e.clientY - lastPanPoint.y;
+
+      setViewOffset((prev) => ({
+        x: prev.x + deltaX / viewScale,
+        y: prev.y + deltaY / viewScale,
+      }));
+
+      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      e.preventDefault();
+    }
+  };
+
+  const handlePanEnd = () => {
+    setIsDragging(false);
+    setLastPanPoint(null);
+  };
+
+  // 줌 핸들러 (수정)
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.max(0.1, Math.min(10, viewScale * delta));
+
+    if (newScale !== viewScale) {
+      // 마우스 위치를 캔버스 좌표계로 변환
+      const worldMouseX = mouseX / viewScale - viewOffset.x;
+      const worldMouseY = mouseY / viewScale - viewOffset.y;
+
+      // 새로운 오프셋 계산 (마우스 위치가 고정되도록)
+      const newOffsetX = mouseX / newScale - worldMouseX;
+      const newOffsetY = mouseY / newScale - worldMouseY;
+
+      setViewOffset({ x: newOffsetX, y: newOffsetY });
+      setViewScale(newScale);
     }
   };
 
   // 마우스 이벤트 핸들러들
   const handleMouseDown = (e) => {
+    // 패닝 모드 체크
+    if (handlePanStart(e)) {
+      return;
+    }
+
     const coords = getCanvasCoordinates(e);
 
-    if (tool === "wall") {
-      const snapped = snapToGrid(coords.x, coords.y);
-      setStartPoint(snapped);
-      setCurrentPoint(snapped);
+    if (tool === "wall" || tool === "scale") {
+      setStartPoint(coords);
+      setCurrentPoint(coords);
       setIsDrawing(true);
     } else if (tool === "select") {
       // 선택 도구: 클릭한 위치에서 가장 가까운 벽 선택
@@ -574,10 +792,13 @@ const FloorPlanEditor = () => {
   };
 
   const handleMouseMove = (e) => {
-    if (isDrawing && tool === "wall") {
+    // 패닝 처리
+    handlePanMove(e);
+
+    if (isDrawing && (tool === "wall" || tool === "scale")) {
       const coords = getCanvasCoordinates(e);
-      const snapped = snapToGrid(coords.x, coords.y);
-      setCurrentPoint(snapped);
+      const orthogonal = snapToOrthogonal(startPoint, coords);
+      setCurrentPoint(orthogonal);
     } else if (isSelectingEraseArea && tool === "partial_eraser") {
       const coords = getCanvasCoordinates(e);
       setEraseAreaEnd(coords);
@@ -585,19 +806,27 @@ const FloorPlanEditor = () => {
   };
 
   const handleMouseUp = (e) => {
-    if (isDrawing && tool === "wall" && startPoint) {
+    // 패닝 종료
+    handlePanEnd();
+
+    if (isDrawing && (tool === "wall" || tool === "scale") && startPoint) {
       const coords = getCanvasCoordinates(e);
-      const snapped = snapToGrid(coords.x, coords.y);
+      const orthogonal = snapToOrthogonal(startPoint, coords);
 
       // 시작점과 끝점이 다를 때만 벽 추가
-      if (startPoint.x !== snapped.x || startPoint.y !== snapped.y) {
+      if (startPoint.x !== orthogonal.x || startPoint.y !== orthogonal.y) {
         const newWall = {
           id: Date.now(),
           start: startPoint,
-          end: snapped,
+          end: orthogonal,
         };
 
-        setWalls((prev) => [...prev, newWall]);
+        // 축척 설정 모드인 경우
+        if (tool === "scale") {
+          setScaleWall(newWall);
+        } else {
+          setWalls((prev) => [...prev, newWall]);
+        }
       }
 
       setIsDrawing(false);
@@ -641,6 +870,11 @@ const FloorPlanEditor = () => {
     isSelectingEraseArea,
     eraseAreaStart,
     eraseAreaEnd,
+    viewScale,
+    viewOffset,
+    // 축척 설정 관련 상태들
+    isScaleSet,
+    scaleWall,
   ]);
 
   // 초기 캔버스 설정
@@ -665,6 +899,8 @@ const FloorPlanEditor = () => {
     uploadedImage,
     backgroundOpacity,
     cachedBackgroundImage,
+    viewScale,
+    viewOffset,
   ]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
@@ -724,122 +960,18 @@ const FloorPlanEditor = () => {
     };
   }, [debouncedRedraw]); // debouncedRedraw 의존성 추가
 
-  // 축척 설정용 마우스 이벤트 핸들러들
-  const handleScaleMouseDown = (e) => {
-    e.preventDefault();
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setScaleStartPoint({ x, y });
-    setScaleCurrentPoint({ x, y });
-    setIsDrawingScale(true);
-    setScalePoints([]);
-  };
-
-  const handleScaleMouseMove = (e) => {
-    if (!isDrawingScale || !scaleStartPoint) return;
-
-    e.preventDefault();
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setScaleCurrentPoint({ x, y });
-  };
-
-  const handleScaleMouseUp = (e) => {
-    if (!isDrawingScale || !scaleStartPoint) return;
-
-    e.preventDefault();
-    const rect = e.target.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // 최소 거리 체크 (너무 짧은 선분 방지)
-    const distance = Math.sqrt(
-      Math.pow(x - scaleStartPoint.x, 2) + Math.pow(y - scaleStartPoint.y, 2)
-    );
-
-    if (distance > 10) {
-      // 10픽셀 이상일 때만 선분 생성
-      setScalePoints([scaleStartPoint, { x, y }]);
-    }
-
-    setIsDrawingScale(false);
-    setScaleStartPoint(null);
-    setScaleCurrentPoint(null);
-  };
-
   // 이미지 업로드 처리
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 축척 설정을 위한 팝업 표시
     const imageUrl = URL.createObjectURL(file);
-    setScaleImage({ file, url: imageUrl });
-    setShowScalePopup(true);
-    setScalePoints([]);
-    setRealLength("");
-    setIsDrawingScale(false);
-    setScaleStartPoint(null);
-    setScaleCurrentPoint(null);
-  };
-
-  // 축척 설정 완료 후 벽 검출
-  const processImageWithScale = async () => {
-    if (!scaleImage || scalePoints.length !== 2 || !realLength) {
-      alert("축척 설정을 완료해주세요.");
-      return;
-    }
-
     setIsProcessing(true);
+
     try {
-      // 화면 좌표를 캔버스 좌표계로 변환하기 위한 스케일 계산
-      const popupImg = document.querySelector('img[alt="축척 설정용 이미지"]');
-      const popupRect = popupImg?.getBoundingClientRect();
-      const canvasRect = canvasRef.current?.getBoundingClientRect();
-
-      // 팝업 이미지에서 캔버스로의 변환 비율
-      const scaleToCanvas = Math.min(
-        canvasRect.width / popupRect.width,
-        canvasRect.height / popupRect.height
-      );
-
-      // 화면 좌표를 캔버스 좌표로 변환
-      const canvasPoint1 = {
-        x: scalePoints[0].x * scaleToCanvas,
-        y: scalePoints[0].y * scaleToCanvas,
-      };
-      const canvasPoint2 = {
-        x: scalePoints[1].x * scaleToCanvas,
-        y: scalePoints[1].y * scaleToCanvas,
-      };
-
-      // 캔버스 좌표계에서의 픽셀 거리 계산
-      const pixelDistance = Math.sqrt(
-        Math.pow(canvasPoint2.x - canvasPoint1.x, 2) +
-          Math.pow(canvasPoint2.y - canvasPoint1.y, 2)
-      );
-
-      // 축척 비율 계산 (픽셀당 mm)
-      const newPixelToMmRatio = parseFloat(realLength) / pixelDistance / 1.3;
-      setPixelToMmRatio(newPixelToMmRatio);
-
-      // 디버깅 정보
-      console.log("축척 설정 (수정):", {
-        popupPoints: scalePoints,
-        canvasPoints: [canvasPoint1, canvasPoint2],
-        scaleToCanvas,
-        pixelDistance,
-        realLength: parseFloat(realLength),
-        ratio: newPixelToMmRatio,
-      });
-
       // WallDetector로 벽 검출
       const detector = new WallDetector();
-      const result = await detector.detectWalls(scaleImage.file, {
+      const result = await detector.detectWalls(file, {
         morphType: 0, // OPEN 연산으로 노이즈 제거
         canny1: 50, // 낮은 임계값
         canny2: 100, // 높은 임계값
@@ -848,68 +980,66 @@ const FloorPlanEditor = () => {
         maxGap: 15, // 선분 간 최대 간격
       });
 
-      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산 (drawCanvas와 동일한 로직 사용)
+      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
       const canvas = canvasRef.current;
       const containerRect = canvas.getBoundingClientRect();
 
-      // 이미지 비율과 캔버스 비율 계산 (drawCanvas와 동일)
+      // 이미지 비율과 캔버스 비율 계산
       const imgAspect = result.imageWidth / result.imageHeight;
       const canvasAspect = containerRect.width / containerRect.height;
 
       let drawWidth, drawHeight, drawX, drawY;
 
       if (imgAspect > canvasAspect) {
-        // 이미지가 캔버스보다 가로로 긴 경우
         drawWidth = containerRect.width;
         drawHeight = containerRect.width / imgAspect;
-        drawX = 0;
-        drawY = (containerRect.height - drawHeight) / 2;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       } else {
-        // 이미지가 캔버스보다 세로로 긴 경우
         drawHeight = containerRect.height;
         drawWidth = containerRect.height * imgAspect;
-        drawX = (containerRect.width - drawWidth) / 2;
-        drawY = 0;
+        drawX = -drawWidth / 2;
+        drawY = -drawHeight / 2;
       }
 
-      // 검출된 좌표를 실제 그려지는 이미지 영역에 맞춰 변환
+      // 검출된 좌표를 중앙 기준 캔버스 좌표로 변환
       const scaleX = drawWidth / result.imageWidth;
       const scaleY = drawHeight / result.imageHeight;
 
-      // 검출된 선분들을 벽으로 변환하고 격자에 스냅
+      // 검출된 선분들을 벽으로 변환 (중앙 기준 좌표계로)
       const detectedWalls = result.lines.map((line, index) => {
-        // 스케일 적용하고 오프셋 추가
-        const scaledStart = {
-          x: line.x1 * scaleX + drawX,
-          y: line.y1 * scaleY + drawY,
-        };
-        const scaledEnd = {
-          x: line.x2 * scaleX + drawX,
-          y: line.y2 * scaleY + drawY,
-        };
-
-        // 격자에 스냅
-        const snappedStart = snapToGrid(scaledStart.x, scaledStart.y);
-        const snappedEnd = snapToGrid(scaledEnd.x, scaledEnd.y);
+        const canvasStartX = line.x1 * scaleX + drawX;
+        const canvasStartY = line.y1 * scaleY + drawY;
+        const canvasEndX = line.x2 * scaleX + drawX;
+        const canvasEndY = line.y2 * scaleY + drawY;
 
         return {
           id: Date.now() + index,
-          start: snappedStart,
-          end: snappedEnd,
+          start: { x: canvasStartX, y: canvasStartY },
+          end: { x: canvasEndX, y: canvasEndY },
         };
       });
 
       setWalls(detectedWalls);
-      setUploadedImage(scaleImage.url);
-      setShowScalePopup(false);
+      setUploadedImage(imageUrl);
+      setScaleImage({ file, url: imageUrl });
 
-      // 축척 설정 완료 후 단순 리렌더링 (깜빡임 방지)
-      setTimeout(() => {
-        drawCanvas();
-      }, 50);
+      // 이미지 변환 정보 저장 (팝업에서 정확한 좌표 변환을 위해)
+      setImageTransform({
+        imageWidth: result.imageWidth,
+        imageHeight: result.imageHeight,
+        drawWidth,
+        drawHeight,
+        drawX,
+        drawY,
+        scaleX,
+        scaleY,
+        containerWidth: containerRect.width,
+        containerHeight: containerRect.height,
+      });
 
       alert(
-        `축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)`
+        `벽 검출이 완료되었습니다! (${detectedWalls.length}개 검출) '축척 설정' 버튼을 클릭해서 축척을 설정하세요.`
       );
     } catch (error) {
       console.error("Wall detection failed:", error);
@@ -967,7 +1097,7 @@ const FloorPlanEditor = () => {
         is_public: false,
         room_data: {
           walls: walls,
-          pixelToMmRatio: pixelToMmRatio,
+          pixelToMmRatio: pixelToMmRatio, // 동적 축척 사용
         },
       };
 
@@ -1029,178 +1159,6 @@ const FloorPlanEditor = () => {
 
   return (
     <div className="w-full h-screen bg-orange-50 flex flex-col overflow-hidden">
-      {/* 축척 설정 팝업 */}
-      {showScalePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-auto">
-            <h2 className="text-xl font-bold text-orange-800 mb-4">
-              축척 설정
-            </h2>
-
-            {/* 이미지 표시 */}
-            <div className="mb-4 relative">
-              <div className="border-2 border-orange-200 rounded-lg overflow-hidden bg-white relative">
-                <img
-                  src={scaleImage?.url}
-                  alt="축척 설정용 이미지"
-                  className="w-full max-h-96 object-contain cursor-crosshair block select-none"
-                  style={{
-                    userSelect: "none",
-                    WebkitUserSelect: "none",
-                    MozUserSelect: "none",
-                    msUserSelect: "none",
-                  }}
-                  onMouseDown={handleScaleMouseDown}
-                  onMouseMove={handleScaleMouseMove}
-                  onMouseUp={handleScaleMouseUp}
-                  onDragStart={(e) => e.preventDefault()}
-                  onContextMenu={(e) => e.preventDefault()}
-                  draggable={false}
-                />
-
-                {/* 완성된 선분 표시 */}
-                {scalePoints.length === 2 && (
-                  <>
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-                      <line
-                        x1={scalePoints[0].x}
-                        y1={scalePoints[0].y}
-                        x2={scalePoints[1].x}
-                        y2={scalePoints[1].y}
-                        stroke="#0066ff"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                      />
-                      {/* 시작점 */}
-                      <circle
-                        cx={scalePoints[0].x}
-                        cy={scalePoints[0].y}
-                        r="4"
-                        fill="#0066ff"
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                      {/* 끝점 */}
-                      <circle
-                        cx={scalePoints[1].x}
-                        cy={scalePoints[1].y}
-                        r="4"
-                        fill="#0066ff"
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                    </svg>
-                  </>
-                )}
-
-                {/* 그리고 있는 선분 표시 */}
-                {isDrawingScale && scaleStartPoint && scaleCurrentPoint && (
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-                    <line
-                      x1={scaleStartPoint.x}
-                      y1={scaleStartPoint.y}
-                      x2={scaleCurrentPoint.x}
-                      y2={scaleCurrentPoint.y}
-                      stroke="#66aaff"
-                      strokeWidth="6"
-                      strokeLinecap="round"
-                      strokeDasharray="5,5"
-                    />
-                    {/* 시작점 */}
-                    <circle
-                      cx={scaleStartPoint.x}
-                      cy={scaleStartPoint.y}
-                      r="3"
-                      fill="#66aaff"
-                      stroke="white"
-                      strokeWidth="1"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-
-            {/* 안내 메시지 */}
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-              <p className="text-sm text-blue-700">
-                {scalePoints.length === 0 &&
-                  !isDrawingScale &&
-                  "1. 이미지에서 기준이 될 길이를 드래그하여 선분을 그어주세요"}
-                {isDrawingScale && "드래그하여 기준 선분을 그어주세요..."}
-                {scalePoints.length === 2 &&
-                  "2. 아래에 그은 선분의 실제 길이를 입력하세요"}
-              </p>
-            </div>
-
-            {/* 실제 길이 입력 */}
-            {scalePoints.length === 2 && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-orange-700 mb-2">
-                  선택한 선분의 실제 길이 (mm):
-                </label>
-                <input
-                  type="number"
-                  value={realLength}
-                  onChange={(e) => setRealLength(e.target.value)}
-                  placeholder="예: 3000"
-                  className="w-full px-3 py-2 border border-orange-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-400
-                  text-gray-900"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  픽셀 거리:{" "}
-                  {Math.round(
-                    Math.sqrt(
-                      Math.pow(scalePoints[1].x - scalePoints[0].x, 2) +
-                        Math.pow(scalePoints[1].y - scalePoints[0].y, 2)
-                    )
-                  )}
-                  px
-                </p>
-              </div>
-            )}
-
-            {/* 버튼들 */}
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  setScalePoints([]);
-                  setIsDrawingScale(false);
-                  setScaleStartPoint(null);
-                  setScaleCurrentPoint(null);
-                }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                disabled={isProcessing}
-              >
-                다시 그리기
-              </button>
-              <button
-                onClick={() => {
-                  setShowScalePopup(false);
-                  setScaleImage(null);
-                  setScalePoints([]);
-                  setIsDrawingScale(false);
-                  setScaleStartPoint(null);
-                  setScaleCurrentPoint(null);
-                }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                disabled={isProcessing}
-              >
-                취소
-              </button>
-              <button
-                onClick={processImageWithScale}
-                disabled={
-                  scalePoints.length !== 2 || !realLength || isProcessing
-                }
-                className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isProcessing ? "처리 중..." : "축척 설정 완료"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 툴바 */}
       <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
         <div className="flex items-center gap-4">
@@ -1263,6 +1221,25 @@ const FloorPlanEditor = () => {
             </button>
 
             <button
+              onClick={() => {
+                setTool("scale");
+                setScaleWall(null);
+                setScaleRealLength("");
+              }}
+              disabled={!uploadedImage}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                !uploadedImage
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : tool === "scale"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <Square size={18} />
+              축척 설정
+            </button>
+
+            <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
               className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
@@ -1309,16 +1286,7 @@ const FloorPlanEditor = () => {
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check size={18} />
-              {isCreatingRoom
-                ? "방 생성 중..."
-                : "선택된 도면으로 우리 집 꾸미기"}
-            </button>
-            <button
-              onClick={handleComplete}
-              className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors shadow-md"
-            >
-              <Check size={18} />
-              도면 저장
+              {isCreatingRoom ? "방 생성 중..." : "집 생성하기"}
             </button>
           </div>
         </div>
@@ -1335,6 +1303,7 @@ const FloorPlanEditor = () => {
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
+                onWheel={handleWheel}
                 onContextMenu={(e) => e.preventDefault()}
                 className="block"
                 style={{
@@ -1343,7 +1312,6 @@ const FloorPlanEditor = () => {
                   cursor: tool === "wall" ? "crosshair" : "default",
                 }}
               />
-
             </div>
           </div>
 
@@ -1362,38 +1330,61 @@ const FloorPlanEditor = () => {
             도구 정보
           </h3>
 
-          {/* 배경 이미지 투명도 조정 */}
-          {uploadedImage && (
+          {/* 축척 설정 도구 */}
+          {tool === "scale" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
               <h4 className="font-medium text-orange-700 mb-2">
-                배경 이미지 설정
+                축척 설정 도구
               </h4>
-              <div className="mb-2">
-                <label className="block text-sm text-orange-600 mb-1">
-                  투명도: {Math.round(backgroundOpacity * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={backgroundOpacity}
-                  onChange={(e) =>
-                    setBackgroundOpacity(parseFloat(e.target.value))
-                  }
-                  className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
-                />
-              </div>
-              <button
-                onClick={() => {
-                  setUploadedImage(null);
-                  setCachedBackgroundImage(null);
-                  alert("배경 이미지가 제거되었습니다.");
-                }}
-                className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-              >
-                배경 이미지 제거
-              </button>
+              {!scaleWall ? (
+                <p className="text-sm text-orange-600 mb-3">
+                  기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
+                </p>
+              ) : (
+                <div>
+                  <p className="text-sm text-orange-600 mb-2">
+                    그린 벽:{" "}
+                    {Math.round(
+                      Math.sqrt(
+                        Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
+                          Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
+                      )
+                    )}
+                    픽셀
+                  </p>
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-orange-700 mb-1">
+                      실제 길이 (mm):
+                    </label>
+                    <input
+                      type="number"
+                      value={scaleRealLength}
+                      onChange={(e) => setScaleRealLength(e.target.value)}
+                      placeholder="예: 3000"
+                      className="w-full px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={applyScale}
+                      disabled={!scaleRealLength}
+                      className="flex-1 px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 disabled:opacity-50"
+                    >
+                      축척 적용
+                    </button>
+                    <button
+                      onClick={() => {
+                        setScaleWall(null);
+                        setScaleRealLength("");
+                        setTool("wall");
+                      }}
+                      className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -1422,34 +1413,50 @@ const FloorPlanEditor = () => {
                   <h5 className="font-medium text-green-700 mb-2">선택된 벽</h5>
                   <p className="text-sm text-green-600 mb-2">
                     현재 길이:{" "}
-                    {calculateDistance(selectedWall.start, selectedWall.end)}mm
+                    {(() => {
+                      const dist = calculateDistance(
+                        selectedWall.start,
+                        selectedWall.end
+                      );
+                      return `${dist.value}${dist.unit}`;
+                    })()}
                   </p>
 
-                  <div className="mb-3">
-                    <label className="block text-xs font-medium text-green-700 mb-1">
-                      길이 조정 (mm):
-                    </label>
-                    <div className="flex gap-1">
-                      <input
-                        type="number"
-                        value={editingWallLength}
-                        onChange={(e) => setEditingWallLength(e.target.value)}
-                        className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                        placeholder="길이 입력"
-                      />
-                      <button
-                        onClick={() => {
-                          const newLength = parseFloat(editingWallLength);
-                          if (newLength && newLength > 0) {
-                            adjustWallLength(selectedWall.id, newLength);
-                          }
-                        }}
-                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                      >
-                        적용
-                      </button>
+                  {isScaleSet && (
+                    <div className="mb-3">
+                      <label className="block text-xs font-medium text-green-700 mb-1">
+                        길이 조정 (mm):
+                      </label>
+                      <div className="flex gap-1">
+                        <input
+                          type="number"
+                          value={editingWallLength}
+                          onChange={(e) => setEditingWallLength(e.target.value)}
+                          className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                          placeholder="길이 입력"
+                        />
+                        <button
+                          onClick={() => {
+                            const newLength = parseFloat(editingWallLength);
+                            if (newLength && newLength > 0) {
+                              adjustWallLength(selectedWall.id, newLength);
+                            }
+                          }}
+                          className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                        >
+                          적용
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {!isScaleSet && (
+                    <div className="mb-3">
+                      <p className="text-xs text-orange-600">
+                        정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
+                      </p>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => {
@@ -1506,34 +1513,92 @@ const FloorPlanEditor = () => {
               )}
             </div>
           )}
+          {/* 뷰포트 컨트롤 */}
+          <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
+            <h4 className="font-medium text-orange-700 mb-3">뷰포트 컨트롤</h4>
 
-          {/* 벽 목록 */}
-          {walls.length > 0 && (
-            <div className="mt-6">
-              <h4 className="font-medium text-orange-700 mb-3">
-                그려진 벽 목록
+            <div className="mb-3">
+              <label className="block text-sm text-orange-600 mb-1">
+                줌: {Math.round(viewScale * 100)}%
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="10"
+                step="0.1"
+                value={viewScale}
+                onChange={(e) => {
+                  const newScale = parseFloat(e.target.value);
+                  setViewScale(newScale);
+                }}
+                className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => setViewScale((prev) => Math.min(10, prev * 1.2))}
+                className="flex-1 px-2 py-1 bg-orange-200 text-orange-700 text-sm rounded hover:bg-orange-300"
+              >
+                확대
+              </button>
+              <button
+                onClick={() =>
+                  setViewScale((prev) => Math.max(0.1, prev / 1.2))
+                }
+                className="flex-1 px-2 py-1 bg-orange-200 text-orange-700 text-sm rounded hover:bg-orange-300"
+              >
+                축소
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setViewScale(1);
+                setViewOffset({ x: 0, y: 0 });
+              }}
+              className="w-full px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700"
+            >
+              초기 위치로
+            </button>
+
+            <p className="text-xs text-orange-500 mt-2">
+              Ctrl+드래그: 패닝 | 휠: 줌
+            </p>
+          </div>
+
+          {/* 배경 이미지 투명도 조정 */}
+          {uploadedImage && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
+              <h4 className="font-medium text-orange-700 mb-2">
+                배경 이미지 설정
               </h4>
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {walls.map((wall, index) => (
-                  <div
-                    key={wall.id}
-                    className="bg-white p-3 rounded border border-orange-200"
-                  >
-                    <p className="text-sm font-medium text-orange-700">
-                      벽 {index + 1}
-                    </p>
-                    <p className="text-xs text-orange-600">
-                      길이: {calculateDistance(wall.start, wall.end)}mm
-                    </p>
-                    <p className="text-xs text-orange-500">
-                      ({Math.round(wall.start.x / 2.5)},{" "}
-                      {Math.round(wall.start.y / 2.5)}) → (
-                      {Math.round(wall.end.x / 2.5)},{" "}
-                      {Math.round(wall.end.y / 2.5)})
-                    </p>
-                  </div>
-                ))}
+              <div className="mb-2">
+                <label className="block text-sm text-orange-600 mb-1">
+                  투명도: {Math.round(backgroundOpacity * 100)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={backgroundOpacity}
+                  onChange={(e) =>
+                    setBackgroundOpacity(parseFloat(e.target.value))
+                  }
+                  className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
+                />
               </div>
+              <button
+                onClick={() => {
+                  setUploadedImage(null);
+                  setCachedBackgroundImage(null);
+                  alert("배경 이미지가 제거되었습니다.");
+                }}
+                className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+              >
+                배경 이미지 제거
+              </button>
             </div>
           )}
         </div>
