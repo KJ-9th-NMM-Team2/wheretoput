@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model furnitures {
+  name        String?
+  brand       String?
+  length_x    String?
+  length_z    String?
+  length_y    String?
+  image_url   String?
+  category_id BigInt?
+
+  @@ignore
+}
