@@ -206,37 +206,8 @@ export const useStore = create(
           }
         }
 
-        // 벽 데이터 저장 (모든 방에 대해 실행)
+        // 벽 데이터는 /create에서 이미 저장되었으므로 /sim에서는 저장하지 않음
         const currentState = get();
-        const floorPlanData = JSON.parse(localStorage.getItem('floorPlanData') || '{}');
-        
-        // localStorage에 벽 데이터가 있으면 room_walls 테이블에 저장
-        if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
-          try {
-            console.log(`방 ${currentState.currentRoomId}에 벽 데이터 저장 시도`);
-            const wallsResponse = await fetch(`/api/room-walls/${currentState.currentRoomId}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                walls: floorPlanData.walls,
-                pixelToMmRatio: floorPlanData.pixelToMmRatio
-              })
-            });
-
-            if (wallsResponse.ok) {
-              const wallsResult = await wallsResponse.json();
-              console.log(`벽 데이터 저장 완료: ${wallsResult.saved_count}개 벽`);
-            } else {
-              console.error('벽 데이터 저장 실패:', wallsResponse.statusText);
-            }
-          } catch (wallError) {
-            console.error('벽 데이터 저장 중 오류:', wallError);
-          }
-        } else {
-          console.log('저장할 벽 데이터가 없습니다 (localStorage에 floorPlanData 없음)');
-        }
 
         // 가구 데이터 저장 (새 room_id 또는 기존 room_id 사용)
         const response = await fetch('/api/sim/save', {
@@ -303,64 +274,30 @@ loadSimulatorState: async (roomId) => {
       categoryId: obj.categoryId
     }));
 
-    // --- 🚩 벽 데이터 처리 로직 수정 시작 ---
-    // [09.01] 수정 : scaleFactor 로 벽 비율 수정하시면 됩니다.
+    // 벽 데이터 처리
+    console.log('API에서 받은 벽 데이터:', result.walls);
     let wallsData = [];
-    const scaleFactor = 3.5; // 원하는 배율 설정 
-
     if (result.walls && result.walls.length > 0) {
-      // 1. 모든 벽들의 기하학적 중심점을 계산합니다.
-      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-      result.walls.forEach(wall => {
-        minX = Math.min(minX, wall.position[0]);
-        maxX = Math.max(maxX, wall.position[0]);
-        minZ = Math.min(minZ, wall.position[2]);
-        maxZ = Math.max(maxZ, wall.position[2]);
-      });
-      const centerX = (minX + maxX) / 2;
-      const centerZ = (minZ + maxZ) / 2;
-
-      // 2. 계산된 중심점을 기준으로 각 벽의 위치와 크기를 다시 계산합니다.
+      console.log(`${result.walls.length}개의 벽 데이터 처리 중...`);
       wallsData = result.walls.map(wall => {
-        // 중심점으로부터의 상대적 위치
-        const relativeX = wall.position[0] - centerX;
-        const relativeZ = wall.position[2] - centerZ;
-
-        // 상대 위치에 scaleFactor를 곱한 후, 다시 중심점을 더해 새 위치를 구함
-        const newX = centerX + relativeX * scaleFactor;
-        const newZ = centerZ + relativeZ * scaleFactor;
-
-        return {
+        console.log('벽 원본 데이터:', wall);
+        const transformedWall = {
           id: wall.id,
           dimensions: {
-            // 중요: 벽의 길이도 스케일에 맞게 늘려줍니다.
-            width: wall.length * scaleFactor,
+            width: wall.length,
             height: wall.height,
             depth: wall.depth
           },
-          position: [
-            newX,
-            wall.position[1], // 높이(y) 위치는 그대로 유지
-            newZ
-          ],
+          position: wall.position,
           rotation: wall.rotation
         };
+        console.log('변환된 벽 데이터:', transformedWall);
+        return transformedWall;
       });
+    } else {
+      console.log('벽 데이터가 없거나 빈 배열입니다:', { walls: result.walls, hasWalls: !!result.walls, length: result.walls?.length });
     }
-    
-    console.log(`스케일(${scaleFactor}배)이 적용된 벽 데이터:`, wallsData);
-    
-    // --- 🚩 벽 데이터 처리 로직 수정 끝 ---
-    
-    // 첫 번째 벽의 상세 정보 확인 (디버깅용)
-    if (wallsData.length > 0) {
-      console.log('첫 번째 벽 상세:', {
-        id: wallsData[0].id,
-        dimensions: wallsData[0].dimensions,
-        position: wallsData[0].position,
-        rotation: wallsData[0].rotation
-      });
-    }
+    console.log('최종 wallsData:', wallsData);
 
     set({ 
       loadedModels: loadedModels,
@@ -375,16 +312,6 @@ loadSimulatorState: async (roomId) => {
     });
 
     console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`);
-    console.log('로드된 객체들:', loadedModels);
-    loadedModels.forEach((model, index) => {
-      console.log(`모델 ${index}:`, {
-        id: model.id,
-        name: model.name,
-        position: model.position,
-        scale: model.scale,
-        url: model.url
-      });
-    });
     return result;
 
   } catch (error) {
