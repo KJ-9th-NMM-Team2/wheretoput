@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { furnitures as Furniture } from '@prisma/client';
 import ItemPaging from './item/ItemPaging';
-import ItemScroll from './item/ItemScroll';
+import ItemSection from './item/ItemSection';
 import { useStore } from '@/app/sim/store/useStore';
+import { createNewModel } from '@/utils/createNewModel';
+import { handlePageChange } from '@/utils/handlePage';
 
 interface SideItemsProps {
     collapsed: boolean;
@@ -18,7 +20,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-    const itemsPerPage = 5;
+    const itemsPerPage = 8;
     const { addModel } = useStore();
 
     // API에서 데이터 가져오기 함수
@@ -66,7 +68,6 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             console.error('Failed to fetch items:', err);
             setError(err instanceof Error ? err.message : 'Failed to load items');
             setItems([]);
-            // setTotalItems(0);
             setTotalPages(0);
         } finally {
             setLoading(false);
@@ -90,71 +91,59 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
 
     // 페이지 변경 핸들러들
     const handlePrevPage = useCallback(() => {
-        if (currentPage > 1) {
-            setCurrentPage(prev => prev - 1);
-        }
+        handlePageChange(currentPage, setCurrentPage, 'prev');
     }, [currentPage]);
 
     const handleNextPage = useCallback(() => {
-        if (currentPage < totalPages) {
-            setCurrentPage(prev => prev + 1);
-        }
+        handlePageChange(currentPage, setCurrentPage, 'next', totalPages);
     }, [currentPage, totalPages]);
 
     // 아이템 클릭 핸들러
-    const handleItemClick = useCallback(async (item: Furniture) => {
+    const handleItemClick = useCallback(async (item: Furniture, delta: number) => {
         console.log('Selected item:', item);
+        const newCount = (item.count || 0) + delta;
+
+        // count가 음수가 되거나 최대치를 초과하지 않도록 체크
+        if (newCount < 0 || newCount > 10) {
+            return;
+        }
     
-        // 3D 모델 생성 API 호출
-        try {
-            const response = await fetch('/api/model-upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ furniture_id: item.furniture_id })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // 생성된 또는 기존 모델 URL 사용
-                const newModel = {
-                    furniture_id: item.furniture_id, // 중요: furniture_id 추가
-                    url: result.model_url,
-                    name: item.name,
-                    length_x: item.length_x,
-                    length_y: item.length_y,
-                    length_z: item.length_z,
-                    price: item.price,
-                    brand: item.brand,
-                    isCityKit: false,
-                    texturePath: null,
-                    position: [0, 0, 0] // 화면 중앙
-                };
+        // count가 0에서 1로 증가할 때 (처음 선택)
+        if (item.count === 0 && delta === 1) {
+            try {
+                const response = await fetch('/api/model-upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ furniture_id: item.furniture_id })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const newModel = createNewModel(item, newCount, result.model_url);
+                    addModel(newModel);
+                } else {
+                    throw new Error(result.error || '3D 모델 생성 실패');
+                }
+            } catch (error) {
+                console.error('3D 모델 생성 실패:', error);
+                // fallback 처리
+                const newModel = createNewModel(item, newCount);
                 addModel(newModel);
-                console.log('3D 모델 추가 성공:', result.model_url);
-            } else {
-                throw new Error(result.error || '3D 모델 생성 실패');
             }
-        } catch (error) {
-            console.error('3D 모델 생성 실패:', error);
-            // fallback으로 기존 파일 사용
-            const newModel = {
-                furniture_id: item.furniture_id, // 중요: furniture_id 추가
-                url: '/legacy_mesh (1).glb',
-                name: item.name,
-                length_x: item.length_x,
-                length_y: item.length_y,
-                length_z: item.length_z,
-                price: item.price,
-                brand: item.brand,
-                isCityKit: false,
-                texturePath: null,
-                position: [0, 0, 0] // 화면 중앙
-            };
-            addModel(newModel);
-            console.log('fallback 모델 사용');
+            return;
         }
 
+        setItems(prevItem => 
+            prevItem.map(prev => 
+                prev.furniture_id === item.furniture_id
+                    ? {...prev, count: newCount}
+                    : prev
+            )
+        );
+
+        const newModel = createNewModel(item, newCount);
+        addModel(newModel);
     }, [addModel]);
 
     // 이미지 에러 핸들러
@@ -169,7 +158,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden border-t border-gray-200">
-            <ItemScroll 
+            <ItemSection 
                 loading={loading}
                 error={error}
                 filteredItems={items} // 서버에서 받은 현재 페이지 데이터

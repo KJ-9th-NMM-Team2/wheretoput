@@ -1,18 +1,19 @@
-import { Loader2 } from 'lucide-react';
+import { ImageOff, Loader2, Minus, Plus } from 'lucide-react';
 import type { ItemScrollProps } from '@/lib/types';
 
-const ItemScroll: React.FC<ItemScrollProps> = ({
+const ItemSection: React.FC<ItemScrollProps> = ({
     loading,
     error,
     filteredItems,
-    // imageErrors,
+    imageErrors,
     selectedCategory,
     handleItemClick,
-    // handleImageError,
+    handleImageError,
 }) => {
 
-    return <>
-        {/* 아이템 목록 - 스크롤 영역 */}
+    return (
+        <>
+            {/* 아이템 목록 - 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-4 py-3">
             {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -30,26 +31,11 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                     {filteredItems.map((item) => (
                         <div
                             key={item.furniture_id}
-                            onClick={() => handleItemClick(item)}
-                            className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all cursor-pointer overflow-hidden"
+                            className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden"
                         >
-                            
-                            {/* // ItemScroll 이미지 영역 */}
-                            <li
-                                key={item.furniture_id}
-                                // draggable
-                                // onDragStart={(e) => {
-                                //     // DataTransfer에 JSON 데이터 저장
-                                //     e.dataTransfer.setData("application/json", JSON.stringify(item));
-                                // }}
-                                className="list-none cursor-grab active:cursor-grabbing"
-                            >
-                                <img src={item.image_url ?? ""} alt={item.name}/>
-                                {/* <span>{item.name}</span> */}
-                            </li>
                             <div className="flex">
                                 {/* 이미지 영역 */}
-                                {/* <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                                <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
                                     {item.image_url && !imageErrors.has(item.id) ? (
                                         <img
                                             src={item.image_url}
@@ -62,10 +48,10 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                                             <ImageOff className="w-8 h-8 text-gray-400" />
                                         </div>
                                     )}
-                                </div> */}
+                                </div>
 
                                 {/* 정보 영역 */}
-                                <div className="flex-1 p-3">
+                                <div className="flex-1 p-3 flex flex-col">
                                     <div className="flex items-start justify-between mb-1">
                                         <h4 className="text-sm font-medium text-gray-800 line-clamp-1">
                                             {item.name}
@@ -76,13 +62,6 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                                             </span>
                                         )}
                                     </div>
-
-                                    {/* 설명 (있을 경우) */}
-                                    {item.description && (
-                                        <p className="text-xs text-gray-600 line-clamp-1 mb-1">
-                                            {item.description}
-                                        </p>
-                                    )}
 
                                     {/* 가격과 사이즈 정보 */}
                                     <div className="flex items-center justify-between text-xs">
@@ -96,6 +75,44 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                                                 {item.length_x}×{item.length_y}×{item.length_z}cm
                                             </span>
                                         )}
+                                    </div>
+                                    {/* 카운터 - 우측 하단 */}
+                                    <div className="flex justify-end mt-auto">
+                                        <div className="flex items-center gap-1 bg-gray-50 border border-gray-300 rounded-md px-1 py-0.5">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleItemClick(item, -1);
+                                                }}
+                                                disabled={(item.count || 0) === 0}
+                                                className={`w-5 h-5 flex items-center justify-center text-xs ${
+                                                    (item.count || 0) === 0 
+                                                        ? 'text-gray-400 cursor-not-allowed' 
+                                                        : 'text-gray-600 hover:text-red-600'
+                                                }`}
+                                            >
+                                                <Minus className="w-3 h-3" />
+                                            </button>
+                                            
+                                            <span className="text-xs font-medium min-w-[12px] text-center">
+                                                {item.count || 0}
+                                            </span>
+                                            
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleItemClick(item, 1);
+                                                }}
+                                                disabled={(item.count || 0) >= 10}
+                                                className={`w-5 h-5 flex items-center justify-center text-xs ${
+                                                    (item.count || 0) >= 10 
+                                                        ? 'text-gray-400 cursor-not-allowed' 
+                                                        : 'text-gray-600 hover:text-blue-600'
+                                                }`}
+                                            >
+                                                <Plus className="w-3 h-3" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -112,7 +129,8 @@ const ItemScroll: React.FC<ItemScrollProps> = ({
                 </div>
             )}
         </div>
-    </>
+        </>
+    );
 }
 
-export default ItemScroll;
+export default ItemSection;

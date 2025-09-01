@@ -1,18 +1,19 @@
 'use client';// 클라이언트 컴포넌트라는 것을 명시 // 이거 안하면 렌더링 안됨
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SideTitle from '@/components/sim/side/SideTitle';
 import SideSearch from '@/components/sim/side/SideSearch';
 import SideCategories from '@/components/sim/side/SideCategories';
 import SideItems from '@/components/sim/side/SideItems';
 import { Furnitures } from '@prisma/client';
+import { useSession } from "next-auth/react";
 
-const SimSideView: React.FC = () => {
+const SimSideView: React.FC<string> = (roomId) => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>();
   const [searchResults, setSearchResults] = useState<Furnitures[]>([]); // 검색 결과 상태 추가
-  
+  const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
 
   const handleCategorySelect = (category: string) => {
     setSearchResults([]);
@@ -23,6 +24,34 @@ const SimSideView: React.FC = () => {
     setSearchResults(results);
     // 검색 결과에 따른 다른 로직 수행
   };
+
+  useEffect(() => {
+    const checkOwnRoomOfUser = async () => {
+      const { data: session, status } = useSession();
+      if (status === "loading") return;
+      if (!session?.user) return;
+
+      if (session?.user?.name && session?.user?.id && session?.user?.image) {
+        try {
+          const response = await fetch(`/api/rooms/user?roomId=${roomId}&userId=${session.user.id}`)
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+
+          const result = await response.json();
+          if (result) {
+            setIsOwnUserRoom(true);
+          } else {
+            setIsOwnUserRoom(false);
+          }
+        } catch (error) {
+          console.error('FETCH ERROR:', error)
+        } 
+      }
+    }
+    checkOwnRoomOfUser();
+  }, []);
 
   return (
     <div className="flex">
@@ -45,11 +74,6 @@ const SimSideView: React.FC = () => {
         {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
         <SideItems collapsed={collapsed} selectedCategory={selectedCategory} furnitures={searchResults}/>
       </div>
-      
-      {/* 메인 콘텐츠 영역 */}
-      {/* <div className="flex-1"> */}
-        {/* 여기에 3D Canvas나 메인 콘텐츠가 들어갑니다 */}
-      {/* </div> */}
     </div>
   );
 };

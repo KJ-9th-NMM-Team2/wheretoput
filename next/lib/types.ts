@@ -1,10 +1,10 @@
-import type { Furniture } from '@prisma/client';
+import type { Furnitures } from '@prisma/client';
 
 // 공통 베이스 인터페이스
 export interface BaseItemProps {
     loading: boolean;
     error: string | null;
-    filteredItems: Furniture[];
+    filteredItems: Furnitures[];
     currentPage: number;
     totalPages: number;
     totalItems: number;
@@ -13,7 +13,7 @@ export interface BaseItemProps {
     itemsPerPage: number;
     imageErrors: Set<string>;
     selectedCategory: string | null;
-    handleItemClick: (item: Furniture) => void;
+    handleItemClick: (item: Furnitures, delta: number) => void;
     handleImageError: (itemId: string) => void;
 }
 

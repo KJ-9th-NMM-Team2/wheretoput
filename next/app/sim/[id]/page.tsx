@@ -24,6 +24,7 @@ import { CameraControlPanel } from '../components/CameraControlPanel.jsx'
 import { KeyboardControls } from '../hooks/KeyboardControls.jsx'
 import { createWallsFromFloorPlan } from '../../wallDetection.js'
 import SimSideView from "@/components/sim/SimSideView"
+import { useSession } from 'next-auth/react'
 
 type position = [number, number, number]
 
@@ -84,6 +85,7 @@ function CameraUpdater() {
   return null;
 }
 
+
 export default function SimPage({ params }: { params: Promise<{ id: string }> }) {
   const controlsRef = useRef(null)
   const { 
@@ -99,7 +101,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
   } = useStore()
   const [wallsData, setWallsData] = useState([])
   const [roomId, setRoomId] = useState(null)
-
+  
   // URL 파라미터에서 room_id 추출 및 자동 로드
   useEffect(() => {
     const initializeSimulator = async () => {
@@ -158,10 +160,12 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
 
   // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
   // camera.position.set(10, 6, 10)
-
+  
+  
   return (
     <div className="flex h-screen overflow-hidden">
-      <SimSideView />
+      {/* {isOwnUserRoom && <SimSideView />} */}
+      <SimSideView roomId={roomId}/>
 
       <div className="flex-1 relative">
         {/* 로딩 상태 표시 */}
