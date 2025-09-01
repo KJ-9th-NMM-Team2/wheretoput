@@ -49,6 +49,7 @@ export function CameraControlPanel() {
             step={1}
             onChange={setCameraFov}
             displayValue={cameraFov}
+            compact
           />
         </div>
 
@@ -78,10 +79,11 @@ function ControlSlider({
       gap: compact ? '3px' : '5px'
     }}>
       <span style={{
-        minWidth: compact ? '12px' : '30px',
-        fontSize: '10px'
+        minWidth: '50px',
+        fontSize: '10px',
+        whiteSpace: 'nowrap'
       }}>
-        {label}:
+        {label}
       </span>
       <input
         type="range"
@@ -94,7 +96,7 @@ function ControlSlider({
       />
       <span style={{
         color: '#ffffff',
-        minWidth: '30px',
+        minWidth: '20px',
         fontSize: '10px',
         textAlign: 'right'
       }}>
