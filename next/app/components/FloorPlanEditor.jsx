@@ -50,6 +50,7 @@ const FloorPlanEditor = () => {
 
   const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
 
+
   // 격자에 스냅하는 함수
   const snapToGrid = (x, y) => {
     return {
@@ -221,10 +222,9 @@ const FloorPlanEditor = () => {
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    // DPR을 고려하지 않고 실제 표시 크기 기준으로 계산
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    return { x, y };
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    return { x: canvasX, y: canvasY };
   };
 
   // 텍스트 그리기 함수 (선 아래에 작게 표시)
@@ -279,10 +279,10 @@ const FloorPlanEditor = () => {
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
-    // 전체 캔버스 클리어 (현재 크기 기준)
+    // 전체 캔버스 클리어
     ctx.clearRect(0, 0, containerRect.width, containerRect.height);
 
-    // 현재 컨테이너 크기를 기준으로 모든 계산 수행
+    // 현재 컨테이너 크기 사용
     const rect = {
       width: containerRect.width,
       height: containerRect.height,
@@ -374,6 +374,9 @@ const FloorPlanEditor = () => {
     ctx.textRenderingOptimization = "optimizeQuality";
     ctx.imageSmoothingEnabled = false; // 격자는 선명하게
 
+    // 격자 크기 사용
+    const gridSize = GRID_SIZE;
+
     // 격자 그리기 - 픽셀 정렬로 선명하게
     ctx.strokeStyle = "#e0e0e0";
     ctx.lineWidth = 0.7;
@@ -382,7 +385,7 @@ const FloorPlanEditor = () => {
     ctx.translate(0.5, 0.5);
 
     // 세로선
-    for (let x = 0; x <= rect.width; x += GRID_SIZE) {
+    for (let x = 0; x <= rect.width; x += gridSize) {
       ctx.beginPath();
       ctx.moveTo(Math.floor(x), 0);
       ctx.lineTo(Math.floor(x), rect.height);
@@ -390,7 +393,7 @@ const FloorPlanEditor = () => {
     }
 
     // 가로선
-    for (let y = 0; y <= rect.height; y += GRID_SIZE) {
+    for (let y = 0; y <= rect.height; y += gridSize) {
       ctx.beginPath();
       ctx.moveTo(0, Math.floor(y));
       ctx.lineTo(rect.width, Math.floor(y));
@@ -657,7 +660,12 @@ const FloorPlanEditor = () => {
   const debouncedRedraw = useCallback(() => {
     // 캐시를 건드리지 않고 단순히 캔버스만 다시 그리기
     drawCanvas();
-  }, [walls, uploadedImage, backgroundOpacity, cachedBackgroundImage]);
+  }, [
+    walls,
+    uploadedImage,
+    backgroundOpacity,
+    cachedBackgroundImage,
+  ]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
@@ -718,6 +726,7 @@ const FloorPlanEditor = () => {
 
   // 축척 설정용 마우스 이벤트 핸들러들
   const handleScaleMouseDown = (e) => {
+    e.preventDefault();
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -731,6 +740,7 @@ const FloorPlanEditor = () => {
   const handleScaleMouseMove = (e) => {
     if (!isDrawingScale || !scaleStartPoint) return;
 
+    e.preventDefault();
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -741,6 +751,7 @@ const FloorPlanEditor = () => {
   const handleScaleMouseUp = (e) => {
     if (!isDrawingScale || !scaleStartPoint) return;
 
+    e.preventDefault();
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -837,22 +848,44 @@ const FloorPlanEditor = () => {
         maxGap: 15, // 선분 간 최대 간격
       });
 
-      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
+      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산 (drawCanvas와 동일한 로직 사용)
       const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = rect.width / result.imageWidth;
-      const scaleY = rect.height / result.imageHeight;
+      const containerRect = canvas.getBoundingClientRect();
+
+      // 이미지 비율과 캔버스 비율 계산 (drawCanvas와 동일)
+      const imgAspect = result.imageWidth / result.imageHeight;
+      const canvasAspect = containerRect.width / containerRect.height;
+
+      let drawWidth, drawHeight, drawX, drawY;
+
+      if (imgAspect > canvasAspect) {
+        // 이미지가 캔버스보다 가로로 긴 경우
+        drawWidth = containerRect.width;
+        drawHeight = containerRect.width / imgAspect;
+        drawX = 0;
+        drawY = (containerRect.height - drawHeight) / 2;
+      } else {
+        // 이미지가 캔버스보다 세로로 긴 경우
+        drawHeight = containerRect.height;
+        drawWidth = containerRect.height * imgAspect;
+        drawX = (containerRect.width - drawWidth) / 2;
+        drawY = 0;
+      }
+
+      // 검출된 좌표를 실제 그려지는 이미지 영역에 맞춰 변환
+      const scaleX = drawWidth / result.imageWidth;
+      const scaleY = drawHeight / result.imageHeight;
 
       // 검출된 선분들을 벽으로 변환하고 격자에 스냅
       const detectedWalls = result.lines.map((line, index) => {
-        // 스케일 적용
+        // 스케일 적용하고 오프셋 추가
         const scaledStart = {
-          x: line.x1 * scaleX,
-          y: line.y1 * scaleY,
+          x: line.x1 * scaleX + drawX,
+          y: line.y1 * scaleY + drawY,
         };
         const scaledEnd = {
-          x: line.x2 * scaleX,
-          y: line.y2 * scaleY,
+          x: line.x2 * scaleX + drawX,
+          y: line.y2 * scaleY + drawY,
         };
 
         // 격자에 스냅
@@ -1011,10 +1044,17 @@ const FloorPlanEditor = () => {
                   src={scaleImage?.url}
                   alt="축척 설정용 이미지"
                   className="w-full max-h-96 object-contain cursor-crosshair block select-none"
-                  style={{ userSelect: "none" }}
+                  style={{
+                    userSelect: "none",
+                    WebkitUserSelect: "none",
+                    MozUserSelect: "none",
+                    msUserSelect: "none",
+                  }}
                   onMouseDown={handleScaleMouseDown}
                   onMouseMove={handleScaleMouseMove}
                   onMouseUp={handleScaleMouseUp}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   draggable={false}
                 />
 
@@ -1289,24 +1329,21 @@ const FloorPlanEditor = () => {
         {/* 캔버스 영역 */}
         <div className="flex-1 p-6 overflow-hidden">
           <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
-            <div
-              ref={containerRef}
-              className="w-full h-full"
-              style={{
-                cursor: tool === "wall" ? "crosshair" : "default",
-              }}
-            >
+            <div ref={containerRef} className="w-full h-full relative">
               <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
+                onContextMenu={(e) => e.preventDefault()}
                 className="block"
                 style={{
                   width: "100%",
                   height: "100%",
+                  cursor: tool === "wall" ? "crosshair" : "default",
                 }}
               />
+
             </div>
           </div>
 
