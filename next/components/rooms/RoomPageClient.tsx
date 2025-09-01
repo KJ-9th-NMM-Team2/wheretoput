@@ -49,7 +49,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   style={{
                     backgroundImage: room?.thumbnail_url
                       ? `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
-     url("${room.thumbnail_url}"), 
+     url("${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}"), 
      url("/placeholder.png")`
                       : `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
      url("/placeholder.png")`,

@@ -8,7 +8,11 @@ export default function HouseCard({ house }: { house: any }) {
       <Link href={`/rooms/${house.room_id}`}>
         <div className="mb-2 w-full aspect-video rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
           <img
-            src={house.thumbnail_url ?? "/placeholder.png"}
+            src={
+              house.thumbnail_url
+                ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${house.thumbnail_url}`
+                : "/placeholder.png"
+            }
             alt={house.title}
             className="w-full h-full object-cover bg-center"
             onError={(e) => {
