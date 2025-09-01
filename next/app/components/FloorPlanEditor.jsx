@@ -35,6 +35,7 @@ const FloorPlanEditor = () => {
   const [eraseAreaEnd, setEraseAreaEnd] = useState(null);
   
   const fileInputRef = useRef(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   // 축척 설정 관련 상태
   const [showScalePopup, setShowScalePopup] = useState(false);
@@ -245,26 +246,33 @@ const FloorPlanEditor = () => {
   // 캔버스 그리기 : 선분 두께 등 수정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    
     const ctx = canvas.getContext("2d");
 
+    // 컨테이너의 실제 크기를 기준으로 캔버스 크기 설정
+    const containerRect = container.getBoundingClientRect();
+    
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
     
-    // 캔버스 실제 해상도 설정
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    // 캔버스 실제 해상도 설정 (컨테이너 크기 기준)
+    canvas.width = containerRect.width * dpr;
+    canvas.height = containerRect.height * dpr;
     
-    // CSS 크기는 원래대로 유지
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
+    // CSS 크기는 컨테이너에 맞춤
+    canvas.style.width = containerRect.width + 'px';
+    canvas.style.height = containerRect.height + 'px';
     
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
     // 전체 캔버스 클리어
-    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.clearRect(0, 0, containerRect.width, containerRect.height);
+
+    // rect를 containerRect로 업데이트
+    const rect = containerRect;
 
     // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
     if (uploadedImage && cachedBackgroundImage) {
@@ -586,11 +594,39 @@ const FloorPlanEditor = () => {
     drawCanvas();
   }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity, cachedBackgroundImage, partialEraserSelectedWall, isSelectingEraseArea, eraseAreaStart, eraseAreaEnd]);
 
+  // 초기 캔버스 설정
+  useEffect(() => {
+    // 컴포넌트 마운트 후 캔버스 초기화
+    const initCanvas = () => {
+      drawCanvas();
+    };
+    
+    // 다음 프레임에서 실행하여 DOM이 완전히 렌더링된 후 처리
+    const timeoutId = setTimeout(initCanvas, 0);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
+
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
+    let resizeTimeout;
+    let resizeObserverTimeout;
+    
     const handleResize = () => {
-      // 리사이즈 후 잠시 대기 후 캔버스 다시 그리기 (레이아웃 안정화)
-      setTimeout(() => {
+      // 이전 타이머 취소
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      
+      // 캔버스 크기를 즉시 업데이트
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+      }
+      
+      // 디바운스된 캔버스 다시 그리기
+      resizeTimeout = setTimeout(() => {
         drawCanvas();
       }, 100);
     };
@@ -602,12 +638,24 @@ const FloorPlanEditor = () => {
     let resizeObserver;
     if (containerRef.current) {
       resizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          // 컨테이너 크기가 변경될 때마다 캔버스 다시 그리기
-          setTimeout(() => {
-            drawCanvas();
-          }, 50);
+        // 이전 타이머 취소
+        if (resizeObserverTimeout) {
+          clearTimeout(resizeObserverTimeout);
         }
+        
+        for (let entry of entries) {
+          // 컨테이너 크기가 변경될 때마다 캔버스 크기 강제 업데이트
+          const canvas = canvasRef.current;
+          if (canvas) {
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+          }
+        }
+        
+        // 디바운스된 캔버스 다시 그리기
+        resizeObserverTimeout = setTimeout(() => {
+          drawCanvas();
+        }, 50);
       });
       resizeObserver.observe(containerRef.current);
     }
@@ -617,8 +665,14 @@ const FloorPlanEditor = () => {
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
+      if (resizeObserverTimeout) {
+        clearTimeout(resizeObserverTimeout);
+      }
     };
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+  }, []); // 의존성을 빈 배열로 변경하여 불필요한 재생성 방지
 
   // 축척 설정용 마우스 이벤트 핸들러들
   const handleScaleMouseDown = (e) => {
@@ -813,35 +867,50 @@ const FloorPlanEditor = () => {
   };
 
   // 시뮬레이터로 이동 핸들러
-  const handleGoToSimulator = () => {
+  const handleGoToSimulator = async () => {
     if (walls.length === 0) {
       alert('먼저 도면을 그려주세요.');
       return;
     }
 
-    // 임시 room_id 생성 (실제 DB 저장은 시뮬레이터에서 저장할 때)
-    const tempRoomId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setIsCreatingRoom(true);
     
-    // 도면 데이터 준비
-    const wallData = {
-      walls: walls,
-      pixelToMmRatio: pixelToMmRatio,
-      timestamp: new Date().getTime(),
-      tempRoomId: tempRoomId,
-      roomData: {
+    try {
+      // 도면 데이터 준비
+      const roomData = {
         title: `Floor Plan Room ${new Date().toLocaleString()}`,
         description: `Generated from floor plan with ${walls.length} walls`,
-        is_public: false
+        is_public: false,
+        walls: walls,
+        pixelToMmRatio: pixelToMmRatio
+      };
+      
+      // 서버에 룸 생성 요청
+      const response = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(roomData)
+      });
+
+      if (!response.ok) {
+        throw new Error('룸 생성에 실패했습니다.');
       }
-    };
-    
-    // localStorage에 도면 데이터 저장
-    localStorage.setItem('floorPlanData', JSON.stringify(wallData));
-    
-    // 임시 room_id로 시뮬레이터 페이지 이동
-    router.push(`/sim/${tempRoomId}`);
-    
-    alert(`${walls.length}개의 벽 데이터를 시뮬레이터로 전송했습니다! 저장 버튼을 눌러야 실제 방이 생성됩니다.`);
+
+      const createdRoom = await response.json();
+      
+      // 생성된 정식 room_id로 시뮬레이터 페이지 이동
+      router.push(`/sim/${createdRoom.id}`);
+      
+      alert(`${walls.length}개의 벽으로 구성된 방이 생성되었습니다! 시뮬레이터에서 꾸며보세요.`);
+      
+    } catch (error) {
+      console.error('Room creation failed:', error);
+      alert('방 생성에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsCreatingRoom(false);
+    }
   };
 
 
@@ -1106,11 +1175,11 @@ const FloorPlanEditor = () => {
           <div className="ml-auto flex gap-2">
             <button
               onClick={handleGoToSimulator}
-              disabled={walls.length === 0}
+              disabled={walls.length === 0 || isCreatingRoom}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check size={18} />
-              선택된 도면으로 우리 집 꾸미기
+              {isCreatingRoom ? '방 생성 중...' : '선택된 도면으로 우리 집 꾸미기'}
             </button>
             <button
               onClick={handleComplete}
