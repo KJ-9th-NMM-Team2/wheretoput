@@ -9,6 +9,7 @@ import {
   Check,
   Upload,
   Trash2,
+  Scissors,
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
@@ -26,6 +27,13 @@ const FloorPlanEditor = () => {
   const [editingWallLength, setEditingWallLength] = useState('');
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
   const [cachedBackgroundImage, setCachedBackgroundImage] = useState(null);
+  
+  // 부분 지우기 관련 상태
+  const [partialEraserSelectedWall, setPartialEraserSelectedWall] = useState(null);
+  const [isSelectingEraseArea, setIsSelectingEraseArea] = useState(false);
+  const [eraseAreaStart, setEraseAreaStart] = useState(null);
+  const [eraseAreaEnd, setEraseAreaEnd] = useState(null);
+  
   const fileInputRef = useRef(null);
 
   // 축척 설정 관련 상태
@@ -100,6 +108,76 @@ const FloorPlanEditor = () => {
         }
         return wall;
       });
+    });
+  };
+
+  // 선분을 부분적으로 잘라내는 함수
+  const partialEraseWall = (wallId, eraseStart, eraseEnd) => {
+    setWalls(prevWalls => {
+      return prevWalls.reduce((newWalls, wall) => {
+        if (wall.id !== wallId) {
+          return [...newWalls, wall];
+        }
+
+        // 선분 위의 점을 선분의 매개변수 t로 변환 (0 <= t <= 1)
+        const getParameterOnLine = (point, lineStart, lineEnd) => {
+          const dx = lineEnd.x - lineStart.x;
+          const dy = lineEnd.y - lineStart.y;
+          const lineLengthSq = dx * dx + dy * dy;
+          
+          if (lineLengthSq === 0) return 0;
+          
+          const t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lineLengthSq;
+          return Math.max(0, Math.min(1, t)); // 0과 1 사이로 제한
+        };
+
+        // 지울 영역의 시작과 끝 매개변수 계산
+        const t1 = getParameterOnLine(eraseStart, wall.start, wall.end);
+        const t2 = getParameterOnLine(eraseEnd, wall.start, wall.end);
+        
+        // t1이 t2보다 작도록 정렬
+        const tStart = Math.min(t1, t2);
+        const tEnd = Math.max(t1, t2);
+
+        // 잘라낼 영역이 너무 작으면 무시
+        if (tEnd - tStart < 0.05) {
+          return [...newWalls, wall];
+        }
+
+        const resultWalls = [];
+
+        // 첫 번째 부분 (시작점부터 지울 영역 시작까지)
+        if (tStart > 0.05) {
+          const newEnd = {
+            x: wall.start.x + (wall.end.x - wall.start.x) * tStart,
+            y: wall.start.y + (wall.end.y - wall.start.y) * tStart
+          };
+          const snappedEnd = snapToGrid(newEnd.x, newEnd.y);
+          
+          resultWalls.push({
+            id: Date.now() + Math.random(),
+            start: wall.start,
+            end: snappedEnd
+          });
+        }
+
+        // 두 번째 부분 (지울 영역 끝부터 끝점까지)
+        if (tEnd < 0.95) {
+          const newStart = {
+            x: wall.start.x + (wall.end.x - wall.start.x) * tEnd,
+            y: wall.start.y + (wall.end.y - wall.start.y) * tEnd
+          };
+          const snappedStart = snapToGrid(newStart.x, newStart.y);
+          
+          resultWalls.push({
+            id: Date.now() + Math.random() + 1,
+            start: snappedStart,
+            end: wall.end
+          });
+        }
+
+        return [...newWalls, ...resultWalls];
+      }, []);
     });
   };
 
@@ -301,10 +379,19 @@ const FloorPlanEditor = () => {
     walls.forEach((wall) => {
       // 선택된 벽인지 확인
       const isSelected = selectedWall?.id === wall.id;
+      const isPartialEraserSelected = partialEraserSelectedWall?.id === wall.id;
       
       // 벽 그리기 (선택된 벽은 다른 색상)
-      ctx.strokeStyle = isSelected ? "#00ff00" : "#ff6600";
-      ctx.lineWidth = isSelected ? 8 : 3;
+      if (isPartialEraserSelected) {
+        ctx.strokeStyle = "#ff0000"; // 부분 지우기 선택된 벽은 빨간색
+        ctx.lineWidth = 5;
+      } else if (isSelected) {
+        ctx.strokeStyle = "#00ff00";
+        ctx.lineWidth = 8;
+      } else {
+        ctx.strokeStyle = "#ff6600";
+        ctx.lineWidth = 3;
+      }
       
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
@@ -322,6 +409,22 @@ const FloorPlanEditor = () => {
 
       drawText(ctx, `${distance}mm`, midX, midY, angle);
     });
+
+    // 부분 지우기 영역 표시 , 컬러설정
+    if (isSelectingEraseArea && eraseAreaStart && eraseAreaEnd) {
+      ctx.strokeStyle = "#0004ffff";
+      ctx.lineWidth = 8;
+      ctx.setLineDash([10, 10]);
+      ctx.globalAlpha = 0.7;
+      
+      ctx.beginPath();
+      ctx.moveTo(eraseAreaStart.x, eraseAreaStart.y);
+      ctx.lineTo(eraseAreaEnd.x, eraseAreaEnd.y);
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1.0;
+    }
 
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
@@ -406,6 +509,30 @@ const FloorPlanEditor = () => {
       if (closestWall) {
         setWalls((prev) => prev.filter((wall) => wall.id !== closestWall.id));
       }
+    } else if (tool === "partial_eraser") {
+      if (!partialEraserSelectedWall) {
+        // 1단계: 벽 선택
+        let closestWall = null;
+        let closestDistance = Infinity;
+        const MAX_SELECT_DISTANCE = 30;
+
+        walls.forEach((wall) => {
+          const distance = getDistanceToWall(coords, wall);
+          if (distance < closestDistance && distance < MAX_SELECT_DISTANCE) {
+            closestDistance = distance;
+            closestWall = wall;
+          }
+        });
+
+        if (closestWall) {
+          setPartialEraserSelectedWall(closestWall);
+        }
+      } else {
+        // 2단계: 지울 영역 선택 시작
+        setIsSelectingEraseArea(true);
+        setEraseAreaStart(coords);
+        setEraseAreaEnd(coords);
+      }
     }
   };
 
@@ -414,6 +541,9 @@ const FloorPlanEditor = () => {
       const coords = getCanvasCoordinates(e);
       const snapped = snapToGrid(coords.x, coords.y);
       setCurrentPoint(snapped);
+    } else if (isSelectingEraseArea && tool === "partial_eraser") {
+      const coords = getCanvasCoordinates(e);
+      setEraseAreaEnd(coords);
     }
   };
 
@@ -436,14 +566,25 @@ const FloorPlanEditor = () => {
       setIsDrawing(false);
       setStartPoint(null);
       setCurrentPoint(null);
+    } else if (isSelectingEraseArea && tool === "partial_eraser" && partialEraserSelectedWall) {
+      // 부분 지우기 실행
+      if (eraseAreaStart && eraseAreaEnd) {
+        partialEraseWall(partialEraserSelectedWall.id, eraseAreaStart, eraseAreaEnd);
+      }
+      
+      // 상태 초기화
+      setIsSelectingEraseArea(false);
+      setPartialEraserSelectedWall(null);
+      setEraseAreaStart(null);
+      setEraseAreaEnd(null);
     }
   };
 
 
-  // 캔버스 다시 그리기
+  // []안의 값이 달라졌다면, 캔버스 다시 그리기
   useEffect(() => {
     drawCanvas();
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity, cachedBackgroundImage]);
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity, cachedBackgroundImage, partialEraserSelectedWall, isSelectingEraseArea, eraseAreaStart, eraseAreaEnd]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
@@ -904,6 +1045,24 @@ const FloorPlanEditor = () => {
             </button>
 
             <button
+              onClick={() => {
+                setTool("partial_eraser");
+                setPartialEraserSelectedWall(null);
+                setIsSelectingEraseArea(false);
+                setEraseAreaStart(null);
+                setEraseAreaEnd(null);
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                tool === "partial_eraser"
+                  ? "bg-orange-500 text-white shadow-md"
+                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+              }`}
+            >
+              <Scissors size={18} />
+              부분 지우기
+            </button>
+
+            <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
               className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
@@ -1110,6 +1269,34 @@ const FloorPlanEditor = () => {
               <p className="text-sm text-orange-600">
                 클릭하여 벽을 삭제할 수 있습니다.
               </p>
+            </div>
+          )}
+
+          {tool === "partial_eraser" && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200">
+              <h4 className="font-medium text-orange-700 mb-2">부분 지우기 모드</h4>
+              {!partialEraserSelectedWall ? (
+                <p className="text-sm text-orange-600">
+                  1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로 표시됩니다)
+                </p>
+              ) : (
+                <div>
+                  <p className="text-sm text-orange-600 mb-2">
+                    2단계: 지울 영역을 드래그하여 선택하세요.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setPartialEraserSelectedWall(null);
+                      setIsSelectingEraseArea(false);
+                      setEraseAreaStart(null);
+                      setEraseAreaEnd(null);
+                    }}
+                    className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  >
+                    선택 취소
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
