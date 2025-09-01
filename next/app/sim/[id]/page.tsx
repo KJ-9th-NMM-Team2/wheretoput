@@ -27,37 +27,63 @@ import SimSideView from "@/components/sim/SimSideView"
 
 type position = [number, number, number]
 
-// 동적 바닥 - 벽 데이터에 따라 크기 조정
+// 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
-  // 벽 데이터가 있으면 벽 영역에 맞게 바닥 크기 계산, 없으면 기본 크기 사용
-  let floorSize = 20; // 기본 크기
-  
-  if (wallsData && wallsData.length > 0) {
-    // 모든 벽의 위치에서 최대/최소값을 찾아 바닥 크기 계산
-    const positions = wallsData.map(wall => wall.position);
-    const xCoords = positions.map(pos => pos[0]);
-    const zCoords = positions.map(pos => pos[2]);
-    
-    const minX = Math.min(...xCoords);
-    const maxX = Math.max(...xCoords);
-    const minZ = Math.min(...zCoords);
-    const maxZ = Math.max(...zCoords);
-    
-    // 여유공간을 포함하여 바닥 크기 결정 (집 느낌을 위해 여유공간 증가)
-    const rangeX = maxX - minX;
-    const rangeZ = maxZ - minZ;
-    floorSize = Math.max(rangeX, rangeZ) + 8; // 4m 여유공간 추가 (기존 2m에서 증가)
-    floorSize = Math.max(floorSize, 15); // 최소 15m 보장 (기존 10m에서 증가)
+  // 벽 데이터가 없으면 기본 바닥 렌더링
+  if (!wallsData || wallsData.length === 0) {
+    return (
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[20, 20]} />
+        <meshStandardMaterial
+          color="#D2B48C"
+          roughness={0.9}
+          metalness={0.0}
+        />
+      </mesh>
+    )
   }
+
+  // 벽들의 2D 좌표를 추출하여 내부 영역 계산
+  const wallLines = wallsData.map(wall => {
+    const { position, rotation, dimensions } = wall
+    const length = dimensions.width
+    const angle = rotation[1] // Y축 회전각
+    
+    // 벽의 시작점과 끝점 계산
+    const halfLength = length / 2
+    const startX = position[0] - Math.cos(angle) * halfLength
+    const startZ = position[2] - Math.sin(angle) * halfLength
+    const endX = position[0] + Math.cos(angle) * halfLength
+    const endZ = position[2] + Math.sin(angle) * halfLength
+    
+    return { startX, startZ, endX, endZ }
+  })
+
+  // 경계 상자 계산
+  const allX = [...wallLines.map(w => w.startX), ...wallLines.map(w => w.endX)]
+  const allZ = [...wallLines.map(w => w.startZ), ...wallLines.map(w => w.endZ)]
+  const minX = Math.min(...allX)
+  const maxX = Math.max(...allX)
+  const minZ = Math.min(...allZ)
+  const maxZ = Math.max(...allZ)
   
+  // 내부 영역 크기 계산 (벽 두께 고려하여 약간 작게)
+  const width = maxX - minX - 0.2 // 벽 두께만큼 빼기
+  const height = maxZ - minZ - 0.2
+  const centerX = (minX + maxX) / 2
+  const centerZ = (minZ + maxZ) / 2
+
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-      <planeGeometry args={[floorSize, floorSize]} />
+    <mesh 
+      position={[centerX, -0.01, centerZ]} 
+      rotation={[-Math.PI / 2, 0, 0]} 
+      receiveShadow
+    >
+      <planeGeometry args={[width, height]} />
       <meshStandardMaterial
         color="#D2B48C"
         roughness={0.9}
         metalness={0.0}
-        normalScale={[1, 1]}
       />
     </mesh>
   )
@@ -80,7 +106,7 @@ function Wall({ width, height, depth = 0.1, position, rotation = [0, 0, 0] }: {
   const materials = [
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 오른쪽
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 왼쪽
-    new THREE.MeshStandardMaterial({ color: '#FF0000', roughness: 0.8, metalness: 0.1 }), // 윗면 (빨간색으로 변경)
+    new THREE.MeshStandardMaterial({ color: '#000000', roughness: 0.8, metalness: 0.1 }), // 윗면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 아랫면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 }), // 앞면
     new THREE.MeshStandardMaterial({ color: '#FFFFFF', roughness: 0.8, metalness: 0.1 })  // 뒷면
