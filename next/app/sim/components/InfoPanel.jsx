@@ -27,7 +27,7 @@ export function InfoPanel() {
       zIndex: 100,
       color: 'white',
       fontSize: '12px',
-      width: '350px',
+      width: '300px',
       maxHeight: '400px',
       overflowY: 'auto'
     }}>
@@ -88,41 +88,41 @@ function ModelItem({
         <ControlSlider
           label="크기"
           value={Array.isArray(model.scale) ? model.scale[0] : model.scale}
+          unit="x"
           min={0.1}
           max={5}
           step={0.1}
           onChange={(value) => onScaleChange(model.id, value)}
-          displayValue={(Array.isArray(model.scale) ? model.scale[0] : model.scale).toFixed(1) + 'x'}
+          compact={true}
         />
         
         {/* 위치 조정 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {['X', 'Y', 'Z'].map((axis, index) => (
-            <ControlSlider
-              key={axis}
-              label={axis}
-              value={model.position[index]}
-              min={axis === 'Y' ? 0 : -10}
-              max={axis === 'Y' ? 5 : 10}
+          <ControlSlider
+              key={'Y'}
+              label={'바닥으로부터의 높이'}
+              value={model.position[1]}
+              unit="m"
+              min={0}
+              max={5}
               step={0.1}
               onChange={(value) => {
                 const newPosition = [...model.position]
-                newPosition[index] = value
+                newPosition[1] = value
                 onPositionChange(model.id, newPosition)
               }}
-              displayValue={model.position[index].toFixed(1)}
               compact={true}
             />
-          ))}
         </div>
         
         {/* 회전 조정 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {['RX', 'RY', 'RZ'].map((axis, index) => (
+          {['X', 'Y', 'Z'].map((axis, index) => (
             <ControlSlider
               key={axis}
-              label={axis}
+              label={`각도 ${axis}`}
               value={(model.rotation[index] * 180 / Math.PI)}
+              unit="°"
               min={-180}
               max={180}
               step={5}
@@ -131,7 +131,6 @@ function ModelItem({
                 newRotation[index] = value * Math.PI / 180
                 onRotationChange(model.id, newRotation)
               }}
-              displayValue={(model.rotation[index] * 180 / Math.PI).toFixed(0) + '°'}
               compact={true}
             />
           ))}
@@ -166,25 +165,61 @@ function ModelItem({
 function ControlSlider({ 
   label, 
   value, 
+  unit,
   min, 
   max, 
   step, 
   onChange, 
-  displayValue, 
   compact = false 
 }) {
   return (
     <div style={{ 
       display: 'flex', 
-      alignItems: 'center', 
+      flexDirection: 'column',
       gap: compact ? '3px' : '5px' 
     }}>
-      <span style={{ 
-        minWidth: compact ? '12px' : '30px', 
-        fontSize: '10px' 
+      {/* 슬라이더 첫번째 줄 */}
+      <div style={{
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        gap: '5px'
       }}>
-        {label}:
-      </span>
+        <span style={{ 
+          minWidth: compact ? '12px' : '30px', 
+          fontSize: '10px' 
+        }}>
+          {label}
+        </span>
+
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          border: '1px solid #ccc',
+          borderRadius: '4px',
+          padding: '0 2px',
+          background: '#fff'
+        }}>
+          <input
+            type="number"
+            value={value}
+            min={min}
+            max={max}
+            step={step}
+            onChange={(e) => onChange(parseFloat(e.target.value))} 
+            style={{ 
+              width: compact ? '40px' : '60px',
+              color: '#000000ff',
+              fontSize: '10px',
+              padding: '2px',
+              textAlign: 'right' 
+            }}
+          />
+          <span style={{ fontSize: '10px', color: '#000000ff' }}>{unit}</span>
+        </div>
+      </div>
+
+      {/* 슬라이더 두번째 줄 */}
       <input
         type="range"
         min={min}
@@ -192,16 +227,8 @@ function ControlSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{ flex: 1 }}
+        style={{ width: '100%' }}
       />
-      <span style={{ 
-        color: '#4CAF50', 
-        minWidth: '30px', 
-        fontSize: '10px',
-        textAlign: 'right'
-      }}>
-        {displayValue}
-      </span>
     </div>
   )
 }
