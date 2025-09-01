@@ -7,6 +7,7 @@ import FurnituresList from "@/components/rooms/FurnituresList";
 import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
+import { Span } from "next/dist/trace";
 
 interface RoomPageClientProps {
   room: any;
@@ -33,6 +34,8 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
 
     checkLikeStatus();
   }, [session?.user?.id, room.room_id]);
+
+  console.log("방 정보:", room);
 
   return (
     <>
@@ -97,6 +100,11 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal">
                 {room.user.name} on {room.updated_at.slice(0, 10)}
               </span>
+                {!room.is_public && (
+                  <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                  비공개
+                  </span>
+                )}
             </div>
             <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
               {room.description}

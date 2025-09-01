@@ -96,30 +96,31 @@ export async function GET(req: NextRequest) {
 
     const rooms = await prisma.rooms.findMany({
       where: {
-        OR: [
-          {
-            title: {
-              contains: query,
-              mode: 'insensitive'
-            }
-          },
-          {
-            user: {
-              name: {
-                contains: query,
-                mode: 'insensitive'
-              }
-            }
+      is_public: true, // 공개 방만 검색
+      OR: [
+        {
+        title: {
+          contains: query,
+          mode: 'insensitive'
+        }
+        },
+        {
+        user: {
+          name: {
+          contains: query,
+          mode: 'insensitive'
           }
-        ],
+        }
+        }
+      ],
       },
       select: {
-        ...getSelectFields(fields),
-        user: {
-          select: {
-            name: true,
-          },
+      ...getSelectFields(fields),
+      user: {
+        select: {
+        name: true,
         },
+      },
       },
       orderBy: getSelectOrder(order),
       ...(num ? { take: parseInt(num) } : {}),

@@ -25,8 +25,16 @@ export default function HouseCard({ house }: { house: any }) {
             {house.title}
           </p>
           <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
-            {`By: ${house.user.name}`}
+            {`By: ${house.user.name}`}{" "}
+            {house.is_public ? (
+              ""
+            ) : (
+              <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                비공개
+              </span>
+            )}
           </p>
+
           <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
             👀 {house.view_count} 👍 {house.num_likes} 💬 {house.num_comments}
           </p>
