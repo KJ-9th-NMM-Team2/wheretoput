@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { convertImageToGLB } from '../../sonnet4_api.js'
+// Trellis API 사용으로 변경
+import { generateTrellisModel } from '../../trellis_api.js'
 import path from 'path'
 import fs from 'fs/promises'
 import https from 'https'
@@ -165,78 +166,38 @@ export async function POST(request) {
     const modelBaseName = `${cleanName}_${furniture_id.substring(0, 8)}` // furniture_id 앞 8자리만 사용
     const tempModelPath = path.join(tempModelDir, `${modelBaseName}.temp`) // 임시 경로
     
-    // 5. sonnet4_api를 사용해 3D 모델로 변환
+    // 5. Trellis API를 사용해 3D 모델로 변환
     console.log('이미지를 3D 모델로 변환 중...')
-    const result = await convertImageToGLB(
-      localImagePath,
-      tempModelPath,
-      [0, 0, 0], // position
-      1 // scale
-    )
+    const result = await generateTrellisModel(furniture_id, furniture.image_url)
     
-    // 6. 실제 생성된 파일을 S3에 업로드
-    let s3Url
-    let finalFilename
-    
-    if (result.filename) {
-      const resultPath = result.filename
-      const resultExt = path.extname(resultPath)
+    // 6. Trellis API 결과 처리 (이미 S3 업로드 및 DB 업데이트가 완료됨)
+    if (result.success && result.model_url) {
+      console.log('Trellis API 3D 변환 및 S3 업로드 완료:', result.model_url)
+      const s3Url = result.model_url
+      const finalFilename = path.basename(s3Url)
       
-      // S3 키 생성 (uploads/ 폴더에 저장)
-      if (resultExt === '.gltf') {
-        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.gltf`
-        const s3Key = `uploads/${finalFilename}`
-        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf+json')
-        console.log(`GLTF 파일 S3 업로드 완료: ${finalFilename}`)
-      } else if (resultExt === '.glb') {
-        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.glb`
-        const s3Key = `uploads/${finalFilename}`
-        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf-binary')
-        console.log(`GLB 파일 S3 업로드 완료: ${finalFilename}`)
-      } else {
-        // 기본값은 GLB로 설정
-        finalFilename = `${timestamp}-${randomId}-${modelBaseName}.glb`
-        const s3Key = `uploads/${finalFilename}`
-        s3Url = await uploadToS3(resultPath, s3Key, 'model/gltf-binary')
-        console.log(`기본 GLB 확장자로 S3 업로드: ${finalFilename}`)
-      }
-      
-      // 임시 파일 삭제
+      console.log('3D 변환 성공:', finalFilename)
+
+      // 7. 임시 파일 정리
       try {
-        await fs.unlink(resultPath)
-        console.log('임시 3D 모델 파일 삭제 완료')
+        await fs.unlink(localImagePath)
+        console.log('임시 이미지 파일 삭제 완료')
       } catch (err) {
-        console.warn('임시 3D 모델 파일 삭제 실패:', err.message)
+        console.warn('임시 이미지 파일 삭제 실패:', err.message)
       }
+
+      console.log('S3 업로드 및 DB 업데이트 완료:', s3Url)
+
+      return NextResponse.json({
+        success: true,
+        furniture_id: furniture_id,
+        model_url: s3Url,
+        filename: finalFilename,
+        message: 'S3에 3D 모델 업로드 및 DB 업데이트 완료'
+      })
     } else {
-      throw new Error('3D 모델 변환 결과 파일이 없습니다.')
+      throw new Error('Trellis API 3D 모델 생성에 실패했습니다.')
     }
-    
-    console.log('3D 변환 성공:', finalFilename)
-
-    // 7. DB의 model_url 컬럼을 S3 URL로 업데이트
-    const updatedFurniture = await prisma.furnitures.update({
-      where: { furniture_id: furniture_id },
-      data: { model_url: s3Url }
-    })
-
-    // 8. 임시 파일 정리
-    try {
-      await fs.unlink(localImagePath)
-      console.log('임시 이미지 파일 삭제 완료')
-    } catch (err) {
-      console.warn('임시 이미지 파일 삭제 실패:', err.message)
-    }
-
-    console.log('S3 업로드 및 DB 업데이트 완료:', s3Url)
-
-    return NextResponse.json({
-      success: true,
-      furniture_id: furniture_id,
-      model_url: s3Url,
-      filename: finalFilename,
-      message: 'S3에 3D 모델 업로드 및 DB 업데이트 완료'
-    })
 
   } catch (error) {
     console.error('3D 모델 생성/업로드 오류:', error)
