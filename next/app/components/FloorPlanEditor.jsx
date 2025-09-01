@@ -23,6 +23,8 @@ const FloorPlanEditor = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedWall, setSelectedWall] = useState(null);
+  const [editingWallLength, setEditingWallLength] = useState('');
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
   const fileInputRef = useRef(null);
 
   // 축척 설정 관련 상태
@@ -62,6 +64,42 @@ const FloorPlanEditor = () => {
     }
     
     return result;
+  };
+
+  // 벽 길이 조정 함수
+  const adjustWallLength = (wallId, newLengthMm) => {
+    setWalls(prevWalls => {
+      return prevWalls.map(wall => {
+        if (wall.id === wallId) {
+          const currentLength = calculateDistance(wall.start, wall.end);
+          if (currentLength === 0) return wall;
+          
+          // 현재 벡터 계산
+          const dx = wall.end.x - wall.start.x;
+          const dy = wall.end.y - wall.start.y;
+          const currentPixelLength = Math.sqrt(dx * dx + dy * dy);
+          
+          // 새로운 픽셀 길이 계산
+          const newPixelLength = newLengthMm / pixelToMmRatio;
+          const scale = newPixelLength / currentPixelLength;
+          
+          // 새로운 끝점 계산 (시작점 고정)
+          const newEnd = {
+            x: wall.start.x + dx * scale,
+            y: wall.start.y + dy * scale
+          };
+          
+          // 격자에 스냅
+          const snappedEnd = snapToGrid(newEnd.x, newEnd.y);
+          
+          return {
+            ...wall,
+            end: snappedEnd
+          };
+        }
+        return wall;
+      });
+    });
   };
 
   // 점과 선분 사이의 거리 계산
@@ -149,6 +187,47 @@ const FloorPlanEditor = () => {
     // 전체 캔버스 클리어
     ctx.clearRect(0, 0, rect.width, rect.height);
 
+    // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
+    if (uploadedImage) {
+      const img = new Image();
+      img.onload = () => {
+        // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+        const imgAspect = img.width / img.height;
+        const canvasAspect = rect.width / rect.height;
+        
+        let drawWidth, drawHeight, drawX, drawY;
+        
+        if (imgAspect > canvasAspect) {
+          // 이미지가 캔버스보다 가로로 긴 경우
+          drawWidth = rect.width;
+          drawHeight = rect.width / imgAspect;
+          drawX = 0;
+          drawY = (rect.height - drawHeight) / 2;
+        } else {
+          // 이미지가 캔버스보다 세로로 긴 경우
+          drawHeight = rect.height;
+          drawWidth = rect.height * imgAspect;
+          drawX = (rect.width - drawWidth) / 2;
+          drawY = 0;
+        }
+        
+        // 투명도 설정 (배경 이미지가 격자와 벽을 가리지 않도록)
+        ctx.globalAlpha = backgroundOpacity;
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.globalAlpha = 1.0;
+        
+        // 이미지 그리기 완료 후 격자와 벽 다시 그리기
+        drawGridAndWalls(ctx, rect);
+      };
+      img.src = uploadedImage;
+    } else {
+      // 배경 이미지가 없는 경우 바로 격자와 벽 그리기
+      drawGridAndWalls(ctx, rect);
+    }
+  };
+
+  // 격자와 벽 그리기 함수 분리
+  const drawGridAndWalls = (ctx, rect) => {
     // 텍스트 렌더링 품질 개선
     ctx.textRenderingOptimization = 'optimizeQuality';
     ctx.imageSmoothingEnabled = false; // 격자는 선명하게
@@ -262,9 +341,16 @@ const FloorPlanEditor = () => {
       });
 
       if (closestWall) {
-        setSelectedWall(selectedWall?.id === closestWall.id ? null : closestWall);
+        const newSelectedWall = selectedWall?.id === closestWall.id ? null : closestWall;
+        setSelectedWall(newSelectedWall);
+        if (newSelectedWall) {
+          setEditingWallLength(calculateDistance(newSelectedWall.start, newSelectedWall.end).toString());
+        } else {
+          setEditingWallLength('');
+        }
       } else {
         setSelectedWall(null);
+        setEditingWallLength('');
       }
     } else if (tool === "eraser") {
       // 클릭 위치에서 가장 가까운 벽 찾기
@@ -321,7 +407,7 @@ const FloorPlanEditor = () => {
   // 캔버스 다시 그리기
   useEffect(() => {
     drawCanvas();
-  }, [walls, isDrawing, startPoint, currentPoint, selectedWall]);
+  }, [walls, isDrawing, startPoint, currentPoint, selectedWall, uploadedImage, backgroundOpacity]);
 
   // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
   useEffect(() => {
@@ -797,6 +883,19 @@ const FloorPlanEditor = () => {
               <Trash2 size={18} />
               전체 지우기
             </button>
+
+            {uploadedImage && (
+              <button
+                onClick={() => {
+                  setUploadedImage(null);
+                  alert('배경 이미지가 제거되었습니다.');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                <Trash2 size={18} />
+                배경 제거
+              </button>
+            )}
           </div>
 
           <input
@@ -869,6 +968,36 @@ const FloorPlanEditor = () => {
             도구 정보
           </h3>
 
+          {/* 배경 이미지 투명도 조정 */}
+          {uploadedImage && (
+            <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
+              <h4 className="font-medium text-orange-700 mb-2">배경 이미지 설정</h4>
+              <div className="mb-2">
+                <label className="block text-sm text-orange-600 mb-1">
+                  투명도: {Math.round(backgroundOpacity * 100)}%
+                </label>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.1"
+                  value={backgroundOpacity}
+                  onChange={(e) => setBackgroundOpacity(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  setUploadedImage(null);
+                  alert('배경 이미지가 제거되었습니다.');
+                }}
+                className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+              >
+                배경 이미지 제거
+              </button>
+            </div>
+          )}
+
           {tool === "wall" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200">
               <h4 className="font-medium text-orange-700 mb-2">
@@ -891,16 +1020,44 @@ const FloorPlanEditor = () => {
               </p>
               {selectedWall && (
                 <div className="bg-green-50 p-3 rounded border border-green-200">
-                  <h5 className="font-medium text-green-700 mb-1">선택된 벽</h5>
-                  <p className="text-sm text-green-600">
-                    길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
+                  <h5 className="font-medium text-green-700 mb-2">선택된 벽</h5>
+                  <p className="text-sm text-green-600 mb-2">
+                    현재 길이: {calculateDistance(selectedWall.start, selectedWall.end)}mm
                   </p>
+                  
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-green-700 mb-1">
+                      길이 조정 (mm):
+                    </label>
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        value={editingWallLength}
+                        onChange={(e) => setEditingWallLength(e.target.value)}
+                        className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                        placeholder="길이 입력"
+                      />
+                      <button
+                        onClick={() => {
+                          const newLength = parseFloat(editingWallLength);
+                          if (newLength && newLength > 0) {
+                            adjustWallLength(selectedWall.id, newLength);
+                          }
+                        }}
+                        className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                      >
+                        적용
+                      </button>
+                    </div>
+                  </div>
+                  
                   <button
                     onClick={() => {
                       setWalls((prev) => prev.filter((wall) => wall.id !== selectedWall.id));
                       setSelectedWall(null);
+                      setEditingWallLength('');
                     }}
-                    className="mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                    className="w-full px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
                   >
                     삭제
                   </button>
