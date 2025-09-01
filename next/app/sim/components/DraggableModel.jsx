@@ -16,6 +16,16 @@ export function DraggableModel({
   isCityKit = false,
   type = "glb",
 }) {
+  // scale 값을 안전하게 처리
+  const safeScale = (() => {
+    if (Array.isArray(scale)) {
+      return scale.map(s => Math.max(s || 1, 0.001));
+    } else if (typeof scale === 'number' && scale > 0) {
+      return [scale, scale, scale];
+    } else {
+      return [1, 1, 1];
+    }
+  })();
   console.log(texturePath, isCityKit);
   const meshRef = useRef();
 
@@ -61,25 +71,42 @@ export function DraggableModel({
 
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
   useEffect(() => {
-    if (meshRef.current) {
+    if (scene && meshRef.current) {
+      console.log(`Setting up model ${modelId} with scale:`, safeScale);
+      
       meshRef.current.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           child.userData.modelId = modelId;
           child.userData.clickable = true;
+          child.visible = true; // 명시적으로 visible 설정
+          
+          // 재질이 투명하지 않도록 확인
+          if (child.material) {
+            if (child.material.transparent === undefined || child.material.opacity === 0) {
+              child.material.transparent = false;
+              child.material.opacity = 1;
+            }
+            child.material.needsUpdate = true;
+          }
 
           // City Kit 텍스처 적용
           if (isCityKit && texture) {
             const newMaterial = child.material.clone();
             newMaterial.map = texture;
+            newMaterial.transparent = false;
+            newMaterial.opacity = 1;
             newMaterial.needsUpdate = true;
             child.material = newMaterial;
           }
         }
       });
+      
+      // 전체 group도 visible 설정
+      meshRef.current.visible = true;
     }
-  }, [scene, animations, modelId, isCityKit, texture, type]);
+  }, [scene, animations, modelId, isCityKit, texture, type, safeScale]);
 
   // City Kit 텍스처 재적용 (선택된 경우)
   useFrame((state, delta) => {
@@ -112,11 +139,29 @@ export function DraggableModel({
 
   // 선택 표시 박스 크기 결정
   const getSelectionBoxSize = () => {
-    const box = new THREE.Box3().setFromObject(scene);
-    const boxSize = new THREE.Vector3();
-    box.getSize(boxSize);
-
-    return [boxSize.x, boxSize.y, boxSize.z];
+    if (!scene || !meshRef.current) {
+      return [1, 1, 1]; // 기본값
+    }
+    
+    try {
+      const box = new THREE.Box3().setFromObject(meshRef.current);
+      if (box.isEmpty()) {
+        return [1, 1, 1]; // 빈 박스인 경우 기본값
+      }
+      
+      const boxSize = new THREE.Vector3();
+      box.getSize(boxSize);
+      
+      // 크기가 너무 작거나 0인 경우 기본값 사용
+      const x = Math.max(boxSize.x || 1, 0.1);
+      const y = Math.max(boxSize.y || 1, 0.1);
+      const z = Math.max(boxSize.z || 1, 0.1);
+      
+      return [x, y, z];
+    } catch (error) {
+      console.warn('Failed to calculate selection box size:', error);
+      return [1, 1, 1];
+    }
   };
 
   return (
@@ -126,21 +171,21 @@ export function DraggableModel({
           ref={meshRef}
           position={position}
           rotation={rotation}
-          scale={[scale, scale, scale]}
+          scale={safeScale}
         >
-          <primitive object={scene.clone()} />
+          <primitive object={scene} />
         </group>
       ) : (
         <group
           ref={meshRef}
           position={position}
           rotation={rotation}
-          scale={[scale, scale, scale]}
+          scale={safeScale}
           onPointerDown={handlePointerDown}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
         >
-          <primitive object={scene.clone()} />
+          <primitive object={scene} />
 
           {(isSelected || isHovering) && (
             <mesh>
