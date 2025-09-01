@@ -107,39 +107,35 @@ function Wall({
     const updateTransparency = () => {
       if (!meshRef.current) return;
 
-      // 벽의 월드 위치와 회전 가져오기
       const wallWorldPosition = new THREE.Vector3();
       meshRef.current.getWorldPosition(wallWorldPosition);
 
       const wallWorldQuaternion = new THREE.Quaternion();
       meshRef.current.getWorldQuaternion(wallWorldQuaternion);
 
-      // 벽의 법선 벡터 (벽의 앞면 방향, Z축 기준)
       const wallNormal = new THREE.Vector3(0, 0, 1);
       wallNormal.applyQuaternion(wallWorldQuaternion);
 
-      // 카메라에서 벽으로의 방향 벡터
       let cameraToWall = new THREE.Vector3()
-        .subVectors(wallWorldPosition, camera.position);
-      cameraToWall.y = 0;
-      cameraToWall.normalize();
+        .subVectors(camera.position, wallWorldPosition)
+        .normalize();
 
-      // 벽의 법선과 카메라 방향 간의 내적 계산
       const dotProduct = wallNormal.dot(cameraToWall);
 
-      // 내적이 양수면 벽을 정면으로 보고 있음 (투명)
-      // 내적이 음수면 벽을 뒤에서 보고 있음 (반투명)
-      // 부드러운 전환을 위해 절댓값 사용
-      const facingRatio = Math.abs(dotProduct);
+      // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
+      const t = 1 - Math.abs(dotProduct);
 
-      const startDot = 0.5;
-      const endOpacity = 0.2;
+      // ease-in-out 적용
+      const ease = t * t * (3 - 2 * t);
 
-      const newOpacity = facingRatio > 0.8 ? 4.2 - 4 * facingRatio : 1;
+      // 정면(불투명)~뒤(투명) 보간
+      const minOpacity = 0.2;
+      const maxOpacity = 0.95;
+      const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+
       setOpacity(newOpacity);
     };
 
-    // 애니메이션 프레임마다 투명도 업데이트
     const animate = () => {
       updateTransparency();
       requestAnimationFrame(animate);

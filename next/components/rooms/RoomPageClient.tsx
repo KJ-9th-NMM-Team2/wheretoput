@@ -37,6 +37,12 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
 
   console.log("방 정보:", room);
 
+  // 동일 가구 포함 x
+  const uniqueFurnituresByRoom = Array.from(
+    new Map(room.room_objects.map((o: any) => [o.furniture_id, o])).values()
+  );
+  console.log(uniqueFurnituresByRoom);
+
   return (
     <>
       <div className="layout-container flex h-full grow flex-col">
@@ -108,7 +114,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
             <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               가구 프리뷰
             </h2>
-            <FurnituresList room_objects={room.room_objects} />
+            <FurnituresList room_objects={uniqueFurnituresByRoom} />
 
             <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               댓글 ({room.num_comments})
