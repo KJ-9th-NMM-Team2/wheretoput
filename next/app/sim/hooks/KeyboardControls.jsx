@@ -43,8 +43,8 @@ export function KeyboardControls({ controlsRef }) {
     if (keys.current["KeyA"]) move.add(right);
     if (keys.current["KeyD"]) move.add(right.clone().negate());
 
-    if (keys.current["Space"] && !keys.current["ShiftLeft"]) move.add(new THREE.Vector3(0, 1, 0));
-    if (keys.current["ShiftLeft"] && !keys.current["Space"]) move.add(new THREE.Vector3(0, -1, 0));
+    if (keys.current["KeyQ"]) move.add(new THREE.Vector3(0, 1, 0));
+    if (keys.current["KeyE"]) move.add(new THREE.Vector3(0, -1, 0));
 
     if (move.lengthSq() > 0) {
       move.normalize().multiplyScalar(speed * delta);

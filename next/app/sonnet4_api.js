@@ -342,7 +342,7 @@ function createFallbackObject(position = [0, 0, 0], scale = 1) {
   return group;
 }
 
-// 사용 예시
+// [09.01] 수정 - main 함수
 async function main() {
   try {
     // 이미지 파일 경로와 출력할 GLTF 파일명 지정

@@ -215,8 +215,6 @@ export default function SimPage({
 
   // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
 
-  // const camera = new THREE.PerspectiveCamera(cameraFov, 2, 0.1, 1000)
-  // camera.position.set(10, 6, 10)
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -288,7 +286,7 @@ export default function SimPage({
         <CameraControlPanel />
 
         <Canvas
-          camera={{ position: [-30, 20, 0], fov: 60 }}
+          camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
           style={{ width: "100%", height: "100vh" }}
           frameloop="demand"

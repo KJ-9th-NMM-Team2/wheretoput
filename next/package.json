@@ -26,9 +26,11 @@
     "next": "15.5.2",
     "next-auth": "^5.0.0-beta.29",
     "next-swagger-doc": "^0.4.1",
+    "node-fetch": "^3.3.2",
     "postprocessing": "^6.37.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "replicate": "^1.1.0",
     "sass": "^1.91.0",
     "socket.io-client": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
@@ -50,5 +52,6 @@
     "prisma": "^6.15.0",
     "tailwindcss": "^4.1.12",
     "typescript": "5.9.2"
-  }
+  },
+  "type": "module"
 }
