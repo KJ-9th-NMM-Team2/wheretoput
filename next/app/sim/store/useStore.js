@@ -11,6 +11,10 @@ function sphericalToCartesian(radius, azimuth, elevation) {
 
 export const useStore = create(
   subscribeWithSelector((set, get) => ({
+    // 보기/편집 모드
+    viewOnly: false,
+    setViewOnly: (value) => set({ viewOnly: value }),
+
     // 모델 관련 상태
     loadedModels: [],
     selectedModelId: null,

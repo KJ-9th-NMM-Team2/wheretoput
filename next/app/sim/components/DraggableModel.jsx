@@ -20,6 +20,7 @@ export function DraggableModel({
 
   // Zustand 스토어 사용
   const {
+    viewOnly,
     selectedModelId,
     hoveringModelId,
     selectModel,
@@ -118,36 +119,40 @@ export function DraggableModel({
 
   return (
     <>
-      <group
-        ref={meshRef}
-        position={position}
-        rotation={rotation}
-        scale={[scale, scale, scale]}
-        onPointerDown={handlePointerDown}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-      >
-        <primitive object={scene.clone()} />
+      {viewOnly ?
+        <group
+          ref={meshRef}
+          position={position}
+          rotation={rotation}
+          scale={[scale, scale, scale]}
+        >
+          <primitive object={scene.clone()} />
+        </group>
+        :
+        <group
+          ref={meshRef}
+          position={position}
+          rotation={rotation}
+          scale={[scale, scale, scale]}
+          onPointerDown={handlePointerDown}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <primitive object={scene.clone()} />
 
-        {(isSelected || isHovering) && (
-          <mesh>
-            <boxGeometry args={getSelectionBoxSize()} />
-            <meshBasicMaterial
-              color={isSelected ? "#00ff00" : "#0000ff"}
-              wireframe
-              transparent
-              opacity={0.5}
-            />
-          </mesh>
-        )}
-
-        {/* 투명한 히트박스 */}
-        {/* 이 컴포넌트가 클릭 선택 관련 이슈를 일으켜서 주석 처리합니다 */}
-        {/* <mesh visible={false}>
-          <boxGeometry args={getSelectionBoxSize()} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh> */}
-      </group>
+          {(isSelected || isHovering) && (
+            <mesh>
+              <boxGeometry args={getSelectionBoxSize()} />
+              <meshBasicMaterial
+                color={isSelected ? "#00ff00" : "#0000ff"}
+                wireframe
+                transparent
+                opacity={0.5}
+              />
+            </mesh>
+          )}
+        </group>
+      }
     </>
   )
 }
