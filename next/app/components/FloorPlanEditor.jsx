@@ -36,8 +36,6 @@ const FloorPlanEditor = () => {
   const [pixelToMmRatio, setPixelToMmRatio] = useState(20); // 1픽셀 = 20mm (기본값)
 
   const GRID_SIZE = 20; // 격자 크기 축소 (500mm당 25px)
-  const CANVAS_WIDTH = 600; // 캔버스 크기 축소
-  const CANVAS_HEIGHT = 300;
 
   // 격자에 스냅하는 함수
   const snapToGrid = (x, y) => {
@@ -844,8 +842,6 @@ const FloorPlanEditor = () => {
             >
               <canvas
                 ref={canvasRef}
-                width={600}
-                height={300}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
