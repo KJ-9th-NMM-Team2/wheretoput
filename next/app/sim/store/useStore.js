@@ -268,100 +268,131 @@ export const useStore = create(
     },
 
     // 시뮬레이터 상태 로드
-    loadSimulatorState: async (roomId) => {
-      set({ isLoading: true });
+loadSimulatorState: async (roomId) => {
+  set({ isLoading: true });
 
-      try {
-        const response = await fetch(`/api/sim/load/${roomId}`);
-        
-        if (!response.ok) {
-          throw new Error(`로드 실패: ${response.statusText}`);
-        }
+  try {
+    const response = await fetch(`/api/sim/load/${roomId}`);
+    
+    if (!response.ok) {
+      throw new Error(`로드 실패: ${response.statusText}`);
+    }
 
-        const result = await response.json();
-        
-        // 기존 모델들 정리
-        const currentState = get();
-        currentState.loadedModels.forEach(model => {
-          if (model.url) URL.revokeObjectURL(model.url);
-        });
+    const result = await response.json();
+    
+    // 기존 모델들 정리
+    const currentState = get();
+    currentState.loadedModels.forEach(model => {
+      if (model.url) URL.revokeObjectURL(model.url);
+    });
 
-        // 로드된 객체들을 loadedModels에 설정
-        const loadedModels = result.objects.map(obj => ({
-          id: obj.id,
-          object_id: obj.object_id,
-          furniture_id: obj.furniture_id,
-          name: obj.name, // InfoPanel에서 사용하는 name 속성 추가
-          position: obj.position,
-          rotation: obj.rotation,
-          scale: obj.scale,
-          url: obj.url,
-          isCityKit: obj.isCityKit,
-          texturePath: obj.texturePath,
-          type: obj.type,
-          furnitureName: obj.furnitureName,
-          categoryId: obj.categoryId
-        }));
+    // 로드된 객체들을 loadedModels에 설정
+    const loadedModels = result.objects.map(obj => ({
+      id: obj.id,
+      object_id: obj.object_id,
+      furniture_id: obj.furniture_id,
+      name: obj.name,
+      position: obj.position,
+      rotation: obj.rotation,
+      scale: obj.scale,
+      url: obj.url,
+      isCityKit: obj.isCityKit,
+      texturePath: obj.texturePath,
+      type: obj.type,
+      furnitureName: obj.furnitureName,
+      categoryId: obj.categoryId
+    }));
 
-        // 벽 데이터 처리 (이미 적절한 크기로 저장되어 있음)
-        console.log('API에서 받은 벽 데이터:', result.walls);
-        const wallsData = result.walls ? result.walls.map(wall => ({
+    // --- 🚩 벽 데이터 처리 로직 수정 시작 ---
+    // [09.01] 수정 : scaleFactor 로 벽 비율 수정하시면 됩니다.
+    let wallsData = [];
+    const scaleFactor = 3.5; // 원하는 배율 설정 
+
+    if (result.walls && result.walls.length > 0) {
+      // 1. 모든 벽들의 기하학적 중심점을 계산합니다.
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      result.walls.forEach(wall => {
+        minX = Math.min(minX, wall.position[0]);
+        maxX = Math.max(maxX, wall.position[0]);
+        minZ = Math.min(minZ, wall.position[2]);
+        maxZ = Math.max(maxZ, wall.position[2]);
+      });
+      const centerX = (minX + maxX) / 2;
+      const centerZ = (minZ + maxZ) / 2;
+
+      // 2. 계산된 중심점을 기준으로 각 벽의 위치와 크기를 다시 계산합니다.
+      wallsData = result.walls.map(wall => {
+        // 중심점으로부터의 상대적 위치
+        const relativeX = wall.position[0] - centerX;
+        const relativeZ = wall.position[2] - centerZ;
+
+        // 상대 위치에 scaleFactor를 곱한 후, 다시 중심점을 더해 새 위치를 구함
+        const newX = centerX + relativeX * scaleFactor;
+        const newZ = centerZ + relativeZ * scaleFactor;
+
+        return {
           id: wall.id,
           dimensions: {
-            width: wall.length,
+            // 중요: 벽의 길이도 스케일에 맞게 늘려줍니다.
+            width: wall.length * scaleFactor,
             height: wall.height,
             depth: wall.depth
           },
           position: [
-            wall.position[0],
-            wall.position[1],
-            wall.position[2]
+            newX,
+            wall.position[1], // 높이(y) 위치는 그대로 유지
+            newZ
           ],
           rotation: wall.rotation
-        })) : [];
-        console.log('변환된 벽 데이터:', wallsData);
-        
-        // 첫 번째 벽의 상세 정보 확인
-        if (wallsData.length > 0) {
-          console.log('첫 번째 벽 상세:', {
-            id: wallsData[0].id,
-            dimensions: wallsData[0].dimensions,
-            position: wallsData[0].position,
-            rotation: wallsData[0].rotation
-          });
-        }
-
-        set({ 
-          loadedModels: loadedModels,
-          wallsData: wallsData,
-          currentRoomId: roomId,
-          selectedModelId: null,
-          currentRoomInfo: {
-            title: result.room_info?.title || '',
-            description: result.room_info?.description || '',
-            is_public: result.room_info?.is_public || false
-          }
-        });
-
-        console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${result.walls_count || 0}개 벽`);
-        console.log('로드된 객체들:', loadedModels);
-        loadedModels.forEach((model, index) => {
-          console.log(`모델 ${index}:`, {
-            id: model.id,
-            name: model.name,
-            position: model.position,
-            scale: model.scale,
-            url: model.url
-          });
-        });
-        return result;
-
-      } catch (error) {
-        console.error('로드 중 오류:', error);
-        throw error;
-      } finally {
-        set({ isLoading: false });
-      }
+        };
+      });
     }
+    
+    console.log(`스케일(${scaleFactor}배)이 적용된 벽 데이터:`, wallsData);
+    
+    // --- 🚩 벽 데이터 처리 로직 수정 끝 ---
+    
+    // 첫 번째 벽의 상세 정보 확인 (디버깅용)
+    if (wallsData.length > 0) {
+      console.log('첫 번째 벽 상세:', {
+        id: wallsData[0].id,
+        dimensions: wallsData[0].dimensions,
+        position: wallsData[0].position,
+        rotation: wallsData[0].rotation
+      });
+    }
+
+    set({ 
+      loadedModels: loadedModels,
+      wallsData: wallsData,
+      currentRoomId: roomId,
+      selectedModelId: null,
+      currentRoomInfo: {
+        title: result.room_info?.title || '',
+        description: result.room_info?.description || '',
+        is_public: result.room_info?.is_public || false
+      }
+    });
+
+    console.log(`시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`);
+    console.log('로드된 객체들:', loadedModels);
+    loadedModels.forEach((model, index) => {
+      console.log(`모델 ${index}:`, {
+        id: model.id,
+        name: model.name,
+        position: model.position,
+        scale: model.scale,
+        url: model.url
+      });
+    });
+    return result;
+
+  } catch (error) {
+    console.error('로드 중 오류:', error);
+    throw error;
+  } finally {
+    set({ isLoading: false });
+  }
+}
   }))
 )

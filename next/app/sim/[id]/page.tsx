@@ -1,20 +1,8 @@
 'use client'
-// 시뮬레이터 페이지 - 수연, 성진
-// app\sim\[id]\page.tsx 에 있어야 합니다.
-// export default async function SimPage({
-//   params,
-// }: {
-//   params: Promise<{ id: string }>;
-// }) {
-//   const { id } = await params;  // /pages/[id]에 해당하는 id 값
-//   return <h1>시뮬레이터 페이지 - id {id}</h1>;
-// }
-
 import React, { useRef, Suspense, useState, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-
 import { useStore } from '../store/useStore.js'
 import { ControlPanel } from '../components/ControlPanel.jsx'
 import { InfoPanel } from '../components/InfoPanel.jsx'
