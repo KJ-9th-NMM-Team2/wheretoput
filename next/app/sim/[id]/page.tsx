@@ -153,7 +153,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     wallsData
   } = useStore()
   const [roomId, setRoomId] = useState(null)
-
+  
   // URL 파라미터에서 room_id 추출 및 자동 로드
   useEffect(() => {
     const initializeSimulator = async () => {
@@ -195,7 +195,7 @@ export default function SimPage({ params }: { params: Promise<{ id: string }> })
     <div className="flex h-screen overflow-hidden">
       {!viewOnly && (
           <>
-            <SimSideView />
+            <SimSideView roomId={roomId} />
           </>
         )}
 

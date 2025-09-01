@@ -1,4 +1,5 @@
 import { fetchRoomById } from "@/lib/api/rooms";
+
 import RoomPageClient from "@/components/rooms/RoomPageClient";
 
 export default async function RoomPage({
@@ -8,6 +9,5 @@ export default async function RoomPage({
 }) {
   const { id } = await params;
   const room: any = await fetchRoomById(id);
-
   return <RoomPageClient room={room} />;
 }
