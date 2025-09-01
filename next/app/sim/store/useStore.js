@@ -275,29 +275,19 @@ loadSimulatorState: async (roomId) => {
     }));
 
     // 벽 데이터 처리
-    console.log('API에서 받은 벽 데이터:', result.walls);
     let wallsData = [];
     if (result.walls && result.walls.length > 0) {
-      console.log(`${result.walls.length}개의 벽 데이터 처리 중...`);
-      wallsData = result.walls.map(wall => {
-        console.log('벽 원본 데이터:', wall);
-        const transformedWall = {
-          id: wall.id,
-          dimensions: {
-            width: wall.length,
-            height: wall.height,
-            depth: wall.depth
-          },
-          position: wall.position,
-          rotation: wall.rotation
-        };
-        console.log('변환된 벽 데이터:', transformedWall);
-        return transformedWall;
-      });
-    } else {
-      console.log('벽 데이터가 없거나 빈 배열입니다:', { walls: result.walls, hasWalls: !!result.walls, length: result.walls?.length });
+      wallsData = result.walls.map(wall => ({
+        id: wall.id,
+        dimensions: {
+          width: wall.length,
+          height: wall.height,
+          depth: wall.depth
+        },
+        position: wall.position,
+        rotation: wall.rotation
+      }));
     }
-    console.log('최종 wallsData:', wallsData);
 
     set({ 
       loadedModels: loadedModels,

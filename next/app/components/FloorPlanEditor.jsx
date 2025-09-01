@@ -228,7 +228,14 @@ const FloorPlanEditor = () => {
   const drawText = (ctx, text, x, y, angle = 0) => {
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(angle);
+    
+    // 텍스트가 거꾸로 보이지 않도록 각도 조정
+    let adjustedAngle = angle;
+    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+      adjustedAngle = angle + Math.PI;
+    }
+    
+    ctx.rotate(adjustedAngle);
     ctx.fillStyle = "#333333";
     ctx.font = "bold 17px 'Segoe UI', Arial, sans-serif";
     ctx.textAlign = "center";
