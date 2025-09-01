@@ -15,6 +15,7 @@ import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
 import { createWallsFromFloorPlan } from "../../wallDetection.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
+import { Environment } from "@react-three/drei";
 
 type position = [number, number, number];
 
@@ -215,7 +216,6 @@ export default function SimPage({
 
   // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
 
-
   return (
     <div className="flex h-screen overflow-hidden">
       {!viewOnly && (
@@ -291,6 +291,7 @@ export default function SimPage({
           style={{ width: "100%", height: "100vh" }}
           frameloop="demand"
         >
+          <Environment preset="apartment" background={false} />
           {/* {cameraMode == "perspective" ? (
             <PerspectiveCamera makeDefault fov={cameraFov} position={[-20, 15, 0]} />
           ) : (

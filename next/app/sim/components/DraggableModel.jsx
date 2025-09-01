@@ -1,9 +1,9 @@
-import React, { useRef, useEffect } from 'react'
-import { useGLTF, useTexture } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
-import { useObjectControls } from '../hooks/useObjectControls.js'
-import { useStore } from '../store/useStore.js'
+import React, { useRef, useEffect } from "react";
+import { useGLTF, useTexture } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { useObjectControls } from "../hooks/useObjectControls.js";
+import { useStore } from "../store/useStore.js";
 
 export function DraggableModel({
   modelId,
@@ -14,9 +14,10 @@ export function DraggableModel({
   controlsRef,
   texturePath = null,
   isCityKit = false,
-  type = 'glb'
+  type = "glb",
 }) {
-  const meshRef = useRef()
+  console.log(texturePath, isCityKit);
+  const meshRef = useRef();
 
   // Zustand 스토어 사용
   const {
@@ -27,11 +28,11 @@ export function DraggableModel({
     hoveringModel,
     updateModelPosition,
     updateModelRotation,
-    updateModelScale
-  } = useStore()
+    updateModelScale,
+  } = useStore();
 
-  const isSelected = selectedModelId === modelId
-  const isHovering = hoveringModelId === modelId
+  const isSelected = selectedModelId === modelId;
+  const isHovering = hoveringModelId === modelId;
 
   // 객체 조작 훅 사용
   const {
@@ -41,7 +42,7 @@ export function DraggableModel({
     handlePointerMove,
     handlePointerUp,
     handlePointerOver,
-    handlePointerOut
+    handlePointerOut,
   } = useObjectControls(
     modelId,
     updateModelPosition,
@@ -50,34 +51,35 @@ export function DraggableModel({
     selectModel,
     hoveringModel,
     controlsRef
-  )
+  );
 
   // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
-  const validUrl = url && typeof url === 'string' ? url : '/legacy_mesh (1).glb'
-  const { scene, animations } = useGLTF(validUrl)
-  const texture = texturePath ? useTexture(texturePath) : null
+  const validUrl =
+    url && typeof url === "string" ? url : "/legacy_mesh (1).glb";
+  const { scene, animations } = useGLTF(validUrl);
+  const texture = texturePath ? useTexture(texturePath) : null;
 
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
   useEffect(() => {
     if (meshRef.current) {
       meshRef.current.traverse((child) => {
         if (child.isMesh) {
-          child.castShadow = true
-          child.receiveShadow = true
-          child.userData.modelId = modelId
-          child.userData.clickable = true
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.userData.modelId = modelId;
+          child.userData.clickable = true;
 
           // City Kit 텍스처 적용
           if (isCityKit && texture) {
-            const newMaterial = child.material.clone()
-            newMaterial.map = texture
-            newMaterial.needsUpdate = true
-            child.material = newMaterial
+            const newMaterial = child.material.clone();
+            newMaterial.map = texture;
+            newMaterial.needsUpdate = true;
+            child.material = newMaterial;
           }
         }
-      })
+      });
     }
-  }, [scene, animations, modelId, isCityKit, texture, type])
+  }, [scene, animations, modelId, isCityKit, texture, type]);
 
   // City Kit 텍스처 재적용 (선택된 경우)
   useFrame((state, delta) => {
@@ -85,28 +87,28 @@ export function DraggableModel({
     if (isSelected && meshRef.current && isCityKit && texture) {
       meshRef.current.traverse((child) => {
         if (child.isMesh && child.material && !child.material.map) {
-          child.material.map = texture
-          child.material.needsUpdate = true
+          child.material.map = texture;
+          child.material.needsUpdate = true;
         }
-      })
+      });
     }
-  })
+  });
 
   // 전역 이벤트 리스너
   useEffect(() => {
     if (isDragging || isScaling) {
-      const handleMouseMove = (e) => handlePointerMove(e)
-      const handleMouseUp = () => handlePointerUp()
+      const handleMouseMove = (e) => handlePointerMove(e);
+      const handleMouseUp = () => handlePointerUp();
 
-      document.addEventListener('mousemove', handleMouseMove)
-      document.addEventListener('mouseup', handleMouseUp)
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
 
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove)
-        document.removeEventListener('mouseup', handleMouseUp)
-      }
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
     }
-  }, [isDragging, isScaling, handlePointerMove, handlePointerUp])
+  }, [isDragging, isScaling, handlePointerMove, handlePointerUp]);
 
   // 선택 표시 박스 크기 결정
   const getSelectionBoxSize = () => {
@@ -115,11 +117,11 @@ export function DraggableModel({
     box.getSize(boxSize);
 
     return [boxSize.x, boxSize.y, boxSize.z];
-  }
+  };
 
   return (
     <>
-      {viewOnly ?
+      {viewOnly ? (
         <group
           ref={meshRef}
           position={position}
@@ -128,7 +130,7 @@ export function DraggableModel({
         >
           <primitive object={scene.clone()} />
         </group>
-        :
+      ) : (
         <group
           ref={meshRef}
           position={position}
@@ -152,7 +154,7 @@ export function DraggableModel({
             </mesh>
           )}
         </group>
-      }
+      )}
     </>
-  )
+  );
 }
