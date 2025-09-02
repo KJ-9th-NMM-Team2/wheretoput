@@ -18,7 +18,7 @@ export function LightControlPanel({ isPopup = false }) {
     padding: '15px',
     borderRadius: '5px',
     color: 'white',
-    fontSize: '12px',
+    fontSize: '16px',
     width: '250px',
     maxHeight: '400px',
     overflowY: 'auto'

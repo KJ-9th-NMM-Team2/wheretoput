@@ -17,7 +17,7 @@ export function CameraControlPanel({ isPopup = false }) {
     padding: '15px',
     borderRadius: '5px',
     color: 'white',
-    fontSize: '12px',
+    fontSize: '13px',
     width: '250px',
     maxHeight: '400px',
     overflowY: 'auto'
@@ -32,7 +32,7 @@ export function CameraControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0' }}>📷 카메라 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px'}}><span className="text-lg">📷</span> 카메라 세팅</h3>
 
       <div
         style={{
@@ -84,7 +84,7 @@ function ControlSlider({
     }}>
       <span style={{
         minWidth: '50px',
-        fontSize: '10px',
+        fontSize: '13px',
         whiteSpace: 'nowrap'
       }}>
         {label}
@@ -101,7 +101,7 @@ function ControlSlider({
       <span style={{
         color: '#ffffff',
         minWidth: '20px',
-        fontSize: '10px',
+        fontSize: '13px',
         textAlign: 'right'
       }}>
         {displayValue}
