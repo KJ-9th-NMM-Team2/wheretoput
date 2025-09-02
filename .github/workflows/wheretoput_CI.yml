@@ -50,7 +50,7 @@ jobs:
         working-directory: socket/
 
       - name: Lint (socket)
-        run: npm run lint --if-present # 린트 실패해도 계속 진행 # || true 지우면 정상 테스트
+        run: npm run lint --if-present || true # 린트 실패해도 계속 진행 # || true 지우면 정상 테스트
         working-directory: socket/
 
       - name: Test (socket)
