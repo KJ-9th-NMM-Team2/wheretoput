@@ -66,6 +66,7 @@ interface LikeParams {
 export async function POST(req: NextRequest) {
   try {
     const { room_id, user_id } = await req.json();
+    console.log(room_id, user_id);
 
     if (!user_id) {
       return Response.json({ error: "user_id가 요구됩니다" }, { status: 400 });
