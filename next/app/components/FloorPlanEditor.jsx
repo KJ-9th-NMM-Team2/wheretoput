@@ -642,8 +642,8 @@ const FloorPlanEditor = () => {
 
   // 패닝을 위한 마우스 이벤트 핸들러들
   const handlePanStart = (e) => {
-    if (e.ctrlKey || e.button === 1) {
-      // Ctrl + 클릭 또는 마우스 휠 클릭으로 패닝
+    // 왼쪽 클릭으로 패닝 (도구가 비활성화 상태일 때만)
+    if (e.button === 0) {
       setIsDragging(true);
       setLastPanPoint({ x: e.clientX, y: e.clientY });
       e.preventDefault();
@@ -698,8 +698,11 @@ const FloorPlanEditor = () => {
 
   // 마우스 이벤트 핸들러들
   const handleMouseDown = (e) => {
-    // 패닝 모드 체크
-    if (handlePanStart(e)) {
+    // 도구가 "none"이거나 활성화된 도구가 없을 때 패닝 가능
+    const shouldCheckPan = tool === "none" || !tool || 
+      (uploadedImage && tool !== "wall" && tool !== "scale" && tool !== "select" && tool !== "eraser" && tool !== "partial_eraser");
+    
+    if (shouldCheckPan && handlePanStart(e)) {
       return;
     }
 
@@ -1163,18 +1166,18 @@ const FloorPlanEditor = () => {
 
           <div className="flex gap-2">
             <button
-              onClick={() => setTool("wall")}
+              onClick={() => setTool(tool === "wall" ? "none" : "wall")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "wall"
                   ? "bg-orange-500 text-white shadow-md"
                   : "bg-orange-200 text-orange-700 hover:bg-orange-300"
               }`}
             >
-              <Square size={18} />벽 그리기
+              <Square size={18} />벽 그리기 {tool === "wall" ? "(ON)" : ""}
             </button>
 
             <button
-              onClick={() => setTool("select")}
+              onClick={() => setTool(tool === "select" ? "none" : "select")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "select"
                   ? "bg-orange-500 text-white shadow-md"
@@ -1182,11 +1185,11 @@ const FloorPlanEditor = () => {
               }`}
             >
               <MousePointer size={18} />
-              선택
+              선택 {tool === "select" ? "(ON)" : ""}
             </button>
 
             <button
-              onClick={() => setTool("eraser")}
+              onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "eraser"
                   ? "bg-orange-500 text-white shadow-md"
@@ -1194,12 +1197,13 @@ const FloorPlanEditor = () => {
               }`}
             >
               <Eraser size={18} />
-              지우기
+              지우기 {tool === "eraser" ? "(ON)" : ""}
             </button>
 
             <button
               onClick={() => {
-                setTool("partial_eraser");
+                const newTool = tool === "partial_eraser" ? "none" : "partial_eraser";
+                setTool(newTool);
                 setPartialEraserSelectedWall(null);
                 setIsSelectingEraseArea(false);
                 setEraseAreaStart(null);
@@ -1212,7 +1216,7 @@ const FloorPlanEditor = () => {
               }`}
             >
               <Scissors size={18} />
-              부분 지우기
+              부분 지우기 {tool === "partial_eraser" ? "(ON)" : ""}
             </button>
 
             <button
@@ -1325,6 +1329,7 @@ const FloorPlanEditor = () => {
             도구 정보
           </h3>
 
+          
           {/* 축척 설정 도구 */}
           {tool === "scale" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
@@ -1558,7 +1563,7 @@ const FloorPlanEditor = () => {
             </button>
 
             <p className="text-xs text-orange-500 mt-2">
-              Ctrl+드래그: 패닝 | 휠: 줌
+              드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
             </p>
           </div>
 
