@@ -275,8 +275,6 @@ const FloorPlanEditor = () => {
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const FIXED_WIDTH = 1200;
-    const FIXED_HEIGHT = 800;
     
     // 캔버스 중앙을 원점(0,0)으로 하는 좌표계로 변환
     const canvasX = ((e.clientX - rect.left) - rect.width / 2) / viewScale - viewOffset.x;
@@ -319,31 +317,32 @@ const FloorPlanEditor = () => {
 
     const ctx = canvas.getContext("2d");
 
-    // 캔버스 크기 고정 (브라우저 줌과 무관하게 항상 동일)
-    const FIXED_WIDTH = 1200;
-    const FIXED_HEIGHT = 800;
+    // 컨테이너 크기에 맞춰 동적으로 캔버스 크기 설정
+    const containerRect = container.getBoundingClientRect();
+    const canvasWidth = containerRect.width;
+    const canvasHeight = containerRect.height;
 
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
 
-    // 캔버스 실제 해상도 설정 (고정 크기 기준)
-    canvas.width = FIXED_WIDTH * dpr;
-    canvas.height = FIXED_HEIGHT * dpr;
+    // 캔버스 실제 해상도 설정 (컨테이너 크기 기준)
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
 
-    // CSS 크기를 고정값으로 설정 (브라우저 줌 영향 없음)
-    canvas.style.width = FIXED_WIDTH + "px";
-    canvas.style.height = FIXED_HEIGHT + "px";
+    // CSS 크기를 컨테이너 크기로 설정
+    canvas.style.width = canvasWidth + "px";
+    canvas.style.height = canvasHeight + "px";
 
     // 컨텍스트 스케일 조정
     ctx.scale(dpr, dpr);
 
     // 전체 캔버스 클리어
-    ctx.clearRect(0, 0, FIXED_WIDTH, FIXED_HEIGHT);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // 고정된 캔버스 크기 사용
+    // 동적 캔버스 크기 사용
     const rect = {
-      width: FIXED_WIDTH,
-      height: FIXED_HEIGHT,
+      width: canvasWidth,
+      height: canvasHeight,
     };
 
     // 배경 이미지 그리기 (업로드된 이미지가 있는 경우)
@@ -461,16 +460,12 @@ const FloorPlanEditor = () => {
     // 고정 격자 크기 사용 (500mm x 500mm = 25px x 25px)
     const gridSize = GRID_SIZE_PX;
 
-    // 뷰포트 영역 계산 (중앙 기준 좌표계에서 격자 범위 결정)
-    const centerX = -viewOffset.x;
-    const centerY = -viewOffset.y;
-    const viewWidth = rect.width / (2 * viewScale);
-    const viewHeight = rect.height / (2 * viewScale);
-    
-    const startX = Math.floor((centerX - viewWidth) / gridSize) * gridSize;
-    const endX = Math.ceil((centerX + viewWidth) / gridSize) * gridSize;
-    const startY = Math.floor((centerY - viewHeight) / gridSize) * gridSize;
-    const endY = Math.ceil((centerY + viewHeight) / gridSize) * gridSize;
+    // 충분히 큰 고정 범위로 격자를 그려서 전체 캔버스를 완전히 덮음
+    const gridRange = 5000; // 5000px 범위 (-5000 ~ +5000)
+    const startX = -gridRange;
+    const endX = gridRange;
+    const startY = -gridRange;
+    const endY = gridRange;
 
     // 격자 그리기 - 픽셀 정렬로 선명하게
     ctx.strokeStyle = "#e0e0e0";
