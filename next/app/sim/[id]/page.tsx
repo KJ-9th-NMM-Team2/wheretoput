@@ -332,7 +332,7 @@ export default function SimPage({
         {
           <div
             style={{
-              position: "absolute",
+              position: "fixed",
               top: "10px",
               left: "50%",
               transform: "translateX(-50%)",
@@ -341,13 +341,16 @@ export default function SimPage({
               borderRadius: "5px",
               zIndex: 100,
               color: "white",
-              fontSize: "12px",
-              width: "100px",
+              fontSize: "14px",
+              width: "140px",
               maxHeight: "400px",
               overflowY: "auto",
             }}
           >
-            <button onClick={() => setViewOnly(!viewOnly)}>
+            <button 
+              onClick={() => setViewOnly(!viewOnly)}
+              style={{ width: "100%", textAlign: "center" }}
+            >
               {viewOnly ? "편집" : "보기"} 모드로 변경
             </button>
           </div>
