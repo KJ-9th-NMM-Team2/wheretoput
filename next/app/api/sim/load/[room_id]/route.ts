@@ -89,32 +89,26 @@ export async function GET(
 
     // room_id 유효성 검사
     if (!room_id) {
-      return Response.json(
-        { error: "room_id is required" },
-        { status: 400 }
-      );
+      return Response.json({ error: "room_id is required" }, { status: 400 });
     }
 
     console.log(`Loading objects for room: ${room_id}`);
 
     // 1. 방이 존재하는지 확인
-    console.log('Step 1: Checking if room exists...');
+    console.log("Step 1: Checking if room exists...");
     const room = await prisma.rooms.findUnique({
-      where: { room_id: room_id }
+      where: { room_id: room_id },
     });
 
     if (!room) {
       console.log(`Room not found: ${room_id}`);
-      return Response.json(
-        { error: "Room not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Room not found" }, { status: 404 });
     }
-    
+
     console.log(`Room found: ${room.title}`);
 
     // 2. room_objects와 furniture 정보, 그리고 벽 정보를 함께 조회
-    console.log('Step 2: Fetching room objects and walls...');
+    console.log("Step 2: Fetching room objects and walls...");
     const roomObjects = await prisma.room_objects.findMany({
       where: { room_id: room_id },
       include: {
@@ -123,44 +117,55 @@ export async function GET(
             furniture_id: true,
             name: true,
             model_url: true,
-            category_id: true
-          }
-        }
+            category_id: true,
+            length_x: true,
+            length_y: true,
+            length_z: true,
+          },
+        },
       },
       orderBy: {
-        created_at: 'asc'
-      }
+        created_at: "asc",
+      },
     });
 
     // 3. 벽 정보 조회
-    console.log('Step 3: Fetching room walls...');
+    console.log("Step 3: Fetching room walls...");
     const roomWalls = await prisma.room_walls.findMany({
       where: { room_id: room_id },
       orderBy: {
-        wall_order: 'asc'
-      }
+        wall_order: "asc",
+      },
     });
 
-    console.log(`Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`);
-    
+    console.log(
+      `Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`
+    );
+
     // 각 객체의 furniture 관계 상태 확인
     roomObjects.forEach((obj, index) => {
-      console.log(`Object ${index}: furniture_id=${obj.furniture_id}, has_furnitures=${!!obj.furnitures}`);
+      console.log(
+        `Object ${index}: furniture_id=${obj.furniture_id}, length: ${obj.furnitures.length_x}, ${obj.furnitures.length_y}, ${obj.furnitures.length_z}`
+      );
     });
 
     // 벽 정보 로그
     roomWalls.forEach((wall, index) => {
-      console.log(`Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`);
+      console.log(
+        `Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`
+      );
     });
 
     // 4. room_walls에 데이터가 없으면 rooms.room_data에서 fallback 시도
     let legacyWallsData = [];
     if (roomWalls.length === 0 && room.room_data) {
-      console.log('room_walls 테이블에 데이터가 없음. room_data에서 fallback 시도...');
+      console.log(
+        "room_walls 테이블에 데이터가 없음. room_data에서 fallback 시도..."
+      );
       const roomData = room.room_data as any;
       if (roomData.walls && Array.isArray(roomData.walls)) {
         console.log(`room_data에서 ${roomData.walls.length}개의 벽 발견`);
-        
+
         // legacy 데이터를 room_walls 형식으로 변환
         const pixelToMmRatio = (roomData.pixelToMmRatio || 20) / 50;
         legacyWallsData = roomData.walls.map((wall: any, index: number) => {
@@ -168,11 +173,11 @@ export async function GET(
           const startY = wall.start.y * pixelToMmRatio;
           const endX = wall.end.x * pixelToMmRatio;
           const endY = wall.end.y * pixelToMmRatio;
-          
+
           const length = Math.sqrt(
             Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)
           );
-          
+
           const positionX = (startX + endX) / 2;
           const positionZ = (startY + endY) / 2;
           const rotationY = Math.atan2(endY - startY, endX - startX);
@@ -212,30 +217,32 @@ export async function GET(
         id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
         object_id: obj.object_id, // DB의 객체 ID
         furniture_id: obj.furniture_id,
-        name: hasFurniture ? obj.furnitures.name : 'Custom Object', // InfoPanel에서 사용하는 name 속성
-        position: [
-          pos?.x || 0,
-          pos?.y || 0,
-          pos?.z || 0
+        name: hasFurniture ? obj.furnitures.name : "Custom Object", // InfoPanel에서 사용하는 name 속성
+        position: [pos?.x || 0, pos?.y || 0, pos?.z || 0],
+        rotation: [rot?.x || 0, rot?.y || 0, rot?.z || 0],
+        length: [
+          Number(obj.furnitures?.length_x),
+          Number(obj.furnitures?.length_y),
+          Number(obj.furnitures?.length_z),
         ],
-        rotation: [
-          rot?.x || 0,
-          rot?.y || 0,
-          rot?.z || 0
-        ],
-        scale: [
-          scale?.x || 1,
-          scale?.y || 1,
-          scale?.z || 1
-        ],
+        scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
         // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
-        url: (hasFurniture && obj.furnitures.model_url) ? obj.furnitures.model_url : '/legacy_mesh (1).glb',
-        isCityKit: hasFurniture ? (obj.furnitures.model_url?.includes('citykit') || false) : false,
+        url:
+          hasFurniture && obj.furnitures.model_url
+            ? obj.furnitures.model_url
+            : "/legacy_mesh (1).glb",
+        isCityKit: hasFurniture
+          ? obj.furnitures.model_url?.includes("citykit") || false
+          : false,
         texturePath: null, // texture_url 필드가 스키마에 없음
-        type: hasFurniture ? (obj.furnitures.model_url?.endsWith('.glb') ? 'glb' : 'building') : 'custom',
+        type: hasFurniture
+          ? obj.furnitures.model_url?.endsWith(".glb")
+            ? "glb"
+            : "building"
+          : "custom",
         // 추가 메타데이터
-        furnitureName: hasFurniture ? obj.furnitures.name : 'Custom Object',
-        categoryId: hasFurniture ? obj.furnitures.category_id : null
+        furnitureName: hasFurniture ? obj.furnitures.name : "Custom Object",
+        categoryId: hasFurniture ? obj.furnitures.category_id : null,
       };
     });
 
@@ -249,14 +256,22 @@ export async function GET(
       length: Number(wall.length),
       height: Number(wall.height),
       depth: Number(wall.depth),
-      position: [Number(wall.position_x), Number(wall.position_y), Number(wall.position_z)],
-      rotation: [Number(wall.rotation_x), Number(wall.rotation_y), Number(wall.rotation_z)],
-      wall_order: wall.wall_order
+      position: [
+        Number(wall.position_x),
+        Number(wall.position_y),
+        Number(wall.position_z),
+      ],
+      rotation: [
+        Number(wall.rotation_x),
+        Number(wall.rotation_y),
+        Number(wall.rotation_z),
+      ],
+      wall_order: wall.wall_order,
     }));
-    
+
     console.log(`최종 변환된 벽 개수: ${walls.length}`);
 
-    return Response.json({
+    const result: any = {
       success: true,
       room_id: room_id,
       objects: objects,
@@ -267,23 +282,27 @@ export async function GET(
         title: room.title,
         description: room.description,
         is_public: room.is_public,
-        updated_at: room.updated_at
-      }
-    });
-
+        updated_at: room.updated_at,
+      },
+    };
+    console.log("결과", result.objects);
+    return Response.json(result);
   } catch (error) {
     console.error("Error loading simulator state:", error);
     console.error("Error details:", {
       message: error.message,
       stack: error.stack,
-      roomId: room_id
+      roomId: room_id,
     });
     return Response.json(
       {
         error: "Internal Server Error",
         message: error.message,
-        details: process.env.NODE_ENV === "development" ? error.stack : "Server error occurred",
-        roomId: room_id
+        details:
+          process.env.NODE_ENV === "development"
+            ? error.stack
+            : "Server error occurred",
+        roomId: room_id,
       },
       { status: 500 }
     );

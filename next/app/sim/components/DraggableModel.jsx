@@ -11,6 +11,7 @@ export function DraggableModel({
   position,
   rotation = [0, 0, 0],
   scale = 1,
+  length = [1, 1, 1],
   controlsRef,
   texturePath = null,
   isCityKit = false,
@@ -18,15 +19,16 @@ export function DraggableModel({
 }) {
   // scale 값을 안전하게 처리
   const safeScale = (() => {
-    if (Array.isArray(scale)) {
-      return scale.map(s => Math.max(s || 1, 0.001));
-    } else if (typeof scale === 'number' && scale > 0) {
-      return [scale, scale, scale];
-    } else {
-      return [1, 1, 1];
-    }
+    console.log(scale, length);
+    const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
+    const lengthArray = Array.isArray(length)
+      ? length
+      : [length, length, length];
+
+    return scaleArray.map((s, i) =>
+      Math.max((s || 1) * (lengthArray[i] || 1) * 0.001, 0.001)
+    );
   })();
-  console.log(texturePath, isCityKit);
   const meshRef = useRef();
 
   // Zustand 스토어 사용
@@ -73,7 +75,28 @@ export function DraggableModel({
   useEffect(() => {
     if (scene && meshRef.current) {
       console.log(`Setting up model ${modelId} with scale:`, safeScale);
+
+      // 모델의 실제 크기 측정
+      const box = new THREE.Box3().setFromObject(scene);
+      const modelSize = new THREE.Vector3();
+      box.getSize(modelSize);
+
+      // 목표 크기로 스케일 조정
+      const targetScale = safeScale.map(
+        (target, i) => target / modelSize.getComponent(i)
+      );
+
+      meshRef.current.scale.set(...targetScale);
+
+      // 바운딩 박스를 업데이트하고 바닥 위치 조정
+      box.setFromObject(scene);
+      const min = box.min;
+      const yOffset = -min.y * targetScale[1]; // 바닥이 y=0에 닿도록 오프셋 계산
       
+      // 기존 position에 y 오프셋 추가
+      const adjustedPosition = [position[0], position[1] + yOffset, position[2]];
+      meshRef.current.position.set(...adjustedPosition);
+
       meshRef.current.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
@@ -81,10 +104,13 @@ export function DraggableModel({
           child.userData.modelId = modelId;
           child.userData.clickable = true;
           child.visible = true; // 명시적으로 visible 설정
-          
+
           // 재질이 투명하지 않도록 확인
           if (child.material) {
-            if (child.material.transparent === undefined || child.material.opacity === 0) {
+            if (
+              child.material.transparent === undefined ||
+              child.material.opacity === 0
+            ) {
               child.material.transparent = false;
               child.material.opacity = 1;
             }
@@ -102,7 +128,7 @@ export function DraggableModel({
           }
         }
       });
-      
+
       // 전체 group도 visible 설정
       meshRef.current.visible = true;
     }
@@ -142,24 +168,24 @@ export function DraggableModel({
     if (!scene || !meshRef.current) {
       return [1, 1, 1]; // 기본값
     }
-    
+
     try {
-      const box = new THREE.Box3().setFromObject(meshRef.current);
+      const box = new THREE.Box3().setFromObject(scene);
       if (box.isEmpty()) {
         return [1, 1, 1]; // 빈 박스인 경우 기본값
       }
-      
+
       const boxSize = new THREE.Vector3();
       box.getSize(boxSize);
-      
+
       // 크기가 너무 작거나 0인 경우 기본값 사용
       const x = Math.max(boxSize.x || 1, 0.1);
       const y = Math.max(boxSize.y || 1, 0.1);
       const z = Math.max(boxSize.z || 1, 0.1);
-      
+
       return [x, y, z];
     } catch (error) {
-      console.warn('Failed to calculate selection box size:', error);
+      console.warn("Failed to calculate selection box size:", error);
       return [1, 1, 1];
     }
   };
@@ -173,7 +199,7 @@ export function DraggableModel({
           rotation={rotation}
           scale={safeScale}
         >
-          <primitive object={scene} />
+          <primitive object={scene.clone()} />
         </group>
       ) : (
         <group
@@ -181,11 +207,18 @@ export function DraggableModel({
           position={position}
           rotation={rotation}
           scale={safeScale}
-          onPointerDown={handlePointerDown}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
         >
-          <primitive object={scene} />
+          <primitive object={scene.clone()} />
+
+          {/* 투명한 클릭/호버 감지 영역 */}
+          <mesh
+            onPointerDown={handlePointerDown}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+          >
+            <boxGeometry args={getSelectionBoxSize()} />
+            <meshBasicMaterial transparent={true} opacity={0} visible={false} />
+          </mesh>
 
           {(isSelected || isHovering) && (
             <mesh>
@@ -194,7 +227,6 @@ export function DraggableModel({
                 color={isSelected ? "#00ff00" : "#0000ff"}
                 wireframe
                 transparent
-                opacity={0.5}
               />
             </mesh>
           )}

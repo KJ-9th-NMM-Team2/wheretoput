@@ -33,9 +33,9 @@ export const useStore = create(
         // scale 값 검증 및 최소값 보장
         let scale = model.scale || state.scaleValue;
         if (Array.isArray(scale)) {
-          scale = scale.map(s => (s <= 0 || s < 0.01) ? 1 : s);
-        } else if (typeof scale === 'number') {
-          scale = (scale <= 0 || scale < 0.01) ? 1 : scale;
+          scale = scale.map((s) => (s <= 0 || s < 0.01 ? 1 : s));
+        } else if (typeof scale === "number") {
+          scale = scale <= 0 || scale < 0.01 ? 1 : scale;
         } else {
           scale = 1;
         }
@@ -96,9 +96,9 @@ export const useStore = create(
         // scale 값 검증 및 최소값 보장
         let scale = newScale;
         if (Array.isArray(scale)) {
-          scale = scale.map(s => (s <= 0 || s < 0.01) ? 0.01 : s);
-        } else if (typeof scale === 'number') {
-          scale = (scale <= 0 || scale < 0.01) ? 0.01 : scale;
+          scale = scale.map((s) => (s <= 0 || s < 0.01 ? 0.01 : s));
+        } else if (typeof scale === "number") {
+          scale = scale <= 0 || scale < 0.01 ? 0.01 : scale;
         } else {
           scale = 1;
         }
@@ -276,35 +276,52 @@ export const useStore = create(
         const currentState = get();
 
         // 벽 스케일 팩터가 1이 아닌 경우, 벽 데이터도 DB에 업데이트
-        if (currentState.wallScaleFactor !== 1.0 && currentState.wallsData.length > 0) {
+        if (
+          currentState.wallScaleFactor !== 1.0 &&
+          currentState.wallsData.length > 0
+        ) {
           try {
             // 현재 스케일 팩터가 적용된 벽 데이터를 DB 형식으로 변환
-            const scaledWalls = currentState.wallsData.map(wall => ({
+            const scaledWalls = currentState.wallsData.map((wall) => ({
               start: {
-                x: wall.position[0] - (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
-                y: wall.position[2] - (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
+                x:
+                  wall.position[0] -
+                  (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y:
+                  wall.position[2] -
+                  (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
               },
               end: {
-                x: wall.position[0] + (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
-                y: wall.position[2] + (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
-              }
+                x:
+                  wall.position[0] +
+                  (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y:
+                  wall.position[2] +
+                  (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
+              },
             }));
 
-            const updateWallsResponse = await fetch(`/api/room-walls/${currentState.currentRoomId}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                walls: scaledWalls,
-                pixelToMmRatio: 1000 // 이미 미터 단위로 변환된 값이므로 1000으로 설정
-              }),
-            });
+            const updateWallsResponse = await fetch(
+              `/api/room-walls/${currentState.currentRoomId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  walls: scaledWalls,
+                  pixelToMmRatio: 1000, // 이미 미터 단위로 변환된 값이므로 1000으로 설정
+                }),
+              }
+            );
 
             if (updateWallsResponse.ok) {
               console.log("벽 데이터 업데이트 완료");
             } else {
-              console.warn("벽 데이터 업데이트 실패:", updateWallsResponse.statusText);
+              console.warn(
+                "벽 데이터 업데이트 실패:",
+                updateWallsResponse.statusText
+              );
             }
           } catch (wallUpdateError) {
             console.error("벽 데이터 업데이트 중 오류:", wallUpdateError);
@@ -364,14 +381,15 @@ export const useStore = create(
           let scale = obj.scale;
           if (Array.isArray(scale)) {
             // 배열 형태의 scale에서 0이나 매우 작은 값들을 1로 대체
-            scale = scale.map(s => (s <= 0 || s < 0.01) ? 1 : s);
-          } else if (typeof scale === 'number') {
+            scale = scale.map((s) => (s <= 0 || s < 0.01 ? 1 : s));
+          } else if (typeof scale === "number") {
             // 단일 숫자 scale에서 0이나 매우 작은 값을 1로 대체
-            scale = (scale <= 0 || scale < 0.01) ? 1 : scale;
+            scale = scale <= 0 || scale < 0.01 ? 1 : scale;
           } else {
             // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
             scale = 1;
           }
+          console.log("obj", obj);
 
           return {
             id: obj.id,
@@ -381,6 +399,7 @@ export const useStore = create(
             position: obj.position,
             rotation: obj.rotation,
             scale: scale,
+            length: [obj.length[0], obj.length[1], obj.length[2]],
             url: obj.url,
             isCityKit: obj.isCityKit,
             texturePath: obj.texturePath,
