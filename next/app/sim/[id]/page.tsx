@@ -116,24 +116,32 @@ function Wall({
       const wallNormal = new THREE.Vector3(0, 0, 1);
       wallNormal.applyQuaternion(wallWorldQuaternion);
 
-      let cameraToWall = new THREE.Vector3()
-        .subVectors(camera.position, wallWorldPosition)
-        .normalize();
-
-      const dotProduct = wallNormal.dot(cameraToWall);
-
-      // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
-      const t = 1 - Math.abs(dotProduct);
-
-      // ease-in-out 적용
-      const ease = t * t * (3 - 2 * t);
-
-      // 정면(불투명)~뒤(투명) 보간
       const minOpacity = 0.2;
       const maxOpacity = 0.95;
-      const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+      // 거리 임계값 - 값이 클수록 멀리서도 투명해짐
+      const distanceThreshold = 30;
 
-      setOpacity(newOpacity);
+      let cameraToWall = new THREE.Vector3()
+        .subVectors(camera.position, wallWorldPosition);
+
+      if (cameraToWall.length() > distanceThreshold) {
+        setOpacity(maxOpacity);
+      }
+      else {
+        cameraToWall.normalize();
+        const dotProduct = wallNormal.dot(cameraToWall);
+
+        // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
+        const t = 1 - Math.abs(dotProduct);
+
+        // ease-in-out 적용
+        const ease = t * t * (3 - 2 * t);
+
+        // 정면(불투명)~뒤(투명) 보간
+        const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+
+        setOpacity(newOpacity);
+      }
     };
 
     const animate = () => {
