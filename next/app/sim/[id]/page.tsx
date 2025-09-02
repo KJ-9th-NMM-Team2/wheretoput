@@ -110,38 +110,46 @@ function Wall({
       const wallWorldPosition = new THREE.Vector3();
       meshRef.current.getWorldPosition(wallWorldPosition);
 
-      const wallWorldQuaternion = new THREE.Quaternion();
-      meshRef.current.getWorldQuaternion(wallWorldQuaternion);
+      // const wallWorldQuaternion = new THREE.Quaternion();
+      // meshRef.current.getWorldQuaternion(wallWorldQuaternion);
 
-      const wallNormal = new THREE.Vector3(0, 0, 1);
-      wallNormal.applyQuaternion(wallWorldQuaternion);
+      // const wallNormal = new THREE.Vector3(0, 0, 1);
+      // wallNormal.applyQuaternion(wallWorldQuaternion);
 
       const minOpacity = 0.2;
       const maxOpacity = 0.95;
-      // 거리 임계값 - 값이 클수록 멀리서도 투명해짐
-      const distanceThreshold = 30;
+      const minDistanceThreshold = 15;
+      const maxDistanceThreshold = 30;
 
       let cameraToWall = new THREE.Vector3()
         .subVectors(camera.position, wallWorldPosition);
+      const distance = cameraToWall.length();
 
-      if (cameraToWall.length() > distanceThreshold) {
+      if (distance > maxDistanceThreshold) {
         setOpacity(maxOpacity);
       }
+      else if (distance < minDistanceThreshold) {
+        setOpacity(minOpacity);
+      }
       else {
-        cameraToWall.normalize();
-        const dotProduct = wallNormal.dot(cameraToWall);
-
-        // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
-        const t = 1 - Math.abs(dotProduct);
-
-        // ease-in-out 적용
-        const ease = t * t * (3 - 2 * t);
-
-        // 정면(불투명)~뒤(투명) 보간
-        const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
-
+        const newOpacity = (maxOpacity - minOpacity) / (maxDistanceThreshold - minDistanceThreshold) * (distance - minDistanceThreshold) + minOpacity;
         setOpacity(newOpacity);
       }
+      // else {
+      //   cameraToWall.normalize();
+      //   const dotProduct = wallNormal.dot(cameraToWall);
+  
+      //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
+      //   const t = 1 - Math.abs(dotProduct);
+
+      //   // ease-in-out 적용
+      //   const ease = t * t * (3 - 2 * t);
+
+      //   // 정면(불투명)~뒤(투명) 보간
+      //   const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+
+      //   setOpacity(newOpacity);
+      // }
     };
 
     const animate = () => {
