@@ -29,6 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Prisma 클라이언트 생성 후 빌드
+COPY prisma ./prisma/
 RUN npx prisma generate
 RUN npm run build
 

@@ -2,7 +2,7 @@ import React from "react";
 import { useStore } from '../store/useStore.js'
 
 
-export function CameraControlPanel() {
+export function CameraControlPanel({ isPopup = false }) {
   const {
     cameraFov,
     cameraZoom,
@@ -12,21 +12,25 @@ export function CameraControlPanel() {
     setCameraMode,
   } = useStore();
 
+  const baseStyle = {
+    background: 'rgba(0,0,0,0.7)',
+    padding: '15px',
+    borderRadius: '5px',
+    color: 'white',
+    fontSize: '12px',
+    width: '250px',
+    maxHeight: '400px',
+    overflowY: 'auto'
+  };
+
+  const positionStyle = isPopup ? 
+    { position: 'static' } : 
+    { position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '10px', zIndex: 100 };
+
   return (
     <div style={{
-      position: 'absolute',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      left: '10px',
-      background: 'rgba(0,0,0,0.7)',
-      padding: '15px',
-      borderRadius: '5px',
-      zIndex: 100,
-      color: 'white',
-      fontSize: '12px',
-      width: '250px',
-      maxHeight: '400px',
-      overflowY: 'auto'
+      ...baseStyle,
+      ...positionStyle
     }}>
       <h3 style={{ margin: '0 0 10px 0' }}>📷 카메라 세팅</h3>
 
