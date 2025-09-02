@@ -95,11 +95,11 @@ result = []
 furnitures_category = [0, 1, 7, 1, 1, 0, 16, 4, 3, 1, 13, 1, 12]
 
 print("가구 데이터 수집을 시작합니다.")
-
+######################################################
 # Tables 카테고리만 수집 (예: 3번째가 Tables라면 z=2)
 # 원하는 카테고리 번호를 여기서 지정하세요 (0부터 시작)
-tables_category_index = 3  
-# 예시: 3번째 카테고리 (실제 번호에 맞게 수정)
+tables_category_index = 7  
+######################################################
 
 # 특정 카테고리만 순회
 for z in [tables_category_index]:
@@ -131,22 +131,29 @@ for z in [tables_category_index]:
                     brand = info_data[1] if len(info_data) > 1 else ''
                     dimensions = info_data[2] if len(info_data) > 2 else ''
                     
-                    w, d, h = '', '', ''
+                    w, h, d = None, None, None
                     if 'x' in dimensions:
-                        parts = dimensions.replace('(mm)', '').split('x')
-                        for part in parts:
-                            part = part.strip()
-                            if 'W:' in part: w = part.split(':')[1].strip()
-                            elif 'D:' in part: d = part.split(':')[1].strip()
-                            elif 'H:' in part: h = part.split(':')[1].strip()
+                        # "숫자 x 숫자 x 숫자" 형태에서 치수 추출
+                        parts = dimensions.replace('(mm)', '').replace('mm', '').split('x')
+                        if len(parts) == 3:
+                            try:
+                                w = int(parts[0].strip())  # width
+                                d = int(parts[1].strip())  # depth  
+                                h = int(parts[2].strip())  # height
+                            except ValueError:
+                                w, h, d = None, None, None
                     
                     result.append({
                         'name': name,
-                        'brand': brand,
+                        'description': None,
                         'length_x': w,
-                        'length_z': d,
                         'length_y': h,
+                        'length_z': d,
                         'image_url': img_src,
+                        'model_url': None,
+                        'price': None,
+                        'brand': brand,
+                        'is_active': False,
                         'category_id': furnitures_category[z],
                     })
                     
