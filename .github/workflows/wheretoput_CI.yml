@@ -1,4 +1,4 @@
-name: CI
+name: wheretoput_CI
 
 on:
   pull_request:
@@ -31,7 +31,7 @@ jobs:
       - name: Install deps (next)
         run: npm ci
         working-directory: next/
-			# 소스 코드에 있는 잠재적인 오류, 버그, 스타일 문제를 찾아내는 정적 코드 분석 도구
+
       - name: Lint (next)
         run: npm run lint --if-present
         working-directory: next/
