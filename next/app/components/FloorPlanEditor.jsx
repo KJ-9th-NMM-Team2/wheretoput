@@ -1157,16 +1157,20 @@ const FloorPlanEditor = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-orange-50 flex flex-col overflow-hidden">
+    <div className="w-full h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* 툴바 */}
-      <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
+      <div className="
+        bg-white/95 backdrop-blur-sm border-b border-amber-100 px-6 py-4 shadow-sm
+        dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg
+        sticky top-0 z-50
+      ">
         <div className="flex items-center gap-4">
           
           <Link href="/" className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer">
             🏠
           </Link>
           
-          <h1 className="text-xl font-bold text-orange-800 mr-6">
+          <h1 className="text-xl font-bold leading-tight tracking-tight text-amber-900 dark:text-amber-100 mr-6 hover:text-amber-600 transition-colors duration-200">
             2D 도면 그리기
           </h1>
 
@@ -1175,8 +1179,8 @@ const FloorPlanEditor = () => {
               onClick={() => setTool(tool === "wall" ? "none" : "wall")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "wall"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+                  ? "bg-gray-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
               <Square size={18} />벽 그리기 {tool === "wall" ? "(ON)" : ""}
@@ -1186,8 +1190,8 @@ const FloorPlanEditor = () => {
               onClick={() => setTool(tool === "select" ? "none" : "select")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "select"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+                  ? "bg-gray-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
               <MousePointer size={18} />
@@ -1198,8 +1202,8 @@ const FloorPlanEditor = () => {
               onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "eraser"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+                  ? "bg-gray-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
               <Eraser size={18} />
@@ -1217,8 +1221,8 @@ const FloorPlanEditor = () => {
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 tool === "partial_eraser"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+                  ? "bg-gray-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
               <Scissors size={18} />
@@ -1236,8 +1240,8 @@ const FloorPlanEditor = () => {
                 !uploadedImage
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : tool === "scale"
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-orange-200 text-orange-700 hover:bg-orange-300"
+                  ? "bg-gray-500 text-white shadow-md"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
               <Square size={18} />
@@ -1247,7 +1251,7 @@ const FloorPlanEditor = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isProcessing}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-200 text-blue-700 rounded-lg font-medium hover:bg-blue-300 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
             >
               <Upload size={18} />
               {isProcessing ? "처리중..." : "도면 업로드"}
@@ -1255,7 +1259,7 @@ const FloorPlanEditor = () => {
 
             <button
               onClick={clearAllWalls}
-              className="flex items-center gap-2 px-4 py-2 bg-red-200 text-red-700 rounded-lg font-medium hover:bg-red-300 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
             >
               <Trash2 size={18} />
               전체 지우기
@@ -1288,7 +1292,7 @@ const FloorPlanEditor = () => {
             <button
               onClick={handleGoToSimulator}
               disabled={walls.length === 0 || isCreatingRoom}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
             >
               <Check size={18} />
               {isCreatingRoom ? "방 생성 중..." : "집 생성하기"}
@@ -1319,14 +1323,6 @@ const FloorPlanEditor = () => {
               />
             </div>
           </div>
-
-          {/* 격자 정보 */}
-          {/* <div className="mt-4 text-sm text-orange-600">
-            <p>격자 크기: 500mm × 500mm</p>
-            <p>
-              총 벽 개수: {walls.length}개
-            </p>
-          </div> */}
         </div>
 
         {/* 사이드 패널 */}
