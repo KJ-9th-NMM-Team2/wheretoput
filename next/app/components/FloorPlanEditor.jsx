@@ -1581,12 +1581,12 @@ const FloorPlanEditor = () => {
                 setViewScale(1);
                 setViewOffset({ x: 0, y: 0 });
               }}
-              className="w-full px-3 py-1 bg-amber-500 text-white text-sm rounded hover:bg-amber-600 transition-colors duration-200"
+              className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
             >
               초기 위치로
             </button>
 
-            <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-2">
+            <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4">
               드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
             </p>
           </div>
@@ -1598,7 +1598,7 @@ const FloorPlanEditor = () => {
                 배경 이미지 설정
               </h4>
               <div className="mb-2">
-                <label className="block text-sm text-orange-600 mb-1">
+                <label className="text-gray-800 dark:text-gray-100 tracking-tight mb-1">
                   투명도: {Math.round(backgroundOpacity * 100)}%
                 </label>
                 <input
