@@ -421,7 +421,6 @@ export default function SimPage({
           )}
           <Suspense fallback={null}>
             {loadedModels.map((model: any) => {
-              console.log(`모델: ${Object.keys(model)}`);
               return (
                 <DraggableModel
                   key={model.id}
