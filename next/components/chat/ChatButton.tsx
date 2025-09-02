@@ -6,8 +6,9 @@ import styles from "./ChatButton.module.scss";
 import { api, setAuthToken } from "@/lib/client/api";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { AnimatePresence, motion } from "framer-motion";
-import { getToken } from "next-auth/jwt";
-// import { auth } from "@/lib/auth";
+import { useSession } from "next-auth/react";
+
+const NEXT_API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
 
 type ChatListItem = {
   chat_room_id: string;
@@ -44,6 +45,8 @@ export default function ChatButton({ currentUserId }: { currentUserId: string })
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const { data: session } = useSession();
+  
 
   const ts = (s?: string) => {
     if (!s) return -Infinity;
@@ -196,7 +199,7 @@ export default function ChatButton({ currentUserId }: { currentUserId: string })
         const users = data ?? [];
         const rows: UserLite[] = (users ?? []).map((u: any) => ({
           id: String(u.id),
-          name: u.name ?? "이름 없음",
+          name: u.name ?? "이름 없음",  
           image: u.image ?? undefined,
         }));
         setPeopleHits(rows.filter(u => u.id !== currentUserId));
@@ -504,9 +507,11 @@ export default function ChatButton({ currentUserId }: { currentUserId: string })
   // 1:1 시작
   const onStartDirect = useCallback(
     async (otherUserId: string) => {
-      const { data } = await api.post("/backend/rooms/direct", { userId: otherUserId }, {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await api.get(`${NEXT_API_URL}/api/backend/rooms/direct`, {
+        params: { currentUserId: session?.user?.id, otherUserId: otherUserId },
+        headers: { Authorization: `Bearer ${token}` }
       });
+      console.log("api 호출 후 ");
       const roomId = data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
       if (!roomId) return;
 

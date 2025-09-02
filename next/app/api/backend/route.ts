@@ -39,7 +39,6 @@ export async function GET(req: Request) {
         if (!users) {
             return Response.json({ error: "사용자를 찾을 수 없습니다." }, { status: 404 })
         }
-        console.log('users', users);
         return Response.json(users);
     } catch (error) {
         console.log("Server /api/backend ERROR");
