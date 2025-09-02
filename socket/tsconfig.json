@@ -29,6 +29,5 @@
     "src",
     "prisma/**/*.ts",
     "src/types/**/*.d.ts",
-    "test/**/*"
   ]
 }
