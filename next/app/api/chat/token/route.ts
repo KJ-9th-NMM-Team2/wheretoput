@@ -31,7 +31,6 @@ export async function GET(req: Request) {
         return Response.json({ error: "No token" }, { status: 401 });
     }
     
-    console.log("token", token);
     return Response.json({ 
         tokenData: token,
         userId: token.id 
