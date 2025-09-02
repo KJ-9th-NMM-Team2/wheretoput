@@ -20,6 +20,25 @@ export function ControlIcons() {
     color: 'white',
     border: 'none',
     borderRadius: '5px',
+    width: '60px', // "저장" 텍스트에 맞게 조정
+    height: '35px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    zIndex: 101,
+    transition: 'background 0.2s ease',
+    padding: '0 8px' // 좌우 여백 추가
+  };
+
+  const bottomIconStyle = {
+    position: 'fixed',
+    bottom: '20px',
+    background: 'rgba(0, 0, 0, 0.7)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
     width: '40px',
     height: '40px',
     cursor: 'pointer',
@@ -82,39 +101,45 @@ export function ControlIcons() {
       <button
         style={{
           ...iconStyle,
-          right: '120px'
+          right: '20px',
+          height: '40px',
+          fontSize: '16px'
         }}
         onClick={() => setShowControlPopup(true)}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = iconStyle.background}
-        title="컨트롤 패널"
+        title="저장하기"
       >
-        <FaSave></FaSave>
+        저장
       </button>
 
-      {/* Light Control Icon */}
+      {/* Light Control Icon - 저장 버튼 왼쪽 */}
       <button
         style={{
-          ...iconStyle,
-          right: '70px'
+          ...bottomIconStyle,
+          top: '10px',
+          right: '90px',
+          bottom: 'auto'
         }}
         onClick={() => setShowLightPopup(true)}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = iconStyle.background}
+        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="조명 설정"
       >
         <MdSunny></MdSunny>
       </button>
 
-      {/* Camera Control Icon */}
+      {/* Camera Control Icon - 조명 버튼 왼쪽 */}
       <button
         style={{
-          ...iconStyle,
-          right: '20px'
+          ...bottomIconStyle,
+          top: '10px',
+          right: '140px',
+          bottom: 'auto'
         }}
         onClick={() => setShowCameraPopup(true)}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = iconStyle.background}
+        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="카메라 설정"
       >
         <FaCameraRetro />
