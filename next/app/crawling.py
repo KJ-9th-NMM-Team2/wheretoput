@@ -1,4 +1,8 @@
-# 필요한 라이브러리들을 가져옵니다.
+# 특정 가구 카테고리만 크롤링
+# tables_category_index 로 조작
+# 0 = 의자 , 1= 조명, ....... 13 = 홈 데코 
+
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -16,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path='../.env.local')
 
 # --- 1. 웹 드라이버 설정 및 사이트 접속 ---
-print("웹 드라이버를 시작하고 Archisketch 사이트로 이동합니다.")
+print("Archisketch 사이트로 이동합니다.")
 chrome_options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(options=chrome_options)
 driver.get('https://planner.archisketch.com/')
@@ -41,7 +45,7 @@ try:
     # Log in 버튼 클릭
     driver.find_element(By.CSS_SELECTOR, '#mainContent > div > div > form > div.confirm_btn > button.btn_g.highlight.submit').click()
     print("로그인 성공. 메인 페이지로 이동합니다.")
-    time.sleep(10) # 로그인 후 페이지 로딩 대기
+    time.sleep(20) # 로그인 후 페이지 로딩 대기
 except Exception as e:
     print(f"로그인 과정에서 오류가 발생했습니다: {e}")
     driver.quit() # 오류 발생 시 드라이버 종료
@@ -94,7 +98,8 @@ print("가구 데이터 수집을 시작합니다.")
 
 # Tables 카테고리만 수집 (예: 3번째가 Tables라면 z=2)
 # 원하는 카테고리 번호를 여기서 지정하세요 (0부터 시작)
-tables_category_index = 2  # 예시: 3번째 카테고리 (실제 번호에 맞게 수정)
+tables_category_index = 3  
+# 예시: 3번째 카테고리 (실제 번호에 맞게 수정)
 
 # 특정 카테고리만 순회
 for z in [tables_category_index]:
@@ -105,8 +110,8 @@ for z in [tables_category_index]:
         time.sleep(1) # 카테고리 내 가구 로딩 대기
 
         # 이 예제에서는 각 카테고리별로 일부만 가져오도록 범위를 작게 설정 (필요시 range 수정)
-        for i in range(1, 5): # 행 (4행까지)
-            for j in range(1, 7): # 열 (6열까지)
+        for i in range(1, 11): # 행 (10행까지)
+            for j in range(1, 3): # 열 (2열까지)
                 try:
                     # 가구 아이템 클릭
                     item_xpath = f'//*[@id="root"]/section/div[1]/div[1]/div/section/aside/section/div/div[3]/div[{i}]/div[{j}]/div/div[1]/div[3]'
@@ -194,6 +199,12 @@ if not df.empty:
         # 3. 새로운 가구가 있을 경우에만 데이터베이스에 삽입
         if not new_furnitures_df.empty:
             print(f'신규 가구 {len(new_furnitures_df)}개를 데이터베이스에 추가합니다.')
+            
+            # 추가되는 가구 이름들을 로그로 출력
+            print("추가되는 가구 목록:")
+            for idx, name in enumerate(new_furnitures_df['name'], 1):
+                print(f"  {idx}. {name}")
+            
             new_furnitures_df.to_sql(
                 'furnitures', 
                 engine, 
