@@ -49,7 +49,7 @@ export function SelectedModelEditModal() {
           {/* 크기 조정 */}
           <div className="mb-4">
             <ControlSlider
-              label={`크기 ${Math.ceil(
+              label={` ${Math.ceil(
                 selectedModel.length[0] *
                   (Array.isArray(selectedModel.scale) ? selectedModel.scale[0] : selectedModel.scale)
               )}mm × ${Math.ceil(

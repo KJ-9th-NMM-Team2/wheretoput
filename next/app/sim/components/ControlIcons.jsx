@@ -105,7 +105,11 @@ export function ControlIcons() {
           height: '40px',
           fontSize: '16px'
         }}
-        onClick={() => setShowControlPopup(true)}
+        onClick={() => {
+          setShowControlPopup(true);
+          setShowLightPopup(false);
+          setShowCameraPopup(false);
+        }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = iconStyle.background}
         title="저장하기"
@@ -121,7 +125,11 @@ export function ControlIcons() {
           right: '90px',
           bottom: 'auto'
         }}
-        onClick={() => setShowLightPopup(true)}
+        onClick={() => {
+          setShowLightPopup(true);
+          setShowControlPopup(false);
+          setShowCameraPopup(false);
+        }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="조명 설정"
@@ -137,7 +145,11 @@ export function ControlIcons() {
           right: '140px',
           bottom: 'auto'
         }}
-        onClick={() => setShowCameraPopup(true)}
+        onClick={() => {
+          setShowCameraPopup(true);
+          setShowControlPopup(false);
+          setShowLightPopup(false);
+        }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="카메라 설정"
@@ -166,7 +178,15 @@ export function ControlIcons() {
 
       {/* Light Control Popup */}
       {showLightPopup && (
-        <div style={popupOverlayStyle} onClick={() => setShowLightPopup(false)}>
+        <div 
+          style={{
+            position: 'fixed',
+            top: '60px',
+            right: '90px',
+            zIndex: 200
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
           <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
             <button 
               style={closeButtonStyle}
@@ -184,7 +204,15 @@ export function ControlIcons() {
 
       {/* Camera Control Popup */}
       {showCameraPopup && (
-        <div style={popupOverlayStyle} onClick={() => setShowCameraPopup(false)}>
+        <div 
+          style={{
+            position: 'fixed',
+            top: '60px',
+            right: '140px',
+            zIndex: 200
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
           <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
             <button 
               style={closeButtonStyle}
