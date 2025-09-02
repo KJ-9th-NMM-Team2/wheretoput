@@ -315,7 +315,7 @@ const FloorPlanEditor = () => {
     ctx.restore();
   };
 
-  // 캔버스 그리기 : 선분 두께 등 수정
+  // 캔버스 그리기 : 고정 크기 설정
   const drawCanvas = () => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -323,19 +323,18 @@ const FloorPlanEditor = () => {
 
     const ctx = canvas.getContext("2d");
 
-    // 컨테이너 크기에 맞춰 동적으로 캔버스 크기 설정
-    const containerRect = container.getBoundingClientRect();
-    const canvasWidth = containerRect.width;
-    const canvasHeight = containerRect.height;
+    // 캔버스 크기 고정 (1600x1200)
+    const canvasWidth = 1600;
+    const canvasHeight = 1200;
 
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
 
-    // 캔버스 실제 해상도 설정 (컨테이너 크기 기준)
+    // 캔버스 실제 해상도 설정 (고정 크기 기준)
     canvas.width = canvasWidth * dpr;
     canvas.height = canvasHeight * dpr;
 
-    // CSS 크기를 컨테이너 크기로 설정
+    // CSS 크기를 고정 크기로 설정
     canvas.style.width = canvasWidth + "px";
     canvas.style.height = canvasHeight + "px";
 
@@ -345,7 +344,7 @@ const FloorPlanEditor = () => {
     // 전체 캔버스 클리어
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // 동적 캔버스 크기 사용
+    // 고정 캔버스 크기 사용
     const rect = {
       width: canvasWidth,
       height: canvasHeight,
@@ -366,7 +365,7 @@ const FloorPlanEditor = () => {
       // 캐시된 이미지 사용 (완전히 로드된 경우에만)
       const img = cachedBackgroundImage;
 
-      // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+      // 이미지를 고정 캔버스 크기에 맞춰 스케일링하여 그리기
       const imgAspect = img.width / img.height;
       const canvasAspect = rect.width / rect.height;
 
@@ -374,14 +373,14 @@ const FloorPlanEditor = () => {
 
       if (imgAspect > canvasAspect) {
         // 이미지가 캔버스보다 가로로 긴 경우
-        drawWidth = rect.width;
-        drawHeight = rect.width / imgAspect;
+        drawWidth = rect.width * 0.8; // 캔버스 크기의 80%로 제한
+        drawHeight = drawWidth / imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       } else {
         // 이미지가 캔버스보다 세로로 긴 경우
-        drawHeight = rect.height;
-        drawWidth = rect.height * imgAspect;
+        drawHeight = rect.height * 0.8; // 캔버스 크기의 80%로 제한
+        drawWidth = drawHeight * imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       }
@@ -409,7 +408,7 @@ const FloorPlanEditor = () => {
         ctx.scale(viewScale, viewScale);
         ctx.translate(viewOffset.x, viewOffset.y);
 
-        // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+        // 이미지를 고정 캔버스 크기에 맞춰 스케일링하여 그리기
         const imgAspect = img.width / img.height;
         const canvasAspect = rect.width / rect.height;
 
@@ -417,14 +416,14 @@ const FloorPlanEditor = () => {
 
         if (imgAspect > canvasAspect) {
           // 이미지가 캔버스보다 가로로 긴 경우
-          drawWidth = rect.width;
-          drawHeight = rect.width / imgAspect;
+          drawWidth = rect.width * 0.8; // 캔버스 크기의 80%로 제한
+          drawHeight = drawWidth / imgAspect;
           drawX = -drawWidth / 2;
           drawY = -drawHeight / 2;
         } else {
           // 이미지가 캔버스보다 세로로 긴 경우
-          drawHeight = rect.height;
-          drawWidth = rect.height * imgAspect;
+          drawHeight = rect.height * 0.8; // 캔버스 크기의 80%로 제한
+          drawWidth = drawHeight * imgAspect;
           drawX = -drawWidth / 2;
           drawY = -drawHeight / 2;
         }
@@ -678,26 +677,22 @@ const FloorPlanEditor = () => {
     setLastPanPoint(null);
   };
 
-  // 줌 핸들러 (수정)
+  // 줌 핸들러 (캔버스 중앙 기준)
   const handleWheel = (e) => {
     e.preventDefault();
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
 
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     const newScale = Math.max(0.1, Math.min(10, viewScale * delta));
 
     if (newScale !== viewScale) {
-      // 마우스 위치를 캔버스 좌표계로 변환
-      const worldMouseX = mouseX / viewScale - viewOffset.x;
-      const worldMouseY = mouseY / viewScale - viewOffset.y;
+      // 캔버스 중앙을 기준으로 줌 (현재 뷰의 중앙점 유지)
+      const scaleRatio = newScale / viewScale;
 
-      // 새로운 오프셋 계산 (마우스 위치가 고정되도록)
-      const newOffsetX = mouseX / newScale - worldMouseX;
-      const newOffsetY = mouseY / newScale - worldMouseY;
+      setViewOffset((prev) => ({
+        x: prev.x * scaleRatio,
+        y: prev.y * scaleRatio,
+      }));
 
-      setViewOffset({ x: newOffsetX, y: newOffsetY });
       setViewScale(newScale);
     }
   };
@@ -914,62 +909,7 @@ const FloorPlanEditor = () => {
     viewOffset,
   ]);
 
-  // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
-  useEffect(() => {
-    let resizeTimeout;
-    let resizeObserverTimeout;
-
-    const handleResize = () => {
-      // 이전 타이머 취소
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-
-      // 즉시 캔버스 다시 그리기 (디바운스 없이)
-      debouncedRedraw();
-
-      // 추가적인 디바운스된 렌더링 (안정성을 위해)
-      resizeTimeout = setTimeout(() => {
-        debouncedRedraw();
-      }, 50);
-    };
-
-    // 윈도우 리사이즈 이벤트
-    window.addEventListener("resize", handleResize);
-
-    // ResizeObserver로 컨테이너 크기 변화 직접 감지
-    let resizeObserver;
-    if (containerRef.current) {
-      resizeObserver = new ResizeObserver((entries) => {
-        // 이전 타이머 취소
-        if (resizeObserverTimeout) {
-          clearTimeout(resizeObserverTimeout);
-        }
-
-        // 즉시 캔버스 다시 그리기 (크기 변경 즉시 반응)
-        debouncedRedraw();
-
-        // 추가적인 디바운스된 렌더링 (연속적인 크기 변경에 대비)
-        resizeObserverTimeout = setTimeout(() => {
-          debouncedRedraw();
-        }, 20);
-      });
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-      if (resizeObserverTimeout) {
-        clearTimeout(resizeObserverTimeout);
-      }
-    };
-  }, [debouncedRedraw]); // debouncedRedraw 의존성 추가
+  // 캔버스는 고정 크기이므로 리사이즈 감지 불필요
 
   // 이미지 업로드 처리
   const handleImageUpload = async (event) => {
@@ -991,24 +931,24 @@ const FloorPlanEditor = () => {
         maxGap: 15, // 선분 간 최대 간격
       });
 
-      // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
-      const canvas = canvasRef.current;
-      const containerRect = canvas.getBoundingClientRect();
+      // 고정된 캔버스 크기 기준으로 이미지 스케일 계산
+      const canvasWidth = 1600;
+      const canvasHeight = 1200;
 
       // 이미지 비율과 캔버스 비율 계산
       const imgAspect = result.imageWidth / result.imageHeight;
-      const canvasAspect = containerRect.width / containerRect.height;
+      const canvasAspect = canvasWidth / canvasHeight;
 
       let drawWidth, drawHeight, drawX, drawY;
 
       if (imgAspect > canvasAspect) {
-        drawWidth = containerRect.width;
-        drawHeight = containerRect.width / imgAspect;
+        drawWidth = canvasWidth * 0.8; // 캔버스 크기의 80%로 제한
+        drawHeight = drawWidth / imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       } else {
-        drawHeight = containerRect.height;
-        drawWidth = containerRect.height * imgAspect;
+        drawHeight = canvasHeight * 0.8; // 캔버스 크기의 80%로 제한
+        drawWidth = drawHeight * imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       }
@@ -1045,8 +985,8 @@ const FloorPlanEditor = () => {
         drawY,
         scaleX,
         scaleY,
-        containerWidth: containerRect.width,
-        containerHeight: containerRect.height,
+        containerWidth: canvasWidth,
+        containerHeight: canvasHeight,
       });
 
       alert(
@@ -1321,9 +1261,13 @@ const FloorPlanEditor = () => {
       {/* 메인 작업 영역 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
-        <div className="flex-1 p-6 overflow-hidden">
-          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
-            <div ref={containerRef} className="w-full h-full relative">
+        <div className="flex-1 p-0 overflow-hidden flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
+            <div
+              ref={containerRef}
+              className="relative"
+              style={{ width: "1600px", height: "1200px" }}
+            >
               <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
@@ -1333,8 +1277,8 @@ const FloorPlanEditor = () => {
                 onContextMenu={(e) => e.preventDefault()}
                 className="block"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "1600px",
+                  height: "1200px",
                   cursor: tool === "wall" ? "crosshair" : "default",
                 }}
               />
