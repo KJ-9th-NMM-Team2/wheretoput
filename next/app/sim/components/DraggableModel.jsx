@@ -144,7 +144,7 @@ export function DraggableModel({
     }
     
     try {
-      const box = new THREE.Box3().setFromObject(meshRef.current);
+      const box = new THREE.Box3().setFromObject(scene);
       if (box.isEmpty()) {
         return [1, 1, 1]; // 빈 박스인 경우 기본값
       }
@@ -173,7 +173,7 @@ export function DraggableModel({
           rotation={rotation}
           scale={safeScale}
         >
-          <primitive object={scene} />
+          <primitive object={scene.clone()} />
         </group>
       ) : (
         <group
@@ -185,7 +185,7 @@ export function DraggableModel({
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
         >
-          <primitive object={scene} />
+          <primitive object={scene.clone()} />
 
           {(isSelected || isHovering) && (
             <mesh>
@@ -194,6 +194,7 @@ export function DraggableModel({
                 color={isSelected ? "#00ff00" : "#0000ff"}
                 wireframe
                 transparent
+                // depthTest={false}
                 opacity={0.5}
               />
             </mesh>
