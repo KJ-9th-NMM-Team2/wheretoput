@@ -1,7 +1,7 @@
 import React from "react";
 import { useStore } from "../store/useStore.js";
 
-export function InfoPanel() {
+export function InfoPanel({ isPopup = false }) {
   const {
     loadedModels,
     selectedModelId,
@@ -16,21 +16,26 @@ export function InfoPanel() {
     return null;
   }
 
+  const baseStyle = {
+    background: "rgba(0,0,0,0.7)",
+    padding: "15px",
+    borderRadius: "5px",
+    color: "white",
+    fontSize: "12px",
+    width: "300px",
+    maxHeight: "400px",
+    overflowY: "auto",
+  };
+
+  const positionStyle = isPopup ? 
+    { position: "static" } : 
+    { position: "absolute", bottom: "10px", right: "10px", zIndex: 100 };
+
   return (
     <div
       style={{
-        position: "absolute",
-        bottom: "10px",
-        right: "10px",
-        background: "rgba(0,0,0,0.7)",
-        padding: "15px",
-        borderRadius: "5px",
-        zIndex: 100,
-        color: "white",
-        fontSize: "12px",
-        width: "300px",
-        maxHeight: "400px",
-        overflowY: "auto",
+        ...baseStyle,
+        ...positionStyle
       }}
     >
       <h3 style={{ margin: "0 0 10px 0" }}>

@@ -6,16 +6,16 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "../store/useStore.js";
-import { ControlPanel } from "../components/ControlPanel.jsx";
-import { InfoPanel } from "../components/InfoPanel.jsx";
 import { DraggableModel } from "../components/DraggableModel.jsx";
-import { LightControlPanel } from "../components/LightControlPanel.jsx";
-import { CameraControlPanel } from "../components/CameraControlPanel.jsx";
+import { ControlIcons } from "../components/ControlIcons.jsx";
+import { SelectedModelEditModal } from "../components/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
 import { createWallsFromFloorPlan } from "../../wallDetection.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
+
+
 
 type position = [number, number, number];
 
@@ -338,19 +338,18 @@ export default function SimPage({
         }
 
         {!viewOnly && (
-          <>
-            <ControlPanel />
-            <InfoPanel />
-          </>
+          <ControlIcons />
         )}
-
-        <LightControlPanel />
-        <CameraControlPanel />
+        
+        <SelectedModelEditModal />
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
-          style={{ width: "100%", height: "100vh" }}
+          style={{ 
+            width: "100%", // 항상 전체 너비 사용
+            height: "100vh" 
+          }}
           frameloop="demand"
         >
           <Environment preset="apartment" background={false} />
@@ -359,7 +358,7 @@ export default function SimPage({
           ) : (
             <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
           )} */}
-          ㅇ
+          
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
           <ambientLight intensity={ambientLightIntensity} />

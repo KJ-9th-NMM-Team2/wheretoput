@@ -23,7 +23,7 @@ const handleSave = async () => {
   }
 };
 
-export function ControlPanel() {
+export function ControlPanel({ isPopup = false }) {
   const fileInputRef = useRef();
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -110,23 +110,28 @@ export function ControlPanel() {
     }
   };
 
+  const baseStyle = {
+    background: "rgba(0,0,0,0.7)",
+    padding: "15px",
+    borderRadius: "5px",
+    color: "white",
+    fontSize: "12px",
+    width: "250px",
+  };
+
+  const positionStyle = isPopup ? 
+    { position: "static" } : 
+    { position: "absolute", top: "10px", right: "10px", zIndex: 100 };
+
   return (
     <div
       style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        background: "rgba(0,0,0,0.7)",
-        padding: "15px",
-        borderRadius: "5px",
-        zIndex: 100,
-        color: "white",
-        fontSize: "12px",
-        width: "250px",
+        ...baseStyle,
+        ...positionStyle
       }}
     >
       {/* 기본 스케일 설정 */}
-      <div style={{ marginBottom: "10px" }}>
+      {/* <div style={{ marginBottom: "10px" }}>
         <label>새 가구 기본 크기:</label>
         <input
           type="range"
@@ -140,7 +145,7 @@ export function ControlPanel() {
         <div style={{ color: "#4CAF50", textAlign: "center" }}>
           {scaleValue.toFixed(1)}x
         </div>
-      </div>
+      </div> */}
 
       {/* 벽 스케일 설정 */}
       <div style={{ marginBottom: "10px" }}>
