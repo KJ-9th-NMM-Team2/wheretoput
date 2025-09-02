@@ -74,7 +74,7 @@ export function DraggableModel({
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
   useEffect(() => {
     if (scene && meshRef.current) {
-      console.log(`Setting up model ${modelId} with scale:`, safeScale);
+      // console.log(`Setting up model ${modelId} with scale:`, safeScale);
 
       // 모델의 실제 크기 측정
       const box = new THREE.Box3().setFromObject(scene);

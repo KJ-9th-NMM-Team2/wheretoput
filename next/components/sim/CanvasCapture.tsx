@@ -9,7 +9,7 @@ export default function CanvasImageLogger() {
 
   const captureAndUpload = useCallback(async () => {
     try {
-      console.log("🎯 Starting canvas capture...");
+      // console.log("🎯 Starting canvas capture...");
 
       // 현재 프레임을 강제 렌더링
       gl.render(scene, camera);
@@ -24,11 +24,11 @@ export default function CanvasImageLogger() {
       // 파일명에 방 ID와 타임스탬프 포함
       const fileName = `room-${currentRoomId}.png`;
 
-      console.log(`📸 Uploading canvas image: ${fileName}`);
+      // console.log(`📸 Uploading canvas image: ${fileName}`);
       const result = await postThumbnailImage(dataURL, fileName, currentRoomId);
 
       if (result.success) {
-        console.log("✅ Canvas image uploaded successfully");
+        // console.log("✅ Canvas image uploaded successfully");
       } else {
         throw new Error(result.error || "Upload failed");
       }

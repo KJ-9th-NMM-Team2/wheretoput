@@ -361,27 +361,27 @@ export async function createWallsFromFloorPlan(roomId = null) {
   // room_id가 제공되면 room_walls 테이블에서 가져오기
   if (roomId && !roomId.startsWith('temp_')) {
     try {
-      console.log(`room_walls 테이블에서 방 ${roomId}의 벽 데이터를 가져옵니다.`);
+      // console.log(`room_walls 테이블에서 방 ${roomId}의 벽 데이터를 가져옵니다.`);
       const response = await fetch(`/api/room-walls/${roomId}`);
       if (response.ok) {
         const wallsResult = await response.json();
         if (wallsResult.success && wallsResult.walls && wallsResult.walls.length > 0) {
-          console.log(`room_walls에서 ${wallsResult.wall_count}개의 벽을 가져왔습니다.`);
+          // console.log(`room_walls에서 ${wallsResult.wall_count}개의 벽을 가져왔습니다.`);
           return wallsResult.walls;
         }
       } else if (response.status !== 404) {
-        console.log(`room_walls API 호출 실패: ${response.status}`);
+        // console.log(`room_walls API 호출 실패: ${response.status}`);
       }
     } catch (error) {
-      console.log('room_walls에서 벽 데이터 가져오기 실패:', error.message);
+      // console.log('room_walls에서 벽 데이터 가져오기 실패:', error.message);
     }
   }
   
   // room_walls에서 가져오지 못했거나 temp_ roomId인 경우 localStorage 사용
-  console.log('localStorage에서 도면 데이터를 가져옵니다.');
+  // console.log('localStorage에서 도면 데이터를 가져옵니다.');
   const floorPlanData = localStorage.getItem('floorPlanData');
   if (!floorPlanData) {
-    console.log('저장된 도면 데이터가 없습니다.');
+    // console.log('저장된 도면 데이터가 없습니다.');
     return [];
   }
   
@@ -389,7 +389,7 @@ export async function createWallsFromFloorPlan(roomId = null) {
     const wallData = JSON.parse(floorPlanData);
     const { walls, pixelToMmRatio, timestamp } = wallData;
     
-    console.log(`도면 데이터 로드됨: ${walls.length}개 벽, 축척: 1px = ${pixelToMmRatio}mm`);
+    // console.log(`도면 데이터 로드됨: ${walls.length}개 벽, 축척: 1px = ${pixelToMmRatio}mm`);
     
     // 2D 벽 데이터를 3D 벽 정보로 변환
     const walls3D = walls.map((wall, index) => {
@@ -436,11 +436,11 @@ export async function createWallsFromFloorPlan(roomId = null) {
         wall.position[2] -= centerZ;
       });
       
-      console.log(`벽 중심점 조정: centerX=${centerX.toFixed(2)}, centerZ=${centerZ.toFixed(2)}`);
+      // console.log(`벽 중심점 조정: centerX=${centerX.toFixed(2)}, centerZ=${centerZ.toFixed(2)}`);
     }
     
     // 생성된 3D 벽 정보를 콘솔에 출력 (디버깅용)
-    console.log('3D 벽 데이터 생성 완료:', walls3D);
+    // console.log('3D 벽 데이터 생성 완료:', walls3D);
     
     return walls3D;
     
@@ -473,7 +473,7 @@ export function createWallGeometry(wallData) {
 // 도면 데이터 클리어 함수
 export function clearFloorPlanData() {
   localStorage.removeItem('floorPlanData');
-  console.log('도면 데이터가 삭제되었습니다.');
+  // console.log('도면 데이터가 삭제되었습니다.');
 }
 
 // 기본 export (클래스 방식으로 사용 시)

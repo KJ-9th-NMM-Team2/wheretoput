@@ -92,23 +92,23 @@ export async function GET(
       return Response.json({ error: "room_id is required" }, { status: 400 });
     }
 
-    console.log(`Loading objects for room: ${room_id}`);
+    // console.log(`Loading objects for room: ${room_id}`);
 
     // 1. 방이 존재하는지 확인
-    console.log("Step 1: Checking if room exists...");
+    // console.log("Step 1: Checking if room exists...");
     const room = await prisma.rooms.findUnique({
       where: { room_id: room_id },
     });
 
     if (!room) {
-      console.log(`Room not found: ${room_id}`);
+      // console.log(`Room not found: ${room_id}`);
       return Response.json({ error: "Room not found" }, { status: 404 });
     }
 
-    console.log(`Room found: ${room.title}`);
+    // console.log(`Room found: ${room.title}`);
 
     // 2. room_objects와 furniture 정보, 그리고 벽 정보를 함께 조회
-    console.log("Step 2: Fetching room objects and walls...");
+    // console.log("Step 2: Fetching room objects and walls...");
     const roomObjects = await prisma.room_objects.findMany({
       where: { room_id: room_id },
       include: {
@@ -130,7 +130,7 @@ export async function GET(
     });
 
     // 3. 벽 정보 조회
-    console.log("Step 3: Fetching room walls...");
+    // console.log("Step 3: Fetching room walls...");
     const roomWalls = await prisma.room_walls.findMany({
       where: { room_id: room_id },
       orderBy: {
@@ -138,33 +138,33 @@ export async function GET(
       },
     });
 
-    console.log(
-      `Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`
-    );
+    // console.log(
+    //   `Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`
+    // );
 
     // 각 객체의 furniture 관계 상태 확인
-    roomObjects.forEach((obj, index) => {
-      console.log(
-        `Object ${index}: furniture_id=${obj.furniture_id}, length: ${obj.furnitures.length_x}, ${obj.furnitures.length_y}, ${obj.furnitures.length_z}`
-      );
-    });
+    // roomObjects.forEach((obj, index) => {
+    //   console.log(
+    //     `Object ${index}: furniture_id=${obj.furniture_id}, length: ${obj.furnitures.length_x}, ${obj.furnitures.length_y}, ${obj.furnitures.length_z}`
+    //   );
+    // });
 
     // 벽 정보 로그
-    roomWalls.forEach((wall, index) => {
-      console.log(
-        `Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`
-      );
-    });
+    // roomWalls.forEach((wall, index) => {
+    //   console.log(
+    //     `Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`
+    //   );
+    // });
 
     // 4. room_walls에 데이터가 없으면 rooms.room_data에서 fallback 시도
     let legacyWallsData = [];
     if (roomWalls.length === 0 && room.room_data) {
-      console.log(
-        "room_walls 테이블에 데이터가 없음. room_data에서 fallback 시도..."
-      );
+      // console.log(
+      //   "room_walls 테이블에 데이터가 없음. room_data에서 fallback 시도..."
+      // );
       const roomData = room.room_data as any;
       if (roomData.walls && Array.isArray(roomData.walls)) {
-        console.log(`room_data에서 ${roomData.walls.length}개의 벽 발견`);
+        // console.log(`room_data에서 ${roomData.walls.length}개의 벽 발견`);
 
         // legacy 데이터를 room_walls 형식으로 변환
         const pixelToMmRatio = (roomData.pixelToMmRatio || 20) / 50;
@@ -269,7 +269,7 @@ export async function GET(
       wall_order: wall.wall_order,
     }));
 
-    console.log(`최종 변환된 벽 개수: ${walls.length}`);
+    // console.log(`최종 변환된 벽 개수: ${walls.length}`);
 
     const result: any = {
       success: true,

@@ -79,8 +79,8 @@ function getSelectOrder(
  */
 export async function GET(req: NextRequest) {
   try {
-    console.log("=== API 호출됨 ===");
-    console.log("전체 URL:", req.url);
+    // console.log("=== API 호출됨 ===");
+    // console.log("전체 URL:", req.url);
 
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("q");
@@ -88,9 +88,9 @@ export async function GET(req: NextRequest) {
     const order = searchParams.get("order"); // order 쿼리 파라미터
     const num = searchParams.get("num"); // num 쿼리 파라미터
 
-    console.log(fields);
-    console.log(order);
-    console.log(getSelectOrder(order));
+    // console.log(fields);
+    // console.log(order);
+    // console.log(getSelectOrder(order));
     if (!query?.trim()) {
       return Response.json([]);
     }
@@ -126,7 +126,7 @@ export async function GET(req: NextRequest) {
       orderBy: getSelectOrder(order),
       ...(num ? { take: parseInt(num) } : {}),
     });
-    console.log(rooms);
+    // console.log(rooms);
     return Response.json(rooms);
   } catch (error) {
     console.error("Error fetching rooms:", error);

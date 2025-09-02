@@ -8,7 +8,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google, GitHub],
   callbacks: {
     async jwt({ token, account, user }) {
-      console.log("token:", token);
+      // console.log("token:", token);
       if (account) {
         token.accessToken = account.access_token;
       }

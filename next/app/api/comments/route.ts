@@ -40,7 +40,7 @@ import type { NextRequest } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const { room_id, user_id, content } = await req.json();
-    console.log(room_id, user_id, content);
+    // console.log(room_id, user_id, content);
 
     if (!user_id || !content) {
       return new Response("Bad Request: Missing user_id or content", {

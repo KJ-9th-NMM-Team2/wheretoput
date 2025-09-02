@@ -17,7 +17,7 @@ export default async function SearchPage({
   } else {
     searchMode = true;
     data = await fetchRooms(undefined, undefined, undefined, query);
-    console.log(data);
+    // console.log(data);
   }
   return (
     <>

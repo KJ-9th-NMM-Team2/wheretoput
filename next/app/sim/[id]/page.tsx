@@ -15,8 +15,6 @@ import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
 
-
-
 type position = [number, number, number];
 
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
@@ -121,24 +119,28 @@ function Wall({
       const minDistanceThreshold = 15;
       const maxDistanceThreshold = 30;
 
-      let cameraToWall = new THREE.Vector3()
-        .subVectors(camera.position, wallWorldPosition);
+      let cameraToWall = new THREE.Vector3().subVectors(
+        camera.position,
+        wallWorldPosition
+      );
       const distance = cameraToWall.length();
 
       if (distance > maxDistanceThreshold) {
         setOpacity(maxOpacity);
-      }
-      else if (distance < minDistanceThreshold) {
+      } else if (distance < minDistanceThreshold) {
         setOpacity(minOpacity);
-      }
-      else {
-        const newOpacity = (maxOpacity - minOpacity) / (maxDistanceThreshold - minDistanceThreshold) * (distance - minDistanceThreshold) + minOpacity;
+      } else {
+        const newOpacity =
+          ((maxOpacity - minOpacity) /
+            (maxDistanceThreshold - minDistanceThreshold)) *
+            (distance - minDistanceThreshold) +
+          minOpacity;
         setOpacity(newOpacity);
       }
       // else {
       //   cameraToWall.normalize();
       //   const dotProduct = wallNormal.dot(cameraToWall);
-  
+
       //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
       //   const t = 1 - Math.abs(dotProduct);
 
@@ -261,7 +263,7 @@ export default function SimPage({
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
 
-        console.log(`시뮬레이터 초기화: room_id = ${currentRoomId}`);
+        // console.log(`시뮬레이터 초기화: room_id = ${currentRoomId}`);
 
         setRoomId(currentRoomId);
         setCurrentRoomId(currentRoomId);
@@ -270,18 +272,18 @@ export default function SimPage({
         if (!currentRoomId.startsWith("temp_")) {
           try {
             await loadSimulatorState(currentRoomId);
-            console.log(`방 ${currentRoomId}의 데이터 로드 완료`);
+            // console.log(`방 ${currentRoomId}의 데이터 로드 완료`);
           } catch (loadError) {
-            console.log(
-              `방 ${currentRoomId}의 저장된 데이터 없음:`,
-              loadError.message
-            );
+            // console.log(
+            //   `방 ${currentRoomId}의 저장된 데이터 없음:`,
+            //   loadError.message
+            // );
             // 저장된 데이터가 없어도 에러로 처리하지 않음
           }
         } else {
-          console.log(
-            `임시 방 ${currentRoomId}이므로 데이터 로드를 건너뜁니다.`
-          );
+          // console.log(
+          //   `임시 방 ${currentRoomId}이므로 데이터 로드를 건너뜁니다.`
+          // );
         }
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);
@@ -352,18 +354,16 @@ export default function SimPage({
           </div>
         }
 
-        {!viewOnly && (
-          <ControlIcons />
-        )}
-        
+        {!viewOnly && <ControlIcons />}
+
         <SelectedModelEditModal />
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
-          style={{ 
+          style={{
             width: "100%", // 항상 전체 너비 사용
-            height: "100vh" 
+            height: "100vh",
           }}
           frameloop="demand"
         >
@@ -373,7 +373,7 @@ export default function SimPage({
           ) : (
             <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
           )} */}
-          
+
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
           <directionalLight

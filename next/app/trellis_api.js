@@ -40,7 +40,7 @@ async function main(furnitureId = null, imageUrl = null) {
             }
         }
         
-        console.log("모델을 실행합니다...");
+        // console.log("모델을 실행합니다...");
         const output = await replicate.run(
             "firtoz/trellis:06f601b67d482565d4724ae3bc29e5e8cbaa6c4594df900da315d6a02f37ce2a",
             {
@@ -60,12 +60,12 @@ async function main(furnitureId = null, imageUrl = null) {
                 }
             }
         );
-        console.log("실행 완료! 이제 파일을 저장합니다...");
-        console.log("전체 API 응답:", output);
+        // console.log("실행 완료! 이제 파일을 저장합니다...");
+        // console.log("전체 API 응답:", output);
 
         if (output.model_file) {
             const url = output.model_file;
-            console.log(`모델 URL로부터 파일 다운로드를 시작합니다: ${url}`);
+            // console.log(`모델 URL로부터 파일 다운로드를 시작합니다: ${url}`);
             
             const response = await fetch(url);
             if (!response.ok) {
@@ -90,21 +90,21 @@ async function main(furnitureId = null, imageUrl = null) {
                 writer.on('error', reject);
             });
 
-            console.log(`✅ GLB 파일이 다음 경로에 저장되었습니다: ${filePath}`);
+            // console.log(`✅ GLB 파일이 다음 경로에 저장되었습니다: ${filePath}`);
             
             // S3에 업로드 (name 컬럼 값 사용)
             const s3Key = `uploads/${furnitureName}.glb`;
             const s3Url = await uploadToS3(filePath, s3Key);
-            console.log(`✅ S3 업로드 완료: ${s3Url}`);
+            // console.log(`✅ S3 업로드 완료: ${s3Url}`);
             
             // DB에 저장
             if (furnitureId) {
                 await updateFurnitureModelUrl(furnitureId, s3Url);
-                console.log(`✅ DB 업데이트 완료: furniture_id ${furnitureId}`);
+                // console.log(`✅ DB 업데이트 완료: furniture_id ${furnitureId}`);
                 return { model_url: s3Url, furniture_id: furnitureId };
             } else {
                 const newFurnitureId = await saveFurnitureToDb(s3Url);
-                console.log(`✅ DB 저장 완료: furniture_id ${newFurnitureId}`);
+                // console.log(`✅ DB 저장 완료: furniture_id ${newFurnitureId}`);
                 return { model_url: s3Url, furniture_id: newFurnitureId };
             }
             

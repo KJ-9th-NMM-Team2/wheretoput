@@ -63,14 +63,14 @@ import { calculatePagination } from "@/lib/paginagtion";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    console.log("Search params:", searchParams.toString());
+    // console.log("Search params:", searchParams.toString());
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "5");
     const categoryParam = searchParams.get("category");
     const category = categoryParam ? parseInt(categoryParam) : null;
     const skip = (page - 1) * limit;
 
-    console.log(`Fetching page ${page}, limit ${limit}, category: ${category}`);
+    // console.log(`Fetching page ${page}, limit ${limit}, category: ${category}`);
 
     // 변수를 try 블록 밖에서 선언
     let furnitures: Furniture[] = [];
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     try {
       if (category && !isNaN(category)) {
         // 카테고리가 지정된 경우
-        console.log("카테고리 필터링:", category);
+        // console.log("카테고리 필터링:", category);
 
         [furnitures, totalCount] = await Promise.all([
           prisma.furnitures.findMany({
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
         ]);
       } else {
         // 카테고리 지정 안된 경우 - 전체 가구
-        console.log("전체 가구 조회");
+        // console.log("전체 가구 조회");
 
         [furnitures, totalCount] = await Promise.all([
           prisma.furnitures.findMany({
@@ -114,9 +114,9 @@ export async function GET(request: Request) {
         ]);
       }
 
-      console.log(
-        `조회 성공: ${furnitures.length}개 조회, 전체 ${totalCount}개`
-      );
+      // console.log(
+      //   `조회 성공: ${furnitures.length}개 조회, 전체 ${totalCount}개`
+      // );
     } catch (dbError) {
       console.error("데이터베이스 쿼리 실패:", dbError);
       throw dbError; // 상위로 에러 전파

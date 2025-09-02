@@ -48,13 +48,13 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
     checkLikeStatus();
   }, [session?.user?.id, room.room_id]);
 
-  console.log("방 정보:", room);
+  // console.log("방 정보:", room);
 
   // 동일 가구 포함 x
   const uniqueFurnituresByRoom = Array.from(
     new Map(room.room_objects.map((o: any) => [o.furniture_id, o])).values()
   );
-  console.log(uniqueFurnituresByRoom);
+  // console.log(uniqueFurnituresByRoom);
 
   return (
     <>
