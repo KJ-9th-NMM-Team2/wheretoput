@@ -27,6 +27,29 @@ export const useStore = create(
     hoveringModelId: null,
     scaleValue: 1,
 
+    // 방에 접근한 유저가 오너인지 확인
+    isOwnUserRoom: false,
+
+    // 액션으로 분리
+    checkUserRoom: async (roomId, userId) => {
+      try {
+        const response = await fetch(`/api/rooms/user?roomId=${roomId}&userId=${userId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const result = await response.json();
+        if (result) {
+          set({ isOwnUserRoom: true});
+        } else {
+          set({ isOwnUserRoom: false});
+        }
+
+        return result ? true : false;
+      } catch (error) {
+        console.error('FETCH ERROR:', error);
+        set({ isOwnUserRoom: false });
+      }
+    },
+
     // 모델 액션들
     addModel: (model) =>
       set((state) => {

@@ -1,9 +1,33 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "../store/useStore.js";
+import { useSession } from "next-auth/react";
+
+const handleSave = async () => {
+  if (!currentRoomId) {
+    setSaveMessage("방 ID가 설정되지 않았습니다.");
+    setTimeout(() => setSaveMessage(""), 3000);
+    return;
+  }
+
+  try {
+    await saveSimulatorState();
+
+    // 저장 완료 후 캔버스 캡처 트리거
+    setShouldCapture(true);
+
+    setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`);
+    setTimeout(() => setSaveMessage(""), 3000);
+  } catch (error) {
+    setSaveMessage(`저장 실패: ${error.message}`);
+    setTimeout(() => setSaveMessage(""), 5000);
+  }
+};
 
 export function ControlPanel() {
   const fileInputRef = useRef();
   const [saveMessage, setSaveMessage] = useState("");
+
+  const {data: session, status} = useSession();
 
   const {
     scaleValue,
@@ -19,7 +43,19 @@ export function ControlPanel() {
     wallScaleFactor,
     setWallScaleFactor,
     loadSimulatorState,
+    checkUserRoom,
+    isOwnUserRoom
   } = useStore();
+
+  useEffect(() => {
+    const useCheckUserRoom = async () => {
+      if (status === 'loading') return;
+      if (!currentRoomId || !session?.user?.id) return;
+
+      await checkUserRoom(currentRoomId, session?.user?.id);
+    }
+    useCheckUserRoom();
+  }, [isOwnUserRoom, currentRoomId])
 
   // GLB 파일 업로드 처리
   const handleFileUpload = (event) => {
@@ -134,12 +170,14 @@ export function ControlPanel() {
       <div style={{ marginBottom: "10px" }}>
         <button
           onClick={handleSave}
-          disabled={isSaving || !currentRoomId}
+          disabled={!isOwnUserRoom || !currentRoomId}
           style={{
             background: currentRoomId
               ? isSaving
                 ? "#999"
-                : "#4CAF50"
+                : isOwnUserRoom
+                  ? "#4CAF50"
+                  : "#999"
               : "#666",
             color: "white",
             border: "none",
@@ -151,7 +189,7 @@ export function ControlPanel() {
             marginBottom: "5px",
           }}
         >
-          {isSaving ? "저장 중..." : `방 상태 저장 (${loadedModels.length}개)`}
+          {isSaving ? "저장 중..." : isOwnUserRoom ? `방 상태 저장 (${loadedModels.length}개)` : `가구 개수 (${loadedModels.length}개)`}
         </button>
 
         {/* 저장 상태 메시지 */}
@@ -169,7 +207,7 @@ export function ControlPanel() {
         )}
 
         {/* 마지막 저장 시간 */}
-        {lastSavedAt && (
+        {isOwnUserRoom && lastSavedAt && (
           <div
             style={{
               fontSize: "9px",
@@ -182,7 +220,6 @@ export function ControlPanel() {
           </div>
         )}
       </div>
-
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}

@@ -29,6 +29,7 @@ export function DraggableModel({
       Math.max((s || 1) * (lengthArray[i] || 1) * 0.001, 0.001)
     );
   })();
+
   const meshRef = useRef();
 
   // Zustand 스토어 사용
@@ -74,6 +75,7 @@ export function DraggableModel({
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
   useEffect(() => {
     if (scene && meshRef.current) {
+
       console.log(`Setting up model ${modelId} with scale:`, safeScale);
 
       // 모델의 실제 크기 측정
@@ -92,6 +94,7 @@ export function DraggableModel({
       box.setFromObject(scene);
       const min = box.min;
       const yOffset = -min.y * targetScale[1]; // 바닥이 y=0에 닿도록 오프셋 계산
+
       
       // 기존 position에 y 오프셋 추가
       const adjustedPosition = [position[0], position[1] + yOffset, position[2]];
@@ -227,6 +230,8 @@ export function DraggableModel({
                 color={isSelected ? "#00ff00" : "#0000ff"}
                 wireframe
                 transparent
+                opacity={0.5}
+
               />
             </mesh>
           )}
