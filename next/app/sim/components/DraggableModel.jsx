@@ -19,7 +19,6 @@ export function DraggableModel({
 }) {
   // scale 값을 안전하게 처리
   const safeScale = (() => {
-    console.log(scale, length);
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
     const lengthArray = Array.isArray(length)
       ? length
