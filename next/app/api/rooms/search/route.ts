@@ -12,6 +12,7 @@ function getSelectFields(fields: string | null) {
     view_count: true,
     created_at: true,
     updated_at: true,
+    is_public: true,
     _count: {
       select: {
         room_comments: true,
@@ -78,7 +79,7 @@ function getSelectOrder(
  */
 export async function GET(req: NextRequest) {
   try {
-  console.log("=== API 호출됨 ===");
+    console.log("=== API 호출됨 ===");
     console.log("전체 URL:", req.url);
 
     const { searchParams } = new URL(req.url);
@@ -96,37 +97,37 @@ export async function GET(req: NextRequest) {
 
     const rooms = await prisma.rooms.findMany({
       where: {
-      is_public: true, // 공개 방만 검색
-      OR: [
-        {
-        title: {
-          contains: query,
-          mode: 'insensitive'
-        }
-        },
-        {
-        user: {
-          name: {
-          contains: query,
-          mode: 'insensitive'
-          }
-        }
-        }
-      ],
+        is_public: true, // 공개 방만 검색
+        OR: [
+          {
+            title: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          {
+            user: {
+              name: {
+                contains: query,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
       },
       select: {
-      ...getSelectFields(fields),
-      user: {
-        select: {
-        name: true,
+        ...getSelectFields(fields),
+        user: {
+          select: {
+            name: true,
+          },
         },
-      },
       },
       orderBy: getSelectOrder(order),
       ...(num ? { take: parseInt(num) } : {}),
     });
+    console.log(rooms);
     return Response.json(rooms);
-
   } catch (error) {
     console.error("Error fetching rooms:", error);
     return new Response("Internal Server Error", { status: 500 });
