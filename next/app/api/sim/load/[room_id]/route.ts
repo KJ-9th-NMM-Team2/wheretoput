@@ -285,7 +285,6 @@ export async function GET(
         updated_at: room.updated_at,
       },
     };
-    console.log("결과", result.objects);
     return Response.json(result);
   } catch (error) {
     console.error("Error loading simulator state:", error);
