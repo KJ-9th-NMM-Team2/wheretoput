@@ -9,7 +9,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        const userInfo = await prisma.User.findUnique({
+          where: { email: user.email! },
+        });
+        console.log("확인 id:", userInfo);
       }
       return token;
     },
