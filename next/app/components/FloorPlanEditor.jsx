@@ -3,6 +3,7 @@ import { WallDetector } from "../wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+
 import {
   Square,
   MousePointer,
@@ -1537,11 +1538,11 @@ const FloorPlanEditor = () => {
             </div>
           )}
           {/* 뷰포트 컨트롤 */}
-          <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
-            <h4 className="font-medium text-gray-700 mb-3">뷰포트 컨트롤</h4>
+          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">뷰포트 컨트롤</h4>
 
             <div className="mb-3">
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className=" text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                 줌: {Math.round(viewScale * 100)}%
               </label>
               <input
@@ -1585,7 +1586,7 @@ const FloorPlanEditor = () => {
               초기 위치로
             </button>
 
-            <p className="text-xs text-gray-700 mt-2">
+            <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-2">
               드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
             </p>
           </div>
