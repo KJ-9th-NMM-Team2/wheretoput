@@ -10,6 +10,8 @@ import {
   deleteRoom,
   type RoomInfo,
 } from "@/lib/roomService";
+import { useRouter } from "next/navigation";
+import { saveRoom } from "@/lib/api/saveRoom";
 
 // React 컴포넌트는 반드시 props 객체 하나만 받아야 하기 때문에 interface로 정의
 interface SideTitleProps {
@@ -30,7 +32,16 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
   const [loading, setLoading] = useState(false);
 
   // Zustand store에서 현재 방 ID 가져오기
-  const { currentRoomId } = useStore();
+  const {
+    saveSimulatorState,
+    currentRoomId,
+    loadedModels,
+    setShouldCapture,
+  } = useStore();
+
+  // 뒤로 가기 버튼
+  const router = useRouter()
+  const [saveMessage, setSaveMessage] = useState("");
 
   // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
   useEffect(() => {
@@ -76,6 +87,24 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     setShowPopup(false);
   };
 
+  // 방 나가기를 위한 저장 처리
+  const handleSaveRoom = async () => {
+    await saveRoom({
+      currentRoomId,
+      setSaveMessage,
+      saveSimulatorState,
+      setShouldCapture,
+      loadedModels,
+    });
+  };
+
+  // 방 나가기
+  const handleOutofRoomClick = async () => {
+    await handleSaveRoom();
+    console.log("방 저장 완료!");
+    router.back();
+  };
+
   return (
     <>
       {/* Logo & Toggle */}
@@ -85,7 +114,7 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
         <div className="flex items-center justify-between p-4 ">
           {!collapsed && (
             <span
-              className="text-lg font-bold truncate max-w-xs"
+              className="text-base font-bold truncate max-w-xs"
               title={roomInfo.title}
               style={{ display: "inline-block", verticalAlign: "middle" }}
             >
@@ -93,14 +122,24 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
             </span>
           )}
           {!collapsed && (
-            <button
-              type="button"
-              onClick={handleSettingsClick}
-              className="ml-4 px-2 py-1 rounded-md bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm"
-            >
-              ⚙️
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSettingsClick}
+                className="ml-2 px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm h-8 flex items-center"
+              >
+                ⚙️
+              </button>
+              <button
+                type="button"
+                onClick={handleOutofRoomClick}
+                className="px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm h-8 flex items-center"
+              >
+                나가기
+              </button>
+            </div>
           )}
+          
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={`text-gray-500 hover:text-gray-700 transition-all duration-300 
