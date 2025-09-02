@@ -11,6 +11,8 @@ import {
   Upload,
   Trash2,
   Scissors,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
@@ -43,6 +45,7 @@ const FloorPlanEditor = () => {
 
   const fileInputRef = useRef(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // 축척 설정 관련 상태 (이미지 업로드 후 벽 선택 방식으로 변경)
   const [showScalePopup, setShowScalePopup] = useState(false);
@@ -1326,25 +1329,43 @@ const FloorPlanEditor = () => {
         </div>
 
         {/* 사이드 패널 */}
-        <div className="w-80 bg-orange-100 border-l border-orange-200 p-6 overflow-y-auto flex-shrink-0">
-          <h3 className="text-lg font-semibold text-orange-800 mb-4">
-            도구 정보
-          </h3>
+        <div className="relative flex">
+          {/* 토글 버튼 */}
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-amber-100 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+            style={{ borderRight: 'none' }}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronLeft size={16} className="text-amber-900 dark:text-amber-100" />
+            ) : (
+              <ChevronRight size={16} className="text-amber-900 dark:text-amber-100" />
+            )}
+          </button>
+
+          {/* 사이드바 컨텐츠 */}
+          <div className={`bg-white/95 backdrop-blur-sm border-l border-amber-100 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto flex-shrink-0 shadow-sm transition-all duration-300 ${
+            isSidebarCollapsed ? 'w-0 p-0' : 'w-80 p-6'
+          }`}>
+            <div className={`${isSidebarCollapsed ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
+              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-4 tracking-tight">
+                도구 정보
+              </h3>
 
           
           {/* 축척 설정 도구 */}
           {tool === "scale" && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
-              <h4 className="font-medium text-orange-700 mb-2">
+            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                 축척 설정 도구
               </h4>
               {!scaleWall ? (
-                <p className="text-sm text-orange-600 mb-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                   기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
                 </p>
               ) : (
                 <div>
-                  <p className="text-sm text-orange-600 mb-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                     그린 벽:{" "}
                     {Math.round(
                       Math.sqrt(
@@ -1355,7 +1376,7 @@ const FloorPlanEditor = () => {
                     픽셀
                   </p>
                   <div className="mb-3">
-                    <label className="block text-xs font-medium text-orange-700 mb-1">
+                    <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-1">
                       실제 길이 (mm):
                     </label>
                     <input
@@ -1363,14 +1384,14 @@ const FloorPlanEditor = () => {
                       value={scaleRealLength}
                       onChange={(e) => setScaleRealLength(e.target.value)}
                       placeholder="예: 3000"
-                      className="w-full px-2 py-1 text-sm border border-orange-300 rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-amber-400 dark:focus:ring-amber-500 transition-all duration-200"
                     />
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={applyScale}
                       disabled={!scaleRealLength}
-                      className="flex-1 px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 disabled:opacity-50"
+                      className="flex-1 px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 transition-colors duration-200 disabled:opacity-50"
                     >
                       축척 적용
                     </button>
@@ -1380,7 +1401,7 @@ const FloorPlanEditor = () => {
                         setScaleRealLength("");
                         setTool("wall");
                       }}
-                      className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                      className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors duration-200"
                     >
                       취소
                     </button>
@@ -1391,29 +1412,29 @@ const FloorPlanEditor = () => {
           )}
 
           {tool === "wall" && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-medium text-orange-700 mb-2">
+            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                 벽 그리기 모드
               </h4>
-              <p className="text-sm text-orange-600 mb-3">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                 클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로 맞춰집니다.
               </p>
-              <p className="text-xs text-orange-500">
+              <p className="text-xs text-gray-700 dark:text-gray-300">
                 각 벽에 자동으로 길이가 표시됩니다.
               </p>
             </div>
           )}
 
           {tool === "select" && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-medium text-orange-700 mb-2">선택 모드</h4>
-              <p className="text-sm text-orange-600 mb-3">
+            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">선택 모드</h4>
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                 벽을 클릭하여 선택하고 편집할 수 있습니다.
               </p>
               {selectedWall && (
                 <div className="bg-green-50 p-3 rounded border border-green-200">
                   <h5 className="font-medium text-green-700 mb-2">선택된 벽</h5>
-                  <p className="text-sm text-green-600 mb-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                     현재 길이:{" "}
                     {(() => {
                       const dist = calculateDistance(
@@ -1454,7 +1475,7 @@ const FloorPlanEditor = () => {
 
                   {!isScaleSet && (
                     <div className="mb-3">
-                      <p className="text-xs text-orange-600">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
                         정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
                       </p>
                     </div>
@@ -1479,7 +1500,7 @@ const FloorPlanEditor = () => {
 
           {tool === "eraser" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-medium text-orange-700 mb-2">지우기 모드</h4>
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">지우기 모드</h4>
               <p className="text-sm text-orange-600">
                 클릭하여 벽을 삭제할 수 있습니다.
               </p>
@@ -1488,7 +1509,7 @@ const FloorPlanEditor = () => {
 
           {tool === "partial_eraser" && (
             <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-medium text-orange-700 mb-2">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                 부분 지우기 모드
               </h4>
               {!partialEraserSelectedWall ? (
@@ -1497,7 +1518,7 @@ const FloorPlanEditor = () => {
                 </p>
               ) : (
                 <div>
-                  <p className="text-sm text-orange-600 mb-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
                     2단계: 지울 영역을 드래그하여 선택하세요.
                   </p>
                   <button
@@ -1517,10 +1538,10 @@ const FloorPlanEditor = () => {
           )}
           {/* 뷰포트 컨트롤 */}
           <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
-            <h4 className="font-medium text-orange-700 mb-3">뷰포트 컨트롤</h4>
+            <h4 className="font-medium text-gray-700 mb-3">뷰포트 컨트롤</h4>
 
             <div className="mb-3">
-              <label className="block text-sm text-orange-600 mb-1">
+              <label className="block text-sm text-gray-700 mb-1">
                 줌: {Math.round(viewScale * 100)}%
               </label>
               <input
@@ -1537,10 +1558,10 @@ const FloorPlanEditor = () => {
               />
             </div>
 
-            <div className="flex gap-2 mb-3">
+            {/* <div className="flex gap-2 mb-3">
               <button
                 onClick={() => setViewScale((prev) => Math.min(10, prev * 1.2))}
-                className="flex-1 px-2 py-1 bg-orange-200 text-orange-700 text-sm rounded hover:bg-orange-300"
+                className="flex-1 px-2 py-1 bg-orange-200 text-gray-700 text-sm rounded hover:bg-orange-300"
               >
                 확대
               </button>
@@ -1548,31 +1569,31 @@ const FloorPlanEditor = () => {
                 onClick={() =>
                   setViewScale((prev) => Math.max(0.1, prev / 1.2))
                 }
-                className="flex-1 px-2 py-1 bg-orange-200 text-orange-700 text-sm rounded hover:bg-orange-300"
+                className="flex-1 px-2 py-1 bg-orange-200 text-gray-700 text-sm rounded hover:bg-orange-300"
               >
                 축소
               </button>
-            </div>
+            </div> */}
 
             <button
               onClick={() => {
                 setViewScale(1);
                 setViewOffset({ x: 0, y: 0 });
               }}
-              className="w-full px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700"
+              className="w-full px-3 py-1 bg-amber-500 text-white text-sm rounded hover:bg-amber-600 transition-colors duration-200"
             >
               초기 위치로
             </button>
 
-            <p className="text-xs text-orange-500 mt-2">
+            <p className="text-xs text-gray-700 mt-2">
               드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
             </p>
           </div>
 
           {/* 배경 이미지 투명도 조정 */}
           {uploadedImage && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200 mb-4">
-              <h4 className="font-medium text-orange-700 mb-2">
+            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                 배경 이미지 설정
               </h4>
               <div className="mb-2">
@@ -1603,6 +1624,8 @@ const FloorPlanEditor = () => {
               </button>
             </div>
           )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
