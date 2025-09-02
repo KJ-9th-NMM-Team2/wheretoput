@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { WallDetector } from "../wallDetection.js";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   Square,
@@ -1160,8 +1161,13 @@ const FloorPlanEditor = () => {
       {/* 툴바 */}
       <div className="bg-orange-100 border-b-2 border-orange-200 p-4 shadow-sm">
         <div className="flex items-center gap-4">
+          
+          <Link href="/" className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer">
+            🏠
+          </Link>
+          
           <h1 className="text-xl font-bold text-orange-800 mr-6">
-            2D 도면 제작기
+            2D 도면 그리기
           </h1>
 
           <div className="flex gap-2">
