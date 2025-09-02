@@ -126,22 +126,39 @@ for z in [tables_category_index]:
                     popup_info = driver.find_element(By.XPATH, '//*[@id="root"]/div[5]/div')
                     info_data = popup_info.text.split('\n')
                     
-                    # 정보 파싱
+                    # 정보 파싱 - 팝업 텍스트 구조 파악
                     name = info_data[0] if len(info_data) > 0 else ''
-                    brand = info_data[1] if len(info_data) > 1 else ''
-                    dimensions = info_data[2] if len(info_data) > 2 else ''
+                    brand = ''
+                    dimensions = ''
+                    
+                    # 치수 정보 찾기 (W:숫자 x D:숫자 x H:숫자 패턴)
+                    for line in info_data[1:]:  # 첫 번째 줄(이름) 제외
+                        if 'x' in line and ('W:' in line or 'D:' in line or 'H:' in line):
+                            dimensions = line
+                        elif not dimensions and line.strip():  # 치수가 아닌 첫 번째 텍스트를 브랜드로
+                            brand = line
                     
                     w, h, d = None, None, None
                     if 'x' in dimensions:
-                        # "숫자 x 숫자 x 숫자" 형태에서 치수 추출
+                        # "W:535 x D:612 x H:1660 (mm)" 형태에서 치수 추출
                         parts = dimensions.replace('(mm)', '').replace('mm', '').split('x')
                         if len(parts) == 3:
                             try:
-                                w = int(parts[0].strip())  # width
-                                d = int(parts[1].strip())  # depth  
-                                h = int(parts[2].strip())  # height
-                            except ValueError:
+                                for part in parts:
+                                    part = part.strip()
+                                    if 'W:' in part:
+                                        w = int(part.split(':')[1].strip())
+                                    elif 'D:' in part:
+                                        d = int(part.split(':')[1].strip())  
+                                    elif 'H:' in part:
+                                        h = int(part.split(':')[1].strip())
+                            except (ValueError, IndexError):
                                 w, h, d = None, None, None
+                    
+                    # NOT NULL 제약조건 때문에 0으로 설정 (치수 없는 경우)
+                    if w is None: w = 0
+                    if h is None: h = 0  
+                    if d is None: d = 0
                     
                     result.append({
                         'name': name,
