@@ -420,20 +420,23 @@ export default function SimPage({
             </>
           )}
           <Suspense fallback={null}>
-            {loadedModels.map((model: any) => (
-              <DraggableModel
-                key={model.id}
-                modelId={model.id}
-                url={model.url}
-                position={model.position}
-                rotation={model.rotation}
-                scale={model.scale}
-                controlsRef={controlsRef}
-                isCityKit={model.isCityKit}
-                texturePath={model.texturePath}
-                type={model.isCityKit ? "building" : "glb"}
-              />
-            ))}
+            {loadedModels.map((model: any) => {
+              return (
+                <DraggableModel
+                  key={model.id}
+                  modelId={model.id}
+                  url={model.url}
+                  position={model.position}
+                  rotation={model.rotation}
+                  scale={model.scale}
+                  length={model.length}
+                  controlsRef={controlsRef}
+                  isCityKit={model.isCityKit}
+                  texturePath={model.texturePath}
+                  type={model.isCityKit ? "building" : "glb"}
+                />
+              );
+            })}
           </Suspense>
           <mesh
             position={[0, -0.01, 0]}
