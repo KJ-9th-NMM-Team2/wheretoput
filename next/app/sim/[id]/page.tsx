@@ -6,16 +6,16 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "../store/useStore.js";
-import { ControlPanel } from "../components/ControlPanel.jsx";
-import { InfoPanel } from "../components/InfoPanel.jsx";
 import { DraggableModel } from "../components/DraggableModel.jsx";
-import { LightControlPanel } from "../components/LightControlPanel.jsx";
-import { CameraControlPanel } from "../components/CameraControlPanel.jsx";
+import { ControlIcons } from "../components/ControlIcons.jsx";
+import { SelectedModelEditModal } from "../components/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
 import { createWallsFromFloorPlan } from "../../wallDetection.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
+
+
 
 type position = [number, number, number];
 
@@ -110,30 +110,46 @@ function Wall({
       const wallWorldPosition = new THREE.Vector3();
       meshRef.current.getWorldPosition(wallWorldPosition);
 
-      const wallWorldQuaternion = new THREE.Quaternion();
-      meshRef.current.getWorldQuaternion(wallWorldQuaternion);
+      // const wallWorldQuaternion = new THREE.Quaternion();
+      // meshRef.current.getWorldQuaternion(wallWorldQuaternion);
 
-      const wallNormal = new THREE.Vector3(0, 0, 1);
-      wallNormal.applyQuaternion(wallWorldQuaternion);
+      // const wallNormal = new THREE.Vector3(0, 0, 1);
+      // wallNormal.applyQuaternion(wallWorldQuaternion);
 
-      let cameraToWall = new THREE.Vector3()
-        .subVectors(camera.position, wallWorldPosition)
-        .normalize();
-
-      const dotProduct = wallNormal.dot(cameraToWall);
-
-      // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
-      const t = 1 - Math.abs(dotProduct);
-
-      // ease-in-out 적용
-      const ease = t * t * (3 - 2 * t);
-
-      // 정면(불투명)~뒤(투명) 보간
       const minOpacity = 0.2;
       const maxOpacity = 0.95;
-      const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+      const minDistanceThreshold = 15;
+      const maxDistanceThreshold = 30;
 
-      setOpacity(newOpacity);
+      let cameraToWall = new THREE.Vector3()
+        .subVectors(camera.position, wallWorldPosition);
+      const distance = cameraToWall.length();
+
+      if (distance > maxDistanceThreshold) {
+        setOpacity(maxOpacity);
+      }
+      else if (distance < minDistanceThreshold) {
+        setOpacity(minOpacity);
+      }
+      else {
+        const newOpacity = (maxOpacity - minOpacity) / (maxDistanceThreshold - minDistanceThreshold) * (distance - minDistanceThreshold) + minOpacity;
+        setOpacity(newOpacity);
+      }
+      // else {
+      //   cameraToWall.normalize();
+      //   const dotProduct = wallNormal.dot(cameraToWall);
+  
+      //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
+      //   const t = 1 - Math.abs(dotProduct);
+
+      //   // ease-in-out 적용
+      //   const ease = t * t * (3 - 2 * t);
+
+      //   // 정면(불투명)~뒤(투명) 보간
+      //   const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+
+      //   setOpacity(newOpacity);
+      // }
     };
 
     const animate = () => {
@@ -338,19 +354,18 @@ export default function SimPage({
         }
 
         {!viewOnly && (
-          <>
-            <ControlPanel />
-            <InfoPanel />
-          </>
+          <ControlIcons />
         )}
-
-        <LightControlPanel />
-        <CameraControlPanel />
+        
+        <SelectedModelEditModal />
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
-          style={{ width: "100%", height: "100vh" }}
+          style={{ 
+            width: "100%", // 항상 전체 너비 사용
+            height: "100vh" 
+          }}
           frameloop="demand"
         >
           <Environment preset="apartment" background={false} />
@@ -359,7 +374,7 @@ export default function SimPage({
           ) : (
             <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
           )} */}
-          ㅇ
+          
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
           <ambientLight intensity={ambientLightIntensity} />
