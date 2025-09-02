@@ -77,7 +77,7 @@ export default function LikeButton({
         </svg>
       </div>
       <p
-        className={`text-[13px] font-bold leading-normal tracking-[0.015em] transition-colors ${
+        className={`font-bold leading-normal tracking-[0.015em] transition-colors ${
           youLiked
             ? "text-red-500 drop-shadow-sm"
             : "text-[#8a7260] dark:text-orange-300"

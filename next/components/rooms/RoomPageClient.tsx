@@ -7,6 +7,8 @@ import FurnituresList from "@/components/rooms/FurnituresList";
 import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
+import { View } from "lucide-react";
+
 import { Span } from "next/dist/trace";
 
 interface RoomPageClientProps {
@@ -17,6 +19,17 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   const { data: session } = useSession();
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // 조회수 1 증가
+  useEffect(() => {
+    fetch(`/api/views`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ room_id: room.room_id }),
+    }).then();
+  }, [room.room_id]);
 
   useEffect(() => {
     const checkLikeStatus = async () => {
@@ -79,6 +92,10 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                     <span className="truncate">3D로 보기</span>
                   </button>
                 </Link>
+                <span className="flex items-center gap-1">
+                  <View size={20} />
+                  {room.view_count}
+                </span>
                 {!loading && <LikeButton room={room} liked={liked} />}
               </div>
             </div>
