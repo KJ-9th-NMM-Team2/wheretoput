@@ -188,7 +188,9 @@ export function DraggableModel({
           <primitive object={scene.clone()} />
 
           {(isSelected || isHovering) && (
-            <mesh>
+            <mesh
+              position={[0, getSelectionBoxSize()[1] / 2, 0]}
+            >
               <boxGeometry args={getSelectionBoxSize()} />
               <meshBasicMaterial
                 color={isSelected ? "#00ff00" : "#0000ff"}
