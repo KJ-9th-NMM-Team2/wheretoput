@@ -142,7 +142,6 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
-    ambientLightIntensity: 0.4,
     directionalLightPosition: [26, 15, 0],
     directionalLightAzimuth: 0,
     directionalLightElevation: 30,

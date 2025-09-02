@@ -244,7 +244,6 @@ export default function SimPage({
     setViewOnly,
     loadedModels,
     deselectModel,
-    ambientLightIntensity,
     directionalLightPosition,
     directionalLightIntensity,
     cameraFov,
@@ -377,7 +376,6 @@ export default function SimPage({
           
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
-          <ambientLight intensity={ambientLightIntensity} />
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}
