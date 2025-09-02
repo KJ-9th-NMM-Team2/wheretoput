@@ -57,7 +57,6 @@ export async function fetchFurnitures({
             setTotalItems(data.pagination.totalItems);
             setTotalPages(data.pagination.totalPages);
         }
-        console.log(`data check : ${data}`);
 
     } catch (err) {
         console.error('Failed to fetch items:', err);

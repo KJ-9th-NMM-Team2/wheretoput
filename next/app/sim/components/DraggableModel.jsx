@@ -26,7 +26,7 @@ export function DraggableModel({
       return [1, 1, 1];
     }
   })();
-  console.log(texturePath, isCityKit);
+  // console.log(texturePath, isCityKit);
   const meshRef = useRef();
 
   // Zustand 스토어 사용
@@ -72,7 +72,7 @@ export function DraggableModel({
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
   useEffect(() => {
     if (scene && meshRef.current) {
-      console.log(`Setting up model ${modelId} with scale:`, safeScale);
+      // console.log(`Setting up model ${modelId} with scale:`, safeScale);
       
       meshRef.current.traverse((child) => {
         if (child.isMesh) {

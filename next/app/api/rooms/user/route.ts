@@ -46,8 +46,8 @@ export async function GET(req: NextRequest) {
         const searchParmas = url.searchParams;
         const userId = searchParmas.get('userId');
         const roomId = searchParmas.get('roomId');
-
-        const result = prisma.rooms.findUnique({
+        
+        const result = await prisma.rooms.findUnique({
             where: {
                 user_id: userId || undefined,
                 room_id: roomId || undefined,

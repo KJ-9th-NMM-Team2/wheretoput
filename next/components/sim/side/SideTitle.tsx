@@ -12,6 +12,7 @@ import {
 } from "@/lib/roomService";
 import { useRouter } from "next/navigation";
 import { saveRoom } from "@/lib/api/saveRoom";
+import { useSession } from "next-auth/react";
 
 // React 컴포넌트는 반드시 props 객체 하나만 받아야 하기 때문에 interface로 정의
 interface SideTitleProps {
@@ -37,11 +38,14 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     currentRoomId,
     loadedModels,
     setShouldCapture,
+    checkUserRoom, 
   } = useStore();
 
   // 뒤로 가기 버튼
   const router = useRouter()
   const [saveMessage, setSaveMessage] = useState("");
+
+  const { data: session } = useSession();
 
   // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
   useEffect(() => {
@@ -100,8 +104,12 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
 
   // 방 나가기
   const handleOutofRoomClick = async () => {
-    await handleSaveRoom();
-    console.log("방 저장 완료!");
+    const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
+    
+    if (isOwnUserRoom) {
+      await handleSaveRoom();
+      console.log("방 저장 완료!");
+    }
     router.back();
   };
 
