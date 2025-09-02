@@ -28,6 +28,6 @@
   "include": [
     "src",
     "prisma/**/*.ts",
-    "src/types/**/*.d.ts"
+    "src/types/**/*.d.ts",
   ]
 }
