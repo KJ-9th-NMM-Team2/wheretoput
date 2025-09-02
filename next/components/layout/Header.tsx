@@ -19,7 +19,7 @@ export function SignInCheck() {
         image={session.user.image}
       />
     );
-  } else return <div className="w-10 h-10"></div>;
+  } else return <SignInButton />;
 }
 
 export default function Header() {

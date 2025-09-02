@@ -12,7 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const userInfo = await prisma.User.findUnique({
           where: { email: user.email! },
         });
-        console.log("확인 id:", userInfo);
+        token.id = userInfo?.id;
       }
       return token;
     },
