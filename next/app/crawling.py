@@ -102,9 +102,15 @@ furnitures_category = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 print("가구 데이터 수집을 시작합니다.")
 ######################################################
-# Tables 카테고리만 수집 (예: 3번째가 Tables라면 z=2)
-# 원하는 카테고리 번호를 여기서 지정하세요 (0부터 시작)
-tables_category_index = 7  
+# 원하는 카테고리 번호를 여기서 지정하시면 됩니다.
+# 0 = chairs , 1 = Lighting
+# 2 = Storage , 3 = Tables
+# 4 = Decor , 5 = Bathroom
+# 6 = Kitchen , 7 = Appliances
+# 8 = Sofas, 9 = Construction
+# 10 = Bedroom , 11 = Outdoor
+# 12 = Home Decor
+tables_category_index = 3
 ######################################################
 
 # 특정 카테고리만 순회

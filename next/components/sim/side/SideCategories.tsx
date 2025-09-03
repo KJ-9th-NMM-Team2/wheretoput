@@ -13,7 +13,7 @@ interface Category {
   name: string;
 }
 
-const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery, totalPrice}) => {
+const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery, totalPrice }) => {
   // 실제 DB의 categories 테이블과 일치하도록 수정완료
   // # -2  = 가구 , -1 = 선택된 가구(장바구니)
   // # 0 = chairs , 1 = Lighting
@@ -24,15 +24,14 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
   // # 10 = Bedroom , 11 = Outdoor
   // # 12 = Home Decor
   const categories: Category[] = [
-    { id: -2, name: "가구" }, //수정완료
-    { id: 5, name: "욕실용품" }, // 수정완료
-    { id: 1, name: "조명" }, //수정완료
-    { id: 4, name: "데코" }, //수정완료
-    { id: 7, name: "가전·디지털" }, // 추가
-    { id: 0, name: "의자" }, // 추가
-
-
-    { id: -1, name: "선택된 가구" }, //수정완료
+    { id: -2, name: "가구" }, 
+    { id: 0, name: "의자" }, 
+    { id: 1, name: "조명" }, 
+    { id: 3, name: "테이블" }, 
+    { id: 4, name: "데코" }, 
+    { id: 5, name: "욕실용품" }, 
+    { id: 7, name: "가전·디지털" }, 
+    { id: -1, name: "선택된 가구" }, 
   ];
 
   const [selectedCategory, setSelectedCategory] = useState<number>(categories[0].id);
@@ -61,11 +60,10 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
           {categories.map((cat) => (
             <button
               key={cat.id}
-              className={`py-2 px-3 text-sm rounded transition ${
-                selectedCategory === cat.id
+              className={`py-2 px-3 text-sm rounded transition ${selectedCategory === cat.id
                   ? 'bg-orange-500 text-white'
                   : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
-              }`}
+                }`}
               onClick={() => handleCategoryClick(cat)}
             >
               {cat.name}
