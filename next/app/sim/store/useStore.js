@@ -144,15 +144,13 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
-    ambientLightIntensity: 0.4,
+    environmentPreset: "apartment",
     directionalLightPosition: [26, 15, 0],
     directionalLightAzimuth: 0,
     directionalLightElevation: 30,
-    directionalLightIntensity: 0.9,
+    directionalLightIntensity: 1.0,
 
-    // 빛 액션
-    setAmbientLightIntensity: (intensity) =>
-      set({ ambientLightIntensity: intensity }),
+    setEnvironmentPreset: (preset) => set({ environmentPreset: preset }),
     setDirectionalLightAzimuth: (azimuth) =>
       set({
         directionalLightAzimuth: azimuth,
@@ -178,10 +176,18 @@ export const useStore = create(
     cameraFov: 30, // Perspective
     // cameraZoom: 50,   // Orthographic
     // cameraMode: 'perspective', // Perspective | Orthographic
+    enableWallTransparency: true,
 
-    // 카메라 액션
     setCameraFov: (fov) => set({ cameraFov: fov }),
     // setCameraMode: (mode) => set({ cameraMode: mode }),
+    setEnableWallTransparency: (enable) => set({ enableWallTransparency: enable }),
+
+    // 벽, 바닥 상태
+    wallColor: "#FFFFFF",
+    floorColor: "#D2B48C",
+
+    setWallColor: (color) => set({ wallColor: color }),
+    setFloorColor: (color) => set({ floorColor: color }),
 
     //[09.01] wallscalefactor 로 벽 조정 가능합니다.
     currentRoomId: null,

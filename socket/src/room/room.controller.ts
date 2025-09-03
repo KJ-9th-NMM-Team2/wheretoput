@@ -15,17 +15,19 @@ export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
   // 채팅 방 생성
-  @Post()
+  @Post('direct')
   async createRoom(
-    @Body() body: { name: string; description?: string; isPrivate?: boolean },
+    @Body() body: { currentUserId: string; otherUserId: string; },
     @Request() req: any,
   ) {
+    // console.log("=== 요청 받음 ===");
+    // console.log("Body:", body);
+    // console.log("Headers:", req.headers);
+    // console.log("User:", req.user);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.roomService.createRoom({
-      name: body.name,
-      description: body.description,
-      createdBy: req.user.userId,
-      isPrivate: body.isPrivate,
+      currentUserId: body.currentUserId,
+      otherUserId: body.otherUserId,
     });
   }
 
