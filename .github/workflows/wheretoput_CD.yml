@@ -148,7 +148,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           source: "docker-compose.socket.yml,.env.production"
-          target: ${{ secrets.EC2_DEPLOY_PATH }}/nest/
+          target: ${{ secrets.EC2_DEPLOY_PATH }}/socket/
           timeout: 60s
       
       - name: Deploy NestJS on EC2
@@ -160,7 +160,7 @@ jobs:
           script: |
             docker system prune -f
             set -e
-            cd ${{ secrets.EC2_DEPLOY_PATH }}/nest
+            cd ${{ secrets.EC2_DEPLOY_PATH }}/socket
             
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
@@ -169,10 +169,10 @@ jobs:
             export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             export ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
             
-            docker-compose -f docker-compose.nest.yml --env-file .env.production pull
-            docker-compose -f docker-compose.nest.yml --env-file .env.production up -d --remove-orphans
+            docker-compose -f docker-compose.socket.yml --env-file .env.production pull
+            docker-compose -f docker-compose.socket.yml --env-file .env.production up -d --remove-orphans
             docker image prune -f
             
-            if docker-compose -f docker-compose.nest.yml ps socket >/dev/null 2>&1; then
-              docker-compose -f docker-compose.nest.yml --env-file .env.production run --rm socket npx prisma migrate deploy || true
+            if docker-compose -f docker-compose.socket.yml ps socket >/dev/null 2>&1; then
+              docker-compose -f docker-compose.socket.yml --env-file .env.production run --rm socket npx prisma migrate deploy || true
             fi
