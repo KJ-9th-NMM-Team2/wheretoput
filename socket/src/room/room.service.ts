@@ -8,12 +8,9 @@ export class RoomService {
   // 방 생성
   async createRoom(params: { currentUserId: string; otherUserId: string }) {
     try {
-      console.log('111111111111111111111111');
-      console.log('this.prisma', this.prisma);
       if (!this.prisma) {
         throw new Error('Prisma service not injected');
       }
-      console.log('222222222222222222222222');
 
       // 기존 채팅방 확인 (양방향으로 검색)
       const existingRoom = await this.prisma.chat_rooms.findFirst({
