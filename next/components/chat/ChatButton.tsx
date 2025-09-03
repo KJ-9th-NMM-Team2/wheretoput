@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-const SOCKET_API_URL = 
+const SOCKET_API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 type ChatListItem = {
@@ -313,10 +313,18 @@ export default function ChatButton({
         status: "sent",
       };
 
-      setMessagesByRoom((prev) => ({
-        ...prev,
-        [msg.roomId]: [...(prev[msg.roomId] ?? []), msg],
-      }));
+      setMessagesByRoom((prev) => {
+        const existingMessages = prev[msg.roomId] ?? [];
+        // 중복 메시지 체크 (같은 ID가 이미 있으면 추가하지 않음)
+        const isDuplicate = existingMessages.some(existingMsg => existingMsg.id === msg.id);
+        if (isDuplicate) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [msg.roomId]: [...existingMessages, msg],
+        };
+      });
 
       setBaseChats((prev) => {
         const updated = prev.map((c) =>
@@ -568,7 +576,7 @@ export default function ChatButton({
         console.error('토큰이 없습니다');
         return;
       }
-      
+
       // 필터 초기화
       setQuery("");
       setSelect("전체");
