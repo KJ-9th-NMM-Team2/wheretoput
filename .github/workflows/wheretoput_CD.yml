@@ -47,6 +47,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: next
+          file: next/Dockerfile.prod  # 추가
           push: true
           tags: |
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:${{ github.sha }}
@@ -58,6 +59,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: socket
+          file: socket/Dockerfile.prod  # 추가
           push: true
           tags: |
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_SOCKET }}:${{ github.sha }}
