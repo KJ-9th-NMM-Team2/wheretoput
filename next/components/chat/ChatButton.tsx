@@ -10,6 +10,8 @@ import { AnimatePresence, motion } from "framer-motion";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const SOCKET_API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 type ChatListItem = {
   chat_room_id: string;
@@ -127,9 +129,10 @@ export default function ChatButton({
         }
         // 여기서 바로 json() 호출하고 다시는 호출하지 않기
         const data = await r.json();
-        // 토큰 값 가져오기
-        const token = data["tokenData"]["jti"];
-        if (!alive) return;
+        console.log('Token API response:', data);
+        // 토큰 값 가져오기 (안전한 체이닝)
+        const token = data?.tokenData?.jti;
+        if (!alive || !token) return;
         setToken(token);
         setAuthToken(token);
         connectSocket(token);
@@ -192,7 +195,11 @@ export default function ChatButton({
   useEffect(() => {
     const bootstrap = async () => {
       const res = await fetch("/api/chat/token", { cache: "no-store" });
-      const { token } = await res.json();
+      const data = await res.json();
+      console.log('토큰 응답:', data);
+      const token = data["tokenData"]?.["jti"] || data.token;
+      console.log('추출된 토큰:', token);
+      setToken(token);
       setAuthToken(token);
       // 이후부터 api.get/post가 자동으로 Authorization 포함
     };
@@ -233,13 +240,14 @@ export default function ChatButton({
   useEffect(() => {
     if (!open || !selectedChatId || !token) return;
     const s = connectSocket(token);
+    console.log('🚪 FRONTEND JOIN:', selectedChatId);
     s.emit("join", { roomId: selectedChatId });
 
     let cancelled = false;
 
     (async () => {
       const { data } = await api.get(
-        `/backend/rooms/${selectedChatId}/messages`,
+        `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
         {
           params: { limit: 50 },
           headers: { Authorization: `Bearer ${token}` },
@@ -305,10 +313,18 @@ export default function ChatButton({
         status: "sent",
       };
 
-      setMessagesByRoom((prev) => ({
-        ...prev,
-        [msg.roomId]: [...(prev[msg.roomId] ?? []), msg],
-      }));
+      setMessagesByRoom((prev) => {
+        const existingMessages = prev[msg.roomId] ?? [];
+        // 중복 메시지 체크 (같은 ID가 이미 있으면 추가하지 않음)
+        const isDuplicate = existingMessages.some(existingMsg => existingMsg.id === msg.id);
+        if (isDuplicate) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [msg.roomId]: [...existingMessages, msg],
+        };
+      });
 
       setBaseChats((prev) => {
         const updated = prev.map((c) =>
@@ -413,6 +429,8 @@ export default function ChatButton({
       });
 
       const s = getSocket() ?? connectSocket(token);
+      console.log('🔵 WEBSOCKET SEND:', { roomId, content, tempId });
+      console.log('🔵 SOCKET STATE:', s.connected);
       s.emit("send", { roomId, content, tempId });
     },
     [currentUserId, token, query, select, recomputeChats]
@@ -557,17 +575,21 @@ export default function ChatButton({
   // 1:1 시작
   const onStartDirect = useCallback(
     async (otherUserId: string, otherUserName?: string) => {
+      if (!token) {
+        console.error('토큰이 없습니다');
+        return;
+      }
+
       // 필터 초기화
       setQuery("");
       setSelect("전체");
 
-      const { data } = await api.get(
-        `${NEXT_API_URL}/api/backend/rooms/direct`,
-        {
-          params: { currentUserId: session?.user?.id, otherUserId },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const { data } = await api.post(`${NEXT_API_URL}/api/backend/rooms/direct`, {
+        currentUserId: session?.user?.id,
+        otherUserId
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const roomId =
         data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);

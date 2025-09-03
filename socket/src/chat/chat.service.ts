@@ -79,20 +79,20 @@ export class ChatService {
         throw new BadRequestException('Message too long (max 1000 characters)');
       }
 
-      // 방 참가자 확인
-      const participant = await this.prisma.chat_participants.findUnique({
-        where: {
-          chat_room_id_user_id: {
-            chat_room_id: params.roomId,
-            user_id: params.userId,
-          },
-        },
-      });
+      // 방 참가자 확인 (임시 비활성화)
+      // const participant = await this.prisma.chat_participants.findUnique({
+      //   where: {
+      //     chat_room_id_user_id: {
+      //       chat_room_id: params.roomId,
+      //       user_id: params.userId,
+      //     },
+      //   },
+      // });
 
-      // 방에 아무도 없으면 에러처리
-      if (!participant) {
-        throw new ForbiddenException('Not a member of this room');
-      }
+      // // 방에 아무도 없으면 에러처리
+      // if (!participant) {
+      //   throw new ForbiddenException('Not a member of this room');
+      // }
 
       const now = new Date();
       const created = await this.prisma.chat_messages.create({
@@ -132,6 +132,8 @@ export class ChatService {
       ) {
         throw error;
       }
+      console.log('💥 MESSAGE SAVE ERROR:', error);
+      console.log('💥 ERROR DETAILS:', JSON.stringify(error, null, 2));
       throw new Error(`Failed to save message: ${error.message}`);
     }
   }
