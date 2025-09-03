@@ -2,13 +2,20 @@
 FROM node:22-alpine
 
 # 의존성 설치를 위한 패키지 추가
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat && \
+    rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # package.json 복사 및 의존성 설치
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --no-audit --no-fund && \
+    npm cache clean --force && \
+    npm prune && \
+    rm -rf /root/.npm /tmp/*
 
 # Prisma 스키마 복사 및 클라이언트 생성
 COPY prisma ./prisma/

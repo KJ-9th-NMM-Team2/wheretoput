@@ -6,13 +6,7 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# package.json만 먼저 복사 (캐싱 최적화)
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production && npm cache clean --force
 
-# 개발 의존성 별도 설치 (빌드용)
-FROM base AS dev-deps
-WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
@@ -21,15 +15,16 @@ FROM base AS builder
 WORKDIR /app
 
 # 개발 의존성 복사 (빌드 시에만 필요)
-COPY --from=dev-deps /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 환경 변수 및 빌드
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-
 # Prisma 클라이언트 생성 후 빌드
 COPY prisma ./prisma/
+
+# Prisma 스키마 복사 및 클라이언트 생성
 RUN npx prisma generate
 RUN npm run build
 
@@ -44,12 +39,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+
+# Next.js standalone (이미 최적화된 의존성 포함)
+COPY --from=builder /app/.next/standalone/ ./
+COPY --from=builder /app/.next/static ./.next/static
+
+
 # Prisma 클라이언트 복사
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Next.js 빌드 결과물 복사
-COPY --from=builder /app/.next/standalone/ ./
-COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
 # 권한 변경
