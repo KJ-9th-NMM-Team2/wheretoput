@@ -1,3 +1,9 @@
+# .env.local 파일에 아래 내용 붙여넣기 하셔야합니다.
+# 카카오 크롤링 인증정보 
+# YOUR_PASSWORD="카톡 비밀번호"
+# YOUR_KAKAO_ID_OR_PHONE="카톡 id"
+
+
 # 특정 가구 카테고리만 크롤링
 # tables_category_index 로 조작
 # -2  = 가구 , -1 = 선택된 가구(장바구니)
@@ -19,10 +25,6 @@ import traceback
 import os
 from dotenv import load_dotenv
 
-# .env.local 파일에 쓰셔야 적용됩니다.
-# 카카오 크롤링 인증정보 
-# YOUR_PASSWORD="카톡 비밀번호"
-# YOUR_KAKAO_ID_OR_PHONE="카톡 id"
 load_dotenv(dotenv_path='../.env.local')
 
 # --- 1. 웹 드라이버 설정 및 사이트 접속 ---

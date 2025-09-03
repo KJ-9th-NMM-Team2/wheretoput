@@ -26,7 +26,7 @@ export function SelectedModelEditModal() {
       <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl rounded-xl overflow-hidden">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-          <span className="text-base font-bold">📝 가구 편집</span>
+          <span className="text-base font-bold"> 가구 편집</span>
           <button
             onClick={deselectModel}
             className="text-gray-500 hover:text-gray-700 transition-colors text-lg"
@@ -41,12 +41,12 @@ export function SelectedModelEditModal() {
 
         {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
-          <div className="font-bold mb-3 text-sm flex items-center gap-2 text-green-700 break-words">
+          <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
              {selectedModel.name}
           </div>
 
           {/* 크기 조정 */}
-          <div className="mb-4">
+          <div className="mb-4 font-bold ">
             <ControlSlider
               label={` ${Math.ceil(
                 selectedModel.length[0] *
@@ -69,7 +69,7 @@ export function SelectedModelEditModal() {
           </div>
 
           {/* 높이 조정 */}
-          <div className="mb-4">
+          <div className="mb-4 font-bold">
             <ControlSlider
               label="바닥으로부터의 높이"
               value={selectedModel.position[1]}
@@ -87,9 +87,9 @@ export function SelectedModelEditModal() {
           </div>
 
           {/* 회전 조정 */}
-          <div className="mb-4">
-            <div className="text-xs mb-2 text-gray-600 font-semibold">
-              🔄 회전 각도
+          <div className="mb-4 font-bold">
+            <div className="text-md mb-2 text-gray-600 font-semibold">
+               회전 각도
             </div>
             {["X", "Y", "Z"].map((axis, index) => (
               <div key={axis} className="mb-3">
@@ -114,9 +114,9 @@ export function SelectedModelEditModal() {
           {/* 제거 버튼 */}
           <button
             onClick={() => removeModel(selectedModel.id)}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
           >
-            🗑️ 가구 삭제
+            가구 삭제
           </button>
         </div>
         </div>

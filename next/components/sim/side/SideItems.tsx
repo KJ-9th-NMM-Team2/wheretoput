@@ -14,9 +14,10 @@ interface SideItemsProps {
     selectedCategory: string | null;
     furnitures: Furniture[];
     setTotalPrice: (price: number) => void;
+    sortOption: string;
 }
 
-const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furnitures, setTotalPrice }) => {
+const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furnitures, setTotalPrice, sortOption }) => {
     const [items, setItems] = useState<Furniture[]>([]);
     const [selectedItems, setSelectedItems] = useState<Furniture[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +30,7 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
     const { addModel, loadedModels } = useStore();
 
     // API에서 데이터 가져오기 함수
-    const fetchItems = useCallback(async (page: number, category: string | null) => {
+    const fetchItems = useCallback(async (page: number, category: string | null, sort: string) => {
         if (loading) return; // 이미 호출 중이면 리턴
         fetchFurnitures({
             setTotalPages,
@@ -39,7 +40,8 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
             setItems,
             page,
             itemsPerPage,
-            category: category || null || ''
+            category: category || null || '',
+            sort: sort
         });
     }, [itemsPerPage]);
 
@@ -64,18 +66,18 @@ const SideItems: React.FC<SideItemsProps> = ({ collapsed, selectedCategory, furn
                     // console.log(result.totalPrice['_sum']);
                 }
             } else {
-                fetchItems(currentPage, selectedCategory);
+                fetchItems(currentPage, selectedCategory, sortOption);
                 setSelectedItems([]);
                 setTotalPrice(0);
             }
         }
         handleCategoryChange();
-    }, [currentPage, selectedCategory, fetchItems]);
+    }, [currentPage, selectedCategory, sortOption, fetchItems]);
 
-    // 카테고리 변경 시 첫 페이지로 리셋
+    // 카테고리나 정렬 변경 시 첫 페이지로 리셋
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedCategory]);
+    }, [selectedCategory, sortOption]);
 
     // 페이지 변경 핸들러들
     const handlePrevPage = useCallback(() => {

@@ -9,6 +9,7 @@ interface fetchFurnituresProps {
   page: number;
   itemsPerPage: number;
   category: string;
+  sort: string;
 }
 
 export async function fetchFurnitures({
@@ -19,7 +20,8 @@ export async function fetchFurnitures({
   setItems,
   page,
   itemsPerPage,
-  category
+  category,
+  sort
 }: fetchFurnituresProps) {
     try {
         setLoading(true);
@@ -34,6 +36,11 @@ export async function fetchFurnitures({
         // 카테고리가 선택되었다면 파라미터에 추가
         if (category) {
             params.append('category', category);
+        }
+
+        // 정렬 옵션 추가
+        if (sort) {
+            params.append('sort', sort);
         }
 
         const response = await fetch(`/api/sim/furnitures?${params}`, {
