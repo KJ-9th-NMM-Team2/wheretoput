@@ -147,7 +147,7 @@ jobs:
           host: ${{ secrets.EC2_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
-          source: "docker-compose.nest.yml,.env.production"
+          source: "docker-compose.socket.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/nest/
           timeout: 60s
       
