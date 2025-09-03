@@ -1,7 +1,13 @@
 # 특정 가구 카테고리만 크롤링
 # tables_category_index 로 조작
-# 0 = 의자 , 1= 조명, ....... 13 = 홈 데코 
-
+# -2  = 가구 , -1 = 선택된 가구(장바구니)
+# 0= chairs , 1= Lighting
+# 2= Storage , 3 = Tables
+# 4 = Decor , 5 = Bathroom
+# 6 = Kitchen , 7 = Appliances
+# 8 = Sofas, 9 = Construction
+# 10 = Bedroom , 11 = Outdoor
+# 12 = Home Decor
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -91,8 +97,8 @@ except Exception as e:
 
 # --- 4. 가구 데이터 수집 (크롤링) ---
 result = []
-# 각 카테고리 ID (임의로 지정된 값)
-furnitures_category = [0, 1, 7, 1, 1, 0, 16, 4, 3, 1, 13, 1, 12]
+# 각 카테고리 ID 
+furnitures_category = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 print("가구 데이터 수집을 시작합니다.")
 ######################################################
