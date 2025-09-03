@@ -21,6 +21,8 @@ type position = [number, number, number];
 
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
+  const { floorColor } = useStore();
+  
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
@@ -74,7 +76,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
       receiveShadow
     >
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial color="#D2B48C" roughness={0.9} metalness={0.0} />
+      <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
     </mesh>
   );
 }
@@ -96,16 +98,20 @@ function Wall({
   const meshRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
   const [opacity, setOpacity] = useState(1.0);
+  const { enableWallTransparency, wallColor } = useStore();
 
   // 벽 렌더링 로그 (한 번만)
   // React.useEffect(() => {
   //   console.log('벽 렌더링:', { width, height, depth, position, rotation });
   // }, []);
 
-  // 카메라 방향과 벽의 법선 벡터 계산하여 투명도 조절
   React.useEffect(() => {
     const updateTransparency = () => {
       if (!meshRef.current) return;
+      if (enableWallTransparency) {
+        setOpacity(1.0);
+        return;
+      }
 
       const wallWorldPosition = new THREE.Vector3();
       meshRef.current.getWorldPosition(wallWorldPosition);
@@ -164,49 +170,16 @@ function Wall({
 
   // 각 면에 다른 재질 적용 (투명도 포함)
   const materials = React.useMemo(() => {
+    let material = new THREE.MeshStandardMaterial({
+      color: wallColor,
+      roughness: 0.8,
+      metalness: 0.1,
+      transparent: enableWallTransparency,
+      opacity: opacity,
+    });
+
     return [
-      new THREE.MeshStandardMaterial({
-        color: "#FFFFFF",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 오른쪽
-      new THREE.MeshStandardMaterial({
-        color: "#FFFFFF",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 왼쪽
-      new THREE.MeshStandardMaterial({
-        color: "#DDDDDD",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 윗면
-      new THREE.MeshStandardMaterial({
-        color: "#FFFFFF",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 아랫면
-      new THREE.MeshStandardMaterial({
-        color: "#FFFFFF",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 앞면
-      new THREE.MeshStandardMaterial({
-        color: "#FFFFFF",
-        roughness: 0.8,
-        metalness: 0.1,
-        transparent: true,
-        opacity: opacity,
-      }), // 뒷면
+      ...Array(6).fill(material)
     ];
   }, [opacity]);
 
@@ -462,6 +435,7 @@ export default function SimPage({
             <planeGeometry args={[200, 200]} />
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
+
           <KeyboardControls controlsRef={controlsRef} />
           <OrbitControls
             ref={controlsRef}
@@ -470,6 +444,7 @@ export default function SimPage({
             minDistance={8}
             maxDistance={50}
           />
+
           <CanvasImageLogger />
         </Canvas>
       </div>

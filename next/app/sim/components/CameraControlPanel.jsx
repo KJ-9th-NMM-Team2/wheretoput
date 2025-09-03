@@ -4,9 +4,11 @@ import { useStore } from '../store/useStore.js'
 
 export function CameraControlPanel({ isPopup = false }) {
   const {
+    enableWallTransparency,
     cameraFov,
     cameraZoom,
     cameraMode,
+    setEnableWallTransparency,
     setCameraFov,
     setCameraZoom,
     setCameraMode,
@@ -45,6 +47,10 @@ export function CameraControlPanel({ isPopup = false }) {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <WallTransparencyToggle
+            enabled={enableWallTransparency}
+            onToggle={setEnableWallTransparency}
+          />
           <ControlSlider
             label="시야각"
             value={cameraFov}
@@ -106,6 +112,24 @@ function ControlSlider({
       }}>
         {displayValue}
       </span>
+    </div>
+  )
+}
+
+function WallTransparencyToggle({ enabled, onToggle }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <span className="text-s text-white">벽 투명화 on/off</span>
+      <button
+        onClick={() => onToggle(!enabled)}
+        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${enabled ? "bg-blue-500" : "bg-gray-300"
+          }`}
+      >
+        <div
+          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${enabled ? "translate-x-6" : "translate-x-0"
+            }`}
+        />
+      </button>
     </div>
   )
 }
