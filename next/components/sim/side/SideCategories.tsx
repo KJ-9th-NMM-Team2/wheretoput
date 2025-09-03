@@ -31,6 +31,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
     { id: 4, name: "데코" }, 
     { id: 5, name: "욕실용품" }, 
     { id: 7, name: "가전·디지털" }, 
+    { id: 10, name: "침구류" }, 
     { id: -1, name: "선택된 가구" }, 
   ];
 

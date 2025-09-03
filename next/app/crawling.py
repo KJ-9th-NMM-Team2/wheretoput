@@ -110,7 +110,7 @@ print("가구 데이터 수집을 시작합니다.")
 # 8 = Sofas, 9 = Construction
 # 10 = Bedroom , 11 = Outdoor
 # 12 = Home Decor
-tables_category_index = 3
+tables_category_index = 10
 ######################################################
 
 # 특정 카테고리만 순회
