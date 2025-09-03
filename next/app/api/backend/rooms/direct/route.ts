@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
                 otherUserId: otherUserId,   // NestJS는 다른 유저 아이디만 필요
             }),
         });
+        // console.log('nestResponse:', nestResponse);
 
         if (!nestResponse.ok) {
             const errorText = await nestResponse.text();
