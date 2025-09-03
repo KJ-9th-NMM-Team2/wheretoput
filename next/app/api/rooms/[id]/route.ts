@@ -158,6 +158,18 @@ export async function GET(
             id: true,
           },
         },
+        rooms: {
+          select: {
+            room_id: true,
+            title: true,
+            user: {
+              select: {
+                name: true,
+                id: true,
+              },
+            },
+          },
+        },
         room_objects: {
           include: {
             furnitures: {
