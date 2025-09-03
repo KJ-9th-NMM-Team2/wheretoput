@@ -35,20 +35,17 @@ export async function GET(
 
     // 방이 존재하는지 확인
     const room = await prisma.rooms.findUnique({
-      where: { room_id: room_id }
+      where: { room_id: room_id },
     });
 
     if (!room) {
-      return Response.json(
-        { error: "Room not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Room not found" }, { status: 404 });
     }
 
     // 방의 벽 데이터 조회
     const walls = await prisma.room_walls.findMany({
       where: { room_id: room_id },
-      orderBy: { wall_order: 'asc' }
+      orderBy: { wall_order: "asc" },
     });
 
     console.log(`Found ${walls.length} walls for room ${room_id}`);
@@ -59,32 +56,31 @@ export async function GET(
       position: [
         Number(wall.position_x),
         Number(wall.position_y),
-        Number(wall.position_z)
+        Number(wall.position_z),
       ],
       rotation: [
         Number(wall.rotation_x),
         Number(wall.rotation_y),
-        Number(wall.rotation_z)
+        Number(wall.rotation_z),
       ],
       dimensions: {
         width: Number(wall.length),
         height: Number(wall.height),
-        depth: Number(wall.depth)
+        depth: Number(wall.depth),
       },
-      material: 'wall',
+      material: "wall",
       original2D: {
         start: { x: Number(wall.start_x), y: Number(wall.start_y) },
-        end: { x: Number(wall.end_x), y: Number(wall.end_y) }
-      }
+        end: { x: Number(wall.end_x), y: Number(wall.end_y) },
+      },
     }));
 
     return Response.json({
       success: true,
       room_id: room_id,
       walls: walls3D,
-      wall_count: walls3D.length
+      wall_count: walls3D.length,
     });
-
   } catch (error) {
     console.error("Error fetching room walls:", error);
     return Response.json(
@@ -151,31 +147,28 @@ export async function POST(
 
     // 방이 존재하는지 확인
     const room = await prisma.rooms.findUnique({
-      where: { room_id: room_id }
+      where: { room_id: room_id },
     });
 
     if (!room) {
-      return Response.json(
-        { error: "Room not found" },
-        { status: 404 }
-      );
+      return Response.json({ error: "Room not found" }, { status: 404 });
     }
 
     // 트랜잭션으로 기존 벽들 삭제 후 새로 추가
     await prisma.$transaction(async (tx) => {
       // 기존 벽들 삭제
       await tx.room_walls.deleteMany({
-        where: { room_id: room_id }
+        where: { room_id: room_id },
       });
 
       // 벽 데이터 변환 및 중심점 계산
       const wallsData = walls.map((wall, index) => {
         // 픽셀 좌표를 미터 단위로 변환
-        const startX = wall.start.x * pixelToMmRatio / 1000;
-        const startZ = wall.start.y * pixelToMmRatio / 1000;
-        const endX = wall.end.x * pixelToMmRatio / 1000;
-        const endZ = wall.end.y * pixelToMmRatio / 1000;
-        
+        const startX = (wall.start.x * pixelToMmRatio) / 1000;
+        const startZ = (wall.start.y * pixelToMmRatio) / 1000;
+        const endX = (wall.end.x * pixelToMmRatio) / 1000;
+        const endZ = (wall.end.y * pixelToMmRatio) / 1000;
+
         // 벽의 길이와 중심점 계산
         const length = Math.sqrt(
           Math.pow(endX - startX, 2) + Math.pow(endZ - startZ, 2)
@@ -183,7 +176,7 @@ export async function POST(
         const centerX = (startX + endX) / 2;
         const centerZ = (startZ + endZ) / 2;
         const rotation = Math.atan2(endZ - startZ, endX - startX);
-        
+
         return {
           start_x: startX,
           start_y: startZ,
@@ -193,29 +186,35 @@ export async function POST(
           position_x: centerX,
           position_z: centerZ,
           rotation_y: rotation,
-          wall_order: index
+          wall_order: index,
         };
       });
 
-      // 벽들의 중심점 계산하여 원점 중심으로 이동
-      if (wallsData.length > 0) {
-        const centerX = wallsData.reduce((sum, wall) => sum + wall.position_x, 0) / wallsData.length;
-        const centerZ = wallsData.reduce((sum, wall) => sum + wall.position_z, 0) / wallsData.length;
-        
-        // 모든 벽의 위치를 중심점 기준으로 조정
-        wallsData.forEach(wall => {
-          wall.position_x -= centerX;
-          wall.position_z -= centerZ;
-          wall.start_x -= centerX;
-          wall.start_y -= centerZ;
-          wall.end_x -= centerX;
-          wall.end_y -= centerZ;
-        });
+      if (pixelToMmRatio != 1000) {
+        // 벽들의 중심점 계산하여 원점 중심으로 이동
+        if (wallsData.length > 0) {
+          const centerX =
+            wallsData.reduce((sum, wall) => sum + wall.position_x, 0) /
+            wallsData.length;
+          const centerZ =
+            wallsData.reduce((sum, wall) => sum + wall.position_z, 0) /
+            wallsData.length;
+
+          // 모든 벽의 위치를 중심점 기준으로 조정
+          wallsData.forEach((wall) => {
+            wall.position_x -= centerX;
+            wall.position_z -= centerZ;
+            wall.start_x -= centerX;
+            wall.start_y -= centerZ;
+            wall.end_x -= centerX;
+            wall.end_y -= centerZ;
+          });
+        }
       }
 
       // 새로운 벽들 추가
       await tx.room_walls.createMany({
-        data: wallsData.map(wall => ({
+        data: wallsData.map((wall) => ({
           room_id: room_id,
           start_x: wall.start_x,
           start_y: wall.start_y,
@@ -225,8 +224,8 @@ export async function POST(
           position_x: wall.position_x,
           position_z: wall.position_z,
           rotation_y: wall.rotation_y,
-          wall_order: wall.wall_order
-        }))
+          wall_order: wall.wall_order,
+        })),
       });
     });
 
@@ -236,9 +235,8 @@ export async function POST(
       success: true,
       room_id: room_id,
       saved_count: walls.length,
-      message: "Walls saved successfully"
+      message: "Walls saved successfully",
     });
-
   } catch (error) {
     console.error("Error saving room walls:", error);
     return Response.json(
