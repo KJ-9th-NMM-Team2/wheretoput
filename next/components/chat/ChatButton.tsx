@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import styles from "./ChatButton.module.scss";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -69,6 +70,9 @@ const INITIAL_CHATS: ChatListItem[] = [
 ];
 
 export default function ChatButton() {
+  const { data: session } = useSession();
+
+  if (session?.user === undefined) return null;
   const [open, setOpen] = useState(false); // 팝업창 on off
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체"); // 필터
   const [selectedChatId, setselectedChatId] = useState<string | null>(null); // null이면 리스트, string이면 방
