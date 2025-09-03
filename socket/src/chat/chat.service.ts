@@ -10,7 +10,7 @@ export type ChatMessageDTO = {
   id: string;
   roomId: string;
   senderId: string;
-  senderName: string;
+  senderName?: string;
   content: string;
   createdAt: string;
   status: 'sent';
@@ -65,7 +65,6 @@ export class ChatService {
   async saveMessage(params: {
     roomId: string;
     userId: string;
-    senderName: string;
     content: string;
   }): Promise<ChatMessageDTO> {
     try {
@@ -80,19 +79,19 @@ export class ChatService {
       }
 
       // 방 참가자 확인
-      const participant = await this.prisma.chat_participants.findUnique({
-        where: {
-          chat_room_id_user_id: {
-            chat_room_id: params.roomId,
-            user_id: params.userId,
-          },
-        },
-      });
+      // const participant = await this.prisma.chat_participants.findUnique({
+      //   where: {
+      //     chat_room_id_user_id: {
+      //       chat_room_id: params.roomId,
+      //       user_id: params.userId,
+      //     },
+      //   },
+      // });
 
       // 방에 아무도 없으면 에러처리
-      if (!participant) {
-        throw new ForbiddenException('Not a member of this room');
-      }
+      // if (!participant) {
+      //   throw new ForbiddenException('Not a member of this room');
+      // }
 
       const now = new Date();
       const created = await this.prisma.chat_messages.create({
@@ -120,7 +119,7 @@ export class ChatService {
         id: created.message_id,
         roomId: created.chat_room_id,
         senderId: created.user_id,
-        senderName: params.senderName,
+        // senderName: params.senderName,
         content: created.content,
         createdAt: created.created_at?.toString() || "",
         status: 'sent',

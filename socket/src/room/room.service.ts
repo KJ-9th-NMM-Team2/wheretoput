@@ -12,12 +12,10 @@ export class RoomService {
     otherUserId: string;
   }) {
     try {
-      console.log('111111111111111111111111');
-      console.log('this.prisma', this.prisma);
+      // console.log('this.prisma', this.prisma);
       if (!this.prisma) {
         throw new Error('Prisma service not injected');
       }
-      console.log('222222222222222222222222');
       const room = await this.prisma.chat_rooms.create({
         data: {
           creator_id: params.currentUserId, // name (OK)

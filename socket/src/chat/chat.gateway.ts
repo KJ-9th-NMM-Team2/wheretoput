@@ -98,7 +98,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const msg = await this.chatService.saveMessage({
       roomId: body.roomId,
       userId,
-      senderName: username,
+      // senderName: username,
       content: body.content,
     });
 

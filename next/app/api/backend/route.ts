@@ -42,6 +42,6 @@ export async function GET(req: Request) {
         return Response.json(users);
     } catch (error) {
         console.log("Server /api/backend ERROR");
-        return Response.json("Server Error Occurred...", {status: 400});
+        return Response.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

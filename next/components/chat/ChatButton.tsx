@@ -46,7 +46,7 @@ export default function ChatButton({
   currentUserId: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
+  const [tokenData, setTokenData] = useState<{token: string; userId: string} | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -124,13 +124,11 @@ export default function ChatButton({
           return;
         }
         // 여기서 바로 json() 호출하고 다시는 호출하지 않기
-        const data = await r.json();
-        // 토큰 값 가져오기
-        const token = data["tokenData"]["jti"];
+        const tokenData = await r.json();
         if (!alive) return;
-        setToken(token);
-        setAuthToken(token);
-        connectSocket(token);
+        setTokenData(tokenData);
+        setAuthToken(tokenData.token);
+        connectSocket(tokenData.token);
       } catch (e) {
         console.error("token error", e);
       }
@@ -141,54 +139,55 @@ export default function ChatButton({
   }, [open]);
 
   // 방 목록 로드
-  // useEffect(() => {
-  //   if (!open || !token) {
-  //     console.log("[ROOMS] 스킵 - open:", open, "token:", !!token);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!open || !tokenData) {
+      return;
+    }
 
-  //   (async () => {
-  //     const path = "/backend/rooms";
-  //     try {
-  //       console.log("[ROOMS] GET", path);
-  //       const { data } = await api.get("/backend/rooms", {
-  //         params: { limit: 1000 },
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
+    (async () => {
+      const path = "/backend/rooms";
+      try {
+        console.log("[ROOMS] GET", path);
+        const { data } = await api.get("/backend/rooms", {
+          params: { limit: 1000 },
+          headers: { Authorization: `Bearer ${tokenData.token}` },
+        });
 
-  //       const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-  //         const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
-  //         return {
-  //           chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
-  //           name: r.name ?? "이름 없음",
-  //           is_private: Boolean(r.is_private),
-  //           lastMessage: lastMsg,
-  //           lastMessageAt: r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
-  //           last_read_at: r.last_read_at ?? r.lastReadAt ?? "1970-01-01T00:00:00.000Z",
-  //           searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
-  //         };
-  //       });
+        const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
+          const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
+          return {
+            chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
+            name: r.name ?? "이름 없음",
+            is_private: Boolean(r.is_private),
+            lastMessage: lastMsg,
+            lastMessageAt: r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
+            last_read_at: r.last_read_at ?? r.lastReadAt ?? "1970-01-01T00:00:00.000Z",
+            searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
+          };
+        });
 
-  //       setBaseChats(mapped);
-  //       setChats(recomputeChats(mapped, "", "전체"));
-  //       setSelect("전체");
-  //       setQuery("");
-  //       console.log("[ROOMS] OK", mapped.length);
-  //     } catch (e: any) {
-  //       console.error("[ROOMS] FAIL", {
-  //         url: path,
-  //         status: e?.response?.status,
-  //         data: e?.response?.data,
-  //         message: e?.message,
-  //         tokenExists: !!token,
-  //       });
-  //     }
-  //   })();
-  // }, [open, token, recomputeChats]);
+        setBaseChats(mapped);
+        setChats(recomputeChats(mapped, "", "전체"));
+        setSelect("전체");
+        setQuery("");
+        console.log("[ROOMS] OK", mapped.length);
+      } catch (e: any) {
+        console.error("[ROOMS] FAIL", {
+          url: path,
+          status: e?.response?.status,
+          data: e?.response?.data,
+          message: e?.message,
+          tokenExists: !!tokenData.token,
+        });
+      }
+    })();
+  }, [open, tokenData, recomputeChats]);
 
   useEffect(() => {
     const bootstrap = async () => {
       const res = await fetch("/api/chat/token", { cache: "no-store" });
+      // token: newToken,
+      // userId: token.id
       const { token } = await res.json();
       setAuthToken(token);
       // 이후부터 api.get/post가 자동으로 Authorization 포함
@@ -228,8 +227,8 @@ export default function ChatButton({
 
   // 방 선택 시 join + 히스토리 로드
   useEffect(() => {
-    if (!open || !selectedChatId || !token) return;
-    const s = connectSocket(token);
+    if (!open || !selectedChatId || !tokenData) return;
+    const s = connectSocket(tokenData.token);
     s.emit("join", { roomId: selectedChatId });
 
     let cancelled = false;
@@ -239,7 +238,7 @@ export default function ChatButton({
         `/backend/rooms/${selectedChatId}/messages`,
         {
           params: { limit: 50 },
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${tokenData.token}` },
         }
       );
       if (cancelled) return;
@@ -274,7 +273,7 @@ export default function ChatButton({
       cancelled = true;
       s.emit("leave", { roomId: selectedChatId });
     };
-  }, [open, selectedChatId, token, query, select, recomputeChats]);
+  }, [open, selectedChatId, tokenData?.token, query, select, recomputeChats]);
 
   // 팝업 닫힐 때 소켓 정리
   useEffect(() => {
@@ -283,12 +282,57 @@ export default function ChatButton({
     if (s) s.disconnect();
   }, [open]);
 
+
+  // 전송
+  const onSendMessage = useCallback(
+    (roomId: string, content: string) => {
+      if (!tokenData) return;
+      const now = new Date().toISOString();
+      const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
+      const tempMsg: Message = {
+        id: tempId,
+        tempId,
+        roomId,
+        senderId: currentUserId,
+        content,
+        createdAt: now,
+        status: "sending",
+      };
+
+      setMessagesByRoom((prev) => ({
+        ...prev,
+        [roomId]: [...(prev[roomId] ?? []), tempMsg],
+      }));
+
+      setBaseChats((prev) => {
+        const updated = prev.map((c) =>
+          c.chat_room_id === roomId
+            ? {
+                ...c,
+                lastMessage: content,
+                lastMessageAt: now,
+                last_read_at: now,
+                //  전송 시 검색 인덱스도 동기화
+                searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+              }
+            : c
+        );
+        setChats(recomputeChats(updated, query, select));
+        return updated;
+      });
+
+      const s = getSocket() ?? connectSocket(tokenData.token);
+      s.emit("send", { roomId, content, tempId });
+    },
+    [currentUserId, tokenData, query, select, recomputeChats]
+  );
+
   // 실시간 수신 + ACK + 읽음 이벤트
   useEffect(() => {
     if (!open) return;
     const s = getSocket();
     if (!s) return;
-
+    
     const onMessage = (m: any) => {
       const msg: Message = {
         id: m.id ?? String(m.message_id),
@@ -368,51 +412,8 @@ export default function ChatButton({
       s.off("message:ack", onAck);
       s.off("read:updated", onRead);
     };
-  }, [open, currentUserId, query, select, recomputeChats, selectedChatId]);
+  }, [open, currentUserId, query, select, recomputeChats, selectedChatId, onSendMessage]);
 
-  // 전송
-  const onSendMessage = useCallback(
-    (roomId: string, content: string) => {
-      if (!token) return;
-      const now = new Date().toISOString();
-      const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
-      const tempMsg: Message = {
-        id: tempId,
-        tempId,
-        roomId,
-        senderId: currentUserId,
-        content,
-        createdAt: now,
-        status: "sending",
-      };
-
-      setMessagesByRoom((prev) => ({
-        ...prev,
-        [roomId]: [...(prev[roomId] ?? []), tempMsg],
-      }));
-
-      setBaseChats((prev) => {
-        const updated = prev.map((c) =>
-          c.chat_room_id === roomId
-            ? {
-                ...c,
-                lastMessage: content,
-                lastMessageAt: now,
-                last_read_at: now,
-                //  전송 시 검색 인덱스도 동기화
-                searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
-              }
-            : c
-        );
-        setChats(recomputeChats(updated, query, select));
-        return updated;
-      });
-
-      const s = getSocket() ?? connectSocket(token);
-      s.emit("send", { roomId, content, tempId });
-    },
-    [currentUserId, token, query, select, recomputeChats]
-  );
 
   // 버블/스크롤 유틸
   const hhmm = (iso: string) =>
@@ -533,10 +534,37 @@ export default function ChatButton({
   }, [selectedMessages]);
 
   // 입력 & 전송
+  // const [text, setText] = useState("");
+  // const send = useCallback(async () => {
+  //   console.log("send", text);
+  //   const trimmed = text.trim();
+  //   if (!trimmed || !selectedChatId) return;
+  //   // console.log('selectedChatId', selectedChatId);
+  //   if (!tokenData) return;
+  //   try {
+
+  //     const {token, userId} = tokenData;
+  //     const response = await api.get(`${NEXT_API_URL}/api/chat`, {
+  //       params: {
+  //         roomId: selectedChatId,
+  //         userId: userId,
+  //         content: trimmed,
+  //       },
+  //       headers: { Authorization: `Bearer ${token}`}
+  //     });
+  //     if (response.status === 200) {
+  //       onSendMessage(selectedChatId, trimmed);
+  //       setText("");
+  //     }
+  //   } catch (error) {
+  //     setText("");  
+  //   }
+  // }, [text, selectedChatId, onSendMessage]);
   const [text, setText] = useState("");
   const send = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed || !selectedChatId) return;
+    
     onSendMessage(selectedChatId, trimmed);
     setText("");
   }, [text, selectedChatId, onSendMessage]);
@@ -553,17 +581,19 @@ export default function ChatButton({
   // 1:1 시작
   const onStartDirect = useCallback(
     async (otherUserId: string) => {
+      if (!tokenData) return;
+      
+      const { token, userId } = tokenData;
       const { data } = await api.get(
         `${NEXT_API_URL}/api/backend/rooms/direct`,
         {
           params: {
-            currentUserId: session?.user?.id,
+            currentUserId: userId,
             otherUserId: otherUserId,
           },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("api 호출 후 ");
       const roomId =
         data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
       if (!roomId) return;
@@ -590,7 +620,7 @@ export default function ChatButton({
         return next;
       });
     },
-    [query, select, recomputeChats, token]
+    [query, select, recomputeChats, tokenData]
   );
 
   return (

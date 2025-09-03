@@ -31,11 +31,10 @@ export async function GET(req: NextRequest) {
                 { status: 400 }
             );
         }
-
         // NestJS 서버 주소 (환경 변수로 관리하는 게 좋음)
         const NEST_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        // console.log('Received Authorization:', req.headers.get("authorization"));
 
-        console.log('NEXT currentUserId: ', currentUserId);
         const nestResponse = await fetch(`${NEST_API_URL}/rooms/direct`, {
             method: "POST",
             headers: {
@@ -48,8 +47,6 @@ export async function GET(req: NextRequest) {
                 currentUserId: currentUserId, // 필요하면 같이 넘겨도 됨
             }),
         });
-
-        console.log("nestResponse", nestResponse);
 
         if (!nestResponse.ok) {
             const errorText = await nestResponse.text();

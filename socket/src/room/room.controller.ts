@@ -10,7 +10,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoomService } from './room.service';
 
 @Controller('rooms')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
   
