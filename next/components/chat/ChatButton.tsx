@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import styles from "./ChatButton.module.scss";
 
 import { api, setAuthToken } from "@/lib/client/api";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -47,12 +47,13 @@ export default function ChatButton({
 }: {
   currentUserId: string;
 }) {
+  const { data: session } = useSession();
+  if (session?.user === undefined) return null;
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const { data: session } = useSession();
 
   const ts = (s?: string) => {
     if (!s) return -Infinity;
@@ -75,7 +76,7 @@ export default function ChatButton({
     : [];
   const selectedChat = useMemo(() => {
     if (!selectedChatId) return null;
-    return baseChats.find(c => c.chat_room_id === selectedChatId) ?? null;
+    return baseChats.find((c) => c.chat_room_id === selectedChatId) ?? null;
   }, [selectedChatId, baseChats]);
   const [peopleHits, setPeopleHits] = useState<UserLite[]>([]);
 
@@ -237,7 +238,6 @@ export default function ChatButton({
 
   // 방 선택 시 join + 히스토리 로드
   useEffect(() => {
-
     if (!open || !selectedChatId || !token) return;
     const s = connectSocket(token);
     console.log('🚪 FRONTEND JOIN:', selectedChatId);
@@ -330,12 +330,12 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === msg.roomId
             ? {
-              ...c,
-              lastMessage: msg.content,
-              lastMessageAt: msg.createdAt,
-              //  수신 시 검색 인덱스도 동기화
-              searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
-            }
+                ...c,
+                lastMessage: msg.content,
+                lastMessageAt: msg.createdAt,
+                //  수신 시 검색 인덱스도 동기화
+                searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
+              }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -354,12 +354,12 @@ export default function ChatButton({
         const next = arr.map((m) =>
           m.id === ack.tempId
             ? {
-              ...m,
-              id: ack.realId,
-              status: "sent",
-              createdAt: ack.createdAt ?? m.createdAt,
-              tempId: undefined,
-            }
+                ...m,
+                id: ack.realId,
+                status: "sent",
+                createdAt: ack.createdAt ?? m.createdAt,
+                tempId: undefined,
+              }
             : m
         );
         return { ...prev, [selectedChatId]: next };
@@ -415,13 +415,13 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === roomId
             ? {
-              ...c,
-              lastMessage: content,
-              lastMessageAt: now,
-              last_read_at: now,
-              //  전송 시 검색 인덱스도 동기화
-              searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
-            }
+                ...c,
+                lastMessage: content,
+                lastMessageAt: now,
+                last_read_at: now,
+                //  전송 시 검색 인덱스도 동기화
+                searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+              }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -461,13 +461,15 @@ export default function ChatButton({
     const isMine = m.senderId === currentUserId;
     return (
       <div
-        className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"
-          }`}
+        className={`flex items-end gap-2 ${
+          isMine ? "justify-end" : "justify-start"
+        }`}
       >
         {!isMine && (
           <div
-            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${showAvatar ? "opacity-100" : "opacity-0"
-              }`}
+            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${
+              showAvatar ? "opacity-100" : "opacity-0"
+            }`}
           >
             {m.avatarUrl ? (
               <img
@@ -481,8 +483,9 @@ export default function ChatButton({
         )}
 
         <div
-          className={`max-w-[75%] ${isMine ? "items-end" : "items-start"
-            } flex flex-col`}
+          className={`max-w-[75%] ${
+            isMine ? "items-end" : "items-start"
+          } flex flex-col`}
         >
           {!isMine && showAvatar && m.senderName ? (
             <span className="text-[11px] text-gray-400 pl-1 mb-0.5">
@@ -594,8 +597,8 @@ export default function ChatButton({
 
       setselectedChatId(roomId);
 
-      setBaseChats(prev => {
-        const exists = prev.some(c => c.chat_room_id === roomId);
+      setBaseChats((prev) => {
+        const exists = prev.some((c) => c.chat_room_id === roomId);
         if (exists) {
           const next = [...prev];
           setChats(recomputeChats(next, "", "전체"));
@@ -619,7 +622,6 @@ export default function ChatButton({
     },
     [recomputeChats, token, session?.user?.id, selectedChatId]
   );
-
 
   return (
     <>
@@ -724,10 +726,11 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "전체"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-                        ? "bg-gray-200 text-blue-500"
-                        : "bg-transparent hover:bg-gray-200"
-                        }`}
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+                        select === "전체"
+                          ? "bg-gray-200 text-blue-500"
+                          : "bg-transparent hover:bg-gray-200"
+                      }`}
                     >
                       전체
                     </button>
@@ -738,10 +741,11 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "읽지 않음"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-                        ? "bg-gray-200 text-blue-500"
-                        : "bg-transparent hover:bg-gray-200"
-                        }`}
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+                        select === "읽지 않음"
+                          ? "bg-gray-200 text-blue-500"
+                          : "bg-transparent hover:bg-gray-200"
+                      }`}
                     >
                       읽지 않음
                     </button>
@@ -763,7 +767,10 @@ export default function ChatButton({
                           peopleHits.map((u) => (
                             <div
                               key={u.id}
-                              onClick={(e) => { e.stopPropagation(); onStartDirect(u.id, u.name); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStartDirect(u.id, u.name);
+                              }}
                               className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
                             >
                               <div className="flex items-center gap-2 min-w-0">
@@ -780,7 +787,6 @@ export default function ChatButton({
                                   {u.name}
                                 </div>
                               </div>
-
                             </div>
                           ))
                         )}
@@ -923,10 +929,11 @@ export default function ChatButton({
                       <button
                         onClick={send}
                         disabled={!text.trim() || !selectedChatId}
-                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${text.trim()
-                          ? "bg-orange-500 hover:bg-orange-600"
-                          : "bg-gray-300 cursor-not-allowed"
-                          }`}
+                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${
+                          text.trim()
+                            ? "bg-orange-500 hover:bg-orange-600"
+                            : "bg-gray-300 cursor-not-allowed"
+                        }`}
                       >
                         전송
                       </button>

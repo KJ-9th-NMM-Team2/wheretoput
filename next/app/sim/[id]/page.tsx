@@ -15,14 +15,12 @@ import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
 
-
-
 type position = [number, number, number];
 
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
   const { floorColor } = useStore();
-  
+
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
@@ -76,7 +74,11 @@ function Floor({ wallsData }: { wallsData: any[] }) {
       receiveShadow
     >
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
+      <meshStandardMaterial
+        color={floorColor}
+        roughness={0.9}
+        metalness={0.0}
+      />
     </mesh>
   );
 }
@@ -108,7 +110,7 @@ function Wall({
   React.useEffect(() => {
     const updateTransparency = () => {
       if (!meshRef.current) return;
-      if (enableWallTransparency) {
+      if (!enableWallTransparency) {
         setOpacity(1.0);
         return;
       }
@@ -127,24 +129,28 @@ function Wall({
       const minDistanceThreshold = 15;
       const maxDistanceThreshold = 30;
 
-      let cameraToWall = new THREE.Vector3()
-        .subVectors(camera.position, wallWorldPosition);
+      let cameraToWall = new THREE.Vector3().subVectors(
+        camera.position,
+        wallWorldPosition
+      );
       const distance = cameraToWall.length();
 
       if (distance > maxDistanceThreshold) {
         setOpacity(maxOpacity);
-      }
-      else if (distance < minDistanceThreshold) {
+      } else if (distance < minDistanceThreshold) {
         setOpacity(minOpacity);
-      }
-      else {
-        const newOpacity = (maxOpacity - minOpacity) / (maxDistanceThreshold - minDistanceThreshold) * (distance - minDistanceThreshold) + minOpacity;
+      } else {
+        const newOpacity =
+          ((maxOpacity - minOpacity) /
+            (maxDistanceThreshold - minDistanceThreshold)) *
+            (distance - minDistanceThreshold) +
+          minOpacity;
         setOpacity(newOpacity);
       }
       // else {
       //   cameraToWall.normalize();
       //   const dotProduct = wallNormal.dot(cameraToWall);
-  
+
       //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
       //   const t = 1 - Math.abs(dotProduct);
 
@@ -178,9 +184,7 @@ function Wall({
       opacity: opacity,
     });
 
-    return [
-      ...Array(6).fill(material)
-    ];
+    return [...Array(6).fill(material)];
   }, [opacity]);
 
   return (
@@ -319,7 +323,7 @@ export default function SimPage({
               overflowY: "auto",
             }}
           >
-            <button 
+            <button
               onClick={() => setViewOnly(!viewOnly)}
               style={{ width: "100%", textAlign: "center" }}
             >
@@ -328,18 +332,16 @@ export default function SimPage({
           </div>
         }
 
-        {!viewOnly && (
-          <ControlIcons />
-        )}
-        
+        {!viewOnly && <ControlIcons />}
+
         <SelectedModelEditModal />
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
-          style={{ 
+          style={{
             width: "100%", // 항상 전체 너비 사용
-            height: "100vh" 
+            height: "100vh",
           }}
           frameloop="demand"
         >
@@ -349,7 +351,7 @@ export default function SimPage({
           ) : (
             <OrthographicCamera makeDefault position={[-20, 15, 0]} zoom={50} />
           )} */}
-          
+
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
           <directionalLight
