@@ -38,11 +38,11 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     currentRoomId,
     loadedModels,
     setShouldCapture,
-    checkUserRoom,
+    checkUserRoom, 
   } = useStore();
 
   // 뒤로 가기 버튼
-  const router = useRouter();
+  const router = useRouter()
   const [saveMessage, setSaveMessage] = useState("");
 
   const { data: session } = useSession();
@@ -105,10 +105,10 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
   // 방 나가기
   const handleOutofRoomClick = async () => {
     const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
-
+    
     if (isOwnUserRoom) {
       await handleSaveRoom();
-      // console.log("방 저장 완료!");
+      console.log("방 저장 완료!");
     }
     router.back();
   };
@@ -147,7 +147,7 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
               </button>
             </div>
           )}
-
+          
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={`text-gray-500 hover:text-gray-700 transition-all duration-300 

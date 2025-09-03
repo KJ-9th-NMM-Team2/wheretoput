@@ -23,7 +23,7 @@ export function CommentCard({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // console.log(currentUserId, comment.user_id);
+  console.log(currentUserId, comment.user_id);
 
   // 현재 사용자가 댓글 작성자인지 확인
 

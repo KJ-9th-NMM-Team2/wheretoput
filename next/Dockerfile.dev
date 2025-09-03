@@ -1,24 +1,28 @@
+# Node.js 22 Alpine 개발용 이미지
 FROM node:22-alpine
 
-RUN apk add --no-cache libc6-compat && \
-    rm -rf /var/cache/apk/*
+# 의존성 설치를 위한 패키지 추가
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-ENV NODE_ENV=development
-ENV NEXT_TELEMETRY_DISABLED=1
-
+# package.json 복사 및 의존성 설치
 COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund && \
-    npm cache clean --force && \
-    npm prune && \
-    rm -rf /root/.npm /tmp/*
+RUN npm ci
 
+# Prisma 스키마 복사 및 클라이언트 생성
 COPY prisma ./prisma/
 RUN npx prisma generate
 
-# node_modules만 제외하고 모든 소스 복사
+# 소스 코드 복사
 COPY . .
 
+# 개발 환경 변수
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# 포트 노출
 EXPOSE 3000
+
+# 개발 서버 실행
 CMD ["npm", "run", "dev"]

@@ -33,21 +33,19 @@ export const useStore = create(
     // 액션으로 분리
     checkUserRoom: async (roomId, userId) => {
       try {
-        const response = await fetch(
-          `/api/rooms/user?roomId=${roomId}&userId=${userId}`
-        );
-        if (!response.ok) throw new Error("Network response was not ok");
-
+        const response = await fetch(`/api/rooms/user?roomId=${roomId}&userId=${userId}`);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
         const result = await response.json();
         if (result) {
-          set({ isOwnUserRoom: true });
+          set({ isOwnUserRoom: true});
         } else {
-          set({ isOwnUserRoom: false });
+          set({ isOwnUserRoom: false});
         }
 
         return result ? true : false;
       } catch (error) {
-        console.error("FETCH ERROR:", error);
+        console.error('FETCH ERROR:', error);
         set({ isOwnUserRoom: false });
       }
     },
@@ -144,6 +142,7 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
+    ambientLightIntensity: 0.4,
     directionalLightPosition: [26, 15, 0],
     directionalLightAzimuth: 0,
     directionalLightElevation: 30,
@@ -264,7 +263,7 @@ export const useStore = create(
             window.history.replaceState({}, "", `/sim/${newRoomId}`);
           }
 
-          // console.log(`새 방 생성 완료: ${newRoomId}`);
+          console.log(`새 방 생성 완료: ${newRoomId}`);
 
           // 벽 데이터가 있으면 room_walls 테이블에 저장
           if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
@@ -340,7 +339,7 @@ export const useStore = create(
             );
 
             if (updateWallsResponse.ok) {
-              // console.log("벽 데이터 업데이트 완료");
+              console.log("벽 데이터 업데이트 완료");
             } else {
               console.warn(
                 "벽 데이터 업데이트 실패:",
@@ -370,7 +369,7 @@ export const useStore = create(
 
         const result = await response.json();
         set({ lastSavedAt: new Date() });
-        // console.log("시뮬레이터 상태 저장 완료:", result);
+        console.log("시뮬레이터 상태 저장 완료:", result);
         return result;
       } catch (error) {
         console.error("저장 중 오류:", error);
@@ -413,7 +412,7 @@ export const useStore = create(
             // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
             scale = 1;
           }
-          // console.log("obj", obj);
+          console.log("obj", obj);
 
           return {
             id: obj.id,
@@ -465,9 +464,9 @@ export const useStore = create(
           },
         });
 
-        // console.log(
-        //   `시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`
-        // );
+        console.log(
+          `시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`
+        );
         return result;
       } catch (error) {
         console.error("로드 중 오류:", error);
