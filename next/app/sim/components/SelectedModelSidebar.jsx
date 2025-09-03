@@ -114,9 +114,9 @@ export function SelectedModelEditModal() {
           {/* 제거 버튼 */}
           <button
             onClick={() => removeModel(selectedModel.id)}
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-blue-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
           >
-            🗑️ 가구 삭제
+            가구 삭제
           </button>
         </div>
         </div>
