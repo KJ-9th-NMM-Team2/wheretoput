@@ -100,7 +100,7 @@ jobs:
           host: ${{ secrets.EC2_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
-          source: "docker-compose.yml,.env.production"
+          source: "docker-compose.next.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/next/
           timeout: 60s
 
@@ -122,8 +122,8 @@ jobs:
             export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             export ECR_REPO_NEXT=${{ secrets.ECR_REPO_NEXT }}
             
-            docker-compose --env-file .env.production pull
-            docker-compose --env-file .env.production up -d --remove-orphans
+            docker-compose -f docker-compose.next.yml --env-file .env.production pull
+            docker-compose -f docker-compose.next.yml --env-file .env.production up -d --remove-orphans
             docker image prune -f
 
   deploy-nest:
@@ -147,10 +147,10 @@ jobs:
           host: ${{ secrets.EC2_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
-          source: "docker-compose.yml,.env.production"
+          source: "docker-compose.nest.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/nest/
           timeout: 60s
-
+      
       - name: Deploy NestJS on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -169,10 +169,10 @@ jobs:
             export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             export ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
             
-            docker-compose --env-file .env.production pull
-            docker-compose --env-file .env.production up -d --remove-orphans
+            docker-compose -f docker-compose.nest.yml --env-file .env.production pull
+            docker-compose -f docker-compose.nest.yml --env-file .env.production up -d --remove-orphans
             docker image prune -f
             
-            if docker-compose ps socket >/dev/null 2>&1; then
-              docker-compose --env-file .env.production run --rm socket npx prisma migrate deploy || true
+            if docker-compose -f docker-compose.nest.yml ps socket >/dev/null 2>&1; then
+              docker-compose -f docker-compose.nest.yml --env-file .env.production run --rm socket npx prisma migrate deploy || true
             fi
