@@ -20,10 +20,9 @@
 
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
     try {
-        const currentUserId = req.nextUrl.searchParams.get("currentUserId");
-        const otherUserId = req.nextUrl.searchParams.get("otherUserId");
+        const { currentUserId, otherUserId } = await req.json();
 
         if (!currentUserId || !otherUserId) {
             return Response.json(
@@ -35,7 +34,10 @@ export async function GET(req: NextRequest) {
         // NestJS 서버 주소 (환경 변수로 관리하는 게 좋음)
         const NEST_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+        console.log('Request data:', { currentUserId, otherUserId });
         console.log('Authorization: ', req.headers.get("authorization"));
+        console.log('NestJS URL:', `${NEST_API_URL}/rooms/direct`);
+        
         const nestResponse = await fetch(`${NEST_API_URL}/rooms/direct`, {
             method: "POST",
             headers: {
@@ -51,8 +53,13 @@ export async function GET(req: NextRequest) {
 
         if (!nestResponse.ok) {
             const errorText = await nestResponse.text();
+            console.error("NestJS Response Error:", {
+                status: nestResponse.status,
+                statusText: nestResponse.statusText,
+                errorText
+            });
             return Response.json(
-                { error: "NestJS error", details: errorText },
+                { error: "NestJS error", details: errorText, status: nestResponse.status },
                 { status: nestResponse.status }
             );
         }
@@ -61,6 +68,10 @@ export async function GET(req: NextRequest) {
         const result = await nestResponse.json();
         return Response.json(result, { status: 200 });
     } catch (error) {
-        return Response.json("api/backend/rooms/direct Serrver Error", { status: 400 });
+        console.error("API Error:", error);
+        return Response.json(
+            { error: "api/backend/rooms/direct Server Error", details: error instanceof Error ? error.message : String(error) }, 
+            { status: 500 }
+        );
     }
 }

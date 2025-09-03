@@ -6,10 +6,7 @@ export class RoomService {
   constructor(private readonly prisma: PrismaService) {}
 
   // 방 생성
-  async createRoom(params: {
-    currentUserId: string;
-    otherUserId: string;
-  }) {
+  async createRoom(params: { currentUserId: string; otherUserId: string }) {
     try {
       console.log('111111111111111111111111');
       console.log('this.prisma', this.prisma);
@@ -17,22 +14,56 @@ export class RoomService {
         throw new Error('Prisma service not injected');
       }
       console.log('222222222222222222222222');
+
+      // 기존 채팅방 확인 (양방향으로 검색)
+      const existingRoom = await this.prisma.chat_rooms.findFirst({
+        where: {
+          OR: [
+            {
+              creator_id: params.currentUserId,
+              other_user_ids: {
+                array_contains: params.otherUserId,
+              },
+            },
+            {
+              creator_id: params.otherUserId,
+              other_user_ids: {
+                array_contains: params.currentUserId,
+              },
+            },
+          ],
+        },
+      });
+
+      if (existingRoom) {
+        console.log('기존 채팅방 발견:', existingRoom.chat_room_id);
+        return existingRoom;
+      }
+
+      console.log('새 채팅방 생성');
       const room = await this.prisma.chat_rooms.create({
         data: {
           creator_id: params.currentUserId, // name (OK)
           other_user_ids: [params.otherUserId], // description
         },
       });
-      // await this.prisma.chat_participants.create({
-      //   data: {
-      //     chat_room_id: room.chat_room_id, // 주의: room_id 아님
-      //     user_id: params.createdBy,
-      //     is_admin: true, // role 대신 Boolean 필드 사용
-      //     // joined_at 기본값 now()
-      //   },
-      // });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      await this.prisma.chat_participants.create({
+        data: {
+          chat_room_id: room.chat_room_id,
+          user_id: params.currentUserId,
+          is_admin: true,
+        },
+      });
+
+      await this.prisma.chat_participants.create({
+        data: {
+          chat_room_id: room.chat_room_id,
+          user_id: params.otherUserId,
+          is_admin: false,
+        },
+      });
+
       return room;
     } catch (error: any) {
       throw new Error(`Failed to create room: ${error.message}`);
@@ -40,7 +71,8 @@ export class RoomService {
   }
 
   // 방 생성
-  async createChatting(params: {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  createChatting(params: {
     name: string;
     description?: string;
     createdBy: string;
@@ -67,12 +99,10 @@ export class RoomService {
       // });
       // // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       // return room;
-      } catch (error: any) {
+    } catch (error: any) {
       throw new Error(`Failed to create room: ${error.message}`);
     }
   }
-
-
 
   // 방 접근 권한 확인
   async checkRoomAccess(roomId: string, userId: string): Promise<boolean> {
