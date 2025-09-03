@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import styles from "./ChatButton.module.scss";
 
 import { api, setAuthToken } from "@/lib/client/api";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -40,11 +40,11 @@ type UserLite = {
   image?: string;
 };
 
-export default function ChatButton({
-  currentUserId,
-}: {
-  currentUserId: string;
-}) {
+
+
+export default function ChatButton({ currentUserId }: { currentUserId: string }) {
+  const { data: session } = useSession();
+  if (session?.user === undefined) return null;
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");

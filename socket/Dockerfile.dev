@@ -7,6 +7,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
+# Prisma 클라이언트 생성 후 빌드
+COPY prisma ./prisma/
+RUN npx prisma generate
+
 # 소스 코드 복사
 COPY . .
 
