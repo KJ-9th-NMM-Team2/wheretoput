@@ -72,6 +72,19 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 </div>
               </div>
             </div>
+            <div>
+              {room.root_room_id && room.rooms ? (
+                <Link
+                  href={`/rooms/${room.root_room_id}`}
+                  className="px-4 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400"
+                >
+                  {room.rooms.user.name}님의 {room.rooms.title}에서 복제된
+                  방입니다.
+                </Link>
+              ) : (
+                ""
+              )}
+            </div>
             <div className="flex justify-stretch">
               <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
                 <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">

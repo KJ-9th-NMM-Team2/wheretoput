@@ -15,8 +15,8 @@ export function TotalPrice({totalPrice} : TotalPriceProps) {
     return <>
         {/* 개선된 가격 표시 */}
         {totalPrice > 0 && (
-            <div className="mt-3 text-right w-full">
-                <span className="text-sm font-bold text-gray-700">
+            <div className="text-right w-full">
+                <span className="text-md font-bold text-gray-700">
                     합계: ₩{formatPrice(totalPrice)}
                 </span>
             </div>

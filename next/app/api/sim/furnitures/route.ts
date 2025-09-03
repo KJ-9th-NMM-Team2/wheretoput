@@ -24,6 +24,13 @@
  *         schema:
  *           type: integer
  *         description: 카테고리 ID
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [price_asc, price_desc, updated_desc]
+ *           default: updated_desc
+ *         description: 정렬 기준 (price_asc=가격오름차순, price_desc=가격내림차순, updated_desc=최신순)
  *     responses:
  *       200:
  *         description: 가구 목록 조회 성공
@@ -68,7 +75,23 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "5");
     const categoryParam = searchParams.get("category");
     const category = categoryParam ? parseInt(categoryParam) : null;
+    const sortParam = searchParams.get("sort") || "updated_desc";
     const skip = (page - 1) * limit;
+
+    // 정렬 옵션 설정
+    let orderBy: any = { updated_at: "desc" }; // 기본값: 최신순 (DB에 가구 업데이트 날짜)
+    switch (sortParam) {
+      case "price_asc":
+        orderBy = { price: "asc" };
+        break;
+      case "price_desc":
+        orderBy = { price: "desc" };
+        break;
+      case "updated_desc":
+      default:
+        orderBy = { updated_at: "desc" };
+        break;
+    }
 
     console.log(`Fetching page ${page}, limit ${limit}, category: ${category}`);
 
@@ -88,9 +111,7 @@ export async function GET(request: Request) {
             },
             take: limit,
             skip: skip,
-            orderBy: {
-              furniture_id: "asc",
-            },
+            orderBy: orderBy,
           }),
           prisma.furnitures.count({
             where: {
@@ -106,9 +127,7 @@ export async function GET(request: Request) {
           prisma.furnitures.findMany({
             take: limit,
             skip: skip,
-            orderBy: {
-              furniture_id: "asc",
-            },
+            orderBy: orderBy,
           }),
           prisma.furnitures.count(),
         ]);

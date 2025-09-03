@@ -33,19 +33,21 @@ export const useStore = create(
     // 액션으로 분리
     checkUserRoom: async (roomId, userId) => {
       try {
-        const response = await fetch(`/api/rooms/user?roomId=${roomId}&userId=${userId}`);
-        if (!response.ok) throw new Error('Network response was not ok');
-        
+        const response = await fetch(
+          `/api/rooms/user?roomId=${roomId}&userId=${userId}`
+        );
+        if (!response.ok) throw new Error("Network response was not ok");
+
         const result = await response.json();
         if (result) {
-          set({ isOwnUserRoom: true});
+          set({ isOwnUserRoom: true });
         } else {
-          set({ isOwnUserRoom: false});
+          set({ isOwnUserRoom: false });
         }
 
         return result ? true : false;
       } catch (error) {
-        console.error('FETCH ERROR:', error);
+        console.error("FETCH ERROR:", error);
         set({ isOwnUserRoom: false });
       }
     },
@@ -142,15 +144,13 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
-    ambientLightIntensity: 0.4,
+    environmentPreset: "apartment",
     directionalLightPosition: [26, 15, 0],
     directionalLightAzimuth: 0,
     directionalLightElevation: 30,
-    directionalLightIntensity: 0.9,
+    directionalLightIntensity: 1.0,
 
-    // 빛 액션
-    setAmbientLightIntensity: (intensity) =>
-      set({ ambientLightIntensity: intensity }),
+    setEnvironmentPreset: (preset) => set({ environmentPreset: preset }),
     setDirectionalLightAzimuth: (azimuth) =>
       set({
         directionalLightAzimuth: azimuth,
@@ -176,14 +176,23 @@ export const useStore = create(
     cameraFov: 30, // Perspective
     // cameraZoom: 50,   // Orthographic
     // cameraMode: 'perspective', // Perspective | Orthographic
+    enableWallTransparency: true,
 
-    // 카메라 액션
     setCameraFov: (fov) => set({ cameraFov: fov }),
     // setCameraMode: (mode) => set({ cameraMode: mode }),
+    setEnableWallTransparency: (enable) => set({ enableWallTransparency: enable }),
+
+    // 벽, 바닥 상태
+    wallColor: "#FFFFFF",
+    floorColor: "#D2B48C",
+
+    setWallColor: (color) => set({ wallColor: color }),
+    setFloorColor: (color) => set({ floorColor: color }),
 
     //[09.01] wallscalefactor 로 벽 조정 가능합니다.
     currentRoomId: null,
     isSaving: false,
+    isCloning: false,
     isLoading: false,
     lastSavedAt: null,
     shouldCapture: false,
@@ -196,10 +205,132 @@ export const useStore = create(
     setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
 
     setSaving: (saving) => set({ isSaving: saving }),
-
+    setCloning: (cloning) => set({ isCloning: cloning }),
     setLoading: (loading) => set({ isLoading: loading }),
 
     setShouldCapture: (capture) => set({ shouldCapture: capture }),
+
+    // 시뮬레이터 상태 복제
+    cloneSimulatorState: async () => {
+      const state = get();
+      if (!state.currentRoomId) {
+        throw new Error("방 ID가 설정되지 않았습니다");
+      }
+
+      set({ isCloning: true });
+
+      try {
+        const objects = state.loadedModels.map((model) => {
+          // furniture_id가 없는 경우 (직접 업로드한 GLB) 임시 UUID 생성하지 않고 null 유지
+          return {
+            furniture_id: model.furniture_id, // null일 수 있음
+            position: model.position,
+            rotation: model.rotation,
+            scale: Array.isArray(model.scale)
+              ? model.scale
+              : [model.scale, model.scale, model.scale],
+            url: model.url,
+            isCityKit: model.isCityKit || false,
+            texturePath: model.texturePath || null,
+            type: model.type || "glb",
+          };
+        });
+
+        // 새 방 복제하기
+        const createCloneRoom = await fetch(`/api/rooms/clone`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            room_id: state.currentRoomId,
+          }),
+        });
+
+        if (!createCloneRoom.ok) {
+          throw new Error(`방 복제 실패: ${createCloneRoom.statusText}`);
+        }
+
+        const cloneResult = await createCloneRoom.json();
+        const clonedId = cloneResult.room_id;
+
+        const currentState = get();
+
+        // 벽 데이터를 DB에 저장
+        if (currentState.wallsData.length > 0) {
+          try {
+            // 현재 스케일 팩터가 적용된 벽 데이터를 DB 형식으로 변환
+            const scaledWalls = currentState.wallsData.map((wall) => ({
+              start: {
+                x:
+                  wall.position[0] -
+                  (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y:
+                  wall.position[2] -
+                  (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
+              },
+              end: {
+                x:
+                  wall.position[0] +
+                  (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+                y:
+                  wall.position[2] +
+                  (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
+              },
+            }));
+
+            const updateWallsResponse = await fetch(
+              `/api/room-walls/${clonedId}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  walls: scaledWalls,
+                  pixelToMmRatio: 1000, // 이미 미터 단위로 변환된 값이므로 1000으로 설정
+                }),
+              }
+            );
+
+            if (updateWallsResponse.ok) {
+              console.log("벽 데이터 업데이트 완료");
+            } else {
+              console.warn(
+                "벽 데이터 업데이트 실패:",
+                updateWallsResponse.statusText
+              );
+            }
+          } catch (wallUpdateError) {
+            console.error("벽 데이터 업데이트 중 오류:", wallUpdateError);
+          }
+        }
+
+        // 가구 데이터 복제 (새 room_id 또는 기존 room_id 사용)
+        const furnResponse = await fetch("/api/sim/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            room_id: clonedId,
+            objects: objects,
+          }),
+        });
+
+        if (!furnResponse.ok) {
+          throw new Error(`복제 실패: ${furnResponse.statusText}`);
+        }
+
+        console.log("시뮬레이터 상태 복제 완료:");
+        return { room_id: clonedId };
+      } catch (error) {
+        console.error("복제 중 오류:", error);
+        throw error;
+      } finally {
+        set({ isCloning: false });
+      }
+    },
 
     // 시뮬레이터 상태 저장
     saveSimulatorState: async () => {
