@@ -331,7 +331,7 @@ export default function SimPage({
         {/* 보기/편집 전환 버튼 (임시) */}
         {/* 실 적용 시 서버에서 권한이 있는지 확인 후 표시 또는 숨기기 */}
         {
-          <div
+          <button
             style={{
               position: "absolute",
               top: "10px",
@@ -344,14 +344,12 @@ export default function SimPage({
               color: "white",
               fontSize: "12px",
               width: "100px",
-              maxHeight: "400px",
-              overflowY: "auto",
+              maxHeight: "40px",
             }}
+            onClick={() => setViewOnly(!viewOnly)}
           >
-            <button onClick={() => setViewOnly(!viewOnly)}>
-              {viewOnly ? "편집" : "보기"} 모드로 변경
-            </button>
-          </div>
+            {viewOnly ? "편집" : "보기"} 모드
+          </button>
         }
 
         {!viewOnly && <ControlIcons />}

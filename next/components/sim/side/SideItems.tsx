@@ -8,6 +8,7 @@ import { handlePageChange } from "@/utils/handlePage";
 import { fetchFurnitures } from "@/lib/api/fetchFurnitures";
 import { calculatePagination } from "@/lib/paginagtion";
 import { fetchSelectedFurnitures } from "@/lib/api/fetchSelectedFurnitures";
+import toast from "react-hot-toast";
 
 interface SideItemsProps {
   collapsed: boolean;
@@ -98,6 +99,7 @@ const SideItems: React.FC<SideItemsProps> = ({
   const handleItemClick = useCallback(
     async (item: Furniture) => {
       // console.log('Selected item:', item);
+      const toastId = toast.loading("모델 생성 중...");
 
       try {
         const response = await fetch("/api/model-upload", {
@@ -111,11 +113,13 @@ const SideItems: React.FC<SideItemsProps> = ({
         if (result.success) {
           const newModel = createNewModel(item, result.model_url);
           addModel(newModel);
+          toast.success("모델 생성 완료", { id: toastId });
         } else {
           throw new Error(result.error || "3D 모델 생성 실패");
         }
       } catch (error) {
         console.error("3D 모델 생성 실패:", error);
+        toast.error("모델 생성 실패", { id: toastId });
         // fallback 처리
         const newModel = createNewModel(item);
         addModel(newModel);
