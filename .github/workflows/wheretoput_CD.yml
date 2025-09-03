@@ -88,7 +88,7 @@ jobs:
           AUTH_GITHUB_SECRET=${{ secrets.AUTH_GITHUB_SECRET }}
           AUTH_GOOGLE_ID=${{ secrets.AUTH_GOOGLE_ID }}
           AUTH_GOOGLE_SECRET=${{ secrets.AUTH_GOOGLE_SECRET }}
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+          REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           EOF
 
@@ -97,7 +97,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           source: "docker-compose.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/next/
           timeout: 60s
@@ -107,7 +107,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           script: |
             docker system prune -f
             set -e
@@ -144,7 +144,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           source: "docker-compose.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/nest/
           timeout: 60s
@@ -154,7 +154,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           script: |
             docker system prune -f
             set -e
