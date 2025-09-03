@@ -47,7 +47,7 @@ export class ChatService {
           data: {
             chat_room_id: roomId,
             user_id: userId,
-            // role: 'member',
+            role: 'member',
           },
         });
       }
@@ -121,7 +121,7 @@ export class ChatService {
         senderId: created.user_id,
         // senderName: params.senderName,
         content: created.content,
-        createdAt: created.created_at?.toString() || "",
+        createdAt: created.created_at.toISOString(),
         status: 'sent',
       };
     } catch (error) {

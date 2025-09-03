@@ -104,7 +104,7 @@
 //     const executableCode = `
 //       'use strict';
 //       ${functionCode}
-
+      
 //       // 함수 실행
 //       try {
 //         const result = ${functionName}([${position.join(", ")}], ${scale});
@@ -180,11 +180,11 @@
 
 //     console.log("환경 변수 API 키:", process.env.ANTHROPIC_API_KEY ? "설정됨" : "설정되지 않음");
 //     console.log("API 키 길이:", process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0);
-
+    
 //     if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === "your_anthropic_api_key_here") {
 //       throw new Error("ANTHROPIC_API_KEY가 설정되지 않았거나 유효하지 않습니다. .env.local 파일을 확인하세요.");
 //     }
-
+   
 //     console.log("Anthropic API 요청 중...");
 //     const response = await anthropic.messages.create({
 //       model: "claude-sonnet-4-20250514",
@@ -203,7 +203,7 @@
 //             },
 //             {
 //               type: "text",
-//               text: `가구 분석: - 이미지의 가구 종류, 형태, 비례, 색상을 파악
+//               text: `가구 분석: - 이미지의 가구 종류, 형태, 비례, 색상을 파악 
 
 // 다음 형식으로 작성해주세요:
 // - 순수 Three.js 코드 (함수 형태)

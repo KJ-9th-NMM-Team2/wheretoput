@@ -13,7 +13,10 @@ export async function fetchRooms(
     q: query,
   });
 
+  console.log("fiels check: ", fields);
+  console.log("order check: ", order);
   const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  console.log(base_url);
   const url = query
     ? `${base_url}/api/rooms/search/?${params.toString()}`
     : `${base_url}/api/rooms?${params.toString()}`;
@@ -27,6 +30,7 @@ export async function fetchRooms(
     num_likes: room._count?.room_likes ?? 0,
     num_comments: room._count?.room_comments ?? 0,
   }));
+  console.log(data);
   return data;
 }
 

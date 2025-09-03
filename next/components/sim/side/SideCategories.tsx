@@ -14,13 +14,26 @@ interface Category {
 }
 
 const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, setSearchQuery, totalPrice }) => {
-  // 카테고리 매핑 (DB의 category_id와 매칭)
-  // 실제 DB의 categories 테이블과 일치하도록 수정 필요
+
+  // 실제 DB의 categories 테이블과 일치하도록 수정완료
+  // # -2  = 가구 , -1 = 선택된 가구(장바구니)
+  // # 0 = chairs , 1 = Lighting
+  // # 2 = Storage , 3 = Tables
+  // # 4 = Decor , 5 = Bathroom
+  // # 6 = Kitchen , 7 = Appliances
+  // # 8 = Sofas, 9 = Construction
+  // # 10 = Bedroom , 11 = Outdoor
+  // # 12 = Home Decor
   const categories: Category[] = [
-    { id: 1, name: "가구" },
-    { id: 16, name: "욕실용품" },
-    { id: 7, name: "조명" },
-    { id: 6, name: "데코" },
+    { id: -2, name: "가구" }, 
+    { id: 0, name: "의자" }, 
+    { id: 1, name: "조명" }, 
+    { id: 3, name: "테이블" }, 
+    { id: 4, name: "데코" }, 
+    { id: 5, name: "욕실용품" }, 
+    { id: 7, name: "가전·디지털" }, 
+    { id: 10, name: "침구류" }, 
+
   ];
 
   const selectedFurnitures = { id: -1, name: "선택된 가구" };
@@ -87,8 +100,9 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
             {selectedFurnitures.name}
           </button>
           <TotalPrice totalPrice={totalPrice} />
-        </div>
+
       </div>
+    </div>
     </div>
   );
 };

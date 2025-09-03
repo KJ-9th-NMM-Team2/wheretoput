@@ -13,17 +13,19 @@ import { RoomService } from './room.service';
 @UseGuards(JwtAuthGuard)
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
-  
+
   // 채팅 방 생성
-  @Post('direct')
+  @Post()
   async createRoom(
-    @Body() body: { currentUserId: string; otherUserId: string; },
+    @Body() body: { name: string; description?: string; isPrivate?: boolean },
     @Request() req: any,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.roomService.createRoom({
-      currentUserId: body.currentUserId,
-      otherUserId: body.otherUserId,
+      name: body.name,
+      description: body.description,
+      createdBy: req.user.userId,
+      isPrivate: body.isPrivate,
     });
   }
 

@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore.js'
 
 export function LightControlPanel({ isPopup = false }) {
   const {
+    ambientLightIntensity,
     directionalLightAzimuth,
     directionalLightElevation,
     directionalLightIntensity,
@@ -17,7 +18,7 @@ export function LightControlPanel({ isPopup = false }) {
     padding: '15px',
     borderRadius: '5px',
     color: 'white',
-    fontSize: '12px',
+    fontSize: '16px',
     width: '250px',
     maxHeight: '400px',
     overflowY: 'auto'
@@ -48,6 +49,16 @@ export function LightControlPanel({ isPopup = false }) {
 
           {/* 위치 조정 */}
           <ControlSlider
+            label="주변광 세기"
+            value={ambientLightIntensity}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={setAmbientLightIntensity}
+            displayValue={`${ambientLightIntensity}`}
+            compact
+          />
+          <ControlSlider
             label="방위각"
             value={directionalLightAzimuth}
             min={0}
@@ -71,8 +82,8 @@ export function LightControlPanel({ isPopup = false }) {
             label="햇빛 세기"
             value={directionalLightIntensity}
             min={0}
-            max={5}
-            step={0.1}
+            max={1}
+            step={0.01}
             onChange={setDirectionalLightIntensity}
             displayValue={`${directionalLightIntensity}`}
             compact

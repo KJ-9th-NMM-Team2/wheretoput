@@ -41,6 +41,6 @@ export async function GET(
   const { id } = await params;
   const decoded_key: string = id.join("/");
   const downloadUrl = await getFileUrl(decoded_key);
-  // console.log(downloadUrl);
+  console.log(downloadUrl);
   return Response.json({ downloadUrl });
 }

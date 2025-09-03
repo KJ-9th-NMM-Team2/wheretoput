@@ -1,25 +1,16 @@
 "use client";
-
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import styles from "./ChatButton.module.scss";
-
-import { api, setAuthToken } from "@/lib/client/api";
-import { connectSocket, getSocket } from "@/lib/client/socket";
-import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
-
-const NEXT_API_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type ChatListItem = {
   chat_room_id: string;
-  name: string; // UI 표시용 (룸 이름)
+  name: string;
   is_private: boolean;
   lastMessage?: string;
   lastMessageTime?: string;
   lastMessageAt?: string;
   last_read_at: string;
-  searchIndex: string; //  검색 전용: 마지막 메시지 전용
 };
 
 type Message = {
@@ -31,15 +22,53 @@ type Message = {
   content: string;
   createdAt: string;
   status?: "sending" | "sent" | "read";
-  tempId?: string;
 };
 
-type UserLite = {
-  id: string;
-  name: string;
-  image?: string;
-};
+//임시 데이터
+const INITIAL_CHATS: ChatListItem[] = [
+  {
+    chat_room_id: "1",
+    name: "성진",
+    is_private: false,
+    lastMessage: "하이",
+    lastMessageAt: "2025-08-27T01:30:00.000Z",
+    last_read_at: "2025-08-28T01:30:00.000Z",
+  },
+  {
+    chat_room_id: "2",
+    name: "상록",
+    is_private: false,
+    lastMessage: "수고하셨어요",
+    lastMessageAt: "2025-08-21T01:30:00.000Z",
+    last_read_at: "2025 -08 - 28T01: 30:00.000Z",
+  },
+  {
+    chat_room_id: "3",
+    name: "종호",
+    is_private: true,
+    lastMessage: "안녕하세요",
+    lastMessageAt: "2025-08-23T01:30:00.000Z",
+    last_read_at: "2025 -08 - 28T01: 30:00.000Z",
+  },
+  {
+    chat_room_id: "4",
+    name: "수연",
+    is_private: true,
+    lastMessage: "머함",
+    lastMessageAt: "2025-08-28T01:30:00.000Z",
+    last_read_at: "2025 -08 - 25T01: 30:00.000Z",
+  },
+  {
+    chat_room_id: "5",
+    name: "준탁",
+    is_private: true,
+    lastMessage: "가나다라마바사",
+    lastMessageAt: "2025-08-25T01:30:00.000Z",
+    last_read_at: "2025 -08 - 24T01: 30:00.000Z",
+  },
+];
 
+<<<<<<< HEAD
 export default function ChatButton({
   currentUserId,
 }: {
@@ -49,67 +78,61 @@ export default function ChatButton({
   const [tokenData, setTokenData] = useState<{token: string; userId: string} | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
+=======
+export default function ChatButton() {
+  const [open, setOpen] = useState(false); // 팝업창 on off
+  const [select, setSelect] = useState<"전체" | "읽지 않음">("전체"); // 필터
+  const [selectedChatId, setselectedChatId] = useState<string | null>(null); // null이면 리스트, string이면 방
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
   const [query, setQuery] = useState("");
-  const { data: session } = useSession();
 
   const ts = (s?: string) => {
     if (!s) return -Infinity;
     const t = Date.parse(s.replace(/\s+/g, ""));
     return Number.isNaN(t) ? -Infinity : t;
   };
-  const isUnread = (chat: ChatListItem) =>
-    ts(chat.lastMessageAt) > ts(chat.last_read_at);
-  const byLatest = (a: ChatListItem, b: ChatListItem) =>
-    ts(b.lastMessageAt) - ts(a.lastMessageAt);
 
-  const [baseChats, setBaseChats] = useState<ChatListItem[]>([]);
-  const [chats, setChats] = useState<ChatListItem[]>([]);
-  const [messagesByRoom, setMessagesByRoom] = useState<
-    Record<string, Message[]>
-  >({});
+  const [baseChats, setBaseChats] = useState<ChatListItem[]>(INITIAL_CHATS); // 데이터를 baseChats에 저장
+  const [chats, setChats] = useState<ChatListItem[]>( // 데이터를 chats에 최신순으로 정렬 후 저장
+    [...INITIAL_CHATS].sort((a, b) => ts(b.lastMessageAt) - ts(a.lastMessageAt))
+  );
 
-  const selectedMessages: Message[] = selectedChatId
-    ? messagesByRoom[selectedChatId] ?? []
-    : [];
-  const selectedChat =
-    chats.find((c) => c.chat_room_id === selectedChatId) ?? null;
-
-  const [peopleHits, setPeopleHits] = useState<UserLite[]>([]);
-
+  // 시간 계산 함수
   function formatRelativeTime(isoString?: string): string {
     if (!isoString) return "";
     const date = new Date(isoString);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const sec = Math.floor(diff / 1000);
-    const min = Math.floor(sec / 60);
-    const hour = Math.floor(min / 60);
-    const day = Math.floor(hour / 24);
-    if (sec < 60) return "방금 전";
-    if (min < 60) return `${min}분 전`;
-    if (hour < 24) return `${hour}시간 전`;
-    if (day === 1) return "어제";
-    if (day < 7) return `${day}일 전`;
-    return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffSec < 60) return "방금 전";
+    if (diffMin < 60) return `${diffMin}분 전`;
+    if (diffHour < 24) return `${diffHour}시간 전`;
+    if (diffDay === 1) return "어제";
+    if (diffDay < 7) return `${diffDay}일 전`;
+
+    // 일주일 이상은 날짜로 표시
+    return date.toLocaleDateString("ko-KR", {
+      month: "long",
+      day: "numeric",
+    });
   }
+  const selectedChat =
+    chats.find((c) => c.chat_room_id === selectedChatId) ?? null; // 사용자가 선택한 채팅방
 
-  //  검색은 searchIndex(=lastMessage)만 기준
-  const recomputeChats = useCallback(
-    (raw: ChatListItem[], q: string, mode: "전체" | "읽지 않음") => {
-      const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
-      const k = q.trim().toLocaleLowerCase("ko-KR");
-      if (!k) {
-        return [...src]
-          .filter((c) => (c.lastMessage ?? "").trim() !== "")
-          .sort(byLatest);
-      }
+  const isUnread = (
+    chat: ChatListItem // 읽지 않음 판별
+  ) => ts(chat.lastMessageAt) > ts(chat.last_read_at);
 
-      const filtered = src.filter((c) => c.searchIndex.includes(k));
-      return filtered.sort(byLatest);
-    },
-    []
-  );
+  const byLatest = (
+    a: ChatListItem,
+    b: ChatListItem // 필터 에서 사용
+  ) => ts(b.lastMessageAt) - ts(a.lastMessageAt);
 
+<<<<<<< HEAD
   // 토큰 교환 + 소켓 준비
   useEffect(() => {
     if (!open) return;
@@ -193,18 +216,67 @@ export default function ChatButton({
       // 이후부터 api.get/post가 자동으로 Authorization 포함
     };
     bootstrap();
+=======
+  // 검색 함수
+  const applySearch = (q: string) => {
+    const qLower = q.trim().toLowerCase();
+    const source = getSourceBySelect();
+
+    const filtered = qLower
+      ? source.filter(
+          (c) =>
+            (c.name?.toLowerCase().includes(qLower) ?? false) ||
+            (c.lastMessage?.toLowerCase().includes(qLower) ?? false)
+        )
+      : source; // 빈 검색어면 전체(혹은 읽지 않음) 그대로
+
+    setChats([...filtered].sort(byLatest));
+  };
+
+  const getSourceBySelect = () => {
+    if (select === "읽지 않음") return baseChats.filter(isUnread);
+    return baseChats;
+  };
+
+  /* 
+    채팅 리스트 함수들
+    -------------------------------------------------------------------------------------------
+    채팅 화면 함수들
+    */
+
+  // 로그인한 사용자의 ID 저장 ( 내가 보낸 메시지인지,상대방이 보낸 메시지인지 )
+  const currentUserId = "me";
+
+  // 메시지를 튜플 형태로 저장함 (예 : 안녕하세요 : [방번호,보낸사람, 보낸시간 등등])
+  const seeded = useMemo(() => {
+    const entries = INITIAL_CHATS.map((c) => {
+      const iso = c.lastMessageAt ?? new Date().toISOString();
+      const msg: Message = {
+        id: `m-${c.chat_room_id}-1`,
+        roomId: c.chat_room_id,
+        senderId: `user:${c.chat_room_id}`, // 상대방 가정
+        senderName: c.name,
+        avatarUrl: `https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(
+          c.name
+        )}`,
+        content: c.lastMessage ?? "",
+        createdAt: iso,
+        status: "read",
+      };
+      return [c.chat_room_id, [msg]];
+    });
+    return Object.fromEntries(entries) as Record<string, Message[]>;
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
   }, []);
 
-  // 테스트용 token 빼놨음
-  useEffect(() => {
-    if (!open) return;
+  const [messagesByRoom, setMessagesByRoom] =
+    useState<Record<string, Message[]>>(seeded);
 
-    const q = query.trim(); //사용자가 채팅창에 검색
-    if (!q) {
-      setPeopleHits([]);
-      return;
-    } // 검색창 비어있을시 검색 결과를 빈 배열로 초기화한 뒤 useEffect 실행 종료
+  const selectedMessages: Message[] = selectedChatId
+    ? messagesByRoom[selectedChatId] ?? []
+    : [];
 
+<<<<<<< HEAD
     const t = setTimeout(async () => {
       try {
         const { data } = await api.get("http://localhost:3000/api/backend", {
@@ -292,18 +364,33 @@ export default function ChatButton({
       const tempMsg: Message = {
         id: tempId,
         tempId,
+=======
+  const onSendMessage = useCallback(
+    (roomId: string, content: string) => {
+      const now = new Date().toISOString();
+      const tempMsg: Message = {
+        id: `tmp-${Math.random().toString(36).slice(2)}`,
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
         roomId,
         senderId: currentUserId,
         content,
         createdAt: now,
+<<<<<<< HEAD
         status: "sending",
       };
 
+=======
+        status: "sent", // 데모: 바로 sent. 실제론 'sending' 후 ack에서 'sent'로
+      };
+
+      // 1) 채팅창에 낙관적으로 메시지 추가
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
       setMessagesByRoom((prev) => ({
         ...prev,
         [roomId]: [...(prev[roomId] ?? []), tempMsg],
       }));
 
+<<<<<<< HEAD
       setBaseChats((prev) => {
         const updated = prev.map((c) =>
           c.chat_room_id === roomId
@@ -414,8 +501,29 @@ export default function ChatButton({
     };
   }, [open, currentUserId, query, select, recomputeChats, selectedChatId, onSendMessage]);
 
+=======
+      // 2) 방 목록 메타 갱신 (lastMessage / lastMessageAt / last_read_at)
+      const updatedBase = baseChats.map((c) =>
+        c.chat_room_id === roomId
+          ? {
+              ...c,
+              lastMessage: content,
+              lastMessageAt: now,
+              last_read_at: now,
+            }
+          : c
+      );
+      setBaseChats(updatedBase);
 
-  // 버블/스크롤 유틸
+      // 3) 현재 탭(전체/읽지 않음)에 맞춰 목록 재정렬
+      const source =
+        select === "읽지 않음" ? updatedBase.filter(isUnread) : updatedBase;
+      setChats([...source].sort(byLatest));
+    },
+    [baseChats, select, currentUserId]
+  );
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
+
   const hhmm = (iso: string) =>
     new Date(iso).toLocaleTimeString("ko-KR", {
       hour: "2-digit",
@@ -423,6 +531,7 @@ export default function ChatButton({
       hour12: false,
     });
 
+  // [추가] 연속 메시지에서 아바타/이름 중복 줄이기
   const shouldShowAvatar = (arr: Message[], idx: number) => {
     if (idx === 0) return true;
     const prev = arr[idx - 1];
@@ -436,6 +545,7 @@ export default function ChatButton({
     return !(sameSender && within3m);
   };
 
+  // [추가] 단일 메시지 버블
   function Bubble({ m, showAvatar }: { m: Message; showAvatar: boolean }) {
     const isMine = m.senderId === currentUserId;
     return (
@@ -455,7 +565,6 @@ export default function ChatButton({
                 src={m.avatarUrl}
                 alt={m.senderName ?? "avatar"}
                 className="h-full w-full object-cover"
-                loading="lazy"
               />
             ) : null}
           </div>
@@ -496,26 +605,16 @@ export default function ChatButton({
     );
   }
 
-  // 오토스크롤
+  // [추가] 오토스크롤 ref
   const listRef = useRef<HTMLDivElement | null>(null);
-  const userAtBottomRef = useRef(true);
 
+  // [추가] 새 메시지/방 전환 시 맨 아래로
   useEffect(() => {
     const el = listRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      userAtBottomRef.current =
-        el.scrollHeight - el.scrollTop - el.clientHeight < 10;
-    };
-    el.addEventListener("scroll", onScroll);
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const el = listRef.current;
-    if (el && userAtBottomRef.current) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [selectedMessages.length, selectedChatId]);
 
+  // [선택] 날짜 헤더 키
   const dayKey = (iso: string) =>
     new Date(iso).toLocaleDateString("ko-KR", {
       year: "numeric",
@@ -524,6 +623,7 @@ export default function ChatButton({
       weekday: "short",
     });
 
+  // [선택] 날짜별 그룹핑
   const groupedByDay = useMemo(() => {
     const acc: Record<string, Message[]> = {};
     for (const m of selectedMessages) {
@@ -532,6 +632,7 @@ export default function ChatButton({
     }
     return acc;
   }, [selectedMessages]);
+<<<<<<< HEAD
 
   // 입력 & 전송
   // const [text, setText] = useState("");
@@ -560,7 +661,10 @@ export default function ChatButton({
   //     setText("");  
   //   }
   // }, [text, selectedChatId, onSendMessage]);
+=======
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
   const [text, setText] = useState("");
+
   const send = useCallback(() => {
     const trimmed = text.trim();
     if (!trimmed || !selectedChatId) return;
@@ -578,6 +682,7 @@ export default function ChatButton({
     }
   };
 
+<<<<<<< HEAD
   // 1:1 시작
   const onStartDirect = useCallback(
     async (otherUserId: string) => {
@@ -623,9 +728,11 @@ export default function ChatButton({
     [query, select, recomputeChats, tokenData]
   );
 
+=======
+>>>>>>> 8793f175028584323bf4c4cafb907debcbc664af
   return (
     <>
-      {/* 플로팅 버튼 */}
+      {/* 채팅 버튼 */}
       <motion.button
         className={styles.button}
         whileTap={{ scale: 0.96 }}
@@ -636,18 +743,18 @@ export default function ChatButton({
             const next = !prev;
             if (next) {
               setSelect("전체");
-              setChats(recomputeChats(baseChats, "", "전체"));
-            } else {
-              setselectedChatId(null);
+              setChats(
+                [...baseChats].sort(
+                  (a, b) => ts(b.lastMessageAt) - ts(a.lastMessageAt)
+                )
+              );
             }
             return next;
           })
         }
-        aria-label="채팅 열기"
       >
         💬
       </motion.button>
-
       <AnimatePresence>
         {open && (
           <motion.div
@@ -657,8 +764,9 @@ export default function ChatButton({
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
             style={{ transformOrigin: "100% 100%" }}
-            className="fixed right-6 bottom-24 z-[1001] w-[min(360px,calc(100vw-32px))] h-[420px] bg-white text-black rounded-xl border border-gray-300 shadow-lg flex flex-col overflow-hidden"
+            className="fixed right-6 bottom-24 z-[1000] w-[360px] h-[420px] bg-white text-black rounded-xl border border-gray-300 shadow-lg flex flex-col overflow-hidden"
           >
+            {/* 내부 화면 전환(list ↔ room) */}
             <AnimatePresence mode="wait" initial={false}>
               {selectedChatId === null ? (
                 // 리스트 화면
@@ -698,7 +806,7 @@ export default function ChatButton({
                       onChange={(e) => {
                         const q = e.target.value;
                         setQuery(q);
-                        setChats(recomputeChats(baseChats, q, select));
+                        applySearch(q);
                       }}
                       placeholder="Messenger 검색"
                       className="bg-transparent outline-none w-full text-[15px] placeholder:text-[#9aa4b2]"
@@ -708,7 +816,7 @@ export default function ChatButton({
                         type="button"
                         onClick={() => {
                           setQuery("");
-                          setChats(recomputeChats(baseChats, "", select));
+                          applySearch("");
                         }}
                         className="ml-2 text-sm text-gray-500 hover:text-gray-700"
                         aria-label="검색어 지우기"
@@ -724,7 +832,8 @@ export default function ChatButton({
                       onClick={() => {
                         setSelect("전체");
                         setselectedChatId(null);
-                        setChats(recomputeChats(baseChats, query, "전체"));
+                        const all = [...baseChats].sort(byLatest);
+                        setChats(all);
                       }}
                       className={`px-3 py-2 rounded-xl transition cursor-pointer ${
                         select === "전체"
@@ -739,7 +848,9 @@ export default function ChatButton({
                       onClick={() => {
                         setSelect("읽지 않음");
                         setselectedChatId(null);
-                        setChats(recomputeChats(baseChats, query, "읽지 않음"));
+                        const unread = baseChats.filter(isUnread);
+                        const sorted = [...unread].sort(byLatest);
+                        setChats(sorted);
                       }}
                       className={`px-3 py-2 rounded-xl transition cursor-pointer ${
                         select === "읽지 않음"
@@ -753,125 +864,31 @@ export default function ChatButton({
 
                   {/* 리스트 */}
                   <div className="flex-1 px-3 pb-2 overflow-y-auto">
-                    {query.trim() ? (
-                      <>
-                        {/* 사람 섹션 */}
-                        <div className="px-1 py-2 text-xs text-gray-500">
-                          사람
-                        </div>
-                        {peopleHits.length === 0 ? (
-                          <div className="px-2 pb-2 text-sm text-gray-400">
-                            일치하는 사람이 없습니다.
-                          </div>
-                        ) : (
-                          peopleHits.map((u) => (
-                            <div
-                              key={u.id}
-                              onClick={() => onStartDirect(u.id)}
-                              className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200">
-                                  {u.image ? (
-                                    <img
-                                      src={u.image}
-                                      alt={u.name}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : null}
-                                </div>
-                                <div className="font-medium truncate">
-                                  {u.name}
-                                </div>
-                              </div>
-                              <button
-                                className="text-xs px-2 py-1 rounded bg-orange-500 text-white hover:bg-orange-600"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onStartDirect(u.id);
-                                }}
-                              >
-                                대화 시작
-                              </button>
+                    {chats.map((chat) => {
+                      const unread = isUnread(chat);
+                      return (
+                        <div
+                          key={chat.chat_room_id}
+                          onClick={() => setselectedChatId(chat.chat_room_id)}
+                          className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                        >
+                          <div>
+                            <div className="font-semibold">{chat.name}</div>
+                            <div className="text-sm text-gray-500 truncate w-40">
+                              {chat.lastMessage}
                             </div>
-                          ))
-                        )}
-
-                        {/* 구분선 */}
-                        <div className="my-2 border-t border-gray-200" />
-
-                        {/* 채팅 섹션 */}
-                        <div className="px-1 py-2 text-xs text-gray-500">
-                          채팅
-                        </div>
-                        {chats.length === 0 ? (
-                          <div className="px-2 pb-2 text-sm text-gray-400">
-                            일치하는 채팅이 없습니다.
                           </div>
-                        ) : (
-                          chats.map((chat) => {
-                            const unread = isUnread(chat);
-                            return (
-                              <div
-                                key={chat.chat_room_id}
-                                onClick={() =>
-                                  setselectedChatId(chat.chat_room_id)
-                                }
-                                className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                              >
-                                <div>
-                                  <div className="font-semibold">
-                                    {chat.name}
-                                  </div>
-                                  <div className="text-sm text-gray-500 truncate w-40">
-                                    {chat.lastMessage}
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {unread && (
-                                    <span className="w-3 h-3 rounded-full bg-orange-500" />
-                                  )}
-                                  <div className="text-xs text-gray-400">
-                                    {formatRelativeTime(chat.lastMessageAt)}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </>
-                    ) : (
-                      // 쿼리 없으면 기존 채팅 목록
-                      <>
-                        {chats.map((chat) => {
-                          const unread = isUnread(chat);
-                          return (
-                            <div
-                              key={chat.chat_room_id}
-                              onClick={() =>
-                                setselectedChatId(chat.chat_room_id)
-                              }
-                              className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                            >
-                              <div>
-                                <div className="font-semibold">{chat.name}</div>
-                                <div className="text-sm text-gray-500 truncate w-40">
-                                  {chat.lastMessage}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {unread && (
-                                  <span className="w-3 h-3 rounded-full bg-orange-500" />
-                                )}
-                                <div className="text-xs text-gray-400">
-                                  {formatRelativeTime(chat.lastMessageAt)}
-                                </div>
-                              </div>
+                          <div className="flex items-center gap-2">
+                            {unread && (
+                              <span className="w-3 h-3 rounded-full bg-orange-500" />
+                            )}
+                            <div className="text-xs text-gray-400">
+                              {formatRelativeTime(chat.lastMessageAt)}
                             </div>
-                          );
-                        })}
-                      </>
-                    )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </motion.div>
               ) : (
@@ -934,7 +951,7 @@ export default function ChatButton({
                       />
                       <button
                         onClick={send}
-                        disabled={!text.trim() || !selectedChatId}
+                        disabled={!text.trim()}
                         className={`px-3 py-2 rounded-lg text-white cursor-pointer ${
                           text.trim()
                             ? "bg-orange-500 hover:bg-orange-600"

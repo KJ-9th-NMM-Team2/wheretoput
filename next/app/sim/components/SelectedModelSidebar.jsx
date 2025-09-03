@@ -1,4 +1,5 @@
 import React from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "../store/useStore.js";
 
 export function SelectedModelEditModal() {
@@ -38,12 +39,10 @@ export function SelectedModelEditModal() {
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto p-4">
 
-        {/* 선택된 모델 정보 */}
+        {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
-          <div className="font-bold mb-3 text-sm flex items-center gap-2 text-green-700">
-            🎯 {selectedModel.name.length > 25
-              ? selectedModel.name.substring(0, 25) + "..."
-              : selectedModel.name}
+          <div className="font-bold mb-3 text-sm flex items-center gap-2 text-green-700 break-words">
+             {selectedModel.name}
           </div>
 
           {/* 크기 조정 */}
@@ -65,6 +64,7 @@ export function SelectedModelEditModal() {
               max={5}
               step={0.1}
               onChange={(value) => updateModelScale(selectedModel.id, value)}
+              defaultValue={1}
             />
           </div>
 
@@ -82,6 +82,7 @@ export function SelectedModelEditModal() {
                 newPosition[1] = value;
                 updateModelPosition(selectedModel.id, newPosition);
               }}
+              defaultValue={0}
             />
           </div>
 
@@ -104,6 +105,7 @@ export function SelectedModelEditModal() {
                     newRotation[index] = (value * Math.PI) / 180;
                     updateModelRotation(selectedModel.id, newRotation);
                   }}
+                  defaultValue={0}
                 />
               </div>
             ))}
@@ -131,7 +133,24 @@ function ControlSlider({
   max,
   step,
   onChange,
+  defaultValue = 0,
 }) {
+  const [displayValue, setDisplayValue] = useState("");
+
+  const formatValue = (value) => {
+    if (step < 1) {
+      return Number.isInteger(value) ? String(value) : value.toFixed(1);
+    }
+    return String(Math.round(value));
+  };
+
+  useEffect(() => {
+    if (value === undefined || value === null)
+      setDisplayValue("");
+    else
+      setDisplayValue(formatValue(value));
+  }, [value, step]);
+
   return (
     <div className="mb-3">
       {/* 라벨과 값 표시 */}
@@ -142,11 +161,25 @@ function ControlSlider({
         <div className="flex items-center border border-gray-300 rounded px-2 py-1 bg-gray-50">
           <input
             type="number"
-            value={typeof value === 'number' ? value.toFixed(step < 1 ? 1 : 0) : value}
+            value={displayValue}
             min={min}
             max={max}
             step={step}
-            onChange={(e) => onChange(parseFloat(e.target.value))}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDisplayValue(val);
+
+              if (val === "" || val === "-" || val === ".")
+                return;
+              onChange(parseFloat(val));
+            }}
+            onBlur={() => {
+              if (displayValue === "" || displayValue === "-" || displayValue === ".") {
+                const fallback = formatValue(defaultValue);
+                setDisplayValue(fallback);
+                onChange(parseFloat(fallback));
+              }
+            }}
             className="w-12 text-xs text-right bg-transparent border-none outline-none text-gray-700"
           />
           <span className="text-xs text-gray-500 ml-1">
