@@ -6,6 +6,23 @@ import { prisma } from "@/lib/prisma";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google, GitHub],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google" || account?.provider === "github") {
+        await prisma.User.upsert({
+          where: { email: user.email! },
+          update: {
+            name: user.name,
+            image: user.image,
+          },
+          create: {
+            email: user.email!,
+            name: user.name,
+            image: user.image,
+          },
+        });
+      }
+      return true;
+    },
     async jwt({ token, account, user }) {
       // console.log("token:", token);
       if (account) {
