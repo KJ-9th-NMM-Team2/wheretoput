@@ -142,15 +142,14 @@ export const useStore = create(
     setScaleValue: (value) => set({ scaleValue: value }),
 
     // 빛 상태
-    ambientLightIntensity: 0.4,
+    environmentPreset: "apartment",
     directionalLightPosition: [26, 15, 0],
     directionalLightAzimuth: 0,
     directionalLightElevation: 30,
-    directionalLightIntensity: 0.9,
+    directionalLightIntensity: 1.0,
 
     // 빛 액션
-    setAmbientLightIntensity: (intensity) =>
-      set({ ambientLightIntensity: intensity }),
+    setEnvironmentPreset: (preset) => set({ environmentPreset: preset }),
     setDirectionalLightAzimuth: (azimuth) =>
       set({
         directionalLightAzimuth: azimuth,

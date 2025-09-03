@@ -242,12 +242,11 @@ export default function SimPage({
   const {
     viewOnly,
     setViewOnly,
+    environmentPreset,
     loadedModels,
     deselectModel,
-    ambientLightIntensity,
     directionalLightPosition,
     directionalLightIntensity,
-    cameraFov,
     setCurrentRoomId,
     loadSimulatorState,
     isLoading,
@@ -371,7 +370,7 @@ export default function SimPage({
           }}
           frameloop="demand"
         >
-          <Environment preset="apartment" background={false} />
+          <Environment preset={environmentPreset} background={false} />
           {/* {cameraMode == "perspective" ? (
             <PerspectiveCamera makeDefault fov={cameraFov} position={[-20, 15, 0]} />
           ) : (
@@ -380,7 +379,6 @@ export default function SimPage({
           
           <CameraUpdater />
           <color attach="background" args={["#87CEEB"]} />
-          <ambientLight intensity={ambientLightIntensity} />
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}

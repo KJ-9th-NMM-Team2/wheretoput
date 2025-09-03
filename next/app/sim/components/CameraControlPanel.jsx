@@ -41,7 +41,7 @@ export function CameraControlPanel({ isPopup = false }) {
           padding: '8px',
           borderRadius: '3px',
           border: '1px solid rgba(255,255,255,0.2)',
-          cursor: 'pointer'
+          cursor: 'default'
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -101,7 +101,7 @@ function ControlSlider({
       <span style={{
         color: '#ffffff',
         minWidth: '20px',
-        fontSize: '13px',
+        fontSize: '11px',
         textAlign: 'right'
       }}>
         {displayValue}
