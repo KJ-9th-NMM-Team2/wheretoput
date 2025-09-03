@@ -592,7 +592,7 @@ export default function ChatButton({
         return next;
       });
     },
-    [recomputeChats, token, session?.user?.id]
+    [recomputeChats, token, session?.user?.id, selectedChatId]
   );
 
 

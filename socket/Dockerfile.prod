@@ -40,9 +40,6 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
 
-# 프로덕션 의존성만 복사
-COPY --from=deps /app/node_modules ./node_modules
-
 # 빌드된 애플리케이션 복사
 COPY --from=builder /app/dist ./dist
 

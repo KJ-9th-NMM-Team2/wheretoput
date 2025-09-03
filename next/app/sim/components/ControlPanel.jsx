@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "../store/useStore.js";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const handleSave = async () => {
   if (!currentRoomId) {
@@ -27,7 +28,7 @@ export function ControlPanel({ isPopup = false }) {
   const fileInputRef = useRef();
   const [saveMessage, setSaveMessage] = useState("");
 
-  const {data: session, status} = useSession();
+  const { data: session, status } = useSession();
 
   const {
     scaleValue,
@@ -35,7 +36,9 @@ export function ControlPanel({ isPopup = false }) {
     addModel,
     clearAllModels,
     saveSimulatorState,
+    cloneSimulatorState,
     isSaving,
+    isCloning,
     currentRoomId,
     lastSavedAt,
     loadedModels,
@@ -44,18 +47,18 @@ export function ControlPanel({ isPopup = false }) {
     setWallScaleFactor,
     loadSimulatorState,
     checkUserRoom,
-    isOwnUserRoom
+    isOwnUserRoom,
   } = useStore();
 
   useEffect(() => {
     const useCheckUserRoom = async () => {
-      if (status === 'loading') return;
+      if (status === "loading") return;
       if (!currentRoomId || !session?.user?.id) return;
 
       await checkUserRoom(currentRoomId, session?.user?.id);
-    }
+    };
     useCheckUserRoom();
-  }, [isOwnUserRoom, currentRoomId])
+  }, [isOwnUserRoom, currentRoomId]);
 
   // GLB 파일 업로드 처리
   const handleFileUpload = (event) => {
@@ -110,6 +113,20 @@ export function ControlPanel({ isPopup = false }) {
     }
   };
 
+  // 방 복제하기
+  const handleClone = async () => {
+    try {
+      const result = await cloneSimulatorState();
+      console.log(result);
+      const cloned_room_id = result.room_id;
+      // 해당 링크로 이동
+
+      window.location.href = `${cloned_room_id}`;
+    } catch (error) {
+      console.log("복제에 실패했습니다...");
+    }
+  };
+
   const baseStyle = {
     background: "rgba(0,0,0,0.7)",
     padding: "15px",
@@ -119,15 +136,15 @@ export function ControlPanel({ isPopup = false }) {
     width: "250px",
   };
 
-  const positionStyle = isPopup ? 
-    { position: "static" } : 
-    { position: "absolute", top: "10px", right: "10px", zIndex: 100 };
+  const positionStyle = isPopup
+    ? { position: "static" }
+    : { position: "absolute", top: "10px", right: "10px", zIndex: 100 };
 
   return (
     <div
       style={{
         ...baseStyle,
-        ...positionStyle
+        ...positionStyle,
       }}
     >
       {/* 기본 스케일 설정 */}
@@ -181,20 +198,27 @@ export function ControlPanel({ isPopup = false }) {
               ? isSaving
                 ? "#999"
                 : isOwnUserRoom
-                  ? "#4CAF50"
-                  : "#999"
+                ? "#4CAF50"
+                : "#999"
               : "#666",
             color: "white",
             border: "none",
             padding: "10px 16px",
             borderRadius: "3px",
-            cursor: currentRoomId && !isSaving ? "pointer" : "not-allowed",
+            cursor:
+              currentRoomId && !isSaving && !isCloning
+                ? "pointer"
+                : "not-allowed",
             fontSize: "12px",
             width: "100%",
             marginBottom: "5px",
           }}
         >
-          {isSaving ? "저장 중..." : isOwnUserRoom ? `방 상태 저장 (${loadedModels.length}개)` : `가구 개수 (${loadedModels.length}개)`}
+          {isSaving
+            ? "저장 중..."
+            : isOwnUserRoom
+            ? `방 상태 저장 (${loadedModels.length}개)`
+            : `가구 개수 (${loadedModels.length}개)`}
         </button>
 
         {/* 저장 상태 메시지 */}
@@ -225,6 +249,35 @@ export function ControlPanel({ isPopup = false }) {
           </div>
         )}
       </div>
+
+      {/* 복제 버튼 */}
+      <div style={{ marginBottom: "10px" }}>
+        <button
+          onClick={handleClone}
+          disabled={!currentRoomId}
+          style={{
+            background: currentRoomId
+              ? isCloning
+                ? "#999"
+                : "#4CAF50"
+              : "#666",
+            color: "white",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: "3px",
+            cursor:
+              currentRoomId && !isCloning && !isSaving
+                ? "pointer"
+                : "not-allowed",
+            fontSize: "12px",
+            width: "100%",
+            marginBottom: "5px",
+          }}
+        >
+          {isCloning ? "복제 중..." : `방 복제하기`}
+        </button>
+      </div>
+
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}

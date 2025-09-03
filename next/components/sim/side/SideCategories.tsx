@@ -36,7 +36,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
 
   ];
 
-  const selectedFurnitures = { id: -1, name: "선택된 가구" };
+  const selectedFurnitures = { id: -1, name: "배치한 가구 목록" };
 
   const [selectedCategory, setSelectedCategory] = useState<number>(categories[0].id);
 
@@ -75,7 +75,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
                 <button
                   key={cat.id}
                   className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.id
-                      ? 'bg-orange-500 text-white'
+                      ? 'bg-blue-500 text-white'
                       : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
                     }`}
                   onClick={() => handleCategoryClick(cat)}
@@ -92,7 +92,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
           <button
             key={selectedFurnitures.id}
             className={`py-2 px-3 text-sm rounded transition whitespace-nowrap ${selectedCategory === selectedFurnitures.id
-                ? 'bg-orange-500 text-white'
+                ? 'bg-blue-500 text-white'
                 : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
               }`}
             onClick={() => handleCategoryClick(selectedFurnitures)}

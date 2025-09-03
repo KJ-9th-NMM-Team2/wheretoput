@@ -22,6 +22,7 @@
     "chokidar": "^4.0.3",
     "dotenv": "^17.2.1",
     "framer-motion": "^12.23.12",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "next-auth": "^5.0.0-beta.29",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.1.12",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "20.19.11",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.8",

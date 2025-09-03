@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import SideTitle from '@/components/sim/side/SideTitle';
 import SideSearch from '@/components/sim/side/SideSearch';
 import SideCategories from '@/components/sim/side/SideCategories';
+import SideSort from '@/components/sim/side/SideSort';
 import SideItems from '@/components/sim/side/SideItems';
 import type { furnitures as Furniture } from '@prisma/client';
 
@@ -13,6 +14,7 @@ const SimSideView: React.FC<string> = (roomId) => {
   const [searchQuery, setSearchQuery] = useState<string>();
   const [searchResults, setSearchResults] = useState<Furniture[]>([]); // 검색 결과 상태 추가
   const [totalPrice, setTotalPrice] = useState(0);
+  const [sortOption, setSortOption] = useState<string>('updated_desc');
 
   const handleCategorySelect = (category: string) => {
     setSearchResults([]);
@@ -22,6 +24,10 @@ const SimSideView: React.FC<string> = (roomId) => {
   const handleSearchResults = (results: Furniture[]) => {
     setSearchResults(results);
     // 검색 결과에 따른 다른 로직 수행
+  };
+
+  const handleSortChange = (sortValue: string) => {
+    setSortOption(sortValue);
   };
 
   return (
@@ -42,9 +48,21 @@ const SimSideView: React.FC<string> = (roomId) => {
           setSearchQuery={setSearchQuery}
           totalPrice={totalPrice}
         />
+        
+        <SideSort 
+          collapsed={collapsed}
+          onSortChange={handleSortChange}
+          currentSort={sortOption}
+        />
 
         {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
-        <SideItems collapsed={collapsed} selectedCategory={selectedCategory} furnitures={searchResults} setTotalPrice={setTotalPrice} />
+        <SideItems 
+          collapsed={collapsed} 
+          selectedCategory={selectedCategory} 
+          furnitures={searchResults} 
+          setTotalPrice={setTotalPrice} 
+          sortOption={sortOption}
+        />
       </div>
     </div>
   );
