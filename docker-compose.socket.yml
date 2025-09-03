@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  socket:
+    image: ${ECR_REGISTRY}/${ECR_REPO_SOCKET}:${IMAGE_TAG}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
