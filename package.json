@@ -1,0 +1,13 @@
+{
+  "name": "wheretoput",
+  "scripts": {
+    "dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "dev:build": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+    "prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
+    "prod:build": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
+    "down": "docker-compose down"
+  },
+  "dependencies": {
+    "react-icons": "^5.5.0"
+  }
+}

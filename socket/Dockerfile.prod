@@ -1,0 +1,69 @@
+# Node.js 22 Alpine 기본 이미지
+FROM node:22-alpine AS base
+
+# 의존성 설치 단계
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# package.json만 먼저 복사 (캐싱 최적화)
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# 개발 의존성 별도 설치 (빌드용)
+FROM base AS dev-deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# 애플리케이션 빌드 단계
+FROM base AS builder
+WORKDIR /app
+
+# 개발 의존성 복사 (빌드 시에만 필요)
+COPY --from=dev-deps /app/node_modules ./node_modules
+COPY . .
+
+# Prisma 클라이언트 생성 (빌드 전에)
+RUN npx prisma generate
+
+# 환경 변수 및 빌드
+ENV NODE_ENV=production
+
+# TypeScript 빌드
+RUN npm run build
+
+# 실행 단계 (최적화된 프로덕션 이미지)
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# 보안을 위해 비특권 사용자 생성
+RUN addgroup --system --gid 1001 nodejs \
+   && adduser --system --uid 1001 nestjs
+
+# 프로덕션 의존성만 복사
+COPY --from=deps /app/node_modules ./node_modules
+
+# 생성된 Prisma 클라이언트 복사
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# 빌드 결과물과 Prisma, 패키지 파일만 복사
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+# 빌드된 애플리케이션 복사
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+# package.json 복사 (실행 시 필요)
+COPY --from=builder /app/package.json ./
+
+USER nestjs
+
+EXPOSE 3001
+ENV PORT=3001
+
+CMD ["node", "dist/main"]

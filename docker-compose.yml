@@ -1,29 +1,17 @@
 services:
   socket:
-    build: ./socket
     ports:
-      - "${BACKEND_PORT}:3000"
-    volumes:
-      - ./socket:/app
-      - /app/node_modules
+      - "${BACKEND_PORT}:3001"
     environment:
-      - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL}
     networks:
       - app-network
 
   next:
-    build: ./next
     ports:
       - "${FRONTEND_PORT}:3000"
-    volumes:
-      - ./next:/app
-      - /app/node_modules
     environment:
-      - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://socket:3001
-    depends_on:
-      - socket
     networks:
       - app-network
 

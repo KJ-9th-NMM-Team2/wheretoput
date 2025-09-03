@@ -1,0 +1,60 @@
+# Node.js 22 Alpine 기본 이미지
+FROM node:22-alpine AS base
+
+# 의존성 설치 단계
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# 애플리케이션 빌드 단계
+FROM base AS builder
+WORKDIR /app
+
+# 개발 의존성 복사 (빌드 시에만 필요)
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# 환경 변수 및 빌드
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+# Prisma 클라이언트 생성 후 빌드
+COPY prisma ./prisma/
+
+# Prisma 스키마 복사 및 클라이언트 생성
+RUN npx prisma generate
+RUN npm run build
+
+# 실행 단계 (최적화된 프로덕션 이미지)
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# 보안을 위해 비특권 사용자 생성
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+
+# Next.js standalone (이미 최적화된 의존성 포함)
+COPY --from=builder /app/.next/standalone/ ./
+COPY --from=builder /app/.next/static ./.next/static
+
+
+# Prisma 클라이언트 복사
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Next.js 빌드 결과물 복사
+COPY --from=builder /app/public ./public
+
+# 권한 변경
+USER nextjs
+
+EXPOSE 3000
+ENV PORT=3000
+
+CMD ["node", "server.js"]

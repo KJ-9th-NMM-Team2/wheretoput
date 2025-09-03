@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)"
+      "Read(/c:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput/**)",
+      "Bash(npm install:*)",
+      "Bash(move:*)",
+      "Bash(robocopy:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker run:*)",
+      "Bash(docker-compose:*)",
+      "Read(C:\\Users\\zx546\\Desktop\\크롤링/**)",
+      "Bash(pip install:*)"
     ],
     "deny": [],
     "ask": []

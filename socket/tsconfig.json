@@ -20,6 +20,14 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src",
+    "prisma/**/*.ts",
+    "src/types/**/*.d.ts",
+  ]
 }
