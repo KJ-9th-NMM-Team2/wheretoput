@@ -39,12 +39,10 @@ export function SelectedModelEditModal() {
         {/* 스크롤 가능한 콘텐츠 영역 */}
         <div className="flex-1 overflow-y-auto p-4">
 
-        {/* 선택된 모델 정보 */}
+        {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
-          <div className="font-bold mb-3 text-sm flex items-center gap-2 text-green-700">
-            🎯 {selectedModel.name.length > 25
-              ? selectedModel.name.substring(0, 25) + "..."
-              : selectedModel.name}
+          <div className="font-bold mb-3 text-sm flex items-center gap-2 text-green-700 break-words">
+             {selectedModel.name}
           </div>
 
           {/* 크기 조정 */}

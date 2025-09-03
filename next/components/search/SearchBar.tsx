@@ -11,17 +11,18 @@ export default function SearchBar({
   onSearch: (input: string) => void;
   setSortType: (type: "view" | "new" | "like") => void;
 }) {
+  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      // console.log("key down enter")
+    if (e.key === 'Enter') {
+      console.log("key down enter")
       onSearch(searchInput);
       setSortType("view");
     }
-  };
+  }
 
   const handleXBox = () => {
     setSearchInput("");
-  };
+  }
   return (
     <div className="px-4 py-3">
       <label className="flex flex-col min-w-40 h-12 w-full">
@@ -52,8 +53,7 @@ export default function SearchBar({
             placeholder="유저 이름 혹은 방 이름을 입력하세요."
           />
           <div className="flex items-center justify-center rounded-r-xl border-l-0 border-none bg-[#f5f2f0] dark:bg-gray-800 pr-4">
-            <button
-              className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-transparent text-[#181411] dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] h-auto min-w-0 px-0"
+            <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-transparent text-[#181411] dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] h-auto min-w-0 px-0"
               onClick={handleXBox}
             >
               <div

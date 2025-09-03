@@ -11,9 +11,9 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  // chat_participants: any;
-  // chat_messages: any;
-  // chat_rooms: any;
+  chat_participants: any;
+  chat_messages: any;
+  chat_rooms: any;
   // 웹 시작될 때 DB연결
   async onModuleInit() {
     await this.$connect();

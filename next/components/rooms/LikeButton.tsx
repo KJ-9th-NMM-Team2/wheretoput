@@ -32,7 +32,7 @@ export default function LikeButton({
     // 일단 대기
     setIsLoading(true);
     try {
-      // console.log(session);
+      console.log(session);
       const result = await fetchPostLike(room.room_id, session.user.id);
       if (result.success) {
         // 성공 시에만 UI 업데이트
@@ -77,7 +77,7 @@ export default function LikeButton({
         </svg>
       </div>
       <p
-        className={`font-bold leading-normal tracking-[0.015em] transition-colors ${
+        className={`text-[13px] font-bold leading-normal tracking-[0.015em] transition-colors ${
           youLiked
             ? "text-red-500 drop-shadow-sm"
             : "text-[#8a7260] dark:text-orange-300"

@@ -1,15 +1,16 @@
-"use client";
+'use client'
 
-import FloorPlanEditor from "../components/FloorPlanEditor.jsx";
+import FloorPlanEditor from '../components/FloorPlanEditor.jsx'
 
 export default function CreatePage() {
   const handleFloorPlanChange = (walls: any[]) => {
-    // console.log('Floor plan updated:', walls)
-  };
+    console.log('Floor plan updated:', walls)
+  }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      <FloorPlanEditor />
+    <div style={{ width: '100vw', height: '100vh' }}>
+      <FloorPlanEditor  />
     </div>
-  );
+  )
 }
+
