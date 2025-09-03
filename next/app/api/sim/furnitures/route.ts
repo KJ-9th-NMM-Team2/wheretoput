@@ -77,7 +77,7 @@ export async function GET(request: Request) {
     let totalCount: number = 0;
 
     try {
-      if (category && !isNaN(category)) {
+      if (categoryParam && !isNaN(category)) {
         // 카테고리가 지정된 경우
         console.log("카테고리 필터링:", category);
 

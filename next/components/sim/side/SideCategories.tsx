@@ -28,11 +28,11 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
     { id: 5, name: "욕실용품" }, // 수정완료
     { id: 1, name: "조명" }, //수정완료
     { id: 4, name: "데코" }, //수정완료
-    { id: 7, name: "가전제품" }, // 추가
-    
-    { id: -1, name: "선택된 가구" }, //수정완료
+    { id: 7, name: "가전·디지털" }, // 추가
+    { id: 0, name: "의자" }, // 추가
 
-   
+
+    { id: -1, name: "선택된 가구" }, //수정완료
   ];
 
   const [selectedCategory, setSelectedCategory] = useState<number>(categories[0].id);
