@@ -30,6 +30,7 @@ export class ChatController {
       limit: n,
       beforeId: before,
     });
+    console.log('확인한 메시지', messages);
     return { roomId, messages };
   }
 }

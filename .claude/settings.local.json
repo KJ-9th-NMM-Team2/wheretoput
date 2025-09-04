@@ -13,7 +13,9 @@
       "Bash(docker run:*)",
       "Bash(docker-compose:*)",
       "Read(C:\\Users\\zx546\\Desktop\\크롤링/**)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Read(/C:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput\\socket\\src\\room/**)",
+      "Read(/C:\\Users\\drink\\Documents\\jungle\\week15\\wheretoput\\socket\\prisma/**)"
     ],
     "deny": [],
     "ask": []
