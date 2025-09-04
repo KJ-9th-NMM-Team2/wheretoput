@@ -5,12 +5,11 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-import { useStore } from "../store/useStore.js";
-import { DraggableModel } from "../components/DraggableModel.jsx";
-import { ControlIcons } from "../components/ControlIcons.jsx";
-import { SelectedModelEditModal } from "../components/SelectedModelSidebar.jsx";
-import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
-import { createWallsFromFloorPlan } from "../../wallDetection.js";
+import { useStore } from "@/components/sim/useStore";
+import { DraggableModel } from "@/components/sim/mainsim/DraggableModel";
+import { ControlIcons } from "@/components/sim/mainsim/ControlIcons";
+import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar";
+import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";

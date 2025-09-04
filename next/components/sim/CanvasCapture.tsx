@@ -1,6 +1,6 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect, useCallback } from "react";
-import { useStore } from "@/app/sim/store/useStore";
+import { useStore } from "@/components/sim/useStore";
 import { postThumbnailImage } from "@/lib/api/thumbnailImage";
 
 export default function CanvasImageLogger() {
