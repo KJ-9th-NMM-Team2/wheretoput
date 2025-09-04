@@ -100,10 +100,9 @@ export default function ChatButton({
   //  검색은 searchIndex(=lastMessage)만 기준
   const recomputeChats = useCallback(
     (raw: ChatListItem[], q: string, mode: "전체" | "읽지 않음") => {
-      console.log("dddd");
       const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
       const k = q.trim().toLocaleLowerCase("ko-KR");
-      
+
       if (!k) {
         return [...src].sort(byLatest);
       }
@@ -366,17 +365,17 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === msg.roomId
             ? {
-                ...c,
-                lastMessage: msg.content,
-                lastMessageAt: msg.createdAt,
-                // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
-                last_read_at:
-                  msg.senderId === currentUserId ||
+              ...c,
+              lastMessage: msg.content,
+              lastMessageAt: msg.createdAt,
+              // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
+              last_read_at:
+                msg.senderId === currentUserId ||
                   msg.roomId === selectedChatId
-                    ? msg.createdAt
-                    : c.last_read_at,
-                searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
-              }
+                  ? msg.createdAt
+                  : c.last_read_at,
+              searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
+            }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -395,12 +394,12 @@ export default function ChatButton({
         const next = arr.map((m) =>
           m.id === ack.tempId
             ? {
-                ...m,
-                id: ack.realId,
-                status: "sent",
-                createdAt: ack.createdAt ?? m.createdAt,
-                tempId: undefined,
-              }
+              ...m,
+              id: ack.realId,
+              status: "sent",
+              createdAt: ack.createdAt ?? m.createdAt,
+              tempId: undefined,
+            }
             : m
         );
         return { ...prev, [selectedChatId]: next };
@@ -475,13 +474,13 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === roomId
             ? {
-                ...c,
-                lastMessage: content,
-                lastMessageAt: now,
-                last_read_at: now,
-                //  전송 시 검색 인덱스도 동기화
-                searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
-              }
+              ...c,
+              lastMessage: content,
+              lastMessageAt: now,
+              last_read_at: now,
+              //  전송 시 검색 인덱스도 동기화
+              searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+            }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -520,14 +519,14 @@ export default function ChatButton({
 
   const shouldShowTimestamp = (arr: Message[], idx: number) => {
     if (idx === arr.length - 1) return true; // 마지막 메시지는 항상 시간 표시
-    
+
     const cur = arr[idx];
     const next = arr[idx + 1];
-    
+
     // 현재 메시지와 다음 메시지의 시간(분)을 비교
     const curTime = hhmm(cur.createdAt);
     const nextTime = hhmm(next.createdAt);
-    
+
     return curTime !== nextTime; // 다음 메시지와 시간이 다르면 시간 표시
   };
 
@@ -537,15 +536,13 @@ export default function ChatButton({
 
     return (
       <div
-        className={`flex items-end gap-2 ${
-          isMine ? "justify-end" : "justify-start"
-        }`}
+        className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"
+          }`}
       >
         {!isMine && (
           <div
-            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${
-              showAvatar ? "opacity-100" : "opacity-0"
-            }`}
+            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${showAvatar ? "opacity-100" : "opacity-0"
+              }`}
           >
             {m.avatarUrl ? (
               <img
@@ -559,9 +556,8 @@ export default function ChatButton({
         )}
 
         <div
-          className={`max-w-[75%] ${
-            isMine ? "items-end" : "items-start"
-          } flex flex-col`}
+          className={`max-w-[75%] ${isMine ? "items-end" : "items-start"
+            } flex flex-col`}
         >
           {!isMine && showAvatar && m.senderName ? (
             <span className="text-[11px] text-gray-400 pl-1 mb-0.5">
@@ -623,8 +619,8 @@ export default function ChatButton({
     if (!open) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node) && 
-          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
         setOpen(false);
         setselectedChatId(null);
       }
@@ -857,11 +853,10 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "전체"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-                        select === "전체"
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
                           ? "bg-gray-200 text-blue-500"
                           : "bg-transparent hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       전체
                     </button>
@@ -872,11 +867,10 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "읽지 않음"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-                        select === "읽지 않음"
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
                           ? "bg-gray-200 text-blue-500"
                           : "bg-transparent hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       읽지 않음
                     </button>
@@ -1061,11 +1055,10 @@ export default function ChatButton({
                       <button
                         onClick={send}
                         disabled={!text.trim() || !selectedChatId}
-                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${
-                          text.trim()
+                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${text.trim()
                             ? "bg-orange-500 hover:bg-orange-600"
                             : "bg-gray-300 cursor-not-allowed"
-                        }`}
+                          }`}
                       >
                         전송
                       </button>

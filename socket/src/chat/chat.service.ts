@@ -21,7 +21,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly roomService: RoomService,
-  ) {}
+  ) { }
 
   // 방 참가자 추가 (권한 체크 포함)
   async joinRoom(roomId: string, userId: string) {
