@@ -83,7 +83,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     const now = new Date();
     // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
-    if (!participant?.last_read_at || participant.last_read_at.getTime() !== now.getTime()) {
+    if (
+      !participant?.last_read_at ||
+      participant.last_read_at.getTime() !== now.getTime()
+    ) {
       await this.prisma.chat_participants.updateMany({
         where: {
           chat_room_id: body.roomId,
@@ -254,132 +257,4 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // ===== 협업 모드 이벤트 처리 =====
 
   // 방 입장 (협업용)
-  @SubscribeMessage('join-room')
-  async onJoinRoom(
-    @MessageBody() roomId: string,
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`🤝 COLLABORATION JOIN: ${socket.id} → room ${roomId}`);
-    
-    const userId = extractUserIdFromToken(
-      this.jwtService,
-      socket.handshake.auth?.token,
-    );
-
-    if (!roomId) throw new BadRequestException('roomId is required');
-
-    // Socket.IO 방에 입장
-    void socket.join(roomId);
-    
-    socket.emit('joined-room', { roomId });
-    this.logger.log(`✅ User ${userId} joined collaboration room: ${roomId}`);
-  }
-
-  // 사용자 입장 알림
-  @SubscribeMessage('user-join')
-  async onUserJoin(
-    @MessageBody() data: { userId: string; userData: { name: string; color: string } },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`👤 USER JOIN: ${data.userId} (${data.userData.name})`);
-    
-    // 방의 다른 사용자들에게 브로드캐스트
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) { // 자신의 소켓 ID는 제외
-        socket.to(room).emit('user-joined', data);
-      }
-    });
-  }
-
-  // 사용자 퇴장 알림  
-  @SubscribeMessage('user-left')
-  async onUserLeft(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`👋 USER LEFT: ${data.userId}`);
-    
-    // 방의 다른 사용자들에게 브로드캐스트
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('user-left', data);
-      }
-    });
-  }
-
-  // 모델 이동
-  @SubscribeMessage('model-move')
-  async onModelMove(
-    @MessageBody() data: { userId: string; modelId: string; position: number[] },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`📦 MODEL MOVE: ${data.modelId} by ${data.userId}`);
-    
-    // 방의 다른 사용자들에게 브로드캐스트
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('model-moved', data);
-      }
-    });
-  }
-
-  // 모델 회전
-  @SubscribeMessage('model-rotate')
-  async onModelRotate(
-    @MessageBody() data: { userId: string; modelId: string; rotation: number[] },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`🔄 MODEL ROTATE: ${data.modelId} by ${data.userId}`);
-    
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('model-rotated', data);
-      }
-    });
-  }
-
-  // 모델 크기 조정
-  @SubscribeMessage('model-scale')
-  async onModelScale(
-    @MessageBody() data: { userId: string; modelId: string; scale: number[] },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`📏 MODEL SCALE: ${data.modelId} by ${data.userId}`);
-    
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('model-scaled', data);
-      }
-    });
-  }
-
-  // 모델 추가
-  @SubscribeMessage('model-added-with-id')
-  async onModelAdded(
-    @MessageBody() data: { userId: string; modelData: any },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`➕ MODEL ADDED: by ${data.userId}`);
-    
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('model-added-with-id', data);
-      }
-    });
-  }
-
-  // 모델 제거
-  @SubscribeMessage('model-removed')
-  async onModelRemoved(
-    @MessageBody() data: { userId: string; modelId: string },
-    @ConnectedSocket() socket: Socket,
-  ) {
-    this.logger.log(`➖ MODEL REMOVED: ${data.modelId} by ${data.userId}`);
-    
-    socket.rooms.forEach(room => {
-      if (room !== socket.id) {
-        socket.to(room).emit('model-removed', data);
-      }
-    });
-  }
 }

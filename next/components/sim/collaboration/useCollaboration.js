@@ -31,6 +31,7 @@ export function useCollaboration(roomId) {
     updateModelScale,
     selectModel,
     setCollaborationCallbacks,
+    connectedUsers,
   } = useStore();
 
   // Socket.IO 연결 초기화
@@ -44,7 +45,7 @@ export function useCollaboration(roomId) {
       // console.log("토큰 응답:", data);
       const token = data["tokenData"]?.["jti"] || data.token;
       // console.log("추출된 토큰:", token);
-      socket.current = startSocket(token);
+      socket.current = startSocket(token, "/collab");
       // console.log("소켓:", socket.current);
 
       socket.current.on("connect", () => {
@@ -91,7 +92,26 @@ export function useCollaboration(roomId) {
 
     socket.current.on("user-left", (data) => {
       removeConnectedUser(data.userId);
-      console.log(`👋 사용자가 퇴장했습니다`);
+      console.log(`👋 $${data.userData.name}님이 퇴장했습니다`);
+    });
+
+    socket.current.on("request-user-list", (data) => {
+      // 기존 사용자가 새로 입장한 사용자에게 자신의 정보를 전송
+      socket.current.emit("user-info-response", {
+        userId: currentUser.id,
+        userData: { name: currentUser.name, color: currentUser.color },
+        targetSocketId: data.newUserId,
+      });
+    });
+
+    // 새로 입장한 사용자가 기존 사용자들의 정보를 받음
+    socket.current.on("user-info-response", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateConnectedUser(data.userId, data.userData);
+        console.log(
+          `📋 기존 사용자 확인: ${data.userData.name}님이 이미 접속해 있습니다`
+        );
+      }
     });
 
     socket.current.on("model-added", (data) => {
@@ -102,31 +122,31 @@ export function useCollaboration(roomId) {
 
     socket.current.on("model-added-with-id", (data) => {
       if (data.userId !== currentUser.id) {
-        addModelWithId(data.modelData);
+        addModelWithId(data.modelData, false); // shouldBroadcast = false
       }
     });
 
     socket.current.on("model-removed", (data) => {
       if (data.userId !== currentUser.id) {
-        removeModel(data.modelId);
+        removeModel(data.modelId, false); // shouldBroadcast = false
       }
     });
 
     socket.current.on("model-moved", (data) => {
       if (data.userId !== currentUser.id) {
-        updateModelPosition(data.modelId, data.position);
+        updateModelPosition(data.modelId, data.position, false); // shouldBroadcast = false
       }
     });
 
     socket.current.on("model-rotated", (data) => {
       if (data.userId !== currentUser.id) {
-        updateModelRotation(data.modelId, data.rotation);
+        updateModelRotation(data.modelId, data.rotation, false); // shouldBroadcast = false
       }
     });
 
     socket.current.on("model-scaled", (data) => {
       if (data.userId !== currentUser.id) {
-        updateModelScale(data.modelId, data.scale);
+        updateModelScale(data.modelId, data.scale, false); // shouldBroadcast = false
       }
     });
 
@@ -297,6 +317,9 @@ export function useCollaboration(roomId) {
     isConnected: socket.current?.connected || false,
 
     // 브로드캐스트 함수들
+    broadcastModelAdd,
+    broadcastModelAddWithId,
+    broadcastModelRemove,
     broadcastModelMove,
     broadcastModelRotate,
     broadcastModelScale,
