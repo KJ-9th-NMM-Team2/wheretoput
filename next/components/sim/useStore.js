@@ -51,6 +51,44 @@ export const useStore = create(
       viewOnly: false,
       setViewOnly: (value) => set({ viewOnly: value }),
 
+      // ===== 동시편집(실시간 협업) 관련 상태 =====
+      collaborationMode: false, // 동시편집 모드 활성화 여부
+      isConnected: false, // WebSocket 연결 상태
+      connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
+      currentUser: { 
+        id: null, 
+        name: null, 
+        color: "#3B82F6" // 사용자별 구분 색상
+      },
+
+      // 동시편집 모드 토글
+      setCollaborationMode: (enabled) => set({ collaborationMode: enabled }),
+
+      // WebSocket 연결 상태 관리
+      setConnectionStatus: (connected) => set({ isConnected: connected }),
+
+      // 현재 사용자 정보 설정
+      setCurrentUser: (user) => set({ currentUser: user }),
+
+      // 다른 사용자 정보 업데이트 (커서 위치, 선택한 모델 등)
+      updateConnectedUser: (userId, userData) =>
+        set((state) => {
+          const newUsers = new Map(state.connectedUsers);
+          newUsers.set(userId, userData);
+          return { connectedUsers: newUsers };
+        }),
+
+      // 사용자 연결 해제시 목록에서 제거
+      removeConnectedUser: (userId) =>
+        set((state) => {
+          const newUsers = new Map(state.connectedUsers);
+          newUsers.delete(userId);
+          return { connectedUsers: newUsers };
+        }),
+
+      // 모든 연결된 사용자 목록 초기화
+      clearConnectedUsers: () => set({ connectedUsers: new Map() }),
+
       // 모델 관련 상태
       loadedModels: [],
       selectedModelId: null,
