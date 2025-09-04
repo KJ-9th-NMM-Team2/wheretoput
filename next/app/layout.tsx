@@ -26,7 +26,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ConditionalHeader />
           {children}
-          <ChatButton />
+          <ChatButton currentUserId={session?.user?.id || null} />
           <Toaster />
         </SessionProvider>
       </body>

@@ -10,8 +10,12 @@ import {
 } from '@nestjs/websockets';
 import { UseGuards, BadRequestException, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { extractUserIdFromToken } from '../utils/jwt.util';
 import { ChatService } from './chat.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RoomService } from '../room/room.service';
 
 type JoinPayload = { roomId: string };
 type LeavePayload = { roomId: string };
@@ -26,7 +30,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(ChatGateway.name);
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly roomService: RoomService,
+  ) {}
+
+  afterInit() {
+    // RoomService에 소켓 서버 인스턴스 전달
+    this.roomService.setSocketServer(this.server);
+  }
 
   // 연결/해제 로그
   handleConnection(socket: Socket) {
@@ -45,15 +59,41 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: JoinPayload,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🚪 JOIN EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`);
+    this.logger.log(
+      `🚪 JOIN EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
+    );
     this.logger.log(`🔍 JOIN EVENT BODY:`, JSON.stringify(body));
-    // 임시로 하드코딩된 실제 사용자 ID 사용 (나중에 JWT에서 가져와야 함)
-    const userId = socket.data.userId as string | undefined || 'clu8lhg5w000108l1dcjb6lbe';
+    // JWT 토큰에서 사용자 정보 추출
+    const userId = extractUserIdFromToken(
+      this.jwtService,
+      socket.handshake.auth?.token,
+    );
     // if (!userId) throw new BadRequestException('Unauthenticated socket'); // 임시 비활성화
     if (!body?.roomId) throw new BadRequestException('roomId is required');
 
     // await this.chatService.joinRoom(body.roomId, userId); // 임시 비활성화
     void socket.join(body.roomId);
+
+    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트 (필요할 때만)
+    const participant = await this.prisma.chat_participants.findFirst({
+      where: {
+        chat_room_id: body.roomId,
+        user_id: userId,
+      },
+    });
+    const now = new Date();
+    // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
+    if (!participant?.last_read_at || participant.last_read_at.getTime() !== now.getTime()) {
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: body.roomId,
+          user_id: userId,
+        },
+        data: {
+          last_read_at: now,
+        },
+      });
+    }
 
     socket.emit('joined', { roomId: body.roomId });
     this.server.to(body.roomId).emit('system', {
@@ -70,9 +110,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: LeavePayload,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🚪 LEAVE EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`);
-    // 임시로 하드코딩된 실제 사용자 ID 사용 (나중에 JWT에서 가져와야 함)
-    const userId = socket.data.userId as string | undefined || 'clu8lhg5w000108l1dcjb6lbe';
+    this.logger.log(
+      `🚪 LEAVE EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
+    );
+    // JWT 토큰에서 사용자 정보 추출
+    const userId = extractUserIdFromToken(
+      this.jwtService,
+      socket.handshake.auth?.token,
+    );
     // if (!userId) throw new BadRequestException('Unauthenticated socket'); // 임시 비활성화
     if (!body?.roomId) throw new BadRequestException('roomId is required');
 
@@ -95,9 +140,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     this.logger.log(`📤 SEND EVENT RECEIVED: ${socket.id}`);
     this.logger.log(`🔍 SEND EVENT BODY:`, JSON.stringify(body));
-    // 임시로 하드코딩된 실제 사용자 ID 사용 (나중에 JWT에서 가져와야 함)
-    const userId = socket.data.userId as string | undefined || 'clu8lhg5w000108l1dcjb6lbe';
-    const username = (socket.data.username as string | undefined) ?? 'Test User';
+
+    console.log(socket.handshake.auth?.token);
+
+    // JWT 토큰에서 사용자 정보 추출
+    const userId = extractUserIdFromToken(
+      this.jwtService,
+      socket.handshake.auth?.token,
+    );
 
     // if (!userId) throw new BadRequestException('Unauthenticated socket'); // 임시 비활성화
     this.logger.log(`📤 MESSAGE SEND: ${body.content} from ${userId}`);
@@ -106,12 +156,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new BadRequestException('content is required');
     }
 
-    // 임시로 메시지 저장을 건너뛰고 바로 ACK/브로드캐스트 테스트
+    console.log(userId);
+
+    // 메시지를 저장
+    console.log('userId:', userId);
+    const result = await this.prisma.chat_messages.create({
+      data: {
+        chat_room_id: body.roomId,
+        user_id: userId,
+        content: body.content,
+      },
+    });
+
+    // 메시지 보낸 사용자의 last_read_at 갱신 (자신이 보낸 메시지는 읽음 처리)
+    await this.prisma.chat_participants.updateMany({
+      where: {
+        chat_room_id: body.roomId,
+        user_id: userId,
+      },
+      data: {
+        last_read_at: new Date(),
+      },
+    });
+
+    // ACK/브로드캐스트 테스트
     const mockMsg = {
       id: `mock-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       roomId: body.roomId,
       senderId: userId,
-      senderName: username,
       content: body.content,
       createdAt: new Date().toISOString(),
       status: 'sent',
@@ -119,7 +191,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // 발신자에게 ACK 전송
     if (body.tempId) {
-      this.logger.log(`🔄 SENDING ACK: tempId=${body.tempId}, realId=${mockMsg.id}`);
+      this.logger.log(
+        `🔄 SENDING ACK: tempId=${body.tempId}, realId=${mockMsg.id}`,
+      );
       socket.emit('message:ack', {
         tempId: body.tempId,
         realId: mockMsg.id,
@@ -134,11 +208,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 읽음 처리
   @SubscribeMessage('read')
-  onRead(
+  async onRead(
     @MessageBody() body: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`👁️ READ EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`);
-    // 읽음 처리 로직은 나중에 구현
+    this.logger.log(
+      `👁️ READ EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
+    );
+
+    // JWT 토큰에서 사용자 정보 추출
+    const userId = extractUserIdFromToken(
+      this.jwtService,
+      socket.handshake.auth?.token,
+    );
+
+    if (!userId || !body?.roomId) return;
+
+    try {
+      // 해당 방의 참가자 정보 업데이트 (last_read_at)
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: body.roomId,
+          user_id: userId,
+        },
+        data: {
+          last_read_at: new Date(),
+        },
+      });
+
+      // 방에 있는 다른 사용자들에게 읽음 상태 변경 알림
+      socket.to(body.roomId).emit('read:updated', {
+        roomId: body.roomId,
+        userId,
+        readAt: new Date().toISOString(),
+      });
+
+      this.logger.log(
+        `✅ READ STATUS UPDATED: user ${userId} in room ${body.roomId}`,
+      );
+    } catch (error) {
+      this.logger.error(`❌ READ STATUS UPDATE FAILED:`, error);
+    }
   }
 }

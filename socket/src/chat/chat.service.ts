@@ -122,7 +122,7 @@ export class ChatService {
         senderId: created.user_id,
         senderName: params.senderName,
         content: created.content,
-        createdAt: created.created_at?.toString() || "",
+        createdAt: created.created_at?.toString() || '',
         status: 'sent',
       };
     } catch (error) {
@@ -132,8 +132,8 @@ export class ChatService {
       ) {
         throw error;
       }
-      console.log('💥 MESSAGE SAVE ERROR:', error);
-      console.log('💥 ERROR DETAILS:', JSON.stringify(error, null, 2));
+      // console.log('💥 MESSAGE SAVE ERROR:', error);
+      // console.log('💥 ERROR DETAILS:', JSON.stringify(error, null, 2));
       throw new Error(`Failed to save message: ${error.message}`);
     }
   }
@@ -181,6 +181,13 @@ export class ChatService {
           user_id: true,
           content: true,
           created_at: true,
+          User: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
         },
       });
 
@@ -189,7 +196,8 @@ export class ChatService {
         id: r.message_id,
         roomId: r.chat_room_id,
         senderId: r.user_id,
-        senderName: '',
+        senderName: r.User?.name || '',
+        senderImage: r.User?.image || null,
         content: r.content,
         createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
         status: 'sent',

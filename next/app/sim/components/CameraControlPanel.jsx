@@ -59,7 +59,6 @@ export function CameraControlPanel({ isPopup = false }) {
             step={1}
             onChange={setCameraFov}
             displayValue={cameraFov}
-            compact
           />
         </div>
 
@@ -80,13 +79,12 @@ function ControlSlider({
   step,
   onChange,
   displayValue,
-  compact = false
 }) {
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: compact ? '3px' : '5px'
+      gap: '3px'
     }}>
       <span style={{
         minWidth: '50px',
