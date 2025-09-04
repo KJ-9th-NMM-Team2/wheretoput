@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { LightControlPanel } from './LightControlPanel.jsx';
-import { CameraControlPanel } from './CameraControlPanel.jsx';
-import { ControlPanel } from './ControlPanel.jsx';
-import { ColorControlPanel } from './ColorControlPanel.jsx';
+import { ControlPanel } from '@/components/sim/mainsim/ControlPanel';
+import { LightControlPanel } from '@/components/sim/mainsim/LightControlPanel';
+import { CameraControlPanel } from '@/components/sim/mainsim/CameraControlPanel';
+import { ColorControlPanel } from '@/components/sim/mainsim/ColorControlPanel';
 
 // react-icons 추가 부분
 import { FaCameraRetro, FaPalette } from "react-icons/fa";
 import { MdSunny } from "react-icons/md";
 import { FaSave } from "react-icons/fa";
 // =====================================
+
 export function ControlIcons() {
-  const [showColorPopup, setShowColorPopup] = useState(false);
-  const [showCameraPopup, setShowCameraPopup] = useState(false);
-  const [showLightPopup, setShowLightPopup] = useState(false);
   const [showControlPopup, setShowControlPopup] = useState(false);
+  const [showLightPopup, setShowLightPopup] = useState(false);
+  const [showCameraPopup, setShowCameraPopup] = useState(false);
+  const [showColorPopup, setShowColorPopup] = useState(false);
 
   const iconStyle = {
     position: 'fixed',

@@ -2,8 +2,8 @@ import React, { useRef, useEffect } from "react";
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useObjectControls } from "../hooks/useObjectControls.js";
-import { useStore } from "../store/useStore.js";
+import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
+import { useStore } from "@/components/sim/useStore";
 
 export function DraggableModel({
   modelId,

@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { on } from "events";
-import { useStore } from "../store/useStore.js";
-import { useHistoryDrag } from "../../../components/sim/history/useHistoryDrag";
+import { useStore } from "@/components/sim/useStore";
+import { useHistoryDrag } from "@/components/sim/history/useHistoryDrag";
 
 export function useObjectControls(
   modelId,
