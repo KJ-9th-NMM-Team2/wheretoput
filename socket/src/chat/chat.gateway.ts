@@ -74,16 +74,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // await this.chatService.joinRoom(body.roomId, userId); // 임시 비활성화
     void socket.join(body.roomId);
 
-    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트
-    await this.prisma.chat_participants.updateMany({
+    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트 (필요할 때만)
+    const participant = await this.prisma.chat_participants.findFirst({
       where: {
         chat_room_id: body.roomId,
         user_id: userId,
       },
-      data: {
-        last_read_at: new Date(),
-      },
     });
+    const now = new Date();
+    // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
+    if (!participant?.last_read_at || participant.last_read_at.getTime() !== now.getTime()) {
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: body.roomId,
+          user_id: userId,
+        },
+        data: {
+          last_read_at: now,
+        },
+      });
+    }
 
     socket.emit('joined', { roomId: body.roomId });
     this.server.to(body.roomId).emit('system', {
