@@ -79,17 +79,34 @@ export default function ChatButton({
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // 메시지 변화 시 및 채팅방 입장 시 맨 아래로 스크롤
+  // 채팅방 변경 시 맨 아래로 스크롤
   useEffect(() => {
-    const el = listRef.current;
-    if (el) {
-      // DOM 업데이트 후 실행하기 위해 requestAnimationFrame 사용
-      requestAnimationFrame(() => {
+    if (!selectedChatId) return;
+    
+    const scrollToBottom = () => {
+      const el = listRef.current;
+      if (el) {
         el.scrollTop = el.scrollHeight;
         userAtBottomRef.current = true;
-      });
+      }
+    };
+
+    // 여러 시점에서 스크롤 시도
+    setTimeout(scrollToBottom, 0);    // 즉시
+    setTimeout(scrollToBottom, 50);   // 50ms 후
+    setTimeout(scrollToBottom, 200);  // 200ms 후
+  }, [selectedChatId]);
+
+  // 새 메시지 추가 시 맨 아래로 스크롤
+  useEffect(() => {
+    const el = listRef.current;
+    if (el && selectedMessages.length > 0) {
+      setTimeout(() => {
+        el.scrollTop = el.scrollHeight;
+        userAtBottomRef.current = true;
+      }, 0);
     }
-  }, [selectedMessages.length, selectedChatId]);
+  }, [selectedMessages.length]);
 
   // 팝업 바깥 클릭 시 닫기
   useEffect(() => {
