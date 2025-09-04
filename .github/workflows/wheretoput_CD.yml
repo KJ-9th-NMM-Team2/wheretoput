@@ -139,6 +139,7 @@ jobs:
           NODE_ENV=production
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EC2_HOST_NEXT=$ {{ secrets.EC2_HOST_NEXT }}
           EOF
 
       - name: Upload files to NestJS EC2
