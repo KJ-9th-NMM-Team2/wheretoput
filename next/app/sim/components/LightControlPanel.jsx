@@ -18,7 +18,7 @@ export function LightControlPanel({ isPopup = false }) {
     padding: '15px',
     borderRadius: '5px',
     color: 'white',
-    fontSize: '16px',
+    fontSize: '13px',
     width: '250px',
     maxHeight: '400px',
     overflowY: 'auto'
@@ -26,14 +26,14 @@ export function LightControlPanel({ isPopup = false }) {
 
   const positionStyle = isPopup ? 
     { position: 'static' } : 
-    { position: 'absolute', bottom: '10px', left: '10px', zIndex: 100 };
+    { position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '10px', zIndex: 100 };
 
   return (
     <div style={{
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0' }}>☀️ 빛 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px'}}><span className="text-lg">☀️</span> 빛 세팅</h3>
 
       <div
         style={{
@@ -47,7 +47,6 @@ export function LightControlPanel({ isPopup = false }) {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
 
-          {/* 위치 조정 */}
           <LightPresetDropdown
             value={environmentPreset}
             onChange={setEnvironmentPreset}
@@ -60,7 +59,6 @@ export function LightControlPanel({ isPopup = false }) {
             step={1}
             onChange={setDirectionalLightAzimuth}
             displayValue={`${directionalLightAzimuth}°`}
-            compact
           />
           <ControlSlider
             label="고도"
@@ -70,7 +68,6 @@ export function LightControlPanel({ isPopup = false }) {
             step={1}
             onChange={setDirectionalLightElevation}
             displayValue={`${directionalLightElevation}°`}
-            compact
           />
           <ControlSlider
             label="햇빛 세기"
@@ -80,7 +77,6 @@ export function LightControlPanel({ isPopup = false }) {
             step={0.1}
             onChange={setDirectionalLightIntensity}
             displayValue={`${directionalLightIntensity}`}
-            compact
           />
         </div>
       </div>
@@ -96,17 +92,16 @@ function ControlSlider({
   step,
   onChange,
   displayValue,
-  compact = false
 }) {
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: compact ? '3px' : '5px'
+       gap: '3px'
     }}>
       <span style={{
         minWidth: '50px',
-        fontSize: '10px',
+        fontSize: '13px',
         whiteSpace: 'nowrap'
       }}>
         {label}
@@ -148,7 +143,7 @@ function LightPresetDropdown({ value, onChange }) {
 
   return (
     <div className="mb-3">
-      <label className="block text-xs text-white mb-1">
+      <label className="block text-sm text-white mb-1">
         조명 프리셋
       </label>
       <select
