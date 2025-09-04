@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  socket:
+    image: ${ECR_REGISTRY}/${ECR_REPO_SOCKET}:${IMAGE_TAG}
+    ports:
+      - "${EC2_HOST_SOCKET:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - ECR_REGISTRY=${ECR_REGISTRY}
+      - ECR_REPO_SOCKET=${ECR_REPO_SOCKET}
+      - IMAGE_TAG=latest
+    restart: unless-stopped

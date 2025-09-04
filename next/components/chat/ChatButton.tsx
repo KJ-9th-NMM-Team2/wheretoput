@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import styles from "./ChatButton.module.scss";
 
 import { api, setAuthToken } from "@/lib/client/api";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { AnimatePresence, motion } from "framer-motion";
-import { useSession } from "next-auth/react";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -45,14 +45,15 @@ type UserLite = {
 export default function ChatButton({
   currentUserId,
 }: {
-  currentUserId: string;
+  currentUserId: string | null;
 }) {
+  const { data: session } = useSession();
+  if (!currentUserId) return null;
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const { data: session } = useSession();
 
   const ts = (s?: string) => {
     if (!s) return -Infinity;
@@ -75,7 +76,7 @@ export default function ChatButton({
     : [];
   const selectedChat = useMemo(() => {
     if (!selectedChatId) return null;
-    return baseChats.find(c => c.chat_room_id === selectedChatId) ?? null;
+    return baseChats.find((c) => c.chat_room_id === selectedChatId) ?? null;
   }, [selectedChatId, baseChats]);
   const [peopleHits, setPeopleHits] = useState<UserLite[]>([]);
 
@@ -99,15 +100,16 @@ export default function ChatButton({
   //  검색은 searchIndex(=lastMessage)만 기준
   const recomputeChats = useCallback(
     (raw: ChatListItem[], q: string, mode: "전체" | "읽지 않음") => {
+      console.log("dddd");
       const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
       const k = q.trim().toLocaleLowerCase("ko-KR");
+      
       if (!k) {
-        return [...src]
-          .filter((c) => (c.lastMessage ?? "").trim() !== "")
-          .sort(byLatest);
+        return [...src].sort(byLatest);
       }
 
       const filtered = src.filter((c) => c.searchIndex.includes(k));
+      console.log("filted", filtered);
       return filtered.sort(byLatest);
     },
     []
@@ -128,7 +130,7 @@ export default function ChatButton({
         }
         // 여기서 바로 json() 호출하고 다시는 호출하지 않기
         const data = await r.json();
-        console.log('Token API response:', data);
+        console.log("Token API response:", data);
         // 토큰 값 가져오기 (안전한 체이닝)
         const token = data?.tokenData?.jti;
         if (!alive || !token) return;
@@ -145,59 +147,70 @@ export default function ChatButton({
   }, [open]);
 
   // 방 목록 로드
-  // useEffect(() => {
-  //   if (!open || !token) {
-  //     console.log("[ROOMS] 스킵 - open:", open, "token:", !!token);
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!open || !token) {
+      console.log("[ROOMS] 스킵 - open:", open, "token:", !!token);
+      return;
+    }
 
-  //   (async () => {
-  //     const path = "/backend/rooms";
-  //     try {
-  //       console.log("[ROOMS] GET", path);
-  //       const { data } = await api.get("/backend/rooms", {
-  //         params: { limit: 1000 },
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
+    (async () => {
+      const path = "/backend/rooms";
+      try {
+        console.log("[ROOMS] GET", path);
+        const response = await fetch(
+          "http://localhost:3000/api/backend/rooms",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await response.json();
 
-  //       const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-  //         const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
-  //         return {
-  //           chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
-  //           name: r.name ?? "이름 없음",
-  //           is_private: Boolean(r.is_private),
-  //           lastMessage: lastMsg,
-  //           lastMessageAt: r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
-  //           last_read_at: r.last_read_at ?? r.lastReadAt ?? "1970-01-01T00:00:00.000Z",
-  //           searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
-  //         };
-  //       });
+        const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
+          console.log("메시지 데이터:", r.creator_id, currentUserId);
+          r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
+          const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
+          const chatRoomName = r.chat_participants
+            .filter((participant: any) => participant.user_id !== currentUserId)
+            .map((participant: any) => participant.user?.name || "이름 없음")
+            .join(", ");
 
-  //       setBaseChats(mapped);
-  //       setChats(recomputeChats(mapped, "", "전체"));
-  //       setSelect("전체");
-  //       setQuery("");
-  //       setselectedChatId(chat.chat_room_id);
-  //       console.log("[ROOMS] OK", mapped.length);
-  //     } catch (e: any) {
-  //       console.error("[ROOMS] FAIL", {
-  //         url: path,
-  //         status: e?.response?.status,
-  //         data: e?.response?.data,
-  //         message: e?.message,
-  //         tokenExists: !!token,
-  //       });
-  //     }
-  //   })();
-  // }, [open, token, recomputeChats]);
+          return {
+            chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
+            name: chatRoomName,
+            is_private: Boolean(r.is_private),
+            lastMessage: lastMsg,
+            lastMessageAt:
+              r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
+            last_read_at:
+              r.last_read_at ?? r.lastReadAt ?? "1970-01-01T00:00:00.000Z",
+            searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
+          };
+        });
+
+        setBaseChats(mapped);
+        setChats(recomputeChats(mapped, "", "전체"));
+        setSelect("전체");
+        setQuery("");
+        console.log("[ROOMS] OK", mapped.length);
+      } catch (e: any) {
+        console.error("[ROOMS] FAIL", {
+          url: path,
+          status: e?.response?.status,
+          data: e?.response?.data,
+          message: e?.message,
+          tokenExists: !!token,
+        });
+      }
+    })();
+  }, [open, token, recomputeChats]);
 
   useEffect(() => {
     const bootstrap = async () => {
       const res = await fetch("/api/chat/token", { cache: "no-store" });
       const data = await res.json();
-      console.log('토큰 응답:', data);
+      console.log("토큰 응답:", data);
       const token = data["tokenData"]?.["jti"] || data.token;
-      console.log('추출된 토큰:', token);
+      console.log("추출된 토큰:", token);
       setToken(token);
       setAuthToken(token);
       // 이후부터 api.get/post가 자동으로 Authorization 포함
@@ -240,10 +253,9 @@ export default function ChatButton({
 
   // 방 선택 시 join + 히스토리 로드
   useEffect(() => {
-
     if (!open || !selectedChatId || !token) return;
     const s = connectSocket(token);
-    console.log('🚪 FRONTEND JOIN:', selectedChatId);
+    console.log("🚪 FRONTEND JOIN:", selectedChatId);
     s.emit("join", { roomId: selectedChatId });
 
     let cancelled = false;
@@ -320,7 +332,9 @@ export default function ChatButton({
       setMessagesByRoom((prev) => {
         const existingMessages = prev[msg.roomId] ?? [];
         // 중복 메시지 체크 (같은 ID가 이미 있으면 추가하지 않음)
-        const isDuplicate = existingMessages.some(existingMsg => existingMsg.id === msg.id);
+        const isDuplicate = existingMessages.some(
+          (existingMsg) => existingMsg.id === msg.id
+        );
         if (isDuplicate) {
           return prev;
         }
@@ -334,12 +348,12 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === msg.roomId
             ? {
-              ...c,
-              lastMessage: msg.content,
-              lastMessageAt: msg.createdAt,
-              //  수신 시 검색 인덱스도 동기화
-              searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
-            }
+                ...c,
+                lastMessage: msg.content,
+                lastMessageAt: msg.createdAt,
+                //  수신 시 검색 인덱스도 동기화
+                searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
+              }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -358,12 +372,12 @@ export default function ChatButton({
         const next = arr.map((m) =>
           m.id === ack.tempId
             ? {
-              ...m,
-              id: ack.realId,
-              status: "sent",
-              createdAt: ack.createdAt ?? m.createdAt,
-              tempId: undefined,
-            }
+                ...m,
+                id: ack.realId,
+                status: "sent",
+                createdAt: ack.createdAt ?? m.createdAt,
+                tempId: undefined,
+              }
             : m
         );
         return { ...prev, [selectedChatId]: next };
@@ -419,13 +433,13 @@ export default function ChatButton({
         const updated = prev.map((c) =>
           c.chat_room_id === roomId
             ? {
-              ...c,
-              lastMessage: content,
-              lastMessageAt: now,
-              last_read_at: now,
-              //  전송 시 검색 인덱스도 동기화
-              searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
-            }
+                ...c,
+                lastMessage: content,
+                lastMessageAt: now,
+                last_read_at: now,
+                //  전송 시 검색 인덱스도 동기화
+                searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+              }
             : c
         );
         setChats(recomputeChats(updated, query, select));
@@ -433,8 +447,8 @@ export default function ChatButton({
       });
 
       const s = getSocket() ?? connectSocket(token);
-      console.log('🔵 WEBSOCKET SEND:', { roomId, content, tempId });
-      console.log('🔵 SOCKET STATE:', s.connected);
+      console.log("🔵 WEBSOCKET SEND:", { roomId, content, tempId });
+      console.log("🔵 SOCKET STATE:", s.connected);
       s.emit("send", { roomId, content, tempId });
     },
     [currentUserId, token, query, select, recomputeChats]
@@ -461,6 +475,7 @@ export default function ChatButton({
     return !(sameSender && within3m);
   };
 
+
   const shouldShowTimestamp = (arr: Message[], idx: number) => {
     if (idx === arr.length - 1) return true; // 마지막 메시지는 항상 시간 표시
     
@@ -474,17 +489,21 @@ export default function ChatButton({
     return curTime !== nextTime; // 다음 메시지와 시간이 다르면 시간 표시
   };
 
+
   function Bubble({ m, showAvatar, showTimestamp }: { m: Message; showAvatar: boolean; showTimestamp: boolean }) {
-    const isMine = m.senderId === currentUserId;
+    const isMine = String(m.senderId) === String(currentUserId);
+
     return (
       <div
-        className={`flex items-end gap-2 ${isMine ? "justify-end" : "justify-start"
-          }`}
+        className={`flex items-end gap-2 ${
+          isMine ? "justify-end" : "justify-start"
+        }`}
       >
         {!isMine && (
           <div
-            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${showAvatar ? "opacity-100" : "opacity-0"
-              }`}
+            className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${
+              showAvatar ? "opacity-100" : "opacity-0"
+            }`}
           >
             {m.avatarUrl ? (
               <img
@@ -498,8 +517,9 @@ export default function ChatButton({
         )}
 
         <div
-          className={`max-w-[75%] ${isMine ? "items-end" : "items-start"
-            } flex flex-col`}
+          className={`max-w-[75%] ${
+            isMine ? "items-end" : "items-start"
+          } flex flex-col`}
         >
           {!isMine && showAvatar && m.senderName ? (
             <span className="text-[11px] text-gray-400 pl-1 mb-0.5">
@@ -555,6 +575,7 @@ export default function ChatButton({
     if (el && userAtBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [selectedMessages.length, selectedChatId]);
 
+
   // 팝업 바깥 클릭 시 닫기
   useEffect(() => {
     if (!open) return;
@@ -570,6 +591,21 @@ export default function ChatButton({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [open]);
+
+  // 채팅방에 처음 들어갈 때 맨 아래로 스크롤
+  useEffect(() => {
+    if (selectedChatId && selectedMessages.length > 0) {
+      const el = listRef.current;
+      if (el) {
+        // 강제로 맨 아래로 스크롤
+        setTimeout(() => {
+          el.scrollTop = el.scrollHeight;
+          userAtBottomRef.current = true;
+        }, 100);
+      }
+    }
+  }, [selectedChatId]);
+
 
   const dayKey = (iso: string) =>
     new Date(iso).toLocaleDateString("ko-KR", {
@@ -610,7 +646,7 @@ export default function ChatButton({
   const onStartDirect = useCallback(
     async (otherUserId: string, otherUserName?: string) => {
       if (!token) {
-        console.error('토큰이 없습니다');
+        console.error("토큰이 없습니다");
         return;
       }
 
@@ -632,6 +668,7 @@ export default function ChatButton({
         headers: { Authorization: `Bearer ${token}` },
       });
 
+
       console.log('API Response:', data);
 
       const roomId =
@@ -640,9 +677,11 @@ export default function ChatButton({
 
       setselectedChatId(roomId);
 
+
       setBaseChats(prev => {
         const existingIndex = prev.findIndex(c => c.chat_room_id === roomId);
         if (existingIndex !== -1) {
+
           const next = [...prev];
           // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
           next[existingIndex] = {
@@ -670,7 +709,6 @@ export default function ChatButton({
     },
     [recomputeChats, token, session?.user?.id, selectedChatId]
   );
-
 
   return (
     <>
@@ -777,10 +815,11 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "전체"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-                        ? "bg-gray-200 text-blue-500"
-                        : "bg-transparent hover:bg-gray-200"
-                        }`}
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+                        select === "전체"
+                          ? "bg-gray-200 text-blue-500"
+                          : "bg-transparent hover:bg-gray-200"
+                      }`}
                     >
                       전체
                     </button>
@@ -791,10 +830,11 @@ export default function ChatButton({
                         setselectedChatId(null);
                         setChats(recomputeChats(baseChats, query, "읽지 않음"));
                       }}
-                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-                        ? "bg-gray-200 text-blue-500"
-                        : "bg-transparent hover:bg-gray-200"
-                        }`}
+                      className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+                        select === "읽지 않음"
+                          ? "bg-gray-200 text-blue-500"
+                          : "bg-transparent hover:bg-gray-200"
+                      }`}
                     >
                       읽지 않음
                     </button>
@@ -816,7 +856,10 @@ export default function ChatButton({
                           peopleHits.map((u) => (
                             <div
                               key={u.id}
-                              onClick={(e) => { e.stopPropagation(); onStartDirect(u.id, u.name); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStartDirect(u.id, u.name);
+                              }}
                               className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
                             >
                               <div className="flex items-center gap-2 min-w-0">
@@ -833,7 +876,6 @@ export default function ChatButton({
                                   {u.name}
                                 </div>
                               </div>
-
                             </div>
                           ))
                         )}
@@ -977,10 +1019,11 @@ export default function ChatButton({
                       <button
                         onClick={send}
                         disabled={!text.trim() || !selectedChatId}
-                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${text.trim()
-                          ? "bg-orange-500 hover:bg-orange-600"
-                          : "bg-gray-300 cursor-not-allowed"
-                          }`}
+                        className={`px-3 py-2 rounded-lg text-white cursor-pointer ${
+                          text.trim()
+                            ? "bg-orange-500 hover:bg-orange-600"
+                            : "bg-gray-300 cursor-not-allowed"
+                        }`}
                       >
                         전송
                       </button>

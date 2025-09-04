@@ -7,7 +7,7 @@ async function bootstrap() {
   
   // ✅ CORS 설정 추가 해줘야지 Next와 통신 가능
   app.enableCors({
-    origin: "http://localhost:3000", // 허용할 프론트 주소
+    origin: process.env.EC2_HOST_NEXT, // 허용할 프론트 주소
     credentials: true,               // 쿠키 포함 허용 여부
   });
 

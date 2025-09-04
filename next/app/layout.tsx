@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import ConditionalHeader from "../components/layout/ConditionalHeader";
 import "./globals.css";
 import ChatButton from "@/components/chat/ChatButton";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "어따놀래",
@@ -25,7 +26,8 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ConditionalHeader />
           {children}
-          <ChatButton />
+          <ChatButton currentUserId={session?.user?.id || null} />
+          <Toaster />
         </SessionProvider>
       </body>
     </html>

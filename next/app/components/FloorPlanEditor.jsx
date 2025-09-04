@@ -3,7 +3,6 @@ import { WallDetector } from "../wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-
 import {
   Square,
   MousePointer,
@@ -280,10 +279,12 @@ const FloorPlanEditor = () => {
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    
+
     // 캔버스 중앙을 원점(0,0)으로 하는 좌표계로 변환
-    const canvasX = ((e.clientX - rect.left) - rect.width / 2) / viewScale - viewOffset.x;
-    const canvasY = ((e.clientY - rect.top) - rect.height / 2) / viewScale - viewOffset.y;
+    const canvasX =
+      (e.clientX - rect.left - rect.width / 2) / viewScale - viewOffset.x;
+    const canvasY =
+      (e.clientY - rect.top - rect.height / 2) / viewScale - viewOffset.y;
     return { x: canvasX, y: canvasY };
   };
 
@@ -323,18 +324,17 @@ const FloorPlanEditor = () => {
     const ctx = canvas.getContext("2d");
 
     // 컨테이너 크기에 맞춰 동적으로 캔버스 크기 설정
-    const containerRect = container.getBoundingClientRect();
-    const canvasWidth = containerRect.width;
-    const canvasHeight = containerRect.height;
+    const canvasWidth = 1600;
+    const canvasHeight = 1200;
 
     // 고해상도 렌더링 설정
     const dpr = window.devicePixelRatio || 1;
 
-    // 캔버스 실제 해상도 설정 (컨테이너 크기 기준)
+    // 캔버스 실제 해상도 설정 (고정 크기 기준)
     canvas.width = canvasWidth * dpr;
     canvas.height = canvasHeight * dpr;
 
-    // CSS 크기를 컨테이너 크기로 설정
+    // CSS 크기를 고정 크기로 설정
     canvas.style.width = canvasWidth + "px";
     canvas.style.height = canvasHeight + "px";
 
@@ -344,7 +344,7 @@ const FloorPlanEditor = () => {
     // 전체 캔버스 클리어
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    // 동적 캔버스 크기 사용
+    // 고정 캔버스 크기 사용
     const rect = {
       width: canvasWidth,
       height: canvasHeight,
@@ -365,7 +365,7 @@ const FloorPlanEditor = () => {
       // 캐시된 이미지 사용 (완전히 로드된 경우에만)
       const img = cachedBackgroundImage;
 
-      // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+      // 이미지를 고정 캔버스 크기에 맞춰 스케일링하여 그리기
       const imgAspect = img.width / img.height;
       const canvasAspect = rect.width / rect.height;
 
@@ -373,14 +373,14 @@ const FloorPlanEditor = () => {
 
       if (imgAspect > canvasAspect) {
         // 이미지가 캔버스보다 가로로 긴 경우
-        drawWidth = rect.width;
-        drawHeight = rect.width / imgAspect;
+        drawWidth = rect.width * 0.8;
+        drawHeight = drawWidth / imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       } else {
         // 이미지가 캔버스보다 세로로 긴 경우
-        drawHeight = rect.height;
-        drawWidth = rect.height * imgAspect;
+        drawHeight = rect.height * 0.8;
+        drawWidth = drawHeight * imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       }
@@ -408,7 +408,7 @@ const FloorPlanEditor = () => {
         ctx.scale(viewScale, viewScale);
         ctx.translate(viewOffset.x, viewOffset.y);
 
-        // 이미지를 캔버스 크기에 맞춰 스케일링하여 그리기
+        // 이미지를 고정 캔버스 크기에 맞춰 스케일링하여 그리기
         const imgAspect = img.width / img.height;
         const canvasAspect = rect.width / rect.height;
 
@@ -416,14 +416,14 @@ const FloorPlanEditor = () => {
 
         if (imgAspect > canvasAspect) {
           // 이미지가 캔버스보다 가로로 긴 경우
-          drawWidth = rect.width;
-          drawHeight = rect.width / imgAspect;
+          drawWidth = rect.width * 0.8; // 캔버스 크기의 80%로 제한
+          drawHeight = drawWidth / imgAspect;
           drawX = -drawWidth / 2;
           drawY = -drawHeight / 2;
         } else {
           // 이미지가 캔버스보다 세로로 긴 경우
-          drawHeight = rect.height;
-          drawWidth = rect.height * imgAspect;
+          drawHeight = rect.height * 0.8; // 캔버스 크기의 80%로 제한
+          drawWidth = drawHeight * imgAspect;
           drawX = -drawWidth / 2;
           drawY = -drawHeight / 2;
         }
@@ -453,7 +453,7 @@ const FloorPlanEditor = () => {
     // 캔버스 중앙을 원점으로 변환
     ctx.save();
     ctx.translate(rect.width / 2, rect.height / 2);
-    
+
     // 뷰포트 변환 적용
     ctx.scale(viewScale, viewScale);
     ctx.translate(viewOffset.x, viewOffset.y);
@@ -677,26 +677,21 @@ const FloorPlanEditor = () => {
     setLastPanPoint(null);
   };
 
-  // 줌 핸들러 (수정)
+  // 줌 핸들러 (캔버스 중앙 기준)
   const handleWheel = (e) => {
     e.preventDefault();
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
 
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     const newScale = Math.max(0.1, Math.min(10, viewScale * delta));
 
     if (newScale !== viewScale) {
-      // 마우스 위치를 캔버스 좌표계로 변환
-      const worldMouseX = mouseX / viewScale - viewOffset.x;
-      const worldMouseY = mouseY / viewScale - viewOffset.y;
+      // 캔버스 중앙을 기준으로 줌 (현재 뷰의 중앙점 유지)
+      const scaleRatio = newScale / viewScale;
 
-      // 새로운 오프셋 계산 (마우스 위치가 고정되도록)
-      const newOffsetX = mouseX / newScale - worldMouseX;
-      const newOffsetY = mouseY / newScale - worldMouseY;
-
-      setViewOffset({ x: newOffsetX, y: newOffsetY });
+      setViewOffset((prev) => ({
+        x: prev.x * scaleRatio,
+        y: prev.y * scaleRatio,
+      }));
       setViewScale(newScale);
     }
   };
@@ -704,9 +699,16 @@ const FloorPlanEditor = () => {
   // 마우스 이벤트 핸들러들
   const handleMouseDown = (e) => {
     // 도구가 "none"이거나 활성화된 도구가 없을 때 패닝 가능
-    const shouldCheckPan = tool === "none" || !tool || 
-      (uploadedImage && tool !== "wall" && tool !== "scale" && tool !== "select" && tool !== "eraser" && tool !== "partial_eraser");
-    
+    const shouldCheckPan =
+      tool === "none" ||
+      !tool ||
+      (uploadedImage &&
+        tool !== "wall" &&
+        tool !== "scale" &&
+        tool !== "select" &&
+        tool !== "eraser" &&
+        tool !== "partial_eraser");
+
     if (shouldCheckPan && handlePanStart(e)) {
       return;
     }
@@ -906,63 +908,6 @@ const FloorPlanEditor = () => {
     viewOffset,
   ]);
 
-  // 윈도우 리사이즈 및 컨테이너 크기 변화 감지
-  useEffect(() => {
-    let resizeTimeout;
-    let resizeObserverTimeout;
-
-    const handleResize = () => {
-      // 이전 타이머 취소
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-
-      // 즉시 캔버스 다시 그리기 (디바운스 없이)
-      debouncedRedraw();
-
-      // 추가적인 디바운스된 렌더링 (안정성을 위해)
-      resizeTimeout = setTimeout(() => {
-        debouncedRedraw();
-      }, 50);
-    };
-
-    // 윈도우 리사이즈 이벤트
-    window.addEventListener("resize", handleResize);
-
-    // ResizeObserver로 컨테이너 크기 변화 직접 감지
-    let resizeObserver;
-    if (containerRef.current) {
-      resizeObserver = new ResizeObserver((entries) => {
-        // 이전 타이머 취소
-        if (resizeObserverTimeout) {
-          clearTimeout(resizeObserverTimeout);
-        }
-
-        // 즉시 캔버스 다시 그리기 (크기 변경 즉시 반응)
-        debouncedRedraw();
-
-        // 추가적인 디바운스된 렌더링 (연속적인 크기 변경에 대비)
-        resizeObserverTimeout = setTimeout(() => {
-          debouncedRedraw();
-        }, 20);
-      });
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-      if (resizeObserverTimeout) {
-        clearTimeout(resizeObserverTimeout);
-      }
-    };
-  }, [debouncedRedraw]); // debouncedRedraw 의존성 추가
-
   // 이미지 업로드 처리
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
@@ -984,23 +929,23 @@ const FloorPlanEditor = () => {
       });
 
       // 이미지 크기를 캔버스 크기에 맞춰 스케일 계산
-      const canvas = canvasRef.current;
-      const containerRect = canvas.getBoundingClientRect();
+      const canvasWidth = 1600;
+      const canvasHeight = 1200;
 
       // 이미지 비율과 캔버스 비율 계산
       const imgAspect = result.imageWidth / result.imageHeight;
-      const canvasAspect = containerRect.width / containerRect.height;
+      const canvasAspect = canvasWidth / canvasHeight;
 
       let drawWidth, drawHeight, drawX, drawY;
 
       if (imgAspect > canvasAspect) {
-        drawWidth = containerRect.width;
-        drawHeight = containerRect.width / imgAspect;
+        drawWidth = canvasWidth * 0.8; // 캔버스 크기의 80%로 제한
+        drawHeight = drawWidth / imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       } else {
-        drawHeight = containerRect.height;
-        drawWidth = containerRect.height * imgAspect;
+        drawHeight = canvasHeight * 0.8; // 캔버스 크기의 80%로 제한
+        drawWidth = drawHeight * imgAspect;
         drawX = -drawWidth / 2;
         drawY = -drawHeight / 2;
       }
@@ -1037,8 +982,8 @@ const FloorPlanEditor = () => {
         drawY,
         scaleX,
         scaleY,
-        containerWidth: containerRect.width,
-        containerHeight: containerRect.height,
+        containerWidth: canvasWidth,
+        containerHeight: canvasHeight,
       });
 
       alert(
@@ -1163,17 +1108,21 @@ const FloorPlanEditor = () => {
   return (
     <div className="w-full h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* 툴바 */}
-      <div className="
+      <div
+        className="
         bg-white/95 backdrop-blur-sm border-b border-amber-100 px-6 py-4 shadow-sm
         dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg
         sticky top-0 z-50
-      ">
+      "
+      >
         <div className="flex items-center gap-4">
-          
-          <Link href="/" className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer">
+          <Link
+            href="/"
+            className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
+          >
             🏠
           </Link>
-          
+
           <h1 className="text-xl font-bold leading-tight tracking-tight text-amber-900 dark:text-amber-100 mr-6 hover:text-amber-600 transition-colors duration-200">
             2D 도면 그리기
           </h1>
@@ -1216,7 +1165,8 @@ const FloorPlanEditor = () => {
 
             <button
               onClick={() => {
-                const newTool = tool === "partial_eraser" ? "none" : "partial_eraser";
+                const newTool =
+                  tool === "partial_eraser" ? "none" : "partial_eraser";
                 setTool(newTool);
                 setPartialEraserSelectedWall(null);
                 setIsSelectingEraseArea(false);
@@ -1308,9 +1258,13 @@ const FloorPlanEditor = () => {
       {/* 메인 작업 영역 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
-        <div className="flex-1 p-6 overflow-hidden">
-          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden h-full">
-            <div ref={containerRef} className="w-full h-full relative">
+        <div className="flex-1 p-0 overflow-hidden flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
+            <div
+              ref={containerRef}
+              className="relative"
+              style={{ width: "1600px", height: "1200px" }}
+            >
               <canvas
                 ref={canvasRef}
                 onMouseDown={handleMouseDown}
@@ -1320,8 +1274,8 @@ const FloorPlanEditor = () => {
                 onContextMenu={(e) => e.preventDefault()}
                 className="block"
                 style={{
-                  width: "100%",
-                  height: "100%",
+                  width: "1600",
+                  height: "1200",
                   cursor: tool === "wall" ? "crosshair" : "default",
                 }}
               />
@@ -1335,296 +1289,340 @@ const FloorPlanEditor = () => {
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-amber-100 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-            style={{ borderRight: 'none' }}
+            style={{ borderRight: "none" }}
           >
             {isSidebarCollapsed ? (
-              <ChevronLeft size={16} className="text-amber-900 dark:text-amber-100" />
+              <ChevronLeft
+                size={16}
+                className="text-amber-900 dark:text-amber-100"
+              />
             ) : (
-              <ChevronRight size={16} className="text-amber-900 dark:text-amber-100" />
+              <ChevronRight
+                size={16}
+                className="text-amber-900 dark:text-amber-100"
+              />
             )}
           </button>
 
           {/* 사이드바 컨텐츠 */}
-          <div className={`bg-white/95 backdrop-blur-sm border-l border-amber-100 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto flex-shrink-0 shadow-sm transition-all duration-300 ${
-            isSidebarCollapsed ? 'w-0 p-0' : 'w-80 p-6'
-          }`}>
-            <div className={`${isSidebarCollapsed ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}>
+          <div
+            className={`bg-white/95 backdrop-blur-sm border-l border-amber-100 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto flex-shrink-0 shadow-sm transition-all duration-300 ${
+              isSidebarCollapsed ? "w-0 p-0" : "w-80 p-6"
+            }`}
+          >
+            <div
+              className={`${
+                isSidebarCollapsed ? "opacity-0" : "opacity-100"
+              } transition-opacity duration-300`}
+            >
               <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-4 tracking-tight">
                 도구 정보
               </h3>
 
-          
-          {/* 축척 설정 도구 */}
-          {tool === "scale" && (
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                축척 설정 도구
-              </h4>
-              {!scaleWall ? (
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                  기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
-                </p>
-              ) : (
-                <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    그린 벽:{" "}
-                    {Math.round(
-                      Math.sqrt(
-                        Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
-                          Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
-                      )
-                    )}
-                    픽셀
-                  </p>
-                  <div className="mb-3">
-                    <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-1">
-                      실제 길이 (mm):
-                    </label>
-                    <input
-                      type="number"
-                      value={scaleRealLength}
-                      onChange={(e) => setScaleRealLength(e.target.value)}
-                      placeholder="예: 3000"
-                      className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-amber-400 dark:focus:ring-amber-500 transition-all duration-200"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={applyScale}
-                      disabled={!scaleRealLength}
-                      className="flex-1 px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 transition-colors duration-200 disabled:opacity-50"
-                    >
-                      축척 적용
-                    </button>
-                    <button
-                      onClick={() => {
-                        setScaleWall(null);
-                        setScaleRealLength("");
-                        setTool("wall");
-                      }}
-                      className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors duration-200"
-                    >
-                      취소
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {tool === "wall" && (
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                벽 그리기 모드
-              </h4>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로 맞춰집니다.
-              </p>
-              <p className="text-xs text-gray-700 dark:text-gray-300">
-                각 벽에 자동으로 길이가 표시됩니다.
-              </p>
-            </div>
-          )}
-
-          {tool === "select" && (
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">선택 모드</h4>
-              <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                벽을 클릭하여 선택하고 편집할 수 있습니다.
-              </p>
-              {selectedWall && (
-                <div className="bg-green-50 p-3 rounded border border-green-200">
-                  <h5 className="font-medium text-green-700 mb-2">선택된 벽</h5>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    현재 길이:{" "}
-                    {(() => {
-                      const dist = calculateDistance(
-                        selectedWall.start,
-                        selectedWall.end
-                      );
-                      return `${dist.value}${dist.unit}`;
-                    })()}
-                  </p>
-
-                  {isScaleSet && (
-                    <div className="mb-3">
-                      <label className="block text-xs font-medium text-green-700 mb-1">
-                        길이 조정 (mm):
-                      </label>
-                      <div className="flex gap-1">
+              {/* 축척 설정 도구 */}
+              {tool === "scale" && (
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    축척 설정 도구
+                  </h4>
+                  {!scaleWall ? (
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                      기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
+                    </p>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        그린 벽:{" "}
+                        {Math.round(
+                          Math.sqrt(
+                            Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
+                              Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
+                          )
+                        )}
+                        픽셀
+                      </p>
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-1">
+                          실제 길이 (mm):
+                        </label>
                         <input
                           type="number"
-                          value={editingWallLength}
-                          onChange={(e) => setEditingWallLength(e.target.value)}
-                          className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-                          placeholder="길이 입력"
+                          value={scaleRealLength}
+                          onChange={(e) => setScaleRealLength(e.target.value)}
+                          placeholder="예: 3000"
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-amber-400 dark:focus:ring-amber-500 transition-all duration-200"
                         />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={applyScale}
+                          disabled={!scaleRealLength}
+                          className="flex-1 px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 transition-colors duration-200 disabled:opacity-50"
+                        >
+                          축척 적용
+                        </button>
                         <button
                           onClick={() => {
-                            const newLength = parseFloat(editingWallLength);
-                            if (newLength && newLength > 0) {
-                              adjustWallLength(selectedWall.id, newLength);
-                            }
+                            setScaleWall(null);
+                            setScaleRealLength("");
+                            setTool("wall");
                           }}
-                          className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                          className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors duration-200"
                         >
-                          적용
+                          취소
                         </button>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {!isScaleSet && (
-                    <div className="mb-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
+              {tool === "wall" && (
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    벽 그리기 모드
+                  </h4>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로
+                    맞춰집니다.
+                  </p>
+                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                    각 벽에 자동으로 길이가 표시됩니다.
+                  </p>
+                </div>
+              )}
+
+              {tool === "select" && (
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    선택 모드
+                  </h4>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    벽을 클릭하여 선택하고 편집할 수 있습니다.
+                  </p>
+                  {selectedWall && (
+                    <div className="bg-green-50 p-3 rounded border border-green-200">
+                      <h5 className="font-medium text-green-700 mb-2">
+                        선택된 벽
+                      </h5>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        현재 길이:{" "}
+                        {(() => {
+                          const dist = calculateDistance(
+                            selectedWall.start,
+                            selectedWall.end
+                          );
+                          return `${dist.value}${dist.unit}`;
+                        })()}
                       </p>
+
+                      {isScaleSet && (
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-green-700 mb-1">
+                            길이 조정 (mm):
+                          </label>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={editingWallLength}
+                              onChange={(e) =>
+                                setEditingWallLength(e.target.value)
+                              }
+                              className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              placeholder="길이 입력"
+                            />
+                            <button
+                              onClick={() => {
+                                const newLength = parseFloat(editingWallLength);
+                                if (newLength && newLength > 0) {
+                                  adjustWallLength(selectedWall.id, newLength);
+                                }
+                              }}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                            >
+                              적용
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {!isScaleSet && (
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
+                          </p>
+                        </div>
+                      )}
+
+                      {isScaleSet && (
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-green-700 mb-1">
+                            길이 조정 (mm):
+                          </label>
+                          <div className="flex gap-1">
+                            <input
+                              type="number"
+                              value={editingWallLength}
+                              onChange={(e) =>
+                                setEditingWallLength(e.target.value)
+                              }
+                              className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              placeholder="길이 입력"
+                            />
+                            <button
+                              onClick={() => {
+                                const newLength = parseFloat(editingWallLength);
+                                if (newLength && newLength > 0) {
+                                  adjustWallLength(selectedWall.id, newLength);
+                                }
+                              }}
+                              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                            >
+                              적용
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {!isScaleSet && (
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
+                          </p>
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setWalls((prev) =>
+                            prev.filter((wall) => wall.id !== selectedWall.id)
+                          );
+                          setSelectedWall(null);
+                          setEditingWallLength("");
+                        }}
+                        className="w-full px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                      >
+                        삭제
+                      </button>
                     </div>
                   )}
-
-                  <button
-                    onClick={() => {
-                      setWalls((prev) =>
-                        prev.filter((wall) => wall.id !== selectedWall.id)
-                      );
-                      setSelectedWall(null);
-                      setEditingWallLength("");
-                    }}
-                    className="w-full px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
-                  >
-                    삭제
-                  </button>
                 </div>
               )}
-            </div>
-          )}
 
-          {tool === "eraser" && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">지우기 모드</h4>
-              <p className="text-sm text-orange-600">
-                클릭하여 벽을 삭제할 수 있습니다.
-              </p>
-            </div>
-          )}
-
-          {tool === "partial_eraser" && (
-            <div className="bg-white p-4 rounded-lg border border-orange-200">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                부분 지우기 모드
-              </h4>
-              {!partialEraserSelectedWall ? (
-                <p className="text-sm text-orange-600">
-                  1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로 표시됩니다)
-                </p>
-              ) : (
-                <div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    2단계: 지울 영역을 드래그하여 선택하세요.
+              {tool === "eraser" && (
+                <div className="bg-white p-4 rounded-lg border border-orange-200">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    지우기 모드
+                  </h4>
+                  <p className="text-sm text-orange-600">
+                    클릭하여 벽을 삭제할 수 있습니다.
                   </p>
+                </div>
+              )}
+
+              {tool === "partial_eraser" && (
+                <div className="bg-white p-4 rounded-lg border border-orange-200">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    부분 지우기 모드
+                  </h4>
+                  {!partialEraserSelectedWall ? (
+                    <p className="text-sm text-orange-600">
+                      1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로
+                      표시됩니다)
+                    </p>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        2단계: 지울 영역을 드래그하여 선택하세요.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setPartialEraserSelectedWall(null);
+                          setIsSelectingEraseArea(false);
+                          setEraseAreaStart(null);
+                          setEraseAreaEnd(null);
+                        }}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                      >
+                        선택 취소
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* 뷰포트 컨트롤 */}
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                  뷰포트 컨트롤
+                </h4>
+
+                <div className="mb-3">
+                  <label className=" text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    줌: {Math.round(viewScale * 100)}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    value={viewScale}
+                    onChange={(e) => {
+                      const newScale = parseFloat(e.target.value);
+                      setViewScale(newScale);
+                    }}
+                    className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    setViewScale(1);
+                    setViewOffset({ x: 0, y: 0 });
+                  }}
+                  className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                >
+                  초기 위치로
+                </button>
+
+                <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4">
+                  드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
+                </p>
+              </div>
+
+              {/* 배경 이미지 투명도 조정 */}
+              {uploadedImage && (
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    배경 이미지 설정
+                  </h4>
+                  <div className="mb-2">
+                    <label className="text-gray-800 dark:text-gray-100 tracking-tight mb-1">
+                      투명도: {Math.round(backgroundOpacity * 100)}%
+                    </label>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1"
+                      step="0.1"
+                      value={backgroundOpacity}
+                      onChange={(e) =>
+                        setBackgroundOpacity(parseFloat(e.target.value))
+                      }
+                      className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                  </div>
                   <button
                     onClick={() => {
-                      setPartialEraserSelectedWall(null);
-                      setIsSelectingEraseArea(false);
-                      setEraseAreaStart(null);
-                      setEraseAreaEnd(null);
+                      setUploadedImage(null);
+                      setCachedBackgroundImage(null);
+                      alert("배경 이미지가 제거되었습니다.");
                     }}
-                    className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                    className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
                   >
-                    선택 취소
+                    배경 이미지 제거
                   </button>
                 </div>
               )}
-            </div>
-          )}
-          {/* 뷰포트 컨트롤 */}
-          <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">뷰포트 컨트롤</h4>
-
-            <div className="mb-3">
-              <label className=" text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                줌: {Math.round(viewScale * 100)}%
-              </label>
-              <input
-                type="range"
-                min="0.1"
-                max="10"
-                step="0.1"
-                value={viewScale}
-                onChange={(e) => {
-                  const newScale = parseFloat(e.target.value);
-                  setViewScale(newScale);
-                }}
-                className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-
-            {/* <div className="flex gap-2 mb-3">
-              <button
-                onClick={() => setViewScale((prev) => Math.min(10, prev * 1.2))}
-                className="flex-1 px-2 py-1 bg-orange-200 text-gray-700 text-sm rounded hover:bg-orange-300"
-              >
-                확대
-              </button>
-              <button
-                onClick={() =>
-                  setViewScale((prev) => Math.max(0.1, prev / 1.2))
-                }
-                className="flex-1 px-2 py-1 bg-orange-200 text-gray-700 text-sm rounded hover:bg-orange-300"
-              >
-                축소
-              </button>
-            </div> */}
-
-            <button
-              onClick={() => {
-                setViewScale(1);
-                setViewOffset({ x: 0, y: 0 });
-              }}
-              className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-            >
-              초기 위치로
-            </button>
-
-            <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4">
-              드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
-            </p>
-          </div>
-
-          {/* 배경 이미지 투명도 조정 */}
-          {uploadedImage && (
-            <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                배경 이미지 설정
-              </h4>
-              <div className="mb-2">
-                <label className="text-gray-800 dark:text-gray-100 tracking-tight mb-1">
-                  투명도: {Math.round(backgroundOpacity * 100)}%
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.1"
-                  value={backgroundOpacity}
-                  onChange={(e) =>
-                    setBackgroundOpacity(parseFloat(e.target.value))
-                  }
-                  className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
-                />
-              </div>
-              <button
-                onClick={() => {
-                  setUploadedImage(null);
-                  setCachedBackgroundImage(null);
-                  alert("배경 이미지가 제거되었습니다.");
-                }}
-                className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-              >
-                배경 이미지 제거
-              </button>
-            </div>
-          )}
             </div>
           </div>
         </div>
