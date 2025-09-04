@@ -30,7 +30,7 @@ export default function ChatButton({
   // 분리된 훅들 사용
   const { token } = useChatConnection(open);
 
-  const { baseChats, chats, setChats, onStartDirect, updateChatRoom } = useChatRooms(
+  const { baseChats, chats, setChats, setBaseChats, onStartDirect, updateChatRoom } = useChatRooms(
     open,
     token,
     currentUserId,
@@ -79,9 +79,16 @@ export default function ChatButton({
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
+  // 메시지 변화 시 및 채팅방 입장 시 맨 아래로 스크롤
   useEffect(() => {
     const el = listRef.current;
-    if (el && userAtBottomRef.current) el.scrollTop = el.scrollHeight;
+    if (el) {
+      // DOM 업데이트 후 실행하기 위해 requestAnimationFrame 사용
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        userAtBottomRef.current = true;
+      });
+    }
   }, [selectedMessages.length, selectedChatId]);
 
   // 팝업 바깥 클릭 시 닫기
@@ -103,20 +110,6 @@ export default function ChatButton({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
-
-  // 채팅방에 처음 들어갈 때 맨 아래로 스크롤
-  useEffect(() => {
-    if (selectedChatId && selectedMessages.length > 0) {
-      const el = listRef.current;
-      if (el) {
-        // 강제로 맨 아래로 스크롤
-        setTimeout(() => {
-          el.scrollTop = el.scrollHeight;
-          userAtBottomRef.current = true;
-        }, 100);
-      }
-    }
-  }, [selectedChatId]);
 
   // 1:1 채팅 시작 핸들러
   const handleStartDirect = async (otherUserId: string, otherUserName?: string) => {
@@ -161,6 +154,7 @@ export default function ChatButton({
             baseChats={baseChats}
             chats={chats}
             setChats={setChats}
+            setBaseChats={setBaseChats}
             peopleHits={peopleHits}
             groupedByDay={groupedByDay}
             text={text}

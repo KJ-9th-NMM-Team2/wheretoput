@@ -1,9 +1,12 @@
 // 채팅방 목록 화면 컴포넌트
 // 채팅방 목록과 사용자 검색 결과를 표시
+// 유저 목록 버튼
 
+import { useState, useEffect } from "react";
 import SearchBar from "./shared/SearchBar";
 import { ChatListItem, UserLite } from "../types/chat-types";
 import { formatRelativeTime, isUnread, recomputeChats } from "../utils/chat-utils";
+import { api } from "@/lib/client/api";
 
 interface ChatListViewProps {
   query: string;
@@ -13,9 +16,11 @@ interface ChatListViewProps {
   baseChats: ChatListItem[];
   chats: ChatListItem[];
   setChats: (chats: ChatListItem[]) => void;
+  setBaseChats: (chats: ChatListItem[]) => void;
   peopleHits: UserLite[];
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
+  currentUserId: string | null;
 }
 
 export default function ChatListView({
@@ -26,14 +31,63 @@ export default function ChatListView({
   baseChats,
   chats,
   setChats,
+  setBaseChats,
   peopleHits,
   onChatSelect,
   onStartDirect,
+  currentUserId,
 }: ChatListViewProps) {
+  const [showUserList, setShowUserList] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserLite[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // 유저 목록 로드
+  const loadAllUsers = async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("http://localhost:3000/api/backend", {
+        params: { limit: 100 } // 모든 유저 가져오기
+      });
+      const users = data ?? [];
+      const rows: UserLite[] = (users ?? []).map((u: any) => ({
+        id: String(u.id),
+        name: u.name ?? "이름 없음",
+        image: u.image ?? undefined,
+      }));
+      // 현재 사용자는 제외
+      const filteredUsers = rows.filter(user => user.id !== currentUserId);
+      setAllUsers(filteredUsers);
+    } catch (error) {
+      console.error("유저 목록 로드 실패:", error);
+      setAllUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 유저 목록 버튼 클릭 시
+  const handleUserListClick = () => {
+    if (!showUserList) {
+      loadAllUsers();
+    }
+    setShowUserList(!showUserList);
+  };
+
+
   return (
     <div className="flex flex-col h-full">
       <header className="px-3 py-2 flex items-center justify-between text-xl">
         <b>채팅</b>
+        <button
+          onClick={handleUserListClick}
+          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${showUserList
+            ? "bg-orange-600"
+            : "bg-orange-500 hover:bg-orange-600"
+            }`}
+          aria-label="유저 목록"
+        >
+          👥
+        </button>
       </header>
 
       {/* 검색 */}
@@ -57,11 +111,10 @@ export default function ChatListView({
             setSelect("전체");
             setChats(recomputeChats(baseChats, query, "전체"));
           }}
-          className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-            select === "전체"
-              ? "bg-gray-200 text-blue-500"
-              : "bg-transparent hover:bg-gray-200"
-          }`}
+          className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
+            ? "bg-gray-200 text-blue-500"
+            : "bg-transparent hover:bg-gray-200"
+            }`}
         >
           전체
         </button>
@@ -71,11 +124,10 @@ export default function ChatListView({
             setSelect("읽지 않음");
             setChats(recomputeChats(baseChats, query, "읽지 않음"));
           }}
-          className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-            select === "읽지 않음"
-              ? "bg-gray-200 text-blue-500"
-              : "bg-transparent hover:bg-gray-200"
-          }`}
+          className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
+            ? "bg-gray-200 text-blue-500"
+            : "bg-transparent hover:bg-gray-200"
+            }`}
         >
           읽지 않음
         </button>
@@ -83,7 +135,51 @@ export default function ChatListView({
 
       {/* 리스트 */}
       <div className="flex-1 px-3 pb-2 overflow-y-auto">
-        {query.trim() ? (
+        {showUserList ? (
+          // 유저 목록 화면
+          <div>
+            <div className="px-1 py-2 text-xs text-gray-500 flex items-center justify-between">
+              <span>모든 유저</span>
+              {loading && <span>로딩 중...</span>}
+            </div>
+            {allUsers.length === 0 && !loading ? (
+              <div className="px-2 pb-2 text-sm text-gray-400">
+                유저가 없습니다.
+              </div>
+            ) : (
+              allUsers.map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => {
+                    onStartDirect(user.id, user.name);
+                    setShowUserList(false); // 유저 목록 닫기
+                  }}
+                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                >
+                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200">
+                    {user.image ? (
+                      <img
+                        src={user.image}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs">
+                        👤
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{user.name}</div>
+                  </div>
+                  <div className="text-xs text-orange-500 opacity-75">
+                    💬
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : query.trim() ? (
           <>
             {/* 사람 섹션 */}
             <div className="px-1 py-2 text-xs text-gray-500">
@@ -193,6 +289,7 @@ export default function ChatListView({
           </>
         )}
       </div>
+      
     </div>
   );
 }
