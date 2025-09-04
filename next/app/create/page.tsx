@@ -1,6 +1,6 @@
 "use client";
 
-import FloorPlanEditor from "../components/FloorPlanEditor.jsx";
+import FloorPlanEditor from "@/components/FloorPlanEditor.jsx";
 import { useSession, signIn } from "next-auth/react";
 import { useEffect } from "react";
 

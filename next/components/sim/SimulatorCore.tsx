@@ -5,12 +5,11 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
-import { useStore } from "../store/useStore.js";
-import { DraggableModel } from "./DraggableModel.jsx";
-import { ControlIcons } from "./ControlIcons.jsx";
-import { SelectedModelEditModal } from "./SelectedModelSidebar.jsx";
-import { KeyboardControls } from "../hooks/KeyboardControls.jsx";
-import { createWallsFromFloorPlan } from "../../wallDetection.js";
+import { useStore } from "@/components/sim/useStore.js";
+import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
+import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
+import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
+import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
@@ -126,7 +125,7 @@ function Wall({
       const newOpacity =
         ((maxOpacity - minOpacity) /
           (maxDistanceThreshold - minDistanceThreshold)) *
-        (distance - minDistanceThreshold) +
+          (distance - minDistanceThreshold) +
         minOpacity;
       materialRef.current.opacity = newOpacity;
     }
@@ -179,7 +178,7 @@ interface SimulatorCoreProps {
 
 /**
  * 시뮬레이터의 핵심 렌더링 로직을 담당하는 공통 컴포넌트
- * 
+ *
  * 다양한 모드(보기/편집/협업)에서 재사용 가능하도록 설계됨
  */
 export function SimulatorCore({
@@ -191,7 +190,7 @@ export function SimulatorCore({
   canvasChildren,
   additionalUI,
   loadingMessage = "방 데이터 로딩 중...",
-  loadingIcon = "🏠"
+  loadingIcon = "🏠",
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const {
@@ -230,9 +229,7 @@ export function SimulatorCore({
             );
           }
         } else {
-          console.log(
-            `임시 방 ${roomId}이므로 데이터 로드를 건너뜁니다.`
-          );
+          console.log(`임시 방 ${roomId}이므로 데이터 로드를 건너뜁니다.`);
         }
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);
@@ -285,9 +282,7 @@ export function SimulatorCore({
   return (
     <div className="flex h-screen overflow-hidden">
       {/* 조건부 사이드바 표시 */}
-      {showSidebar && !viewOnly && (
-        <SimSideView roomId={roomId} />
-      )}
+      {showSidebar && !viewOnly && <SimSideView roomId={roomId} />}
 
       <div className="flex-1 relative">
         {/* 로딩 상태 표시 */}
@@ -352,7 +347,7 @@ export function SimulatorCore({
             shadow-mapSize-height={2048}
           />
           <Floor wallsData={wallsData} />
-          
+
           {/* 벽 렌더링 */}
           {wallsData.length > 0 ? (
             wallsData.map((wall) => (
@@ -393,7 +388,7 @@ export function SimulatorCore({
               />
             </>
           )}
-          
+
           <Suspense fallback={null}>
             {loadedModels.map((model: any) => {
               return (
@@ -413,7 +408,7 @@ export function SimulatorCore({
               );
             })}
           </Suspense>
-          
+
           <mesh
             position={[0, -0.01, 0]}
             rotation={[-Math.PI / 2, 0, 0]}

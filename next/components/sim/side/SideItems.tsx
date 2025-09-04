@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { furnitures as Furniture } from "@prisma/client";
 import ItemPaging from "./item/ItemPaging";
 import ItemSection from "./item/ItemSection";
-import { useStore } from "@/app/sim/store/useStore";
+import { useStore } from "@/components/sim/useStore";
 import { createNewModel } from "@/utils/createNewModel";
 import { handlePageChange } from "@/utils/handlePage";
 import { fetchFurnitures } from "@/lib/api/fetchFurnitures";
