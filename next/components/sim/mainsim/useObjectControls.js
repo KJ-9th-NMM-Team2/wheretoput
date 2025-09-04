@@ -111,7 +111,7 @@ export function useObjectControls(
             newPosition.x,
             newPosition.y,
             newPosition.z,
-          ]);
+          ], true, true); // shouldBroadcast=true, isDragging=true
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
@@ -140,6 +140,9 @@ export function useObjectControls(
     const currentModel = loadedModels.find((model) => model.id === modelId);
     
     if (isDragging && currentModel?.position) {
+      // 드래그 완료시 최종 위치를 브로드캐스트 
+      onPositionChange(modelId, currentModel.position, true, false); // shouldBroadcast=true, isDragging=false
+      
       // 이동 완료 시 히스토리에 기록
       endDragMove(
         modelId,

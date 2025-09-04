@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useStore } from "@/components/sim/useStore.js";
+import { io } from "socket.io-client";
+import { connectSocket as startSocket } from "@/lib/client/socket";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
@@ -11,9 +13,7 @@ import { useStore } from "@/components/sim/useStore.js";
  * - 사용자 선택 상태 동기화
  */
 export function useCollaboration(roomId) {
-  console.log("협업 모드 실행 중!, roomId:", roomId);
-  const ws = useRef(null);
-  const reconnectTimer = useRef(null);
+  const socket = useRef(null);
   const isManualDisconnect = useRef(false);
 
   const {
@@ -23,156 +23,153 @@ export function useCollaboration(roomId) {
     updateConnectedUser,
     removeConnectedUser,
     clearConnectedUsers,
+    addModel,
+    addModelWithId,
+    removeModel,
     updateModelPosition,
     updateModelRotation,
     updateModelScale,
     selectModel,
+    setCollaborationCallbacks,
   } = useStore();
 
-  // WebSocket 연결 초기화
-  const connectWebSocket = () => {
+  // Socket.IO 연결 초기화
+  const connectSocket = async () => {
+    console.log("소켓접속 시도중");
     if (!roomId || !collaborationMode) return;
 
     try {
-      // 실제 구현시 환경변수에서 WebSocket 서버 주소 가져오기
-      const wsUrl = `ws://localhost:8080/collaboration/${roomId}`;
-      ws.current = new WebSocket(wsUrl);
+      const res = await fetch("/api/chat/token", { cache: "no-store" });
+      const data = await res.json();
+      // console.log("토큰 응답:", data);
+      const token = data["tokenData"]?.["jti"] || data.token;
+      // console.log("추출된 토큰:", token);
+      socket.current = startSocket(token);
+      // console.log("소켓:", socket.current);
 
-      ws.current.onopen = () => {
+      socket.current.on("connect", () => {
         console.log("🔗 협업 모드 연결됨");
         setConnectionStatus(true);
 
+        // 방 입장
+        socket.current.emit("join-room", roomId);
+
         // 사용자 정보 전송 (입장 알림)
-        sendMessage({
-          type: "USER_JOIN",
+        socket.current.emit("user-join", {
           userId: currentUser.id,
           userData: {
             name: currentUser.name,
             color: currentUser.color,
           },
         });
-      };
+      });
 
-      ws.current.onmessage = (event) => {
-        handleWebSocketMessage(JSON.parse(event.data));
-      };
+      // 이벤트 리스너 등록
+      setupSocketListeners();
 
-      ws.current.onclose = () => {
+      socket.current.on("disconnect", () => {
         console.log("🔌 협업 연결 끊김");
         setConnectionStatus(false);
+      });
 
-        // 수동으로 끊지 않은 경우 자동 재연결 시도
-        if (!isManualDisconnect.current && collaborationMode) {
-          scheduleReconnect();
-        }
-      };
-
-      ws.current.onerror = (error) => {
+      socket.current.on("connect_error", (error) => {
         console.error("❌ 협업 연결 오류:", error);
-      };
+      });
     } catch (error) {
       console.error("WebSocket 연결 실패:", error);
     }
   };
 
-  // WebSocket 메시지 처리
-  const handleWebSocketMessage = (message) => {
-    switch (message.type) {
-      case "USER_JOIN":
-        // 새 사용자 입장
-        updateConnectedUser(message.userId, message.userData);
-        console.log(`👤 ${message.userData.name}님이 입장했습니다`);
-        break;
+  // Socket.IO 이벤트 리스너 설정
+  const setupSocketListeners = () => {
+    if (!socket.current) return;
 
-      case "USER_LEAVE":
-        // 사용자 퇴장
-        removeConnectedUser(message.userId);
-        console.log(`👋 사용자가 퇴장했습니다`);
-        break;
+    socket.current.on("user-join", (data) => {
+      updateConnectedUser(data.userId, data.userData);
+      console.log(`👤 ${data.userData.name}님이 입장했습니다`);
+    });
 
-      case "MODEL_MOVE":
-        // 모델 위치 변경 동기화
-        if (message.userId !== currentUser.id) {
-          updateModelPosition(message.modelId, message.position);
-        }
-        break;
+    socket.current.on("user-left", (data) => {
+      removeConnectedUser(data.userId);
+      console.log(`👋 사용자가 퇴장했습니다`);
+    });
 
-      case "MODEL_ROTATE":
-        // 모델 회전 동기화
-        if (message.userId !== currentUser.id) {
-          updateModelRotation(message.modelId, message.rotation);
-        }
-        break;
+    socket.current.on("model-added", (data) => {
+      if (data.userId !== currentUser.id) {
+        addModel(data.modelData);
+      }
+    });
 
-      case "MODEL_SCALE":
-        // 모델 크기 변경 동기화
-        if (message.userId !== currentUser.id) {
-          updateModelScale(message.modelId, message.scale);
-        }
-        break;
+    socket.current.on("model-added-with-id", (data) => {
+      if (data.userId !== currentUser.id) {
+        addModelWithId(data.modelData);
+      }
+    });
 
-      case "MODEL_SELECT":
-        // 다른 사용자의 모델 선택 상태 업데이트
-        if (message.userId !== currentUser.id) {
-          updateConnectedUser(message.userId, {
-            ...message.userData,
-            selectedModel: message.modelId,
-          });
-        }
-        break;
+    socket.current.on("model-removed", (data) => {
+      if (data.userId !== currentUser.id) {
+        removeModel(data.modelId);
+      }
+    });
 
-      case "CURSOR_MOVE":
-        // 커서 위치 업데이트
-        if (message.userId !== currentUser.id) {
-          updateConnectedUser(message.userId, {
-            ...message.userData,
-            cursor: message.cursor,
-          });
-        }
-        break;
+    socket.current.on("model-moved", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateModelPosition(data.modelId, data.position);
+      }
+    });
 
-      default:
-        console.warn("알 수 없는 메시지 타입:", message.type);
+    socket.current.on("model-rotated", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateModelRotation(data.modelId, data.rotation);
+      }
+    });
+
+    socket.current.on("model-scaled", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateModelScale(data.modelId, data.scale);
+      }
+    });
+
+    // 후순위
+    socket.current.on("model-selected", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateConnectedUser(data.userId, {
+          ...data.userData,
+          selectedModel: data.modelId,
+        });
+      }
+    });
+
+    // 후순위
+    socket.current.on("cursor-moved", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateConnectedUser(data.userId, {
+          ...data.userData,
+          cursor: data.cursor,
+        });
+      }
+    });
+  };
+
+  // Socket.IO 이벤트 전송
+  const emitEvent = (event, data) => {
+    if (socket.current && socket.current.connected) {
+      socket.current.emit(event, data);
     }
   };
 
-  // WebSocket 메시지 전송
-  const sendMessage = (message) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify(message));
-    }
-  };
-
-  // 자동 재연결 스케줄링
-  const scheduleReconnect = () => {
-    if (reconnectTimer.current) {
-      clearTimeout(reconnectTimer.current);
-    }
-
-    reconnectTimer.current = setTimeout(() => {
-      console.log("🔄 협업 모드 재연결 시도...");
-      connectWebSocket();
-    }, 3000); // 3초 후 재연결
-  };
-
-  // WebSocket 연결 해제
+  // Socket.IO 연결 해제
   const disconnect = () => {
     isManualDisconnect.current = true;
 
-    if (ws.current) {
+    if (socket.current) {
       // 퇴장 알림 전송
-      sendMessage({
-        type: "USER_LEAVE",
+      socket.current.emit("user-left", {
         userId: currentUser.id,
       });
 
-      ws.current.close();
-      ws.current = null;
-    }
-
-    if (reconnectTimer.current) {
-      clearTimeout(reconnectTimer.current);
-      reconnectTimer.current = null;
+      socket.current.disconnect();
+      socket.current = null;
     }
 
     clearConnectedUsers();
@@ -181,10 +178,20 @@ export function useCollaboration(roomId) {
 
   // 협업 모드 변경시 연결/해제 처리
   useEffect(() => {
-    if (collaborationMode && currentUser.id) {
+    console.log("useEffect 트리거됨:", {
+      collaborationMode,
+      roomId,
+      currentUserId: currentUser.id,
+    });
+    if (collaborationMode && roomId && currentUser.id) {
       isManualDisconnect.current = false;
-      connectWebSocket();
+      connectSocket();
     } else {
+      console.log("connectSocket 실행 조건 미충족:", {
+        collaborationMode,
+        roomId,
+        currentUserId: currentUser.id,
+      });
       disconnect();
     }
 
@@ -193,10 +200,53 @@ export function useCollaboration(roomId) {
     };
   }, [collaborationMode, roomId, currentUser.id]);
 
+  // Store에 브로드캐스트 함수들 등록
+  useEffect(() => {
+    if (collaborationMode) {
+      setCollaborationCallbacks({
+        broadcastModelAdd,
+        broadcastModelAddWithId,
+        broadcastModelRemove,
+        broadcastModelMove,
+        broadcastModelRotate,
+        broadcastModelScale,
+      });
+    } else {
+      setCollaborationCallbacks({
+        broadcastModelAdd: null,
+        broadcastModelAddWithId: null,
+        broadcastModelRemove: null,
+        broadcastModelMove: null,
+        broadcastModelRotate: null,
+        broadcastModelScale: null,
+      });
+    }
+  }, [collaborationMode]);
+
   // 실시간 동기화를 위한 이벤트 전송 함수들
+  const broadcastModelAdd = (modelData) => {
+    emitEvent("model-added-with-id", {
+      userId: currentUser.id,
+      modelData,
+    });
+  };
+
+  const broadcastModelAddWithId = (modelData) => {
+    emitEvent("model-added-with-id", {
+      userId: currentUser.id,
+      modelData,
+    });
+  };
+
+  const broadcastModelRemove = (modelId) => {
+    emitEvent("model-removed", {
+      userId: currentUser.id,
+      modelId,
+    });
+  };
+
   const broadcastModelMove = (modelId, position) => {
-    sendMessage({
-      type: "MODEL_MOVE",
+    emitEvent("model-move", {
       userId: currentUser.id,
       modelId,
       position,
@@ -204,8 +254,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastModelRotate = (modelId, rotation) => {
-    sendMessage({
-      type: "MODEL_ROTATE",
+    emitEvent("model-rotate", {
       userId: currentUser.id,
       modelId,
       rotation,
@@ -213,17 +262,16 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastModelScale = (modelId, scale) => {
-    sendMessage({
-      type: "MODEL_SCALE",
+    emitEvent("model-scale", {
       userId: currentUser.id,
       modelId,
       scale,
     });
   };
 
+  // 일단 나중에 합시다
   const broadcastModelSelect = (modelId) => {
-    sendMessage({
-      type: "MODEL_SELECT",
+    emitEvent("model-select", {
       userId: currentUser.id,
       modelId,
       userData: {
@@ -234,8 +282,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastCursorMove = (cursor) => {
-    sendMessage({
-      type: "CURSOR_MOVE",
+    emitEvent("cursor-move", {
       userId: currentUser.id,
       cursor,
       userData: {
@@ -247,7 +294,7 @@ export function useCollaboration(roomId) {
 
   return {
     // 연결 상태
-    isConnected: ws.current?.readyState === WebSocket.OPEN,
+    isConnected: socket.current?.connected || false,
 
     // 브로드캐스트 함수들
     broadcastModelMove,

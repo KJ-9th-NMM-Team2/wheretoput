@@ -55,10 +55,10 @@ export const useStore = create(
       collaborationMode: false, // 동시편집 모드 활성화 여부
       isConnected: false, // WebSocket 연결 상태
       connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
-      currentUser: { 
-        id: null, 
-        name: null, 
-        color: "#3B82F6" // 사용자별 구분 색상
+      currentUser: {
+        id: null,
+        name: null,
+        color: "#3B82F6", // 사용자별 구분 색상
       },
 
       // 동시편집 모드 토글
@@ -88,6 +88,20 @@ export const useStore = create(
 
       // 모든 연결된 사용자 목록 초기화
       clearConnectedUsers: () => set({ connectedUsers: new Map() }),
+
+      // 협업 모드용 브로드캐스트 콜백들
+      collaborationCallbacks: {
+        broadcastModelAdd: null,
+        broadcastModelAddWithId: null,
+        broadcastModelRemove: null,
+        broadcastModelMove: null,
+        broadcastModelRotate: null,
+        broadcastModelScale: null,
+      },
+
+      // 협업 훅에서 브로드캐스트 함수들을 등록
+      setCollaborationCallbacks: (callbacks) =>
+        set({ collaborationCallbacks: callbacks }),
 
       // 모델 관련 상태
       loadedModels: [],
@@ -121,7 +135,7 @@ export const useStore = create(
       },
 
       // 모델 액션들
-      addModel: (model) =>
+      addModel: (model, shouldBroadcast = true) =>
         set((state) => {
           // scale 값 검증 및 최소값 보장
           let scale = model.scale || state.scaleValue;
@@ -133,7 +147,7 @@ export const useStore = create(
             scale = 1;
           }
 
-          return {
+          const result = {
             loadedModels: [
               ...state.loadedModels,
               {
@@ -149,10 +163,21 @@ export const useStore = create(
               },
             ],
           };
+
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          if (
+            shouldBroadcast &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelAdd
+          ) {
+            state.collaborationCallbacks.broadcastModelAdd(model);
+          }
+
+          return result;
         }),
 
       // 히스토리 복원용: 기존 ID를 유지하면서 모델 추가
-      addModelWithId: (model) =>
+      addModelWithId: (model, shouldBroadcast = true) =>
         set((state) => {
           // scale 값 검증 및 최소값 보장
           let scale = model.scale || state.scaleValue;
@@ -164,7 +189,7 @@ export const useStore = create(
             scale = 1;
           }
 
-          return {
+          const result = {
             loadedModels: [
               ...state.loadedModels,
               {
@@ -177,17 +202,38 @@ export const useStore = create(
               },
             ],
           };
+
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          if (
+            shouldBroadcast &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelAddWithId
+          ) {
+            state.collaborationCallbacks.broadcastModelAddWithId(model);
+          }
+
+          return result;
         }),
 
-      removeModel: (modelId) =>
+      removeModel: (modelId, shouldBroadcast = true) =>
         set((state) => {
           const model = state.loadedModels.find((m) => m.id === modelId);
           if (model && model.url) {
             URL.revokeObjectURL(model.url);
           }
-          return {
+          const result = {
             loadedModels: state.loadedModels.filter((m) => m.id !== modelId),
           };
+
+          if (
+            shouldBroadcast &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelRemove
+          ) {
+            state.collaborationCallbacks.broadcastModelRemove(model);
+          }
+
+          return result;
         }),
 
       clearAllModels: () =>
@@ -198,21 +244,66 @@ export const useStore = create(
           return { loadedModels: [] };
         }),
 
-      updateModelPosition: (modelId, newPosition) =>
-        set((state) => ({
-          loadedModels: state.loadedModels.map((model) =>
-            model.id === modelId ? { ...model, position: newPosition } : model
-          ),
-        })),
+      updateModelPosition: (
+        modelId,
+        newPosition,
+        shouldBroadcast = true,
+        isDragging = false
+      ) => {
+        set((state) => {
+          // 상태 업데이트
+          const newState = {
+            loadedModels: state.loadedModels.map((model) =>
+              model.id === modelId ? { ...model, position: newPosition } : model
+            ),
+          };
 
-      updateModelRotation: (modelId, newRotation) =>
-        set((state) => ({
-          loadedModels: state.loadedModels.map((model) =>
-            model.id === modelId ? { ...model, rotation: newRotation } : model
-          ),
-        })),
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          // 단, 드래그 중에는 브로드캐스트하지 않음.
+          if (
+            shouldBroadcast &&
+            !isDragging &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelMove
+          ) {
+            state.collaborationCallbacks.broadcastModelMove(
+              modelId,
+              newPosition
+            );
+          }
 
-      updateModelScale: (modelId, newScale) =>
+          return newState;
+        });
+      },
+
+      // 소켓 브로드캐스트
+
+      updateModelRotation: (modelId, newRotation, shouldBroadcast = true) =>
+        set((state) => {
+          const newState = {
+            // 상태 업데이트
+            loadedModels: state.loadedModels.map((model) =>
+              model.id === modelId ? { ...model, rotation: newRotation } : model
+            ),
+          };
+
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+
+          if (
+            shouldBroadcast &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelRotate
+          ) {
+            state.collaborationCallbacks.broadcastModelRotate(
+              modelId,
+              newRotation
+            );
+          }
+
+          return newState;
+        }),
+
+      updateModelScale: (modelId, newScale, shouldBroadcast = true) =>
         set((state) => {
           // scale 값 검증 및 최소값 보장
           let scale = newScale;
@@ -224,11 +315,21 @@ export const useStore = create(
             scale = 1;
           }
 
-          return {
+          const newState = {
             loadedModels: state.loadedModels.map((model) =>
               model.id === modelId ? { ...model, scale: scale } : model
             ),
           };
+
+          if (
+            shouldBroadcast &&
+            state.collaborationMode &&
+            state.collaborationCallbacks.broadcastModelScale
+          ) {
+            state.collaborationCallbacks.broadcastModelScale(modelId, scale);
+          }
+
+          return newState;
         }),
 
       // 선택, 마우스 호버링 관련
