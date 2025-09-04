@@ -83,6 +83,34 @@ export const useStore = create(
         };
       }),
 
+    // 히스토리 복원용: 기존 ID를 유지하면서 모델 추가
+    addModelWithId: (model) =>
+      set((state) => {
+        // scale 값 검증 및 최소값 보장
+        let scale = model.scale || state.scaleValue;
+        if (Array.isArray(scale)) {
+          scale = scale.map((s) => (s <= 0 || s < 0.01 ? 1 : s));
+        } else if (typeof scale === "number") {
+          scale = scale <= 0 || scale < 0.01 ? 1 : scale;
+        } else {
+          scale = 1;
+        }
+
+        return {
+          loadedModels: [
+            ...state.loadedModels,
+            {
+              ...model,
+              // ID를 유지 (히스토리 복원용)
+              id: model.id,
+              position: model.position || [0, 0, 0],
+              rotation: model.rotation || [0, 0, 0],
+              scale: scale,
+            },
+          ],
+        };
+      }),
+
     removeModel: (modelId) =>
       set((state) => {
         const model = state.loadedModels.find((m) => m.id === modelId);

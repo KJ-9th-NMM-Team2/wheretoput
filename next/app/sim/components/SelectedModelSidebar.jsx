@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { useStore } from "../store/useStore.js";
+import { useHistory, ActionType } from "@/components/sim/history";
 
 export function SelectedModelEditModal() {
   const {
@@ -12,6 +13,8 @@ export function SelectedModelEditModal() {
     updateModelScale,
     deselectModel,
   } = useStore();
+  
+  const { addAction } = useHistory();
 
   // 선택된 모델 찾기
   const selectedModel = loadedModels.find(model => model.id === selectedModelId);
@@ -113,7 +116,36 @@ export function SelectedModelEditModal() {
 
           {/* 제거 버튼 */}
           <button
-            onClick={() => removeModel(selectedModel.id)}
+            onClick={() => {
+              // 히스토리에 삭제 액션 기록 (삭제 전에 현재 상태 저장)
+              addAction({
+                type: ActionType.FURNITURE_REMOVE,
+                data: {
+                  furnitureId: selectedModel.id,
+                  previousData: {
+                    id: selectedModel.id,
+                    name: selectedModel.name,
+                    url: selectedModel.url,
+                    position: selectedModel.position,
+                    rotation: selectedModel.rotation,
+                    scale: selectedModel.scale,
+                    length: selectedModel.length,
+                    furniture_id: selectedModel.furniture_id,
+                    isCityKit: selectedModel.isCityKit,
+                    texturePath: selectedModel.texturePath,
+                    type: selectedModel.type,
+                    furnitureName: selectedModel.furnitureName,
+                    categoryId: selectedModel.categoryId,
+                    object_id: selectedModel.object_id
+                  }
+                },
+                description: `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"를 삭제했습니다`
+              });
+              
+              // 실제 가구 삭제
+              removeModel(selectedModel.id);
+              deselectModel();
+            }}
             className="w-full bg-blue-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
           >
             가구 삭제

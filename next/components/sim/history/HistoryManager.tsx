@@ -180,12 +180,20 @@ function executeRedoAction(action: HistoryAction) {
 
 function addFurnitureToScene(data: any) {
   console.log('Adding furniture to scene:', data);
-  // TODO: 실제 3D 씬에 가구 추가 로직 구현
+  
+  // useStore의 addModel 함수를 호출하기 위해 전역 이벤트 사용
+  window.dispatchEvent(new CustomEvent('historyAddFurniture', {
+    detail: { furnitureData: data.previousData }
+  }));
 }
 
 function removeFurnitureFromScene(furnitureId: string) {
   console.log('Removing furniture from scene:', furnitureId);
-  // TODO: 실제 3D 씬에서 가구 제거 로직 구현
+  
+  // useStore의 removeModel 함수를 호출하기 위해 전역 이벤트 사용
+  window.dispatchEvent(new CustomEvent('historyRemoveFurniture', {
+    detail: { furnitureId }
+  }));
 }
 
 function moveFurnitureInScene(furnitureId: string, position: any) {
