@@ -168,29 +168,39 @@ export default function ChatButton({
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
           console.log("메시지 데이터:", r.creator_id, currentUserId);
           r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
+          console.log("마지막 메시지: ", r.last_message);
           const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
           const chatRoomName = r.chat_participants
             .filter((participant: any) => participant.user_id !== currentUserId)
             .map((participant: any) => participant.user?.name || "이름 없음")
             .join(", ");
 
-          return {
+          const result = {
             chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
             name: chatRoomName,
             is_private: Boolean(r.is_private),
             lastMessage: lastMsg,
             lastMessageAt:
               r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
-            last_read_at:
-              r.last_read_at ?? r.lastReadAt ?? "1970-01-01T00:00:00.000Z",
+            last_read_at: r.last_read_at ?? "1970-01-01T00:00:00.000Z",
             searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
           };
+
+          console.log(
+            "lastMessageAt:",
+            result.lastMessageAt,
+            "last_read_at:",
+            result.last_read_at
+          );
+
+          return result;
         });
 
         setBaseChats(mapped);
         setChats(recomputeChats(mapped, "", "전체"));
         setSelect("전체");
         setQuery("");
+
         console.log("[ROOMS] OK", mapped.length);
       } catch (e: any) {
         console.error("[ROOMS] FAIL", {
@@ -340,6 +350,14 @@ export default function ChatButton({
         };
       });
 
+      // 현재 열린 채팅방의 메시지이고 내가 보낸 메시지가 아니라면 자동으로 읽음 처리
+      if (msg.roomId === selectedChatId && msg.senderId !== currentUserId) {
+        const s = getSocket();
+        if (s) {
+          s.emit("read", { roomId: msg.roomId });
+        }
+      }
+
       setBaseChats((prev) => {
         const updated = prev.map((c) =>
           c.chat_room_id === msg.roomId
@@ -347,7 +365,12 @@ export default function ChatButton({
                 ...c,
                 lastMessage: msg.content,
                 lastMessageAt: msg.createdAt,
-                //  수신 시 검색 인덱스도 동기화
+                // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
+                last_read_at:
+                  msg.senderId === currentUserId ||
+                  msg.roomId === selectedChatId
+                    ? msg.createdAt
+                    : c.last_read_at,
                 searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
               }
             : c
@@ -380,17 +403,36 @@ export default function ChatButton({
       });
     };
 
-    const onRead = (evt: { roomId: string }) => {
-      if (evt.roomId !== selectedChatId) return;
-      setMessagesByRoom((prev) => {
-        const arr = prev[evt.roomId] ?? [];
-        const next = arr.map((m) =>
-          m.senderId === currentUserId && m.status !== "read"
-            ? { ...m, status: "read" }
-            : m
-        );
-        return { ...prev, [evt.roomId]: next };
-      });
+    const onRead = (evt: {
+      roomId: string;
+      userId?: string;
+      readAt?: string;
+    }) => {
+      // 메시지 읽음 상태 업데이트 (현재 열린 방만)
+      if (evt.roomId === selectedChatId) {
+        setMessagesByRoom((prev) => {
+          const arr = prev[evt.roomId] ?? [];
+          const next = arr.map((m) =>
+            m.senderId === currentUserId && m.status !== "read"
+              ? { ...m, status: "read" }
+              : m
+          );
+          return { ...prev, [evt.roomId]: next };
+        });
+      }
+
+      // 방 목록의 last_read_at 업데이트 (모든 방)
+      if (evt.userId === currentUserId && evt.readAt) {
+        setBaseChats((prev) => {
+          const next = prev.map((c) =>
+            c.chat_room_id === evt.roomId
+              ? { ...c, last_read_at: evt.readAt }
+              : c
+          );
+          setChats(recomputeChats(next, query, select));
+          return next;
+        });
+      }
     };
 
     s.on("message", onMessage);
