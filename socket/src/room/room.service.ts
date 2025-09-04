@@ -8,12 +8,9 @@ export class RoomService {
   // 방 생성
   async createRoom(params: { currentUserId: string; otherUserId: string }) {
     try {
-      console.log('111111111111111111111111');
-      console.log('this.prisma', this.prisma);
       if (!this.prisma) {
         throw new Error('Prisma service not injected');
       }
-      console.log('222222222222222222222222');
 
       // 기존 채팅방 확인 (양방향으로 검색)
       const existingRoom = await this.prisma.chat_rooms.findFirst({
@@ -40,31 +37,60 @@ export class RoomService {
         return existingRoom;
       }
 
-      console.log('새 채팅방 생성');
-      const room = await this.prisma.chat_rooms.create({
-        data: {
-          creator_id: params.currentUserId, // name (OK)
-          other_user_ids: [params.otherUserId], // description
-        },
-      });
+      // 상대방 사용자 정보 조회
+      let otherUsers: { name: string | null }[] = [];
+      let roomName = `사용자 ${params.otherUserId}`; // 기본값 설정
 
-      await this.prisma.chat_participants.create({
-        data: {
-          chat_room_id: room.chat_room_id,
-          user_id: params.currentUserId,
-          is_admin: true,
-        },
-      });
+      try {
+        otherUsers = await this.prisma.user.findMany({
+          where: { id: { in: [params.otherUserId] } },
+          select: { name: true },
+        });
 
-      await this.prisma.chat_participants.create({
-        data: {
-          chat_room_id: room.chat_room_id,
-          user_id: params.otherUserId,
-          is_admin: false,
-        },
-      });
+        if (otherUsers.length > 0) {
+          roomName = otherUsers.map((user) => user.name).join(', ');
+        }
+      } catch (error) {
+        console.error('User 조회 실패:', error);
+        // 기본값 사용 (이미 설정됨)
+      }
 
-      return room;
+      console.log('새 채팅방 생성:', roomName);
+
+      console.log('트랜잭션 시작 전');
+      // 트랜잭션으로 채팅방 및 참가자 생성
+      const result = await this.prisma.$transaction(async (prisma) => {
+        console.log('chat_rooms 생성 시도');
+        const room = await prisma.chat_rooms.create({
+          data: {
+            name: roomName,
+            creator_id: params.currentUserId,
+            other_user_ids: [params.otherUserId],
+          },
+        });
+        console.log('chat_rooms 생성 완료:', room.chat_room_id);
+
+        await prisma.chat_participants.create({
+          data: {
+            chat_room_id: room.chat_room_id,
+            user_id: params.currentUserId,
+            is_admin: true,
+          },
+        });
+
+        await prisma.chat_participants.create({
+          data: {
+            chat_room_id: room.chat_room_id,
+            user_id: params.otherUserId,
+            is_admin: false,
+          },
+        });
+
+        return room;
+      });
+      console.log('트랜잭션 완료');
+
+      return result;
     } catch (error: any) {
       throw new Error(`Failed to create room: ${error.message}`);
     }
