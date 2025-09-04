@@ -122,7 +122,7 @@ export class ChatService {
         senderId: created.user_id,
         senderName: params.senderName,
         content: created.content,
-        createdAt: created.created_at?.toString() || "",
+        createdAt: created.created_at?.toString() || '',
         status: 'sent',
       };
     } catch (error) {
@@ -132,8 +132,8 @@ export class ChatService {
       ) {
         throw error;
       }
-      console.log('💥 MESSAGE SAVE ERROR:', error);
-      console.log('💥 ERROR DETAILS:', JSON.stringify(error, null, 2));
+      // console.log('💥 MESSAGE SAVE ERROR:', error);
+      // console.log('💥 ERROR DETAILS:', JSON.stringify(error, null, 2));
       throw new Error(`Failed to save message: ${error.message}`);
     }
   }
