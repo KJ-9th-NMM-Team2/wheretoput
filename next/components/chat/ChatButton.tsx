@@ -103,7 +103,7 @@ export default function ChatButton({
       console.log("dddd");
       const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
       const k = q.trim().toLocaleLowerCase("ko-KR");
-      console.log("src", src, "k", k);
+      
       if (!k) {
         return [...src].sort(byLatest);
       }
