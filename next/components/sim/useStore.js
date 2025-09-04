@@ -55,10 +55,10 @@ export const useStore = create(
       collaborationMode: false, // 동시편집 모드 활성화 여부
       isConnected: false, // WebSocket 연결 상태
       connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
-      currentUser: { 
-        id: null, 
-        name: null, 
-        color: "#3B82F6" // 사용자별 구분 색상
+      currentUser: {
+        id: null,
+        name: null,
+        color: "#3B82F6", // 사용자별 구분 색상
       },
 
       // 동시편집 모드 토글
@@ -152,6 +152,10 @@ export const useStore = create(
         }),
 
       // 히스토리 복원용: 기존 ID를 유지하면서 모델 추가
+      // addModel: 새 가구 추가 → 새로운 고유 ID 필요
+      // addModelWithId: 히스토리 복원 → 원래 ID를 유지해야 
+      // undo/redo가 정확히 작동
+      
       addModelWithId: (model) =>
         set((state) => {
           // scale 값 검증 및 최소값 보장

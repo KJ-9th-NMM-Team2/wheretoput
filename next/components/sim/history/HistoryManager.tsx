@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useRef } from 'react';
 import { HistoryAction, HistoryState, HistoryContextType, ActionType } from './types';
 
+// 컨텍스트 생성후, 타입정의 - HistoryContextType 타입만가능
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
 
 type HistoryActionInternal = 
@@ -11,16 +12,25 @@ type HistoryActionInternal =
   | { type: 'REDO' }
   | { type: 'CLEAR' };
 
+// 히스토리 초기설정 - HistoryState 타입을 적용하는 type Annotation
 const initialState: HistoryState = {
   actions: [],
   currentIndex: -1,
 };
 
+// 함수 반환 타입은 HistoryState 
+// state : {액션 전체 배열 actions , cur_index}
+// reducer : (state,action) => (new state)
 function historyReducer(state: HistoryState, action: HistoryActionInternal): HistoryState {
   switch (action.type) {
     case 'ADD_ACTION':
+      // 히스토리인 actions 배열에서 0~cur_idx 까지만 복사
       const newActions = state.actions.slice(0, state.currentIndex + 1);
+
+      // 위 배열에 새로운 action 추가
       newActions.push(action.payload);
+
+      //추가된 새로운 HistoryState (히스토리 전체 상태) 반환
       return {
         actions: newActions,
         currentIndex: newActions.length - 1,
@@ -28,18 +38,18 @@ function historyReducer(state: HistoryState, action: HistoryActionInternal): His
     
     case 'UNDO':
       return {
-        ...state,
+        ...state, //state 의 모든 내용 복사후 아래 코드로 속성 업데이트
         currentIndex: Math.max(-1, state.currentIndex - 1),
       };
     
     case 'REDO':
       return {
-        ...state,
+        ...state, //state 의 모든 내용 복사후 아래 코드로 속성 업데이트
         currentIndex: Math.min(state.actions.length - 1, state.currentIndex + 1),
       };
     
     case 'CLEAR':
-      return initialState;
+      return initialState; // 빈배열 , cur_idx = -1 초기화
     
     default:
       return state;
@@ -47,23 +57,35 @@ function historyReducer(state: HistoryState, action: HistoryActionInternal): His
 }
 
 export function HistoryProvider({ children }: { children: React.ReactNode }) {
+  // useReducer 는 두개의 값 반환
+  // 1. state (history = HistoryState 객체)
+  // 2. dispatch : 상태변경 요청함수 
+  // 첫 렌더링시 initialState
   const [history, dispatch] = useReducer(historyReducer, initialState);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 히스토리에 새로운 action 추가
+  // HistoryAction 객체에서 id,timestamp 생략
   const addAction = useCallback((action: Omit<HistoryAction, 'id' | 'timestamp'>) => {
     const newAction: HistoryAction = {
       ...action,
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
+      id: crypto.randomUUID(), //히스토리마다 "고유" id 생성
+      timestamp: Date.now(), // 현재시간 추가
     };
+    
+    // 여기서 dispatch가 실행 -> historyreducer 실행
     dispatch({ type: 'ADD_ACTION', payload: newAction });
   }, []);
 
+  // 현재 딜레이는 1초로 설정 -> 
   const addActionDebounced = useCallback((action: Omit<HistoryAction, 'id' | 'timestamp'>, delay = 1000) => {
+    
+    // 이전에 설정된 타이머가 있는지 확인-> 있다면 초기화
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
+    // 콜백함수 : delay(1초) 뒤에 addAction()실행
     debounceTimerRef.current = setTimeout(() => {
       addAction(action);
     }, delay);
