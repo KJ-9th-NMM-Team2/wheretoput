@@ -99,9 +99,39 @@ export const useStore = create(
         broadcastModelScale: null,
       },
 
+      // 쓰로틀링 관리 객체
+      _throttledBroadcasts: {},
+
       // 협업 훅에서 브로드캐스트 함수들을 등록
       setCollaborationCallbacks: (callbacks) =>
         set({ collaborationCallbacks: callbacks }),
+
+      // 통합 브로드캐스트 관리 함수
+      broadcastWithThrottle: (eventType, modelId, data, throttleMs = 50) => {
+        const state = get();
+        
+        if (!state.collaborationMode || !state.collaborationCallbacks[eventType]) {
+          return;
+        }
+
+        const throttleKey = `${eventType}_${modelId}`;
+        
+        // 기존 타이머 클리어
+        if (state._throttledBroadcasts[throttleKey]) {
+          clearTimeout(state._throttledBroadcasts[throttleKey]);
+        }
+
+        // 새 타이머 설정
+        state._throttledBroadcasts[throttleKey] = setTimeout(() => {
+          const currentState = get();
+          if (currentState.collaborationCallbacks[eventType]) {
+            currentState.collaborationCallbacks[eventType](modelId, data);
+          }
+          delete currentState._throttledBroadcasts[throttleKey];
+        }, throttleMs);
+
+        set({ _throttledBroadcasts: state._throttledBroadcasts });
+      },
 
       // 모델 관련 상태
       loadedModels: [],
@@ -165,12 +195,8 @@ export const useStore = create(
           };
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
-          if (
-            shouldBroadcast &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelAdd
-          ) {
-            state.collaborationCallbacks.broadcastModelAdd(model);
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelAdd', model.id, model, 0);
           }
 
           return result;
@@ -207,12 +233,8 @@ export const useStore = create(
           };
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
-          if (
-            shouldBroadcast &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelAddWithId
-          ) {
-            state.collaborationCallbacks.broadcastModelAddWithId(model);
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelAddWithId', model.id, model, 0);
           }
 
           return result;
@@ -228,12 +250,8 @@ export const useStore = create(
             loadedModels: state.loadedModels.filter((m) => m.id !== modelId),
           };
 
-          if (
-            shouldBroadcast &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelRemove
-          ) {
-            state.collaborationCallbacks.broadcastModelRemove(model);
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelRemove', modelId, null, 0);
           }
 
           return result;
@@ -250,8 +268,7 @@ export const useStore = create(
       updateModelPosition: (
         modelId,
         newPosition,
-        shouldBroadcast = true,
-        isDragging = false
+        shouldBroadcast = true
       ) => {
         set((state) => {
           // 상태 업데이트
@@ -262,17 +279,8 @@ export const useStore = create(
           };
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
-          // 단, 드래그 중에는 브로드캐스트하지 않음.
-          if (
-            shouldBroadcast &&
-            !isDragging &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelMove
-          ) {
-            state.collaborationCallbacks.broadcastModelMove(
-              modelId,
-              newPosition
-            );
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelMove', modelId, newPosition, 50);
           }
 
           return newState;
@@ -291,16 +299,8 @@ export const useStore = create(
           };
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
-
-          if (
-            shouldBroadcast &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelRotate
-          ) {
-            state.collaborationCallbacks.broadcastModelRotate(
-              modelId,
-              newRotation
-            );
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelRotate', modelId, newRotation, 50);
           }
 
           return newState;
@@ -324,12 +324,8 @@ export const useStore = create(
             ),
           };
 
-          if (
-            shouldBroadcast &&
-            state.collaborationMode &&
-            state.collaborationCallbacks.broadcastModelScale
-          ) {
-            state.collaborationCallbacks.broadcastModelScale(modelId, scale);
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle('broadcastModelScale', modelId, scale, 50);
           }
 
           return newState;
