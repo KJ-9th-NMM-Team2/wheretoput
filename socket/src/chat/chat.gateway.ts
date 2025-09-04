@@ -83,7 +83,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
     const now = new Date();
     // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
-    if (!participant?.last_read_at || participant.last_read_at.getTime() !== now.getTime()) {
+    if (
+      !participant?.last_read_at ||
+      participant.last_read_at.getTime() !== now.getTime()
+    ) {
       await this.prisma.chat_participants.updateMany({
         where: {
           chat_room_id: body.roomId,
@@ -250,4 +253,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.error(`❌ READ STATUS UPDATE FAILED:`, error);
     }
   }
+
+  // ===== 협업 모드 이벤트 처리 =====
+
+  // 방 입장 (협업용)
 }

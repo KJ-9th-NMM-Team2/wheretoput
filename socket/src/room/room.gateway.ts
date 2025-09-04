@@ -5,6 +5,7 @@ import { Socket, Server } from "socket.io";
 export class RoomGateway {
   @WebSocketServer()
   server: Server;
+  
 
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(client: Socket, payload: { roomId: string }) {
