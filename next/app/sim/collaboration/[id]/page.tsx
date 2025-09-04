@@ -10,6 +10,7 @@ import {
 } from "@/components/sim/collaboration/CollaborationIndicators.jsx";
 import { useCollaboration } from "@/components/sim/collaboration/useCollaboration.js";
 import { HistoryProvider } from "@/components/sim/history";
+import { connectSocket, getSocket } from "@/lib/client/socket";
 
 // 협업 모드 헤더 컴포넌트
 function CollaborationHeader({ roomId }: { roomId: string }) {
@@ -78,6 +79,69 @@ function CollaborationPageContent({
   if (!roomId) {
     return <div>Loading...</div>;
   }
+
+  // socket 통신 테스트 해보던거 아직 정확한 작동 X
+  // useEffect(() => {
+  //   let alive = true;
+    
+  //   const initSocketAndJoinRoom = async () => {
+  //     try {
+  //       // 1. 토큰 가져오기
+  //       const r = await fetch("/api/chat/token", { cache: "no-store" });
+  //       if (!r.ok) {
+  //         console.error("token status", r.status);
+  //         return;
+  //       }
+        
+  //       const data = await r.json();
+  //       const token = data.token;
+  //       if (!alive || !token) return;
+        
+  //       // 2. 소켓 연결
+  //       const socket = connectSocket(token);
+        
+  //       socket.emit('socketConnect', { roomId });
+        
+  //       // 3. 연결 대기
+  //       socket.on('connect', () => {
+  //         console.log('Socket connected, joining room:', roomId);
+  //         socket.emit('joinRoom', { roomId });
+  //       });
+        
+  //       // 4. 이벤트 리스너 등록
+  //       socket.on('userJoined', (data) => {
+  //         console.log(`사용자 입장:`, data);
+  //       });
+        
+  //       socket.on('furnitureUpdated', (data) => {
+  //         console.log('가구 업데이트:', data);
+  //       });
+        
+  //       // 이미 연결되어 있다면 바로 방 입장
+  //       if (socket.connected) {
+  //         socket.emit('joinRoom', { roomId });
+  //       }
+        
+  //     } catch (e) {
+  //       console.error("Socket init error:", e);
+  //     }
+  //   };
+    
+  //   initSocketAndJoinRoom();
+    
+  //   return () => {
+  //     alive = false;
+  //     // 소켓 정리
+  //     const socket = getSocket();
+  //     if (socket) {
+  //       socket.emit('leaveRoom', { roomId });
+  //       socket.off('userJoined');
+  //       socket.off('furnitureUpdated');
+  //       socket.off('connect');
+  //       socket.disconnect();
+  //     }
+  //   };
+  // }, [roomId]);
 
   return (
     <SimulatorCore
