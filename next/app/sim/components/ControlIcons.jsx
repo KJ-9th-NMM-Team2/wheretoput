@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { LightControlPanel } from './LightControlPanel.jsx';
 import { CameraControlPanel } from './CameraControlPanel.jsx';
 import { ControlPanel } from './ControlPanel.jsx';
+import { ColorControlPanel } from './ColorControlPanel.jsx';
 
 // react-icons 추가 부분
-import { FaCameraRetro } from "react-icons/fa";
+import { FaCameraRetro, FaPalette } from "react-icons/fa";
 import { MdSunny } from "react-icons/md";
 import { FaSave } from "react-icons/fa";
 // =====================================
 export function ControlIcons() {
-  const [showLightPopup, setShowLightPopup] = useState(false);
+  const [showColorPopup, setShowColorPopup] = useState(false);
   const [showCameraPopup, setShowCameraPopup] = useState(false);
+  const [showLightPopup, setShowLightPopup] = useState(false);
   const [showControlPopup, setShowControlPopup] = useState(false);
 
   const iconStyle = {
@@ -109,6 +111,7 @@ export function ControlIcons() {
           setShowControlPopup(true);
           setShowLightPopup(false);
           setShowCameraPopup(false);
+          setShowColorPopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = iconStyle.background}
@@ -126,9 +129,10 @@ export function ControlIcons() {
           bottom: 'auto'
         }}
         onClick={() => {
-          setShowLightPopup(true);
           setShowControlPopup(false);
+          setShowLightPopup(true);
           setShowCameraPopup(false);
+          setShowColorPopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
@@ -146,15 +150,37 @@ export function ControlIcons() {
           bottom: 'auto'
         }}
         onClick={() => {
-          setShowCameraPopup(true);
           setShowControlPopup(false);
           setShowLightPopup(false);
+          setShowCameraPopup(true);
+          setShowColorPopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="카메라 설정"
       >
         <FaCameraRetro />
+      </button>
+
+      {/* Color Control Icon - 카메라 버튼 왼쪽 */}
+      <button
+        style={{
+          ...bottomIconStyle,
+          top: '10px',
+          right: '190px',
+          bottom: 'auto'
+        }}
+        onClick={() => {
+          setShowControlPopup(false);
+          setShowLightPopup(false);
+          setShowCameraPopup(false);
+          setShowColorPopup(true);
+        }}
+        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
+        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
+        title="색상 설정"
+      >
+        <FaPalette />
       </button>
 
       {/* Control Panel 팝업 결정 */}
@@ -223,6 +249,32 @@ export function ControlIcons() {
             </button>
             <div style={{ position: 'static', background: 'transparent' }}>
               <CameraControlPanel isPopup={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Color Control Popup */}
+      {showColorPopup && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '60px',
+            right: '190px',
+            zIndex: 200
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+            <button 
+              style={closeButtonStyle}
+              onClick={() => setShowColorPopup(false)}
+              title="닫기"
+            >
+              ×
+            </button>
+            <div style={{ position: 'static', background: 'transparent' }}>
+              <ColorControlPanel isPopup={true} />
             </div>
           </div>
         </div>
