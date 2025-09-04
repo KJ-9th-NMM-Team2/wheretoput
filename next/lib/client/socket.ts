@@ -12,7 +12,7 @@ export function connectSocket(jwt: string) {
         auth: { token: jwt },
       }
     );
-    // console.log('🔌 SOCKET CONNECTING TO:', process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
+    console.log('🔌 SOCKET CONNECTING TO:', process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
   } else {
     socket.auth = { token: jwt };
     socket.disconnect().connect();
