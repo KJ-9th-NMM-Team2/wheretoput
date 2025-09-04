@@ -1,54 +1,14 @@
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { NextRequest } from "next/server";
 
 /**
  * @swagger
- * /api/rooms/{id}:
- *   get:
- *     tags:
- *       - rooms
- *     summary: 특정 방 정보 조회
- *     description: 특정 방의 상세 정보를 조회합니다 (사용자, 가구, 댓글 포함)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 방 ID
- *     responses:
- *       200:
- *         description: 방 정보 조회 성공
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 room_id:
- *                   type: string
- *                 title:
- *                   type: string
- *                 thumbnail_url:
- *                   type: string
- *                 view_count:
- *                   type: integer
- *                 _count:
- *                   type: object
- *                 user:
- *                   type: object
- *                 room_objects:
- *                   type: array
- *                 room_comments:
- *                   type: array
- *       404:
- *         description: 방을 찾을 수 없음
- *       500:
- *         description: 서버 오류
+ * /api/rooms/{id}/image:
  *   put:
+ *     summary: 방 썸네일 이미지 업데이트
+ *     description: 특정 방의 썸네일 이미지 URL을 업데이트합니다.
  *     tags:
- *       - rooms
- *     summary: 방 정보 수정
- *     description: 특정 방의 정보를 수정합니다
+ *       - Rooms
  *     parameters:
  *       - in: path
  *         name: id
@@ -56,30 +16,25 @@ import type { NextRequest } from "next/server";
  *         schema:
  *           type: string
  *         description: 방 ID
+ *         example: "room_123"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             properties:
- *               title:
- *                 type: string
- *                 description: 방 제목
- *                 example: "우리집 거실"
- *               description:
- *                 type: string
- *                 description: 방 설명
- *                 example: "따뜻하고 아늑한 거실입니다"
- *               is_public:
- *                 type: boolean
- *                 description: 공개 여부
- *                 example: true
  *             required:
- *               - title
+ *               - imageKey
+ *             properties:
+ *               imageKey:
+ *                 type: string
+ *                 description: S3에 업로드된 이미지의 키값
+ *                 example: "thumbnails/room-123-2024-01-01T12-00-00-000Z.png"
+ *           example:
+ *             imageKey: "thumbnails/room-123-2024-01-01T12-00-00-000Z.png"
  *     responses:
  *       200:
- *         description: 방 정보 수정 성공
+ *         description: 썸네일 이미지 업데이트 성공
  *         content:
  *           application/json:
  *             schema:
@@ -87,160 +42,53 @@ import type { NextRequest } from "next/server";
  *               properties:
  *                 room_id:
  *                   type: string
+ *                   description: 방 ID
+ *                 thumbnail_url:
+ *                   type: string
+ *                   description: 업데이트된 썸네일 이미지 키
  *                 title:
  *                   type: string
+ *                   description: 방 제목
  *                 description:
  *                   type: string
- *                 is_public:
- *                   type: boolean
+ *                   description: 방 설명
+ *                 created_at:
+ *                   type: string
+ *                   format: date-time
+ *                   description: 생성일시
  *                 updated_at:
  *                   type: string
  *                   format: date-time
- *       404:
- *         description: 방을 찾을 수 없음
+ *                   description: 수정일시
+ *             example:
+ *               room_id: "room_123"
+ *               thumbnail_url: "thumbnails/room-123-2024-01-01T12-00-00-000Z.png"
+ *               title: "거실 인테리어"
+ *               description: "모던한 거실 공간"
+ *               created_at: "2024-01-01T10:00:00.000Z"
+ *               updated_at: "2024-01-01T12:00:00.000Z"
  *       500:
  *         description: 서버 오류
- *   delete:
- *     tags:
- *       - rooms
- *     summary: 방 삭제
- *     description: 특정 방을 삭제합니다 (관련된 모든 데이터도 함께 삭제됩니다)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: 방 ID
- *     responses:
- *       200:
- *         description: 방 삭제 성공
  *         content:
- *           application/json:
+ *           text/plain:
  *             schema:
- *               type: object
- *               properties:
- *                 room_id:
- *                   type: string
- *                 title:
- *                   type: string
- *                 deleted_at:
- *                   type: string
- *                   format: date-time
- *       404:
- *         description: 방을 찾을 수 없음
- *       500:
- *         description: 서버 오류
+ *               type: string
+ *               example: "이미지 갱신에 실패했습니다"
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = await params;
-    // users 모델의 display_name을 포함해서 가져오기 위해 include 사용
-    const roomWithUser = await prisma.rooms.findUnique({
-      where: {
-        room_id: id,
-      },
-
-      include: {
-        _count: {
-          select: {
-            room_comments: true,
-            room_likes: true,
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            image: true,
-            id: true,
-          },
-        },
-        rooms: {
-          select: {
-            room_id: true,
-            title: true,
-            user: {
-              select: {
-                name: true,
-                id: true,
-              },
-            },
-          },
-        },
-        room_objects: {
-          include: {
-            furnitures: {
-              select: {
-                furniture_id: true,
-                name: true,
-                description: true,
-                image_url: true,
-                price: true,
-                brand: true,
-              },
-            },
-          },
-        },
-        room_comments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                image: true,
-              },
-            },
-          },
-          orderBy: {
-            created_at: "desc",
-          },
-        },
-      },
-    });
-    if (!roomWithUser) {
-      return new Response("Room not found", { status: 404 });
-    }
-    return Response.json(roomWithUser);
-  } catch (error) {
-    console.error("Error fetching rooms:", error);
-    return new Response("Internal Server Error", { status: 500 });
-  }
-}
-
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id: room_id } = await params;
+  const { imageKey } = await req.json();
   try {
-    const { id } = await params;
-    const body = await req.json();
-    const { title, description, is_public } = body;
-    const updatedRoom = await prisma.rooms.update({
-      where: { room_id: id },
-      data: { title, description, is_public },
+    const room = await prisma.rooms.update({
+      where: { room_id: room_id },
+      data: { thumbnail_url: imageKey },
     });
-    return Response.json(updatedRoom);
+    return new Response(JSON.stringify(room), { status: 200 });
   } catch (error) {
-    console.error("Error updating room:", error);
-    return new Response("Internal Server Error", { status: 500 });
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = await params;
-    const updatedRoom = await prisma.rooms.delete({
-      where: { room_id: id },
-    });
-    return Response.json(updatedRoom);
-  } catch (error) {
-    console.error("Error deleting room:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    console.error("방 썸네일 이미지 갱신 실패:", error);
+    return new Response("이미지 갱신에 실패했습니다", { status: 500 });
   }
 }
