@@ -14,6 +14,7 @@ import { createWallsFromFloorPlan } from "../../wallDetection.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
+import { HistoryProvider } from "@/components/sim/history";
 
 type position = [number, number, number];
 
@@ -185,7 +186,7 @@ function CameraUpdater() {
   return null;
 }
 
-export default function SimPage({
+function SimPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -203,6 +204,9 @@ export default function SimPage({
     loadSimulatorState,
     isLoading,
     wallsData,
+    addModel,
+    addModelWithId,
+    removeModel,
   } = useStore();
   const [roomId, setRoomId] = useState(null);
 
@@ -242,6 +246,36 @@ export default function SimPage({
 
     initializeSimulator();
   }, [params, setCurrentRoomId, loadSimulatorState]);
+
+  // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
+  useEffect(() => {
+    const handleHistoryAddFurniture = (event) => {
+      const { furnitureData } = event.detail;
+      console.log('History: Adding furniture back:', furnitureData);
+      
+      // 원래 ID를 유지하면서 가구 추가
+      const modelToAdd = {
+        ...furnitureData,
+        id: furnitureData.id, // 원래 ID 사용
+      };
+      
+      addModelWithId(modelToAdd);
+    };
+
+    const handleHistoryRemoveFurniture = (event) => {
+      const { furnitureId } = event.detail;
+      console.log('History: Removing furniture:', furnitureId);
+      removeModel(furnitureId);
+    };
+
+    window.addEventListener('historyAddFurniture', handleHistoryAddFurniture);
+    window.addEventListener('historyRemoveFurniture', handleHistoryRemoveFurniture);
+
+    return () => {
+      window.removeEventListener('historyAddFurniture', handleHistoryAddFurniture);
+      window.removeEventListener('historyRemoveFurniture', handleHistoryRemoveFurniture);
+    };
+  }, [addModelWithId, removeModel]);
 
   // 벽 데이터는 이제 loadSimulatorState에서 함께 로드됨
 
@@ -426,5 +460,17 @@ export default function SimPage({
         </Canvas>
       </div>
     </div>
+  );
+}
+
+export default function SimPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <HistoryProvider>
+      <SimPageContent params={params} />
+    </HistoryProvider>
   );
 }

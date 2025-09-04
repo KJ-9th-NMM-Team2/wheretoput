@@ -167,6 +167,40 @@ export function DraggableModel({
     }
   }, [isDragging, isScaling, handlePointerMove, handlePointerUp]);
 
+  // 히스토리 시스템에서 오는 이벤트 리스너
+  useEffect(() => {
+    const handleHistoryMove = (event) => {
+      const { furnitureId, position } = event.detail;
+      if (furnitureId === modelId) {
+        updateModelPosition(modelId, position);
+      }
+    };
+
+    const handleHistoryRotate = (event) => {
+      const { furnitureId, rotation } = event.detail;
+      if (furnitureId === modelId) {
+        updateModelRotation(modelId, rotation);
+      }
+    };
+
+    const handleHistoryScale = (event) => {
+      const { furnitureId, scale } = event.detail;
+      if (furnitureId === modelId) {
+        updateModelScale(modelId, scale);
+      }
+    };
+
+    window.addEventListener('historyMoveFurniture', handleHistoryMove);
+    window.addEventListener('historyRotateFurniture', handleHistoryRotate);
+    window.addEventListener('historyScaleFurniture', handleHistoryScale);
+
+    return () => {
+      window.removeEventListener('historyMoveFurniture', handleHistoryMove);
+      window.removeEventListener('historyRotateFurniture', handleHistoryRotate);
+      window.removeEventListener('historyScaleFurniture', handleHistoryScale);
+    };
+  }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
+
   // 선택 표시 박스 크기 결정
   const getSelectionBoxSize = () => {
     if (!scene || !meshRef.current) {
