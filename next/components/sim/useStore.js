@@ -55,10 +55,10 @@ export const useStore = create(
       collaborationMode: false, // 동시편집 모드 활성화 여부
       isConnected: false, // WebSocket 연결 상태
       connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
-      currentUser: { 
-        id: null, 
-        name: null, 
-        color: "#3B82F6" // 사용자별 구분 색상
+      currentUser: {
+        id: null,
+        name: null,
+        color: "#3B82F6", // 사용자별 구분 색상
       },
 
       // 동시편집 모드 토글
@@ -138,7 +138,7 @@ export const useStore = create(
               ...state.loadedModels,
               {
                 ...model,
-                id: model.id || Date.now() + Math.random(),
+                id: model.id || crypto.randomUUID(),
                 position: model.position || [
                   (Math.random() - 0.5) * 15,
                   0,
@@ -152,8 +152,15 @@ export const useStore = create(
         }),
 
       // 히스토리 복원용: 기존 ID를 유지하면서 모델 추가
+      // addModel: 새 가구 추가 → 새로운 고유 ID 필요
+      // addModelWithId: 히스토리 복원 → 원래 ID를 유지해야 
+      // undo/redo가 정확히 작동
+      
       addModelWithId: (model) =>
         set((state) => {
+          // 같은 ID의 기존 모델 제거 (중복 방지)
+          const filteredModels = state.loadedModels.filter((m) => m.id !== model.id);
+          
           // scale 값 검증 및 최소값 보장
           let scale = model.scale || state.scaleValue;
           if (Array.isArray(scale)) {
@@ -166,7 +173,7 @@ export const useStore = create(
 
           return {
             loadedModels: [
-              ...state.loadedModels,
+              ...filteredModels,
               {
                 ...model,
                 // ID를 유지 (히스토리 복원용)
