@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, Suspense, useState, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -98,8 +98,8 @@ function Wall({
   rotation?: [number, number, number];
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
   const { camera } = useThree();
-  const [opacity, setOpacity] = useState(1.0);
   const { enableWallTransparency, wallColor } = useStore();
 
   // 벽 렌더링 로그 (한 번만)
@@ -107,92 +107,67 @@ function Wall({
   //   console.log('벽 렌더링:', { width, height, depth, position, rotation });
   // }, []);
 
-  React.useEffect(() => {
-    const updateTransparency = () => {
-      if (!meshRef.current) return;
-      if (!enableWallTransparency) {
-        setOpacity(1.0);
-        return;
-      }
+  useFrame(() => {
+    if (!meshRef.current || !materialRef.current) return;
+    if (!enableWallTransparency) {
+      materialRef.current.opacity = 1.0;
+      return;
+    }
 
-      const wallWorldPosition = new THREE.Vector3();
-      meshRef.current.getWorldPosition(wallWorldPosition);
 
-      // const wallWorldQuaternion = new THREE.Quaternion();
-      // meshRef.current.getWorldQuaternion(wallWorldQuaternion);
+    const wallWorldPosition = new THREE.Vector3();
+    meshRef.current.getWorldPosition(wallWorldPosition);
+    const distance = camera.position.distanceTo(wallWorldPosition);
 
-      // const wallNormal = new THREE.Vector3(0, 0, 1);
-      // wallNormal.applyQuaternion(wallWorldQuaternion);
+    // const wallWorldQuaternion = new THREE.Quaternion();
+    // meshRef.current.getWorldQuaternion(wallWorldQuaternion);
 
-      const minOpacity = 0.2;
-      const maxOpacity = 0.95;
-      const minDistanceThreshold = 15;
-      const maxDistanceThreshold = 30;
+    // const wallNormal = new THREE.Vector3(0, 0, 1);
+    // wallNormal.applyQuaternion(wallWorldQuaternion);
 
-      let cameraToWall = new THREE.Vector3().subVectors(
-        camera.position,
-        wallWorldPosition
-      );
-      const distance = cameraToWall.length();
+    const minOpacity = 0.2;
+    const maxOpacity = 0.95;
+    const minDistanceThreshold = 15;
+    const maxDistanceThreshold = 30;
 
-      if (distance > maxDistanceThreshold) {
-        setOpacity(maxOpacity);
-      } else if (distance < minDistanceThreshold) {
-        setOpacity(minOpacity);
-      } else {
-        const newOpacity =
-          ((maxOpacity - minOpacity) /
-            (maxDistanceThreshold - minDistanceThreshold)) *
-            (distance - minDistanceThreshold) +
-          minOpacity;
-        setOpacity(newOpacity);
-      }
-      // else {
-      //   cameraToWall.normalize();
-      //   const dotProduct = wallNormal.dot(cameraToWall);
+    if (distance > maxDistanceThreshold) {
+      materialRef.current.opacity = maxOpacity;
+    } else if (distance < minDistanceThreshold) {
+      materialRef.current.opacity = minOpacity;
+    } else {
+      const newOpacity =
+        ((maxOpacity - minOpacity) /
+          (maxDistanceThreshold - minDistanceThreshold)) *
+        (distance - minDistanceThreshold) +
+        minOpacity;
+      materialRef.current.opacity = newOpacity;
+    }
+    // else {
+    //   cameraToWall.normalize();
+    //   const dotProduct = wallNormal.dot(cameraToWall);
 
-      //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
-      //   const t = 1 - Math.abs(dotProduct);
+    //   // 내적값을 0~1로 변환 (0: 정면, 1: 완전 뒤)
+    //   const t = 1 - Math.abs(dotProduct);
 
-      //   // ease-in-out 적용
-      //   const ease = t * t * (3 - 2 * t);
+    //   // ease-in-out 적용
+    //   const ease = t * t * (3 - 2 * t);
 
-      //   // 정면(불투명)~뒤(투명) 보간
-      //   const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
+    //   // 정면(불투명)~뒤(투명) 보간
+    //   const newOpacity = minOpacity + (maxOpacity - minOpacity) * ease;
 
-      //   setOpacity(newOpacity);
-      // }
-    };
-
-    const animate = () => {
-      updateTransparency();
-      requestAnimationFrame(animate);
-    };
-
-    const animationId = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(animationId);
-  }, [camera]);
-
-  // 각 면에 다른 재질 적용 (투명도 포함)
-  const materials = React.useMemo(() => {
-    let material = new THREE.MeshStandardMaterial({
-      color: wallColor,
-      roughness: 0.8,
-      metalness: 0.1,
-      transparent: enableWallTransparency,
-      opacity: opacity,
-    });
-
-    return [...Array(6).fill(material)];
-  }, [opacity]);
+    //   setOpacity(newOpacity);
+    // }
+  });
 
   return (
     <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
       <boxGeometry args={[width, height, depth]} />
-      {materials.map((material, index) => (
-        <primitive key={index} object={material} attach={`material-${index}`} />
-      ))}
+      <meshStandardMaterial
+        ref={materialRef}
+        color={wallColor}
+        roughness={0.8}
+        metalness={0.1}
+      />
     </mesh>
   );
 }
