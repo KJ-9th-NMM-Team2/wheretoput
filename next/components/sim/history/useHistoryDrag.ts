@@ -58,8 +58,8 @@ export function useHistoryDrag(debounceDelay: number = 1000) {
     };
   }, []);
 
-  // [09.04] 사용자가 드래그를 끝냈을때, 히스토리에 기록 
-  // usecallback은 [] (의존성 배열)의 값이 바뀔때만 업데이트 
+  // [09.04] 1.사용자가 드래그를 끝냈을때, 히스토리에 기록결정
+  // usecallback은 [] (의존성 배열) 이 바뀔때만 업데이트 
   const endDragMove = useCallback((
     furnitureId: string,
     finalPosition: Position,
@@ -104,9 +104,10 @@ export function useHistoryDrag(debounceDelay: number = 1000) {
         startScale: null,
       };
     }
-  }, []);
-//[addActionDebounced, debounceDelay]
+  }, [addHistoryWithDelay]);
 
+
+  // 2. 가구 회전이 끝났을때 히스토리 기록여부 결정
   const endDragRotate = useCallback((
     furnitureId: string,
     finalRotation: Rotation,
@@ -147,10 +148,10 @@ export function useHistoryDrag(debounceDelay: number = 1000) {
         startScale: null,
       };
     }
-  }, []);
-//[addActionDebounced, debounceDelay]
+  }, [addHistoryWithDelay]);
 
 
+// 3. 가구 크기조절시 히스토리 기록여부 결정
   const endDragScale = useCallback((
     furnitureId: string,
     finalScale: Scale,
@@ -191,9 +192,9 @@ export function useHistoryDrag(debounceDelay: number = 1000) {
         startScale: null,
       };
     }
-  }, []);
-//[addActionDebounced, debounceDelay]
+  }, [addHistoryWithDelay]);
 
+  // 4. 
   const cancelDrag = useCallback(() => {
     dragStateRef.current = {
       isDragging: false,

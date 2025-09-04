@@ -1,6 +1,22 @@
-# Sim History System
+## 액션 타입
 
-Archisketch와 같은 히스토리 기능을 구현한 append 모델 기반 시스템입니다.
+- `FURNITURE_ADD`: 가구 추가
+- `FURNITURE_REMOVE`: 가구 제거  
+- `FURNITURE_MOVE`: 가구 이동
+- `FURNITURE_ROTATE`: 가구 회전
+- `FURNITURE_SCALE`: 가구 크기 변경
+
+## 키보드 단축키
+
+- **Ctrl+Z (Cmd+Z)**: Undo
+- **Ctrl+Y (Cmd+Shift+Z)**: Redo
+
+## Append 모델 
+
+- 모든 액션이 순차적으로 저장됨
+- Undo 시 인덱스만 변경, 데이터 삭제 안함
+- Redo 가능
+- 새 액션 추가 시 현재 위치 이후 기록 삭제
 
 ## 구조
 
@@ -65,22 +81,3 @@ function YourComponent() {
 }
 ```
 
-## 액션 타입
-
-- `FURNITURE_ADD`: 가구 추가
-- `FURNITURE_REMOVE`: 가구 제거  
-- `FURNITURE_MOVE`: 가구 이동
-- `FURNITURE_ROTATE`: 가구 회전
-- `FURNITURE_SCALE`: 가구 크기 변경
-
-## 키보드 단축키
-
-- **Ctrl+Z (Cmd+Z)**: Undo
-- **Ctrl+Y (Cmd+Shift+Z)**: Redo
-
-## Append 모델 특징
-
-- 모든 액션이 순차적으로 저장됨
-- Undo 시 인덱스만 변경, 데이터 삭제 안함
-- Redo 가능
-- 새 액션 추가 시 현재 위치 이후 기록 삭제

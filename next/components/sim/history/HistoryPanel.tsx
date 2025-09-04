@@ -1,5 +1,8 @@
 'use client';
 
+// [09.04] 이부분은 히스토리 패널 인데 현재 쓰진 않고있습니다. 
+
+
 import React from 'react';
 import { useHistory } from './HistoryManager';
 import { ActionType } from './types';

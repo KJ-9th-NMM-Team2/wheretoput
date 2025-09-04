@@ -1,3 +1,4 @@
+// 히스토리에 저장할 액션타입 (가구 추가/삭제/이동/회전/크기조정)
 export enum ActionType {
   FURNITURE_ADD = 'FURNITURE_ADD',
   FURNITURE_REMOVE = 'FURNITURE_REMOVE',
@@ -32,6 +33,7 @@ export interface FurnitureData {
   previousData?: any;
 }
 
+//히스토리 하나를 나타내는 객체
 export interface HistoryAction {
   id: string;
   type: ActionType;
@@ -40,6 +42,9 @@ export interface HistoryAction {
   timestamp: number;
 }
 
+//히스토리 전체 상태 
+// actions : 액션 전체 배열
+// cur_index : undo/redo 에서 현재 위치
 export interface HistoryState {
   actions: HistoryAction[];
   currentIndex: number;
