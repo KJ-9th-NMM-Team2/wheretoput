@@ -1,46 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import styles from "./ChatButton.module.scss";
-
-import { api, setAuthToken } from "@/lib/client/api";
-import { connectSocket, getSocket } from "@/lib/client/socket";
 import { AnimatePresence, motion } from "framer-motion";
 
-const NEXT_API_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-const SOCKET_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-type ChatListItem = {
-  chat_room_id: string;
-  name: string; // UI 표시용 (룸 이름)
-  is_private: boolean;
-  lastMessage?: string;
-  lastMessageTime?: string;
-  lastMessageAt?: string;
-  last_read_at: string;
-  searchIndex: string; //  검색 전용: 마지막 메시지 전용
-};
-
-type Message = {
-  id: string;
-  roomId: string;
-  senderId: string;
-  senderName?: string;
-  senderImage?: string;
-  content: string;
-  createdAt: string;
-  status?: "sending" | "sent" | "read";
-  tempId?: string;
-};
-
-type UserLite = {
-  id: string;
-  name: string;
-  image?: string;
-};
+// 분리된 훅들과 유틸들 import
+import { useChatConnection } from "./hooks/useChatConnection";
+import { useChatRooms } from "./hooks/useChatRooms";
+import { useChatMessages } from "./hooks/useChatMessages";
+import { useUserSearch } from "./hooks/useUserSearch";
+import { 
+  formatRelativeTime, 
+  isUnread, 
+  shouldShowAvatar, 
+  shouldShowTimestamp,
+  recomputeChats 
+} from "./utils/chat-utils";
+import { ChatListItem, Message } from "./types/chat-types";
 
 export default function ChatButton({
   currentUserId,
@@ -49,497 +26,45 @@ export default function ChatButton({
 }) {
   const { data: session } = useSession();
   if (!currentUserId) return null;
+  
   const [open, setOpen] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
-  const ts = (s?: string) => {
-    if (!s) return -Infinity;
-    const t = Date.parse(s.replace(/\s+/g, ""));
-    return Number.isNaN(t) ? -Infinity : t;
-  };
-  const isUnread = (chat: ChatListItem) =>
-    ts(chat.lastMessageAt) > ts(chat.last_read_at);
-  const byLatest = (a: ChatListItem, b: ChatListItem) =>
-    ts(b.lastMessageAt) - ts(a.lastMessageAt);
+  // 분리된 훅들 사용
+  const { token } = useChatConnection(open);
+  
+  const { baseChats, chats, setChats, onStartDirect, updateChatRoom } = useChatRooms(
+    open, 
+    token, 
+    currentUserId, 
+    query, 
+    select
+  );
+  
+  const { 
+    selectedMessages, 
+    groupedByDay, 
+    text, 
+    setText, 
+    send, 
+    onEditorKeyDown 
+  } = useChatMessages(
+    open, 
+    selectedChatId, 
+    token, 
+    currentUserId, 
+    updateChatRoom
+  );
+  
+  const { peopleHits } = useUserSearch(open, query, currentUserId);
 
-  const [baseChats, setBaseChats] = useState<ChatListItem[]>([]);
-  const [chats, setChats] = useState<ChatListItem[]>([]);
-  const [messagesByRoom, setMessagesByRoom] = useState<
-    Record<string, Message[]>
-  >({});
-
-  const selectedMessages: Message[] = selectedChatId
-    ? messagesByRoom[selectedChatId] ?? []
-    : [];
   const selectedChat = useMemo(() => {
     if (!selectedChatId) return null;
     return baseChats.find((c) => c.chat_room_id === selectedChatId) ?? null;
   }, [selectedChatId, baseChats]);
-  const [peopleHits, setPeopleHits] = useState<UserLite[]>([]);
 
-  function formatRelativeTime(isoString?: string): string {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const sec = Math.floor(diff / 1000);
-    const min = Math.floor(sec / 60);
-    const hour = Math.floor(min / 60);
-    const day = Math.floor(hour / 24);
-    if (sec < 60) return "방금 전";
-    if (min < 60) return `${min}분 전`;
-    if (hour < 24) return `${hour}시간 전`;
-    if (day === 1) return "어제";
-    if (day < 7) return `${day}일 전`;
-    return date.toLocaleDateString("ko-KR", { month: "long", day: "numeric" });
-  }
-
-  //  검색은 searchIndex(=lastMessage)만 기준
-  const recomputeChats = useCallback(
-    (raw: ChatListItem[], q: string, mode: "전체" | "읽지 않음") => {
-      const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
-      const k = q.trim().toLocaleLowerCase("ko-KR");
-
-
-      if (!k) {
-        return [...src].sort(byLatest);
-      }
-
-      const filtered = src.filter((c) => c.searchIndex.includes(k));
-      console.log("filted", filtered);
-      return filtered.sort(byLatest);
-    },
-    []
-  );
-
-  // 토큰 교환 + 소켓 준비
-  useEffect(() => {
-    if (!open) return;
-    let alive = true;
-    (async () => {
-      try {
-        // 1. 토큰을 받아오는 작업
-        const r = await fetch("/api/chat/token", { cache: "no-store" }); // 401 에러
-        // 2. response 응답 체크
-        if (!r.ok) {
-          console.error("token status", r.status);
-          return;
-        }
-        // 여기서 바로 json() 호출하고 다시는 호출하지 않기
-        const data = await r.json();
-        console.log("Token API response:", data);
-        // 토큰 값 가져오기 (안전한 체이닝)
-        const token = data?.tokenData?.jti;
-        if (!alive || !token) return;
-        setToken(token);
-        setAuthToken(token);
-        connectSocket(token);
-      } catch (e) {
-        console.error("token error", e);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [open]);
-
-  // 방 목록 로드
-  useEffect(() => {
-    if (!open || !token) {
-      console.log("[ROOMS] 스킵 - open:", open, "token:", !!token);
-      return;
-    }
-
-    (async () => {
-      const path = "/backend/rooms";
-      try {
-        console.log("[ROOMS] GET", path);
-        const response = await fetch(
-          "http://localhost:3000/api/backend/rooms",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = await response.json();
-
-        const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-          console.log("메시지 데이터:", r.creator_id, currentUserId);
-          r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
-          console.log("마지막 메시지: ", r.last_message);
-          const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
-          const chatRoomName = r.chat_participants
-            .filter((participant: any) => participant.user_id !== currentUserId)
-            .map((participant: any) => participant.user?.name || "이름 없음")
-            .join(", ");
-
-          const result = {
-            chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
-            name: chatRoomName,
-            is_private: Boolean(r.is_private),
-            lastMessage: lastMsg,
-            lastMessageAt:
-              r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
-            last_read_at: r.last_read_at ?? "1970-01-01T00:00:00.000Z",
-            searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
-          };
-
-          console.log(
-            "lastMessageAt:",
-            result.lastMessageAt,
-            "last_read_at:",
-            result.last_read_at
-          );
-
-          return result;
-        });
-
-        setBaseChats(mapped);
-        setChats(recomputeChats(mapped, "", "전체"));
-        setSelect("전체");
-        setQuery("");
-
-        console.log("[ROOMS] OK", mapped.length);
-      } catch (e: any) {
-        console.error("[ROOMS] FAIL", {
-          url: path,
-          status: e?.response?.status,
-          data: e?.response?.data,
-          message: e?.message,
-          tokenExists: !!token,
-        });
-      }
-    })();
-  }, [open, token, recomputeChats]);
-
-  useEffect(() => {
-    const bootstrap = async () => {
-      const res = await fetch("/api/chat/token", { cache: "no-store" });
-      const data = await res.json();
-      console.log("토큰 응답:", data);
-      const token = data["tokenData"]?.["jti"] || data.token;
-      console.log("추출된 토큰:", token);
-      setToken(token);
-      setAuthToken(token);
-      // 이후부터 api.get/post가 자동으로 Authorization 포함
-    };
-    bootstrap();
-  }, []);
-
-  // 테스트용 token 빼놨음
-  useEffect(() => {
-    if (!open) return;
-
-    const q = query.trim(); //사용자가 채팅창에 검색
-    if (!q) {
-      setPeopleHits([]);
-      return;
-    } // 검색창 비어있을시 검색 결과를 빈 배열로 초기화한 뒤 useEffect 실행 종료
-
-    const t = setTimeout(async () => {
-      try {
-        const { data } = await api.get("http://localhost:3000/api/backend", {
-          params: { q, limit: 20 },
-        });
-        const users = data ?? [];
-        const rows: UserLite[] = (users ?? []).map((u: any) => ({
-          id: String(u.id),
-          name: u.name ?? "이름 없음",
-          image: u.image ?? undefined,
-        }));
-        const actualCurrentUserId = currentUserId || session?.user?.id;
-        const filtered = rows.filter((u) => u.id !== actualCurrentUserId);
-        console.log(
-          "Search results with images:",
-          filtered.map((u) => ({ name: u.name, image: u.image }))
-        );
-        setPeopleHits(filtered);
-      } catch {
-        setPeopleHits([]); // 실패 시 비움
-      }
-    }, 250);
-
-    return () => clearTimeout(t);
-  }, [open, query, currentUserId]);
-
-  // 방 선택 시 join + 히스토리 로드
-  useEffect(() => {
-    if (!open || !selectedChatId || !token) return;
-    const s = connectSocket(token);
-    console.log("🚪 FRONTEND JOIN:", selectedChatId);
-    s.emit("join", { roomId: selectedChatId });
-
-    let cancelled = false;
-
-    (async () => {
-      const { data } = await api.get(
-        `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
-        {
-          params: { limit: 50 },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (cancelled) return;
-      const history: Message[] = (data?.messages ?? data ?? []).map(
-        (m: any) => ({
-          id: m.id ?? String(m.message_id),
-          roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
-          senderId: m.senderId ?? String(m.user_id),
-          senderName: m.senderName ?? "이름 없음",
-          senderImage: m.senderImage ?? "",
-          content: m.content,
-          createdAt: m.createdAt ?? m.created_at,
-          status: "read",
-        })
-      );
-      console.log(
-        "Messages with avatars:",
-        history.map((h) => ({
-          senderName: h.senderName,
-          senderImage: h.senderImage,
-        }))
-      );
-      setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
-
-      // 읽음 처리 + 목록 last_read_at 갱신
-      s.emit("read", { roomId: selectedChatId });
-      setBaseChats((prev) => {
-        const next = prev.map((c) =>
-          c.chat_room_id === selectedChatId
-            ? { ...c, last_read_at: new Date().toISOString() }
-            : c
-        );
-        setChats(recomputeChats(next, query, select));
-        return next;
-      });
-    })();
-
-    return () => {
-      cancelled = true;
-      s.emit("leave", { roomId: selectedChatId });
-    };
-  }, [open, selectedChatId, token, query, select, recomputeChats]);
-
-  // 팝업 닫힐 때 소켓 정리
-  useEffect(() => {
-    if (open) return;
-    const s = getSocket();
-    if (s) s.disconnect();
-  }, [open]);
-
-  // 실시간 수신 + ACK + 읽음 이벤트
-  useEffect(() => {
-    if (!open) return;
-    const s = getSocket();
-    if (!s) return;
-
-    const onMessage = (m: any) => {
-      const msg: Message = {
-        id: m.id ?? String(m.message_id),
-        roomId: m.roomId ?? String(m.room_id),
-        senderId: m.senderId ?? String(m.user_id),
-        senderName: m.sender?.name ?? m.user?.name,
-        senderImage: m.sender?.image ?? m.user?.image,
-        content: m.content,
-        createdAt: m.createdAt ?? m.created_at,
-        status: "sent",
-      };
-
-      setMessagesByRoom((prev) => {
-        const existingMessages = prev[msg.roomId] ?? [];
-        // 중복 메시지 체크 (같은 ID가 이미 있으면 추가하지 않음)
-        const isDuplicate = existingMessages.some(
-          (existingMsg) => existingMsg.id === msg.id
-        );
-        if (isDuplicate) {
-          return prev;
-        }
-        return {
-          ...prev,
-          [msg.roomId]: [...existingMessages, msg],
-        };
-      });
-
-      // 현재 열린 채팅방의 메시지이고 내가 보낸 메시지가 아니라면 자동으로 읽음 처리
-      if (msg.roomId === selectedChatId && msg.senderId !== currentUserId) {
-        const s = getSocket();
-        if (s) {
-          s.emit("read", { roomId: msg.roomId });
-        }
-      }
-
-      setBaseChats((prev) => {
-        const updated = prev.map((c) =>
-          c.chat_room_id === msg.roomId
-            ? {
-              ...c,
-              lastMessage: msg.content,
-              lastMessageAt: msg.createdAt,
-              // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
-              last_read_at:
-                msg.senderId === currentUserId ||
-                  msg.roomId === selectedChatId
-                  ? msg.createdAt
-                  : c.last_read_at,
-              searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
-            }
-            : c
-        );
-        setChats(recomputeChats(updated, query, select));
-        return updated;
-      });
-    };
-
-    const onAck = (ack: {
-      tempId: string;
-      realId: string;
-      createdAt?: string;
-    }) => {
-      if (!selectedChatId) return;
-      setMessagesByRoom((prev) => {
-        const arr = prev[selectedChatId] ?? [];
-        const next = arr.map((m) =>
-          m.id === ack.tempId
-            ? {
-              ...m,
-              id: ack.realId,
-              status: "sent",
-              createdAt: ack.createdAt ?? m.createdAt,
-              tempId: undefined,
-            }
-            : m
-        );
-        return { ...prev, [selectedChatId]: next };
-      });
-    };
-
-    const onRead = (evt: {
-      roomId: string;
-      userId?: string;
-      readAt?: string;
-    }) => {
-      // 메시지 읽음 상태 업데이트 (현재 열린 방만)
-      if (evt.roomId === selectedChatId) {
-        setMessagesByRoom((prev) => {
-          const arr = prev[evt.roomId] ?? [];
-          const next = arr.map((m) =>
-            m.senderId === currentUserId && m.status !== "read"
-              ? { ...m, status: "read" }
-              : m
-          );
-          return { ...prev, [evt.roomId]: next };
-        });
-      }
-
-      // 방 목록의 last_read_at 업데이트 (모든 방)
-      if (evt.userId === currentUserId && evt.readAt) {
-        setBaseChats((prev) => {
-          const next = prev.map((c) =>
-            c.chat_room_id === evt.roomId
-              ? { ...c, last_read_at: evt.readAt }
-              : c
-          );
-          setChats(recomputeChats(next, query, select));
-          return next;
-        });
-      }
-    };
-
-    s.on("message", onMessage);
-    s.on("message:ack", onAck);
-    s.on("read:updated", onRead);
-
-    return () => {
-      s.off("message", onMessage);
-      s.off("message:ack", onAck);
-      s.off("read:updated", onRead);
-    };
-  }, [open, currentUserId, query, select, recomputeChats, selectedChatId]);
-
-  // 전송
-  const onSendMessage = useCallback(
-    (roomId: string, content: string) => {
-      if (!token) return;
-      const now = new Date().toISOString();
-      const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
-      const tempMsg: Message = {
-        id: tempId,
-        tempId,
-        roomId,
-        senderId: currentUserId,
-        content,
-        createdAt: now,
-        status: "sending",
-      };
-
-      setMessagesByRoom((prev) => ({
-        ...prev,
-        [roomId]: [...(prev[roomId] ?? []), tempMsg],
-      }));
-
-      setBaseChats((prev) => {
-        const updated = prev.map((c) =>
-          c.chat_room_id === roomId
-            ? {
-              ...c,
-              lastMessage: content,
-              lastMessageAt: now,
-              last_read_at: now,
-              //  전송 시 검색 인덱스도 동기화
-              searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
-            }
-            : c
-        );
-        setChats(recomputeChats(updated, query, select));
-        return updated;
-      });
-
-      const s = getSocket() ?? connectSocket(token);
-      console.log("🔵 WEBSOCKET SEND:", { roomId, content, tempId });
-      console.log("🔵 SOCKET STATE:", s.connected);
-      s.emit("send", { roomId, content, tempId });
-    },
-    [currentUserId, token, query, select, recomputeChats]
-  );
-
-  // 버블/스크롤 유틸
-  const hhmm = (iso: string) =>
-    new Date(iso).toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-
-  const shouldShowAvatar = (arr: Message[], idx: number) => {
-    if (idx === 0) return true;
-    const prev = arr[idx - 1];
-    const cur = arr[idx];
-    const sameSender = prev.senderId === cur.senderId;
-    const within3m =
-      Math.abs(
-        new Date(cur.createdAt).getTime() - new Date(prev.createdAt).getTime()
-      ) <
-      3 * 60 * 1000;
-    return !(sameSender && within3m);
-  };
-
-  const shouldShowTimestamp = (arr: Message[], idx: number) => {
-    if (idx === arr.length - 1) return true; // 마지막 메시지는 항상 시간 표시
-
-
-    const cur = arr[idx];
-    const next = arr[idx + 1];
-
-
-    // 현재 메시지와 다음 메시지의 시간(분)을 비교
-    const curTime = hhmm(cur.createdAt);
-    const nextTime = hhmm(next.createdAt);
-
-    return curTime !== nextTime; // 다음 메시지와 시간이 다르면 시간 표시
-  };
 
   function Bubble({
     m,
@@ -596,7 +121,11 @@ export default function ChatButton({
 
           {showTimestamp && (
             <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
-              <span>{hhmm(m.createdAt)}</span>
+              <span>{new Date(m.createdAt).toLocaleTimeString("ko-KR", {
+                hour: "2-digit",
+                minute: "2-digit", 
+                hour12: false,
+              })}</span>
               {isMine && m.status === "sending" && <span>전송 중</span>}
               {isMine && m.status === "sent" && <span>보냄</span>}
               {isMine && m.status === "read" && <span>읽음</span>}
@@ -609,7 +138,7 @@ export default function ChatButton({
     );
   }
 
-  // 오토스크롤
+  // UI 관련 refs와 스크롤 처리
   const listRef = useRef<HTMLDivElement | null>(null);
   const userAtBottomRef = useRef(true);
   const popupRef = useRef<HTMLDivElement | null>(null);
@@ -665,108 +194,17 @@ export default function ChatButton({
     }
   }, [selectedChatId]);
 
-  const dayKey = (iso: string) =>
-    new Date(iso).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      weekday: "short",
-    });
-
-  const groupedByDay = useMemo(() => {
-    const acc: Record<string, Message[]> = {};
-    for (const m of selectedMessages) {
-      const k = dayKey(m.createdAt);
-      (acc[k] ||= []).push(m);
-    }
-    return acc;
-  }, [selectedMessages]);
-
-  // 입력 & 전송
-  const [text, setText] = useState("");
-  const send = useCallback(() => {
-    const trimmed = text.trim();
-    if (!trimmed || !selectedChatId) return;
-    onSendMessage(selectedChatId, trimmed);
-    setText("");
-  }, [text, selectedChatId, onSendMessage]);
-
-  const onEditorKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (
-    e
-  ) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
+  // 1:1 채팅 시작 핸들러
+  const handleStartDirect = async (otherUserId: string, otherUserName?: string) => {
+    // 필터 초기화
+    setQuery("");
+    setSelect("전체");
+    
+    const roomId = await onStartDirect(otherUserId, otherUserName);
+    if (roomId) {
+      setselectedChatId(roomId);
     }
   };
-
-  // 1:1 시작
-  const onStartDirect = useCallback(
-    async (otherUserId: string, otherUserName?: string) => {
-      if (!token) {
-        console.error("토큰이 없습니다");
-        return;
-      }
-
-      // 필터 초기화
-      setQuery("");
-      setSelect("전체");
-
-      console.log("Creating chat room:");
-      console.log("- currentUserId prop:", currentUserId);
-      console.log("- session?.user?.id:", session?.user?.id);
-      console.log("- otherUserId:", otherUserId);
-      console.log("- otherUserName:", otherUserName);
-
-      const { data } = await api.post(
-        `${NEXT_API_URL}/api/backend/rooms/direct`,
-        {
-          currentUserId: currentUserId || session?.user?.id,
-          otherUserId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("API Response:", data);
-
-      const roomId =
-        data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
-      if (!roomId) return;
-
-      setselectedChatId(roomId);
-
-      setBaseChats((prev) => {
-        const existingIndex = prev.findIndex((c) => c.chat_room_id === roomId);
-        if (existingIndex !== -1) {
-          const next = [...prev];
-          // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
-          next[existingIndex] = {
-            ...next[existingIndex],
-            name: data?.name ?? otherUserName ?? next[existingIndex].name,
-          };
-          setChats(recomputeChats(next, "", "전체"));
-          return next;
-        }
-        const next = [
-          {
-            chat_room_id: roomId,
-            name: data?.name ?? otherUserName ?? "새 대화", // 채팅방 이름 우선, 없으면 상대방 이름
-            is_private: true,
-            lastMessage: "",
-            lastMessageAt: new Date().toISOString(),
-            last_read_at: "1970-01-01T00:00:00.000Z",
-            searchIndex: "",
-          },
-          ...prev,
-        ];
-        setChats(recomputeChats(next, "", "전체"));
-        return next;
-      });
-    },
-    [recomputeChats, token, session?.user?.id, selectedChatId]
-  );
 
   return (
     <>
@@ -914,7 +352,7 @@ export default function ChatButton({
                               key={u.id}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onStartDirect(u.id, u.name);
+                                handleStartDirect(u.id, u.name);
                               }}
                               className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
                             >
