@@ -239,7 +239,10 @@ export default function ChatButton({
           name: u.name ?? "이름 없음",
           image: u.image ?? undefined,
         }));
-        setPeopleHits(rows.filter((u) => u.id !== currentUserId));
+        const actualCurrentUserId = currentUserId || session?.user?.id;
+        const filtered = rows.filter((u) => u.id !== actualCurrentUserId);
+        console.log('Search results with images:', filtered.map(u => ({ name: u.name, image: u.image })));
+        setPeopleHits(filtered);
       } catch {
         setPeopleHits([]); // 실패 시 비움
       }
@@ -279,6 +282,7 @@ export default function ChatButton({
           status: "read",
         })
       );
+      console.log('Messages with avatars:', history.map(h => ({ senderName: h.senderName, avatarUrl: h.avatarUrl })));
       setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
 
       // 읽음 처리 + 목록 last_read_at 갱신
@@ -471,8 +475,24 @@ export default function ChatButton({
     return !(sameSender && within3m);
   };
 
-  function Bubble({ m, showAvatar }: { m: Message; showAvatar: boolean }) {
+
+  const shouldShowTimestamp = (arr: Message[], idx: number) => {
+    if (idx === arr.length - 1) return true; // 마지막 메시지는 항상 시간 표시
+    
+    const cur = arr[idx];
+    const next = arr[idx + 1];
+    
+    // 현재 메시지와 다음 메시지의 시간(분)을 비교
+    const curTime = hhmm(cur.createdAt);
+    const nextTime = hhmm(next.createdAt);
+    
+    return curTime !== nextTime; // 다음 메시지와 시간이 다르면 시간 표시
+  };
+
+
+  function Bubble({ m, showAvatar, showTimestamp }: { m: Message; showAvatar: boolean; showTimestamp: boolean }) {
     const isMine = String(m.senderId) === String(currentUserId);
+
     return (
       <div
         className={`flex items-end gap-2 ${
@@ -518,12 +538,14 @@ export default function ChatButton({
             {m.content}
           </div>
 
-          <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
-            <span>{hhmm(m.createdAt)}</span>
-            {isMine && m.status === "sending" && <span>전송 중</span>}
-            {isMine && m.status === "sent" && <span>보냄</span>}
-            {isMine && m.status === "read" && <span>읽음</span>}
-          </div>
+          {showTimestamp && (
+            <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-400">
+              <span>{hhmm(m.createdAt)}</span>
+              {isMine && m.status === "sending" && <span>전송 중</span>}
+              {isMine && m.status === "sent" && <span>보냄</span>}
+              {isMine && m.status === "read" && <span>읽음</span>}
+            </div>
+          )}
         </div>
 
         {isMine && <div className="h-8 w-8 flex-shrink-0" />}
@@ -534,6 +556,8 @@ export default function ChatButton({
   // 오토스크롤
   const listRef = useRef<HTMLDivElement | null>(null);
   const userAtBottomRef = useRef(true);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const el = listRef.current;
@@ -551,6 +575,23 @@ export default function ChatButton({
     if (el && userAtBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [selectedMessages.length, selectedChatId]);
 
+
+  // 팝업 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node) && 
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        setOpen(false);
+        setselectedChatId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
   // 채팅방에 처음 들어갈 때 맨 아래로 스크롤
   useEffect(() => {
     if (selectedChatId && selectedMessages.length > 0) {
@@ -564,6 +605,7 @@ export default function ChatButton({
       }
     }
   }, [selectedChatId]);
+
 
   const dayKey = (iso: string) =>
     new Date(iso).toLocaleDateString("ko-KR", {
@@ -608,20 +650,26 @@ export default function ChatButton({
         return;
       }
 
+
       // 필터 초기화
       setQuery("");
       setSelect("전체");
 
-      const { data } = await api.post(
-        `${NEXT_API_URL}/api/backend/rooms/direct`,
-        {
-          currentUserId: session?.user?.id,
-          otherUserId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      console.log('Creating chat room:');
+      console.log('- currentUserId prop:', currentUserId);
+      console.log('- session?.user?.id:', session?.user?.id);
+      console.log('- otherUserId:', otherUserId);
+      console.log('- otherUserName:', otherUserName);
+
+      const { data } = await api.post(`${NEXT_API_URL}/api/backend/rooms/direct`, {
+        currentUserId: currentUserId || session?.user?.id,
+        otherUserId
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+
+      console.log('API Response:', data);
 
       const roomId =
         data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
@@ -629,17 +677,24 @@ export default function ChatButton({
 
       setselectedChatId(roomId);
 
-      setBaseChats((prev) => {
-        const exists = prev.some((c) => c.chat_room_id === roomId);
-        if (exists) {
+
+      setBaseChats(prev => {
+        const existingIndex = prev.findIndex(c => c.chat_room_id === roomId);
+        if (existingIndex !== -1) {
+
           const next = [...prev];
+          // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
+          next[existingIndex] = {
+            ...next[existingIndex],
+            name: data?.name ?? otherUserName ?? next[existingIndex].name
+          };
           setChats(recomputeChats(next, "", "전체"));
           return next;
         }
         const next = [
           {
             chat_room_id: roomId,
-            name: data?.name ?? otherUserName ?? "새 대화", // 낙관적 이름 주입
+            name: data?.name ?? otherUserName ?? "새 대화", // 채팅방 이름 우선, 없으면 상대방 이름
             is_private: true,
             lastMessage: "",
             lastMessageAt: new Date().toISOString(),
@@ -659,6 +714,7 @@ export default function ChatButton({
     <>
       {/* 플로팅 버튼 */}
       <motion.button
+        ref={buttonRef}
         className={styles.button}
         whileTap={{ scale: 0.96 }}
         whileHover={{ scale: 1.03 }}
@@ -683,6 +739,7 @@ export default function ChatButton({
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={popupRef}
             key="chat-popup"
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -941,6 +998,7 @@ export default function ChatButton({
                             key={m.id}
                             m={m}
                             showAvatar={shouldShowAvatar(arr, i)}
+                            showTimestamp={shouldShowTimestamp(arr, i)}
                           />
                         ))}
                       </div>
