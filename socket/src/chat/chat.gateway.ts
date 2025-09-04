@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { extractUserIdFromToken } from '../utils/jwt.util';
 import { ChatService } from './chat.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RoomService } from '../room/room.service';
 
 type JoinPayload = { roomId: string };
 type LeavePayload = { roomId: string };
@@ -33,7 +34,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService: ChatService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly roomService: RoomService,
   ) {}
+
+  afterInit() {
+    // RoomService에 소켓 서버 인스턴스 전달
+    this.roomService.setSocketServer(this.server);
+  }
 
   // 연결/해제 로그
   handleConnection(socket: Socket) {
@@ -66,6 +73,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // await this.chatService.joinRoom(body.roomId, userId); // 임시 비활성화
     void socket.join(body.roomId);
+
+    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트 (필요할 때만)
+    const participant = await this.prisma.chat_participants.findFirst({
+      where: {
+        chat_room_id: body.roomId,
+        user_id: userId,
+      },
+    });
+    const now = new Date();
+    // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
+    if (!participant?.last_read_at || participant.last_read_at.getTime() !== now.getTime()) {
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: body.roomId,
+          user_id: userId,
+        },
+        data: {
+          last_read_at: now,
+        },
+      });
+    }
 
     socket.emit('joined', { roomId: body.roomId });
     this.server.to(body.roomId).emit('system', {
@@ -140,6 +168,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       },
     });
 
+    // 메시지 보낸 사용자의 last_read_at 갱신 (자신이 보낸 메시지는 읽음 처리)
+    await this.prisma.chat_participants.updateMany({
+      where: {
+        chat_room_id: body.roomId,
+        user_id: userId,
+      },
+      data: {
+        last_read_at: new Date(),
+      },
+    });
+
     // ACK/브로드캐스트 테스트
     const mockMsg = {
       id: `mock-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -169,13 +208,46 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 읽음 처리
   @SubscribeMessage('read')
-  onRead(
+  async onRead(
     @MessageBody() body: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
     this.logger.log(
       `👁️ READ EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
     );
-    // 읽음 처리 로직은 나중에 구현
+
+    // JWT 토큰에서 사용자 정보 추출
+    const userId = extractUserIdFromToken(
+      this.jwtService,
+      socket.handshake.auth?.token,
+    );
+
+    if (!userId || !body?.roomId) return;
+
+    try {
+      // 해당 방의 참가자 정보 업데이트 (last_read_at)
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: body.roomId,
+          user_id: userId,
+        },
+        data: {
+          last_read_at: new Date(),
+        },
+      });
+
+      // 방에 있는 다른 사용자들에게 읽음 상태 변경 알림
+      socket.to(body.roomId).emit('read:updated', {
+        roomId: body.roomId,
+        userId,
+        readAt: new Date().toISOString(),
+      });
+
+      this.logger.log(
+        `✅ READ STATUS UPDATED: user ${userId} in room ${body.roomId}`,
+      );
+    } catch (error) {
+      this.logger.error(`❌ READ STATUS UPDATE FAILED:`, error);
+    }
   }
 }
