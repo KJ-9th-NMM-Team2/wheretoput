@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useStore } from "@/app/sim/store/useStore.js";
+import { useStore } from "@/components/sim/useStore.js";
 import { useSession } from "next-auth/react";
 
 // 모드 버튼 컴포넌트

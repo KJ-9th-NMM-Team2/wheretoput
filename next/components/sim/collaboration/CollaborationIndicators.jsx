@@ -1,5 +1,5 @@
 import React from "react";
-import { useStore } from "@/app/sim/store/useStore.js";
+import { useStore } from "@/components/sim/useStore.js";
 import { Html } from "@react-three/drei";
 
 /**

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ModeControlPanel } from "@/components/sim/collaboration/ModeControlPanel.jsx";
-import { SimulatorCore } from "../components/SimulatorCore";
+import { SimulatorCore } from "@/components/sim/SimulatorCore";
 import { HistoryProvider } from "@/components/sim/history";
 
 /**

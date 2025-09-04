@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useStore } from "../../store/useStore.js";
-import { SimulatorCore } from "../../components/SimulatorCore";
+import { useStore } from "@/components/sim/useStore.js";
+import { SimulatorCore } from "@/components/sim/SimulatorCore";
 import {
   CollaborativeCursors,
   ConnectedUsersList,
   CollaborativeSelectionHighlight,
 } from "@/components/sim/collaboration/CollaborationIndicators.jsx";
-import { useCollaboration } from "../../hooks/useCollaboration.js";
+import { useCollaboration } from "@/components/sim/collaboration/useCollaboration.js";
 import { HistoryProvider } from "@/components/sim/history";
 
 // 협업 모드 헤더 컴포넌트

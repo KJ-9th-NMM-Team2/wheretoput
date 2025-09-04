@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useStore } from "@/app/sim/store/useStore.js";
+import { useStore } from "@/components/sim/useStore.js";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
