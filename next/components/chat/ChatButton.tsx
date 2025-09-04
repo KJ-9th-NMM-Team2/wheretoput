@@ -473,7 +473,6 @@ export default function ChatButton({
 
   function Bubble({ m, showAvatar }: { m: Message; showAvatar: boolean }) {
     const isMine = String(m.senderId) === String(currentUserId);
-    console.log("디버그:", { senderId: m.senderId, currentUserId, isMine });
     return (
       <div
         className={`flex items-end gap-2 ${
