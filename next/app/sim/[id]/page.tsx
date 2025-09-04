@@ -14,6 +14,7 @@ import { createWallsFromFloorPlan } from "../../wallDetection.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
+import { HistoryProvider } from "@/components/sim/history";
 
 type position = [number, number, number];
 
@@ -210,7 +211,7 @@ function CameraUpdater() {
   return null;
 }
 
-export default function SimPage({
+function SimPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -451,5 +452,17 @@ export default function SimPage({
         </Canvas>
       </div>
     </div>
+  );
+}
+
+export default function SimPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <HistoryProvider>
+      <SimPageContent params={params} />
+    </HistoryProvider>
   );
 }

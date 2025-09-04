@@ -13,7 +13,16 @@
       "Bash(docker run:*)",
       "Bash(docker-compose:*)",
       "Read(C:\\Users\\zx546\\Desktop\\크롤링/**)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Read(/c:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\api\\history/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\components\\sim/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\sim\\components/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\sim\\hooks/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\sim\\store/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\components\\sim/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\components\\sim/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\sim\\[id]/**)",
+      "Read(/C:\\Users\\zx546\\Desktop\\wheretoput\\next\\app\\sim\\[id]/**)"
     ],
     "deny": [],
     "ask": []

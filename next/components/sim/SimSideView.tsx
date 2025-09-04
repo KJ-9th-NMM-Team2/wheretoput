@@ -6,15 +6,18 @@ import SideSearch from '@/components/sim/side/SideSearch';
 import SideCategories from '@/components/sim/side/SideCategories';
 import SideSort from '@/components/sim/side/SideSort';
 import SideItems from '@/components/sim/side/SideItems';
+import { HistoryControls, useHistoryKeyboard } from '@/components/sim/history';
 import type { furnitures as Furniture } from '@prisma/client';
 
-const SimSideView: React.FC<string> = (roomId) => {
+const SideViewContent: React.FC<{roomId: string}> = ({ roomId }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>();
-  const [searchResults, setSearchResults] = useState<Furniture[]>([]); // 검색 결과 상태 추가
+  const [searchResults, setSearchResults] = useState<Furniture[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [sortOption, setSortOption] = useState<string>('updated_desc');
+
+  useHistoryKeyboard();
 
   const handleCategorySelect = (category: string) => {
     setSearchResults([]);
@@ -23,7 +26,6 @@ const SimSideView: React.FC<string> = (roomId) => {
 
   const handleSearchResults = (results: Furniture[]) => {
     setSearchResults(results);
-    // 검색 결과에 따른 다른 로직 수행
   };
 
   const handleSortChange = (sortValue: string) => {
@@ -32,16 +34,17 @@ const SimSideView: React.FC<string> = (roomId) => {
 
   return (
     <div className="flex">
-      {/* Sidebar */}
       <div
         className={`${
-          // 접힙: 펼침
           collapsed ? "w-10" : "w-80" 
-        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200`} // border 추가로 구분선
+        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200`}
       >
-        {/* 고정 영역들 */}
         <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} />
         <SideSearch collapsed={collapsed} onSearchResults={handleSearchResults} resetQuery={searchQuery} selectedCategory={selectedCategory} />
+        
+        {/* 히스토리 컨트롤 - 카테고리 바로 위에 배치 */}
+        <HistoryControls collapsed={collapsed} />
+        
         <SideCategories 
           collapsed={collapsed}
           onCategorySelect={handleCategorySelect}
@@ -55,7 +58,6 @@ const SimSideView: React.FC<string> = (roomId) => {
           currentSort={sortOption}
         />
 
-        {/* 스크롤 가능한 메뉴 영역 - 나머지 공간을 모두 차지 */}
         <SideItems 
           collapsed={collapsed} 
           selectedCategory={selectedCategory} 
@@ -66,6 +68,14 @@ const SimSideView: React.FC<string> = (roomId) => {
       </div>
     </div>
   );
+};
+
+const SimSideView: React.FC<{ roomId: string | null }> = ({ roomId }) => {
+  if (!roomId) {
+    return null; // roomId가 없으면 아무것도 렌더링하지 않음
+  }
+  
+  return <SideViewContent roomId={roomId} />;
 };
 
 export default SimSideView;

@@ -3,6 +3,7 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { on } from "events";
 import { useStore } from "../store/useStore.js";
+import { useHistoryDrag } from "../../../components/sim/history/useHistoryDrag";
 
 export function useObjectControls(
   modelId,
@@ -20,6 +21,9 @@ export function useObjectControls(
   const [dragOffset, setDragOffset] = useState(new THREE.Vector3());
   const [initialMouseY, setInitialMouseY] = useState(0);
   const [initialScale, setInitialScale] = useState(1);
+  
+  // 히스토리 기능
+  const { startDrag, endDragMove, endDragScale, cancelDrag } = useHistoryDrag();
 
   const handlePointerDown = useCallback(
     (e) => {
@@ -30,11 +34,23 @@ export function useObjectControls(
         controlsRef.current.enabled = false;
       }
 
+      const currentModel = loadedModels.find((model) => model.id === modelId);
+      
       if (e.shiftKey) {
         // Shift + 클릭으로 크기 조정 모드
         setIsScaling(true);
         setInitialMouseY(e.clientY);
-        setInitialScale(e.currentTarget.scale || 1);
+        const currentScale = currentModel?.scale || 1;
+        setInitialScale(currentScale);
+        
+        // 히스토리에 드래그 시작 기록 (스케일)
+        startDrag(
+          modelId,
+          undefined, // position
+          undefined, // rotation  
+          { x: currentScale, y: currentScale, z: currentScale }
+        );
+        
         gl.domElement.style.cursor = "ns-resize";
       } else {
         // 일반 클릭으로 이동 모드
@@ -46,7 +62,6 @@ export function useObjectControls(
 
         raycaster.setFromCamera(mouse, camera);
 
-        const currentModel = loadedModels.find((model) => model.id === modelId);
         const currentY = currentModel ? currentModel.position[1] : 0;
         const floorPlane = new THREE.Plane(
           new THREE.Vector3(0, 1, 0),
@@ -59,10 +74,18 @@ export function useObjectControls(
           setDragOffset(intersectPoint.clone().sub(e.currentTarget.position));
         }
 
+        // 히스토리에 드래그 시작 기록 (위치)
+        if (currentModel?.position) {
+          startDrag(
+            modelId,
+            { x: currentModel.position[0], y: currentModel.position[1], z: currentModel.position[2] }
+          );
+        }
+
         gl.domElement.style.cursor = "grabbing";
       }
     },
-    [modelId, onSelect, camera, gl, raycaster, mouse, controlsRef, loadedModels]
+    [modelId, onSelect, camera, gl, raycaster, mouse, controlsRef, loadedModels, startDrag]
   );
 
   const handlePointerMove = useCallback(
@@ -114,6 +137,25 @@ export function useObjectControls(
   );
 
   const handlePointerUp = useCallback(() => {
+    const currentModel = loadedModels.find((model) => model.id === modelId);
+    
+    if (isDragging && currentModel?.position) {
+      // 이동 완료 시 히스토리에 기록
+      endDragMove(
+        modelId,
+        { x: currentModel.position[0], y: currentModel.position[1], z: currentModel.position[2] },
+        `가구 "${modelId}"를 이동했습니다`
+      );
+    } else if (isScaling && currentModel?.scale) {
+      // 크기 조정 완료 시 히스토리에 기록
+      const scale = currentModel.scale;
+      endDragScale(
+        modelId,
+        { x: scale, y: scale, z: scale },
+        `가구 "${modelId}" 크기를 변경했습니다`
+      );
+    }
+    
     setIsDragging(false);
     setIsScaling(false);
     gl.domElement.style.cursor = "auto";
@@ -121,7 +163,7 @@ export function useObjectControls(
     if (controlsRef.current) {
       controlsRef.current.enabled = true;
     }
-  }, [gl, controlsRef]);
+  }, [isDragging, isScaling, modelId, loadedModels, endDragMove, endDragScale, gl, controlsRef]);
 
   const handlePointerOver = useCallback(() => {
     onHover(modelId);
