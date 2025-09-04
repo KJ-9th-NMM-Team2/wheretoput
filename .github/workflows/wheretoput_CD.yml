@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: next
-          file: next/Dockerfile.prod  # 추가
+          file: next/Dockerfile.prod
           push: true
           tags: |
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:${{ github.sha }}
@@ -59,7 +59,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: socket
-          file: socket/Dockerfile.prod  # 추가
+          file: socket/Dockerfile.prod
           push: true
           tags: |
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_SOCKET }}:${{ github.sha }}
@@ -93,7 +93,8 @@ jobs:
           REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           AUTH_TRUST_HOST=true
-          NEXT_PUBLIC_BASE_URL=http://${{ secrets.EC2_HOST_NEXT }}:3000
+          NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           EOF
 
       - name: Upload files to Next.js EC2
@@ -141,7 +142,9 @@ jobs:
           NODE_ENV=production
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
-          EC2_HOST_NEXT=$ {{ secrets.EC2_HOST_NEXT }}
+          EC2_HOST_NEXT=${{ secrets.EC2_HOST_NEXT }}
+          NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           EOF
 
       - name: Upload files to NestJS EC2
