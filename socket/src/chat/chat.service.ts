@@ -181,6 +181,13 @@ export class ChatService {
           user_id: true,
           content: true,
           created_at: true,
+          User: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
         },
       });
 
@@ -189,7 +196,8 @@ export class ChatService {
         id: r.message_id,
         roomId: r.chat_room_id,
         senderId: r.user_id,
-        senderName: '',
+        senderName: r.User?.name || '',
+        senderImage: r.User?.image || null,
         content: r.content,
         createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
         status: 'sent',
