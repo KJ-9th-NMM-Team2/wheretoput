@@ -29,7 +29,7 @@ type Message = {
   roomId: string;
   senderId: string;
   senderName?: string;
-  avatarUrl?: string;
+  senderImage?: string;
   content: string;
   createdAt: string;
   status?: "sending" | "sent" | "read";
@@ -103,7 +103,7 @@ export default function ChatButton({
       console.log("dddd");
       const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
       const k = q.trim().toLocaleLowerCase("ko-KR");
-      
+
       if (!k) {
         return [...src].sort(byLatest);
       }
@@ -251,7 +251,10 @@ export default function ChatButton({
         }));
         const actualCurrentUserId = currentUserId || session?.user?.id;
         const filtered = rows.filter((u) => u.id !== actualCurrentUserId);
-        console.log('Search results with images:', filtered.map(u => ({ name: u.name, image: u.image })));
+        console.log(
+          "Search results with images:",
+          filtered.map((u) => ({ name: u.name, image: u.image }))
+        );
         setPeopleHits(filtered);
       } catch {
         setPeopleHits([]); // 실패 시 비움
@@ -285,14 +288,20 @@ export default function ChatButton({
           id: m.id ?? String(m.message_id),
           roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
           senderId: m.senderId ?? String(m.user_id),
-          senderName: m.sender?.name ?? m.user?.name,
-          avatarUrl: m.sender?.image ?? m.user?.image,
+          senderName: m.senderName ?? "이름 없음",
+          senderImage: m.senderImage ?? "",
           content: m.content,
           createdAt: m.createdAt ?? m.created_at,
           status: "read",
         })
       );
-      console.log('Messages with avatars:', history.map(h => ({ senderName: h.senderName, avatarUrl: h.avatarUrl })));
+      console.log(
+        "Messages with avatars:",
+        history.map((h) => ({
+          senderName: h.senderName,
+          senderImage: h.senderImage,
+        }))
+      );
       setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
 
       // 읽음 처리 + 목록 last_read_at 갱신
@@ -333,7 +342,7 @@ export default function ChatButton({
         roomId: m.roomId ?? String(m.room_id),
         senderId: m.senderId ?? String(m.user_id),
         senderName: m.sender?.name ?? m.user?.name,
-        avatarUrl: m.sender?.image ?? m.user?.image,
+        senderImage: m.sender?.image ?? m.user?.image,
         content: m.content,
         createdAt: m.createdAt ?? m.created_at,
         status: "sent",
@@ -517,22 +526,28 @@ export default function ChatButton({
     return !(sameSender && within3m);
   };
 
-
   const shouldShowTimestamp = (arr: Message[], idx: number) => {
     if (idx === arr.length - 1) return true; // 마지막 메시지는 항상 시간 표시
-    
+
     const cur = arr[idx];
     const next = arr[idx + 1];
-    
+
     // 현재 메시지와 다음 메시지의 시간(분)을 비교
     const curTime = hhmm(cur.createdAt);
     const nextTime = hhmm(next.createdAt);
-    
+
     return curTime !== nextTime; // 다음 메시지와 시간이 다르면 시간 표시
   };
 
-
-  function Bubble({ m, showAvatar, showTimestamp }: { m: Message; showAvatar: boolean; showTimestamp: boolean }) {
+  function Bubble({
+    m,
+    showAvatar,
+    showTimestamp,
+  }: {
+    m: Message;
+    showAvatar: boolean;
+    showTimestamp: boolean;
+  }) {
     const isMine = String(m.senderId) === String(currentUserId);
 
     return (
@@ -547,9 +562,9 @@ export default function ChatButton({
               showAvatar ? "opacity-100" : "opacity-0"
             }`}
           >
-            {m.avatarUrl ? (
+            {m.senderImage ? (
               <img
-                src={m.avatarUrl}
+                src={m.senderImage}
                 alt={m.senderName ?? "avatar"}
                 className="h-full w-full object-cover"
                 loading="lazy"
@@ -617,21 +632,24 @@ export default function ChatButton({
     if (el && userAtBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [selectedMessages.length, selectedChatId]);
 
-
   // 팝업 바깥 클릭 시 닫기
   useEffect(() => {
     if (!open) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node) && 
-          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
         setselectedChatId(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
   // 채팅방에 처음 들어갈 때 맨 아래로 스크롤
@@ -647,7 +665,6 @@ export default function ChatButton({
       }
     }
   }, [selectedChatId]);
-
 
   const dayKey = (iso: string) =>
     new Date(iso).toLocaleDateString("ko-KR", {
@@ -692,26 +709,28 @@ export default function ChatButton({
         return;
       }
 
-
       // 필터 초기화
       setQuery("");
       setSelect("전체");
 
-      console.log('Creating chat room:');
-      console.log('- currentUserId prop:', currentUserId);
-      console.log('- session?.user?.id:', session?.user?.id);
-      console.log('- otherUserId:', otherUserId);
-      console.log('- otherUserName:', otherUserName);
+      console.log("Creating chat room:");
+      console.log("- currentUserId prop:", currentUserId);
+      console.log("- session?.user?.id:", session?.user?.id);
+      console.log("- otherUserId:", otherUserId);
+      console.log("- otherUserName:", otherUserName);
 
-      const { data } = await api.post(`${NEXT_API_URL}/api/backend/rooms/direct`, {
-        currentUserId: currentUserId || session?.user?.id,
-        otherUserId
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await api.post(
+        `${NEXT_API_URL}/api/backend/rooms/direct`,
+        {
+          currentUserId: currentUserId || session?.user?.id,
+          otherUserId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-
-      console.log('API Response:', data);
+      console.log("API Response:", data);
 
       const roomId =
         data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
@@ -719,16 +738,14 @@ export default function ChatButton({
 
       setselectedChatId(roomId);
 
-
-      setBaseChats(prev => {
-        const existingIndex = prev.findIndex(c => c.chat_room_id === roomId);
+      setBaseChats((prev) => {
+        const existingIndex = prev.findIndex((c) => c.chat_room_id === roomId);
         if (existingIndex !== -1) {
-
           const next = [...prev];
           // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
           next[existingIndex] = {
             ...next[existingIndex],
-            name: data?.name ?? otherUserName ?? next[existingIndex].name
+            name: data?.name ?? otherUserName ?? next[existingIndex].name,
           };
           setChats(recomputeChats(next, "", "전체"));
           return next;
