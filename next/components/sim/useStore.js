@@ -152,7 +152,7 @@ export const useStore = create(
               ...state.loadedModels,
               {
                 ...model,
-                id: model.id || Date.now() + Math.random(),
+                id: model.id || crypto.randomUUID(),
                 position: model.position || [
                   (Math.random() - 0.5) * 15,
                   0,
@@ -179,6 +179,9 @@ export const useStore = create(
       // 히스토리 복원용: 기존 ID를 유지하면서 모델 추가
       addModelWithId: (model, shouldBroadcast = true) =>
         set((state) => {
+          // 같은 ID의 기존 모델 제거 (중복 방지)
+          const filteredModels = state.loadedModels.filter((m) => m.id !== model.id);
+          
           // scale 값 검증 및 최소값 보장
           let scale = model.scale || state.scaleValue;
           if (Array.isArray(scale)) {
@@ -191,7 +194,7 @@ export const useStore = create(
 
           const result = {
             loadedModels: [
-              ...state.loadedModels,
+              ...filteredModels,
               {
                 ...model,
                 // ID를 유지 (히스토리 복원용)
