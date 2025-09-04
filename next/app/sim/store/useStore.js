@@ -100,7 +100,7 @@ export const useStore = create(
               ...state.loadedModels,
               {
                 ...model,
-                id: Date.now() + Math.random(),
+                id: model.id || Date.now() + Math.random(),
                 position: model.position || [
                   (Math.random() - 0.5) * 15,
                   0,
