@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { furnitures as Furniture } from "@prisma/client";
 import ItemPaging from "./item/ItemPaging";
 import ItemSection from "./item/ItemSection";
-import { useStore } from "@/app/sim/store/useStore";
+import { useStore } from "@/components/sim/useStore";
 import { createNewModel } from "@/utils/createNewModel";
 import { handlePageChange } from "@/utils/handlePage";
 import { fetchFurnitures } from "@/lib/api/fetchFurnitures";
@@ -118,15 +118,18 @@ const SideItems: React.FC<SideItemsProps> = ({
 
         if (result.success) {
           const newModel = createNewModel(item, result.model_url);
+          const modelId = Date.now() + Math.random();
+          const modelWithId = { ...newModel, id: modelId };
+          
           toast.success(`${item.name} 생성 완료`, { id: toastId });
-          addModel(newModel);
+          addModel(modelWithId);
           
           // 히스토리에 가구 추가 액션 기록
           addAction({
             type: ActionType.FURNITURE_ADD,
             data: {
-              furnitureId: newModel.id,
-              previousData: newModel
+              furnitureId: modelId,
+              previousData: modelWithId
             },
             description: `${item.name} 추가`
           });
@@ -138,20 +141,23 @@ const SideItems: React.FC<SideItemsProps> = ({
         toast.error(`${item.name} 생성 실패:`, { id: toastId });
         // fallback 처리
         const newModel = createNewModel(item);
-        addModel(newModel);
+        const modelId = Date.now() + Math.random();
+        const modelWithId = { ...newModel, id: modelId };
+        
+        addModel(modelWithId);
         
         // 히스토리에 가구 추가 액션 기록
         addAction({
           type: ActionType.FURNITURE_ADD,
           data: {
-            furnitureId: newModel.id,
-            previousData: newModel
+            furnitureId: modelId,
+            previousData: modelWithId
           },
           description: `${item.name} 추가`
         });
       }
     },
-    [addModel]
+    [addModel, addAction]
   );
 
   // 이미지 에러 핸들러

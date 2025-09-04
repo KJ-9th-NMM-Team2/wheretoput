@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useStore } from "../store/useStore.js";
+import { useStore } from "@/components/sim/useStore";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 

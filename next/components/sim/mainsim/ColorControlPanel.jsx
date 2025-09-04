@@ -1,5 +1,5 @@
 import React from "react";
-import { useStore } from '../store/useStore.js'
+import { useStore } from '@/components/sim/useStore';
 import { HexColorPicker } from "react-colorful";
 
 
