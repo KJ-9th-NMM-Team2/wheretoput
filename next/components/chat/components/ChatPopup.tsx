@@ -17,6 +17,7 @@ interface ChatPopupProps {
   baseChats: ChatListItem[];
   chats: ChatListItem[];
   setChats: (chats: ChatListItem[]) => void;
+  setBaseChats: (chats: ChatListItem[]) => void;
   peopleHits: UserLite[];
   groupedByDay: Record<string, Message[]>;
   text: string;
@@ -41,6 +42,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
     baseChats,
     chats,
     setChats,
+    setBaseChats,
     peopleHits,
     groupedByDay,
     text,
@@ -83,9 +85,11 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 baseChats={baseChats}
                 chats={chats}
                 setChats={setChats}
+                setBaseChats={setBaseChats}
                 peopleHits={peopleHits}
                 onChatSelect={onChatSelect}
                 onStartDirect={onStartDirect}
+                currentUserId={currentUserId}
               />
             </motion.div>
           ) : (
