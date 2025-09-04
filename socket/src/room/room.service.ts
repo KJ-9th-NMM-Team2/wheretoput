@@ -5,6 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RoomService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private socketServer: any;
+
+  setSocketServer(server: any) {
+    this.socketServer = server;
+  }
+
   // 방 생성
   async createRoom(params: { currentUserId: string; otherUserId: string }) {
     try {
@@ -89,6 +95,24 @@ export class RoomService {
         return room;
       });
       console.log('트랜잭션 완료');
+
+      // 새 방이 생성되면 관련 사용자들에게 소켓 이벤트 전송
+      if (this.socketServer) {
+        const roomData = {
+          chat_room_id: result.chat_room_id,
+          name: result.name,
+          is_private: true,
+          created_at: result.created_at,
+        };
+        
+        // 양쪽 사용자에게 방 생성 알림
+        this.socketServer.emit('room:created', {
+          room: roomData,
+          participants: [params.currentUserId, params.otherUserId]
+        });
+        
+        console.log('📢 ROOM CREATED EVENT SENT:', roomData);
+      }
 
       return result;
     } catch (error: any) {
