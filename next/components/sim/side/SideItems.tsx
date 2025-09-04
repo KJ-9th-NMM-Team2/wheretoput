@@ -118,7 +118,7 @@ const SideItems: React.FC<SideItemsProps> = ({
 
         if (result.success) {
           const newModel = createNewModel(item, result.model_url);
-          const modelId = Date.now() + Math.random();
+          const modelId = crypto.randomUUID();
           const modelWithId = { ...newModel, id: modelId };
           
           toast.success(`${item.name} 생성 완료`, { id: toastId });
@@ -141,7 +141,7 @@ const SideItems: React.FC<SideItemsProps> = ({
         toast.error(`${item.name} 생성 실패:`, { id: toastId });
         // fallback 처리
         const newModel = createNewModel(item);
-        const modelId = Date.now() + Math.random();
+        const modelId = crypto.randomUUID();
         const modelWithId = { ...newModel, id: modelId };
         
         addModel(modelWithId);
