@@ -4,7 +4,7 @@ services:
   next:
     image: ${ECR_REGISTRY}/${ECR_REPO_NEXT}:${IMAGE_TAG}
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${EC2_HOST_NEXT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
@@ -17,4 +17,7 @@ services:
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
       - AWS_REGION=${AWS_REGION}
       - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN}
+      - ECR_REGISTRY=${ECR_REGISTRY}
+      - ECR_REPO_NEXT=${ECR_REPO_NEXT}
+      - IMAGE_TAG=latest
     restart: unless-stopped
