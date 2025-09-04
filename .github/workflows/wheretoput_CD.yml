@@ -92,6 +92,8 @@ jobs:
           AUTH_GOOGLE_SECRET=${{ secrets.AUTH_GOOGLE_SECRET }}
           REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
+          AUTH_TRUST_HOST=true
+          NEXT_PUBLIC_BASE_URL=http://${{ secrets.EC2_HOST_NEXT }}:3000
           EOF
 
       - name: Upload files to Next.js EC2
