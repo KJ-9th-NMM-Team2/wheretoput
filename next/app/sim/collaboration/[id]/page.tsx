@@ -13,34 +13,6 @@ import { HistoryProvider } from "@/components/sim/history";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { useSession } from "next-auth/react";
 
-// 협업 모드 헤더 컴포넌트
-function CollaborationHeader({ roomId }: { roomId: string }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: "10px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        background: "rgba(245, 158, 11, 0.9)", // 협업 모드 색상
-        padding: "12px 20px",
-        borderRadius: "8px",
-        zIndex: 100,
-        color: "white",
-        fontSize: "14px",
-        fontWeight: "bold",
-        textAlign: "center",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <span>🤝</span>
-        <span>협업 모드</span>
-        <span style={{ fontSize: "12px", opacity: 0.8 }}>Room: {roomId}</span>
-      </div>
-    </div>
-  );
-}
 
 function CollaborationPageContent({
   params,
@@ -158,7 +130,6 @@ function CollaborationPageContent({
       showSidebar={true}
       showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
       showEditControls={true}
-      customHeader={<CollaborationHeader roomId={roomId} />}
       canvasChildren={<CollaborativeCursors />}
       additionalUI={
         <>

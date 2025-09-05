@@ -5,9 +5,10 @@ import { ChatModule } from './chat/chat.module';
 import { RoomModule } from './room/room.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CollabModule } from './collab/collab.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [PrismaModule, ChatModule, RoomModule, CollabModule],
+  imports: [PrismaModule, ChatModule, RoomModule, CollabModule, RedisModule],
   controllers: [AppController],
   providers: [AppService],
 })

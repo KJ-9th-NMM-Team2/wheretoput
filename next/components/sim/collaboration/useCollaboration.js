@@ -32,6 +32,7 @@ export function useCollaboration(roomId) {
     selectModel,
     setCollaborationCallbacks,
     connectedUsers,
+    saveSimulatorState,
   } = useStore();
 
   // Socket.IO 연결 초기화
@@ -55,7 +56,8 @@ export function useCollaboration(roomId) {
         // 방 입장
         socket.current.emit("join-room", roomId);
 
-        // 사용자 정보 전송 (입장 알림)
+        // 협업 모드에서는 바로 사용자 입장 처리
+        console.log("협업 모드 연결 완료, 즉시 사용자 입장 처리");
         socket.current.emit("user-join", {
           userId: currentUser.id,
           userData: {
@@ -68,7 +70,7 @@ export function useCollaboration(roomId) {
       // 이벤트 리스너 등록
       setupSocketListeners();
 
-      socket.current.on("disconnect", () => {
+      socket.current.on("disconnect", async () => {
         console.log("🔌 협업 연결 끊김");
         setConnectionStatus(false);
       });
@@ -90,9 +92,30 @@ export function useCollaboration(roomId) {
       console.log(`👤 ${data.userData.name}님이 입장했습니다`);
     });
 
-    socket.current.on("user-left", (data) => {
+    socket.current.on("user-left", async (data) => {
+      console.log("🔴 user-left 이벤트 수신:", data);
+      console.log("현재 connectedUsers:", connectedUsers);
+
+      // 퇴장한 사용자가 선택한 모델이 있다면 선택 해제 (제거하기 전에 미리 처리)
+      const leavingUser = connectedUsers.get(data.userId);
+      if (leavingUser?.selectedModel) {
+        // 선택된 모델의 잠금 상태 해제 등 필요한 정리 작업
+        console.log(
+          `🔓 ${data.userId}님이 선택한 모델 ${leavingUser.selectedModel} 선택 해제`
+        );
+      }
+
+      // 사용자 정보 제거
       removeConnectedUser(data.userId);
-      console.log(`👋 $${data.userData.name}님이 퇴장했습니다`);
+      console.log(
+        `👋 ${
+          leavingUser?.name || data.userData?.name || data.userId
+        }님이 퇴장했습니다`
+      );
+      console.log(
+        "퇴장 후 connectedUsers:",
+        useStore.getState().connectedUsers
+      );
     });
 
     socket.current.on("request-user-list", (data) => {
@@ -102,6 +125,55 @@ export function useCollaboration(roomId) {
         userData: { name: currentUser.name, color: currentUser.color },
         targetSocketId: data.newUserId,
       });
+    });
+
+    // Redis 기반 초기 방 상태 수신 (전체 상태 적용)
+    socket.current.on("initial-room-state", (data) => {
+      console.log(
+        `📦 Redis 전체 상태 수신: ${data.models?.length || 0}개 모델`
+      );
+      console.log("Redis 모델 정보:", data.models);
+      console.log("방 접속자 정보:", data.connectedUsers);
+
+      const store = useStore.getState();
+
+      // 기존 로드된 모델들 초기화 (Redis가 단일 진실 소스)
+      store.loadedModels.forEach((model) => {
+        removeModel(model.id, false);
+      });
+
+      // Redis의 모든 모델을 새로 추가
+      if (data.models && data.models.length > 0) {
+        console.log(`🔄 Redis의 ${data.models.length}개 모델로 전체 교체`);
+        data.models.forEach((redisModel, index) => {
+          console.log(`Redis 모델 ${index}:`, redisModel);
+          console.log(
+            `모델 ID: ${redisModel.id}, furniture_id: ${redisModel.furniture_id}`
+          );
+          console.log(`position:`, redisModel.position);
+          console.log(`rotation:`, redisModel.rotation);
+          console.log(`scale:`, redisModel.scale);
+
+          try {
+            addModelWithId(redisModel, false);
+            console.log(`✅ 모델 ${redisModel.id} 추가 성공`);
+          } catch (error) {
+            console.error(`❌ 모델 ${redisModel.id} 추가 실패:`, error);
+          }
+        });
+      } else {
+        console.log("📭 Redis에 저장된 모델이 없음");
+      }
+
+      // 연결된 사용자 정보 업데이트
+      if (data.connectedUsers) {
+        data.connectedUsers.forEach(([userId, userData]) => {
+          if (userId !== currentUser.id) {
+            console.log(`기존 사용자 정보 업데이트: ${userData.name}`);
+            updateConnectedUser(userId, userData);
+          }
+        });
+      }
     });
 
     // 새로 입장한 사용자가 기존 사용자들의 정보를 받음
@@ -196,6 +268,20 @@ export function useCollaboration(roomId) {
     setConnectionStatus(false);
   };
 
+  // DB 로드 완료 시 사용자 입장 처리
+  useEffect(() => {
+    if (socket.current && socket.current.connected) {
+      console.log("DB 로드 완료, 사용자 입장 처리");
+      socket.current.emit("user-join", {
+        userId: currentUser.id,
+        userData: {
+          name: currentUser.name,
+          color: currentUser.color,
+        },
+      });
+    }
+  }, [currentUser.id, currentUser.name, currentUser.color]);
+
   // 협업 모드 변경시 연결/해제 처리
   useEffect(() => {
     console.log("useEffect 트리거됨:", {
@@ -245,7 +331,7 @@ export function useCollaboration(roomId) {
 
   // 실시간 동기화를 위한 이벤트 전송 함수들
   const broadcastModelAdd = (modelData) => {
-    emitEvent("model-added-with-id", {
+    emitEvent("model-added", {
       userId: currentUser.id,
       modelData,
     });
@@ -266,7 +352,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastModelMove = (modelId, position) => {
-    emitEvent("model-move", {
+    emitEvent("model-moved", {
       userId: currentUser.id,
       modelId,
       position,
@@ -274,7 +360,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastModelRotate = (modelId, rotation) => {
-    emitEvent("model-rotate", {
+    emitEvent("model-rotated", {
       userId: currentUser.id,
       modelId,
       rotation,
@@ -282,7 +368,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastModelScale = (modelId, scale) => {
-    emitEvent("model-scale", {
+    emitEvent("model-scaled", {
       userId: currentUser.id,
       modelId,
       scale,

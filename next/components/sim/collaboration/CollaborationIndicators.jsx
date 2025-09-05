@@ -2,6 +2,23 @@ import React from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { Html } from "@react-three/drei";
 
+// CSS 애니메이션 스타일 추가
+if (
+  typeof window !== "undefined" &&
+  !document.querySelector("#collaboration-styles")
+) {
+  const style = document.createElement("style");
+  style.id = "collaboration-styles";
+  style.textContent = `
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 /**
  * 협업 모드에서 다른 사용자들의 상태를 시각적으로 표시하는 컴포넌트들
  *
@@ -117,43 +134,72 @@ export function ConnectedUsersList() {
     <div
       style={{
         position: "fixed",
-        top: "80px", // 기존 편집/보기 버튼 아래에 위치
+        top: "10px",
         left: "50%",
         transform: "translateX(-50%)",
-        background: "rgba(0,0,0,0.8)",
-        padding: "5px 10px",
-        borderRadius: "8px",
-        zIndex: 99,
-        color: "white",
-        fontSize: "13px",
-        minWidth: "50px",
+        zIndex: 100,
         textAlign: "center",
       }}
     >
       {/* 연결된 사용자 목록 */}
       {connectedUsers.size > 0 ? (
-        <div>
-          <div style={{ fontSize: "11px", opacity: 0.8, marginBottom: "4px" }}>
-            함께 편집 중 ({connectedUsers.size}명)
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "12px",
+            padding: "8px 12px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "6px",
+            }}
+          >
+            <div
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                background: "#10b981",
+                animation: "pulse 2s infinite",
+              }}
+            ></div>
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "#374151",
+              }}
+            >
+              협업 중 • {connectedUsers.size}명
+            </span>
           </div>
           <div
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "4px",
-              justifyContent: "center",
+              gap: "6px",
             }}
           >
             {Array.from(connectedUsers.entries()).map(([userId, userData]) => (
               <div
                 key={userId}
                 style={{
-                  background: userData.color,
+                  background: `linear-gradient(135deg, ${userData.color}, ${userData.color}dd)`,
                   color: "white",
-                  padding: "2px 6px",
-                  borderRadius: "12px",
+                  padding: "4px 8px",
+                  borderRadius: "16px",
                   fontSize: "11px",
-                  fontWeight: "bold",
+                  fontWeight: "500",
+                  textShadow: "0 1px 2px rgba(0,0,0,0.3)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
                 }}
               >
                 {userData.name}
@@ -162,9 +208,55 @@ export function ConnectedUsersList() {
           </div>
         </div>
       ) : isConnected ? (
-        <div style={{ fontSize: "11px", opacity: 0.6 }}>혼자 편집 중</div>
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: "10px",
+            padding: "6px 10px",
+            fontSize: "11px",
+            color: "#6b7280",
+            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <div
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              background: "#f59e0b",
+            }}
+          ></div>
+          혼자 편집 중
+        </div>
       ) : (
-        <div style={{ fontSize: "11px", opacity: 0.6 }}>연결 끊김</div>
+        <div
+          style={{
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: "10px",
+            padding: "6px 10px",
+            fontSize: "11px",
+            color: "#ef4444",
+            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <div
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              background: "#ef4444",
+            }}
+          ></div>
+          연결 끊김
+        </div>
       )}
     </div>
   );

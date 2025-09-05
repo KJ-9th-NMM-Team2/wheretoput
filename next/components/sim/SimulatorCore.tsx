@@ -207,6 +207,7 @@ export function SimulatorCore({
     addModel,
     addModelWithId,
     removeModel,
+    collaborationMode,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -220,7 +221,13 @@ export function SimulatorCore({
         // 임시 방이 아닌 경우에만 데이터 로드 시도
         if (!roomId.startsWith("temp_")) {
           try {
-            await loadSimulatorState(roomId);
+            if (collaborationMode) {
+              console.log(`협업 모드이므로 벽 데이터만 로드하고 가구는 Redis에서 받습니다.`);
+              await loadSimulatorState(roomId, { wallsOnly: true });
+            } else {
+              console.log(`일반 모드로 전체 데이터를 로드합니다.`);
+              await loadSimulatorState(roomId);
+            }
             console.log(`방 ${roomId}의 데이터 로드 완료`);
           } catch (loadError) {
             console.log(
@@ -239,7 +246,7 @@ export function SimulatorCore({
     if (roomId) {
       initializeSimulator();
     }
-  }, [roomId, setCurrentRoomId, loadSimulatorState]);
+  }, [roomId, setCurrentRoomId, loadSimulatorState, collaborationMode]);
 
   // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
   useEffect(() => {
