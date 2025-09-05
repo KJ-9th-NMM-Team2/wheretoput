@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { CollabGateway } from './collab.gateway';
 import { RoomService } from '../room/room.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: { expiresIn: '24h' },
     }),
+    RedisModule,
   ],
   providers: [CollabGateway, RoomService, JwtAuthGuard],
   exports: [CollabGateway, RoomService],
