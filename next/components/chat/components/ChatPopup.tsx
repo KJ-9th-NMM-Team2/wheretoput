@@ -27,6 +27,7 @@ interface ChatPopupProps {
   onEditorKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
+  onDeleteChat: (chatId: string) => void;
   onBack: () => void;
   currentUserId: string | null;
   listRef: React.RefObject<HTMLDivElement>;
@@ -53,6 +54,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
     onEditorKeyDown,
     onChatSelect,
     onStartDirect,
+    onDeleteChat,
     onBack,
     currentUserId,
     listRef,
@@ -91,6 +93,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 peopleHits={peopleHits}
                 onChatSelect={onChatSelect}
                 onStartDirect={onStartDirect}
+                onDeleteChat={onDeleteChat}
                 currentUserId={currentUserId}
               />
             </motion.div>

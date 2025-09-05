@@ -110,6 +110,12 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
 
           // 전송 후 정리
           removeSelectedImage();
+        } else {
+          // 3. 이미지가 없으면 텍스트만 전송
+          if (text.trim()) {
+            send();
+            setText('');
+          }
         }
       } catch (error) {
         console.error('메시지 전송 오류:', error);
