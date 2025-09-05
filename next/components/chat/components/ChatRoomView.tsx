@@ -41,6 +41,13 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
       fileInputRef.current?.click();
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendWithImage();
+      }
+    };
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -195,7 +202,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              onKeyDown={onEditorKeyDown}
+              onKeyDown={handleKeyDown}
               placeholder="메시지 입력..."
               rows={1}
               className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 max-h-40"
