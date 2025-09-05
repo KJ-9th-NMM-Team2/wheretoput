@@ -188,12 +188,32 @@ export function useCollaboration(roomId) {
 
     socket.current.on("model-added", (data) => {
       if (data.userId !== currentUser.id) {
-        addModel(data.modelData);
+        console.log("➕ model-added 이벤트 수신:", data);
+        console.log("modelData 상세 정보:", {
+          id: data.modelData?.id,
+          name: data.modelData?.name,
+          url: data.modelData?.url,
+          furniture_id: data.modelData?.furniture_id,
+          position: data.modelData?.position,
+          rotation: data.modelData?.rotation,
+          scale: data.modelData?.scale
+        });
+        addModel(data.modelData, false);
       }
     });
 
     socket.current.on("model-added-with-id", (data) => {
       if (data.userId !== currentUser.id) {
+        console.log("➕ model-added-with-id 이벤트 수신:", data);
+        console.log("modelData 상세 정보:", {
+          id: data.modelData?.id,
+          name: data.modelData?.name,
+          url: data.modelData?.url,
+          furniture_id: data.modelData?.furniture_id,
+          position: data.modelData?.position,
+          rotation: data.modelData?.rotation,
+          scale: data.modelData?.scale
+        });
         addModelWithId(data.modelData, false); // shouldBroadcast = false
       }
     });

@@ -352,7 +352,7 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; modelData: any },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`➕ MODEL ADDED: by ${data.userId}`);
+    this.logger.log(`➕ MODEL ADDED WITH ID: by ${data.userId}`);
 
     // Redis에 새 모델 추가
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
