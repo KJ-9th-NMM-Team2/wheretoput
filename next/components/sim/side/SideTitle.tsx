@@ -111,8 +111,12 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
       console.log("방 저장 완료!");
     }
     
-    // 이전 페이지가 /create인 경우 메인 페이지로, 아니면 이전 페이지로
-    if (document.referrer && document.referrer.includes('/create')) {
+    // URL에서 from 파라미터 확인하거나 sessionStorage 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const fromStorage = sessionStorage.getItem('previousPage');
+    
+    if (fromParam === 'create' || fromStorage === 'create') {
       router.push('/');
     } else {
       router.back();
