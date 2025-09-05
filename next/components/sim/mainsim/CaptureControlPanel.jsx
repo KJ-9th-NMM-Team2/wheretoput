@@ -17,7 +17,7 @@ export function CaptureControlPanel({ isPopup = false }) {
       ${isPopup ? 'static' : 'absolute top-1/2 -translate-y-1/2 left-2.5 z-[100]'}
     `}>
       <h3 className="m-0 mb-2.5 text-base">
-        <span className="text-lg"></span> 화면 캡쳐
+        <span > 화면 캡쳐</span> 
       </h3>
 
       <div className="cursor-default">

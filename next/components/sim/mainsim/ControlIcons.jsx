@@ -9,6 +9,7 @@ import { CaptureControlPanel } from '@/components/sim/mainsim/CaptureControlPane
 import { FaCameraRetro, FaPalette, FaCamera } from "react-icons/fa";
 import { MdSunny } from "react-icons/md";
 import { FaSave } from "react-icons/fa";
+import { TbScreenshot } from "react-icons/tb";
 // =====================================
 
 export function ControlIcons() {
@@ -209,7 +210,7 @@ export function ControlIcons() {
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="화면 캡쳐"
       >
-        <FaCamera />
+        <TbScreenshot /> 
       </button>
 
       {/* Control Panel 팝업 결정 */}
