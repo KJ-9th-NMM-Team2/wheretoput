@@ -6,6 +6,7 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
+import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
@@ -25,7 +26,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#D2B48C" roughness={0.9} metalness={0.0} />
+        <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
       </mesh>
     );
   }
@@ -82,69 +83,6 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   );
 }
 
-// 도면 기반 3D 벽 컴포넌트
-function Wall({
-  width,
-  height,
-  depth = 0.1,
-  position,
-  rotation = [0, 0, 0],
-}: {
-  width: number;
-  height: number;
-  depth?: number;
-  position: position;
-  rotation?: [number, number, number];
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const { camera } = useThree();
-  const { enableWallTransparency, wallColor } = useStore();
-
-  useFrame(() => {
-    if (!meshRef.current || !materialRef.current) return;
-    if (!enableWallTransparency) {
-      materialRef.current.opacity = 1.0;
-      return;
-    }
-
-    const wallWorldPosition = new THREE.Vector3();
-    meshRef.current.getWorldPosition(wallWorldPosition);
-    const distance = camera.position.distanceTo(wallWorldPosition);
-
-    const minOpacity = 0.2;
-    const maxOpacity = 0.95;
-    const minDistanceThreshold = 15;
-    const maxDistanceThreshold = 30;
-
-    if (distance > maxDistanceThreshold) {
-      materialRef.current.opacity = maxOpacity;
-    } else if (distance < minDistanceThreshold) {
-      materialRef.current.opacity = minOpacity;
-    } else {
-      const newOpacity =
-        ((maxOpacity - minOpacity) /
-          (maxDistanceThreshold - minDistanceThreshold)) *
-          (distance - minDistanceThreshold) +
-        minOpacity;
-      materialRef.current.opacity = newOpacity;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
-      <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        ref={materialRef}
-        color={wallColor}
-        transparent
-        roughness={0.8}
-        metalness={0.1}
-      />
-    </mesh>
-  );
-}
-
 function CameraUpdater() {
   const fov = useStore((state) => state.cameraFov);
   const { camera } = useThree();
@@ -195,6 +133,7 @@ export function SimulatorCore({
   const controlsRef = useRef(null);
   const {
     viewOnly,
+    backgroundColor,
     environmentPreset,
     loadedModels,
     deselectModel,
@@ -332,7 +271,7 @@ export function SimulatorCore({
           <Environment preset={environmentPreset} background={false} />
 
           <CameraUpdater />
-          <color attach="background" args={["#87CEEB"]} />
+          <color attach="background" args={[backgroundColor]} />
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}

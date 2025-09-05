@@ -379,12 +379,14 @@ export const useStore = create(
       setEnableWallTransparency: (enable) =>
         set({ enableWallTransparency: enable }),
 
-      // 벽, 바닥 상태
+      // 색상 관련 상태
       wallColor: "#FFFFFF",
       floorColor: "#D2B48C",
+      backgroundColor: "#87CEEB",
 
       setWallColor: (color) => set({ wallColor: color }),
       setFloorColor: (color) => set({ floorColor: color }),
+      setBackgroundColor: (color) => set({ backgroundColor: color }),
 
       //[09.01] wallscalefactor 로 벽 조정 가능합니다.
       currentRoomId: null,
