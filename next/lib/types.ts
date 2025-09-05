@@ -21,7 +21,9 @@ export interface BaseItemProps {
 // 각 컴포넌트별 필요한 속성만 선택
 export type ItemSectionProps = Pick<BaseItemProps, 
     'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
->;
+> & {
+    handleSelectModel?: (item: Furniture) => void;
+};
 
 export type ItemPagingProps = Pick<BaseItemProps, 
     'loading' | 'error' | 'currentPage' | 'totalPages' | 'totalItems' | 'handlePrevPage' | 'handleNextPage' | 'itemsPerPage'

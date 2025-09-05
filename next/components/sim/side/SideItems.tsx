@@ -36,7 +36,7 @@ const SideItems: React.FC<SideItemsProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const itemsPerPage = 8;
-  const { addModel, loadedModels } = useStore();
+  const { addModel, loadedModels, selectModel } = useStore();
   const { addAction } = useHistory();
 
   // API에서 데이터 가져오기 함수
@@ -91,6 +91,22 @@ const SideItems: React.FC<SideItemsProps> = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedCategory, sortOption]);
+
+  // loadedModels 변경 시 배치한 가구목록 새로고침
+  useEffect(() => {
+    const refreshSelectedItems = async () => {
+      if (selectedCategory === "-1") {
+        const furnitureId = loadedModels.map((item: any) => item.furniture_id);
+        const result = await fetchSelectedFurnitures(furnitureId, sortOption);
+
+        if (result) {
+          setSelectedItems(result.furnitures);
+          setTotalPrice(result.totalPrice["_sum"]["price"] || 0);
+        }
+      }
+    };
+    refreshSelectedItems();
+  }, [loadedModels, selectedCategory, sortOption, setTotalPrice]);
 
   // 페이지 변경 핸들러들
   const handlePrevPage = useCallback(() => {
@@ -165,6 +181,16 @@ const SideItems: React.FC<SideItemsProps> = ({
     setImageErrors((prev) => new Set(prev).add(furnitureId));
   }, []);
 
+  // 가구 선택 핸들러 (배치한 가구목록에서 카드 클릭 시)
+  const handleSelectModel = useCallback((item: Furniture) => {
+    // loadedModels에서 해당 furniture_id를 가진 모델 찾기
+    const modelToSelect = loadedModels.find(model => model.furniture_id === item.furniture_id);
+    
+    if (modelToSelect) {
+      selectModel(modelToSelect.id);
+    }
+  }, [loadedModels, selectModel]);
+
   // collapsed 상태일 때는 아무것도 렌더링하지 않음
   if (collapsed) {
     return null;
@@ -181,6 +207,7 @@ const SideItems: React.FC<SideItemsProps> = ({
         selectedCategory={selectedCategory}
         handleItemClick={handleItemClick}
         handleImageError={handleImageError}
+        handleSelectModel={handleSelectModel}
       />
 
       {/* 페이지네이션 */}

@@ -11,6 +11,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
     selectedCategory,
     handleItemClick,
     handleImageError,
+    handleSelectModel,
 }) => {
     const itemsToRender = selectedItems?.length > 0 ? selectedItems : filteredItems;
     const isSelectedCategory = selectedItems?.length > 0;
@@ -33,10 +34,12 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                     {itemsToRender.map((item) => (
                         <div
                             key={item.furniture_id}
-                            onClick={!isSelectedCategory ? () => handleItemClick(item) : undefined}
-                            className={`bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden ${
-                                !isSelectedCategory ? 'cursor-pointer' : ''
-                            }`}
+                            onClick={
+                                !isSelectedCategory 
+                                    ? () => handleItemClick(item) 
+                                    : () => handleSelectModel && handleSelectModel(item)
+                            }
+                            className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden cursor-pointer"
                         >
                             <div className="flex">
                                 {/* 이미지 영역 */}
