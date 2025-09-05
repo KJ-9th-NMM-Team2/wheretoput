@@ -92,6 +92,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   }, [addAction]);
 
   const undo = useCallback(() => {
+    //히스토리 배열이 존재할때만
     if (history.currentIndex >= 0) {
       const actionToUndo = history.actions[history.currentIndex];
       if (actionToUndo) {
@@ -103,6 +104,8 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
 
   const redo = useCallback(() => {
     if (history.currentIndex < history.actions.length - 1) {
+      
+      // 앞 action인 cur_idx +1 로 이동 
       const actionToRedo = history.actions[history.currentIndex + 1];
       if (actionToRedo) {
         executeRedoAction(actionToRedo);
@@ -115,6 +118,7 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR' });
   }, []);
 
+  // undo, redor 가능한지 결정
   const canUndo = history.currentIndex >= 0;
   const canRedo = history.currentIndex < history.actions.length - 1;
 
@@ -136,7 +140,10 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// action : 하나의 액션 객체
+// UNDO 실행
 function executeUndoAction(action: HistoryAction) {
+  // type = action.type , data  = action.data
   const { type, data } = action;
 
   switch (type) {
@@ -168,6 +175,7 @@ function executeUndoAction(action: HistoryAction) {
   }
 }
 
+// Redo 실행
 function executeRedoAction(action: HistoryAction) {
   const { type, data } = action;
 
