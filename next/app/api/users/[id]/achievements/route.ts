@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAchievementsData, getUserAchievementsWithStatus } from "@/lib/api/achievements";
+import { createAchievementsData, getUserAchievementsWithStatus } from "@/lib/api/achievement/achievements";
 
 export async function POST(request: NextRequest) {
   try {

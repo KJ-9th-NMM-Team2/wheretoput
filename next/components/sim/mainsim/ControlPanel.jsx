@@ -101,6 +101,8 @@ export function ControlPanel({ isPopup = false }) {
 
     try {
       await saveSimulatorState();
+      console.log("saved simulator state");
+      await fetch(`/api/achievement/${session?.user?.id}`);
 
       // 저장 완료 후 캔버스 캡처 트리거
       setShouldCapture(true);
