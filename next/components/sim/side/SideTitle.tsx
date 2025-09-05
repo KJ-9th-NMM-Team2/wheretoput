@@ -110,7 +110,17 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
       await handleSaveRoom();
       console.log("방 저장 완료!");
     }
-    router.back();
+    
+    // URL에서 from 파라미터 확인하거나 sessionStorage 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const fromStorage = sessionStorage.getItem('previousPage');
+    
+    if (fromParam === 'create' || fromStorage === 'create') {
+      router.push('/');
+    } else {
+      router.back();
+    }
   };
 
   return (

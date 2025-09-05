@@ -127,46 +127,15 @@ export function ControlPanel({ isPopup = false }) {
     }
   };
 
-  const baseStyle = {
-    background: "rgba(0,0,0,0.7)",
-    padding: "15px",
-    borderRadius: "5px",
-    color: "white",
-    fontSize: "12px",
-    width: "250px",
-  };
-
-  const positionStyle = isPopup
-    ? { position: "static" }
-    : { position: "absolute", top: "10px", right: "10px", zIndex: 100 };
-
   return (
-    <div
-      style={{
-        ...baseStyle,
-        ...positionStyle,
-      }}
-    >
-      {/* 기본 스케일 설정 */}
-      {/* <div style={{ marginBottom: "10px" }}>
-        <label>새 가구 기본 크기:</label>
-        <input
-          type="range"
-          min="0.1"
-          max="3"
-          step="0.1"
-          value={scaleValue}
-          onChange={(e) => setScaleValue(parseFloat(e.target.value))}
-          style={{ width: "100%", margin: "5px 0" }}
-        />
-        <div style={{ color: "#4CAF50", textAlign: "center" }}>
-          {scaleValue.toFixed(1)}x
-        </div>
-      </div> */}
-
+    <div className={`
+      bg-black bg-opacity-70 p-4 rounded text-white text-xs w-[250px]
+      ${isPopup ? 'static' : 'absolute top-2.5 right-2.5 z-[100]'}
+    `}>
+     
       {/* 벽 스케일 설정 */}
-      <div style={{ marginBottom: "10px" }}>
-        <label>벽 크기 조정:</label>
+      <div className="mb-2.5">
+        <label className="text-white">벽 크기 조정:</label>
         <input
           type="range"
           min="0.5"
@@ -181,38 +150,29 @@ export function ControlPanel({ isPopup = false }) {
               loadSimulatorState(currentRoomId);
             }
           }}
-          style={{ width: "100%", margin: "5px 0" }}
+          className="w-full my-1.5"
         />
-        <div style={{ color: "#FF9800", textAlign: "center" }}>
+        <div className="text-orange-500 text-center">
           {wallScaleFactor.toFixed(1)}x
         </div>
       </div>
 
       {/* 저장 버튼 */}
-      <div style={{ marginBottom: "10px" }}>
+      <div className="mb-2.5">
         <button
           onClick={handleSave}
           disabled={!isOwnUserRoom || !currentRoomId}
-          style={{
-            background: currentRoomId
+          className={`
+            w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
+            ${currentRoomId
               ? isSaving
-                ? "#999"
+                ? "bg-gray-500 cursor-not-allowed"
                 : isOwnUserRoom
-                ? "#4CAF50"
-                : "#999"
-              : "#666",
-            color: "white",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "3px",
-            cursor:
-              currentRoomId && !isSaving && !isCloning
-                ? "pointer"
-                : "not-allowed",
-            fontSize: "12px",
-            width: "100%",
-            marginBottom: "5px",
-          }}
+                ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                : "bg-gray-500 cursor-not-allowed"
+              : "bg-gray-600 cursor-not-allowed"
+            }
+          `}
         >
           {isSaving
             ? "저장 중..."
@@ -223,56 +183,36 @@ export function ControlPanel({ isPopup = false }) {
 
         {/* 저장 상태 메시지 */}
         {saveMessage && (
-          <div
-            style={{
-              fontSize: "10px",
-              color: saveMessage.includes("실패") ? "#ff4444" : "#4CAF50",
-              textAlign: "center",
-              marginBottom: "5px",
-            }}
-          >
+          <div className={`
+            text-sm text-center mb-1.5
+            ${saveMessage.includes("실패") ? "text-red-400" : "text-green-500"}
+          `}>
             {saveMessage}
           </div>
         )}
 
         {/* 마지막 저장 시간 */}
         {isOwnUserRoom && lastSavedAt && (
-          <div
-            style={{
-              fontSize: "9px",
-              color: "#aaa",
-              textAlign: "center",
-              marginBottom: "5px",
-            }}
-          >
+          <div className="text-xs text-gray-400 text-center mb-1.5">
             마지막 저장: {lastSavedAt.toLocaleTimeString()}
           </div>
         )}
       </div>
 
       {/* 복제 버튼 */}
-      <div style={{ marginBottom: "10px" }}>
+      <div className="mb-2.5">
         <button
           onClick={handleClone}
           disabled={!currentRoomId}
-          style={{
-            background: currentRoomId
+          className={`
+            w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
+            ${currentRoomId
               ? isCloning
-                ? "#999"
-                : "#4CAF50"
-              : "#666",
-            color: "white",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "3px",
-            cursor:
-              currentRoomId && !isCloning && !isSaving
-                ? "pointer"
-                : "not-allowed",
-            fontSize: "12px",
-            width: "100%",
-            marginBottom: "5px",
-          }}
+                ? "bg-gray-500 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600 cursor-pointer"
+              : "bg-gray-600 cursor-not-allowed"
+            }
+          `}
         >
           {isCloning ? "복제 중..." : `방 복제하기`}
         </button>
@@ -281,16 +221,7 @@ export function ControlPanel({ isPopup = false }) {
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}
-        style={{
-          background: "#f44336",
-          color: "white",
-          border: "none",
-          padding: "8px 16px",
-          borderRadius: "3px",
-          cursor: "pointer",
-          fontSize: "12px",
-          width: "100%",
-        }}
+        className="w-full px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white border-none rounded text-sm cursor-pointer"
       >
         모든 가구 제거
       </button>

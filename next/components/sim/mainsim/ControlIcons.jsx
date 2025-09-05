@@ -3,11 +3,13 @@ import { ControlPanel } from '@/components/sim/mainsim/ControlPanel';
 import { LightControlPanel } from '@/components/sim/mainsim/LightControlPanel';
 import { CameraControlPanel } from '@/components/sim/mainsim/CameraControlPanel';
 import { ColorControlPanel } from '@/components/sim/mainsim/ColorControlPanel';
+import { CaptureControlPanel } from '@/components/sim/mainsim/CaptureControlPanel';
 
 // react-icons 추가 부분
-import { FaCameraRetro, FaPalette } from "react-icons/fa";
+import { FaCameraRetro, FaPalette, FaCamera } from "react-icons/fa";
 import { MdSunny } from "react-icons/md";
 import { FaSave } from "react-icons/fa";
+import { TbScreenshot } from "react-icons/tb";
 // =====================================
 
 export function ControlIcons() {
@@ -15,6 +17,7 @@ export function ControlIcons() {
   const [showLightPopup, setShowLightPopup] = useState(false);
   const [showCameraPopup, setShowCameraPopup] = useState(false);
   const [showColorPopup, setShowColorPopup] = useState(false);
+  const [showCapturePopup, setShowCapturePopup] = useState(false);
 
   const iconStyle = {
     position: 'fixed',
@@ -113,6 +116,7 @@ export function ControlIcons() {
           setShowLightPopup(false);
           setShowCameraPopup(false);
           setShowColorPopup(false);
+          setShowCapturePopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = iconStyle.background}
@@ -134,6 +138,7 @@ export function ControlIcons() {
           setShowLightPopup(true);
           setShowCameraPopup(false);
           setShowColorPopup(false);
+          setShowCapturePopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
@@ -155,6 +160,7 @@ export function ControlIcons() {
           setShowLightPopup(false);
           setShowCameraPopup(true);
           setShowColorPopup(false);
+          setShowCapturePopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
@@ -176,12 +182,35 @@ export function ControlIcons() {
           setShowLightPopup(false);
           setShowCameraPopup(false);
           setShowColorPopup(true);
+          setShowCapturePopup(false);
         }}
         onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
         onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="색상 설정"
       >
         <FaPalette />
+      </button>
+
+      {/* Capture Control Icon - 색상 버튼 왼쪽 */}
+      <button
+        style={{
+          ...bottomIconStyle,
+          top: '10px',
+          right: '240px',
+          bottom: 'auto'
+        }}
+        onClick={() => {
+          setShowControlPopup(false);
+          setShowLightPopup(false);
+          setShowCameraPopup(false);
+          setShowColorPopup(false);
+          setShowCapturePopup(true);
+        }}
+        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
+        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
+        title="화면 캡쳐"
+      >
+        <TbScreenshot /> 
       </button>
 
       {/* Control Panel 팝업 결정 */}
@@ -276,6 +305,32 @@ export function ControlIcons() {
             </button>
             <div style={{ position: 'static', background: 'transparent' }}>
               <ColorControlPanel isPopup={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Capture Control Popup */}
+      {showCapturePopup && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '60px',
+            right: '240px',
+            zIndex: 200
+          }} 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+            <button 
+              style={closeButtonStyle}
+              onClick={() => setShowCapturePopup(false)}
+              title="닫기"
+            >
+              ×
+            </button>
+            <div style={{ position: 'static', background: 'transparent' }}>
+              <CaptureControlPanel isPopup={true} />
             </div>
           </div>
         </div>

@@ -1091,6 +1091,9 @@ const FloorPlanEditor = () => {
 
       console.log("Using room ID for navigation:", roomId);
 
+      // 이전 페이지가 create임을 저장
+      sessionStorage.setItem('previousPage', 'create');
+
       // 생성된 정식 room_id로 시뮬레이터 페이지 이동
       router.push(`/sim/${roomId}`);
 

@@ -393,6 +393,7 @@ export const useStore = create(
       isLoading: false,
       lastSavedAt: null,
       shouldCapture: false,
+      shouldCaptureDownload: false,
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
@@ -406,6 +407,7 @@ export const useStore = create(
       setLoading: (loading) => set({ isLoading: loading }),
 
       setShouldCapture: (capture) => set({ shouldCapture: capture }),
+      setShouldCaptureDownload: (capture) => set({ shouldCaptureDownload: capture }),
 
       // 시뮬레이터 상태 복제
       cloneSimulatorState: async () => {
