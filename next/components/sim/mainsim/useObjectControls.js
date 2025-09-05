@@ -15,7 +15,7 @@ export function useObjectControls(
   controlsRef
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
-  const { loadedModels } = useStore();
+  const { loadedModels, isModelLocked } = useStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
   const [dragOffset, setDragOffset] = useState(new THREE.Vector3());
@@ -28,6 +28,13 @@ export function useObjectControls(
   const handlePointerDown = useCallback(
     (e) => {
       e.stopPropagation();
+      
+      // 🔒 락 체크 - 맨 처음에!
+      if (isModelLocked(modelId)) {
+        console.log("🚫 모델이 락되어 있어서 상호작용 차단:", modelId);
+        return; // 모든 상호작용 차단
+      }
+      
       onSelect(modelId);
 
       if (controlsRef.current) {

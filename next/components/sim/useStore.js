@@ -54,7 +54,7 @@ export const useStore = create(
       // ===== 동시편집(실시간 협업) 관련 상태 =====
       collaborationMode: false, // 동시편집 모드 활성화 여부
       isConnected: false, // WebSocket 연결 상태
-      connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
+      connectedUsers: new Map(), // 접속중인 다른 사용자들
       currentUser: {
         id: null,
         name: null,
@@ -74,7 +74,12 @@ export const useStore = create(
       updateConnectedUser: (userId, userData) =>
         set((state) => {
           const newUsers = new Map(state.connectedUsers);
-          newUsers.set(userId, userData);
+          const existingData = newUsers.get(userId) || {};
+          newUsers.set(userId, { ...existingData, ...userData });
+          console.log("👥 Updated connected user:", userId, {
+            ...existingData,
+            ...userData,
+          });
           return { connectedUsers: newUsers };
         }),
 
@@ -107,7 +112,7 @@ export const useStore = create(
         set({ collaborationCallbacks: callbacks }),
 
       // 통합 브로드캐스트 관리 함수
-      broadcastWithThrottle: (eventType, modelId, data, throttleMs = 50) => {
+      broadcastWithThrottle: (eventType, modelId, data, throttleMs = 30) => {
         const state = get();
 
         if (
@@ -129,10 +134,10 @@ export const useStore = create(
           const currentState = get();
           if (currentState.collaborationCallbacks[eventType]) {
             // 이벤트 타입에 따라 다른 파라미터 전달 방식 사용
-            if (eventType.includes('Add')) {
+            if (eventType.includes("Add")) {
               // 모델 추가의 경우 modelData만 전달
               currentState.collaborationCallbacks[eventType](data);
-            } else if (eventType.includes('Remove')) {
+            } else if (eventType.includes("Remove")) {
               // 모델 제거의 경우 modelId만 전달
               currentState.collaborationCallbacks[eventType](modelId);
             } else {
@@ -312,7 +317,7 @@ export const useStore = create(
               "broadcastModelMove",
               modelId,
               newPosition,
-              50
+              30
             );
           }
 
@@ -337,7 +342,7 @@ export const useStore = create(
               "broadcastModelRotate",
               modelId,
               newRotation,
-              50
+              30
             );
           }
 
@@ -367,7 +372,7 @@ export const useStore = create(
               "broadcastModelScale",
               modelId,
               scale,
-              50
+              30
             );
           }
 
@@ -375,9 +380,39 @@ export const useStore = create(
         }),
 
       // 선택, 마우스 호버링 관련
-      selectModel: (modelId) => set({ selectedModelId: modelId }),
-      deselectModel: () => set({ selectedModelId: null }),
+      selectModel: (modelId, shouldBroadcast = true) => {
+        console.log("📍 selectModel called:", { modelId, shouldBroadcast });
+        set({ selectedModelId: modelId });
+        if (shouldBroadcast) {
+          console.log("📡 Calling broadcastWithThrottle for select");
+          get().broadcastWithThrottle("broadcastModelSelect", modelId, null, 0);
+        }
+      },
+
+      deselectModel: (shouldBroadcast = true) => {
+        const currentSelectedId = get().selectedModelId;
+        set({ selectedModelId: null });
+        if (shouldBroadcast) {
+          get().broadcastWithThrottle(
+            "broadcastModelDeselect",
+            currentSelectedId,
+            null,
+            0
+          );
+        }
+      },
+
       hoveringModel: (modelId) => set({ hoveringModelId: modelId }),
+
+      // 🔒 락 체크 헬퍼 함수
+      isModelLocked: (modelId) => {
+        const state = get();
+        return Array.from(state.connectedUsers.entries()).some(
+          ([userId, userData]) =>
+            userData.selectedModelId === modelId &&
+            userId !== state.currentUser.id
+        );
+      },
 
       // 스케일 값 설정
       setScaleValue: (value) => set({ scaleValue: value }),
@@ -452,7 +487,8 @@ export const useStore = create(
       setLoading: (loading) => set({ isLoading: loading }),
 
       setShouldCapture: (capture) => set({ shouldCapture: capture }),
-      setShouldCaptureDownload: (capture) => set({ shouldCaptureDownload: capture }),
+      setShouldCaptureDownload: (capture) =>
+        set({ shouldCaptureDownload: capture }),
 
       // 시뮬레이터 상태 복제
       cloneSimulatorState: async () => {
