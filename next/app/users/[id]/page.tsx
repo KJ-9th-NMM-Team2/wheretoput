@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import EditPopup from "@/components/sim/side/EditPopup";
 import { updateRoomInfo, deleteRoom } from "@/lib/roomService";
+import { FaTrashCan } from "react-icons/fa6";
 
 export default function UserPage({
   params,
@@ -74,7 +75,7 @@ export default function UserPage({
   const handleDeleteRoom = async () => {
     if (!editingRoom) return;
     
-    if (!confirm('정말로 이 방을 삭제하시겠습니까?')) {
+    if (!confirm('정말로 이 방을 삭제할까요?')) {
       return;
     }
     
@@ -109,7 +110,7 @@ export default function UserPage({
   const handleBulkDelete = async () => {
     if (selectedRooms.size === 0) return;
     
-    if (!confirm(`선택한 ${selectedRooms.size}개의 방을 정말 삭제하시겠습니까?`)) {
+    if (!confirm(`선택한 ${selectedRooms.size}개의 방을 정말 삭제할까요?`)) {
       return;
     }
 
@@ -202,7 +203,9 @@ export default function UserPage({
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       selectedRooms.size === 0
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-red-600 text-white hover:bg-red-700"
+                        
+                        // 삭제할 방이 있을때
+                        : "bg-red-300 text-red-700 hover:bg-red-400"
                     }`}
                   >
                     선택한 방 삭제 ({selectedRooms.size})
@@ -216,7 +219,8 @@ export default function UserPage({
                       : "bg-red-100 text-red-700 hover:bg-red-200"
                   }`}
                 >
-                  {isDeleteMode ? "취소" : "삭제 모드"}
+                  
+                  {isDeleteMode ? "취소" : <FaTrashCan size={20} />}
                 </button>
               </div>
             )}
