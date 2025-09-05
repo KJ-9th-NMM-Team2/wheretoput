@@ -40,7 +40,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                         >
                             <div className="flex">
                                 {/* 이미지 영역 */}
-                                <div className="w-20 h-20 bg-gray-100 flex-shrink-0">
+                                <div className={`${isSelectedCategory ? 'w-24 h-24' : 'w-20 h-20'} bg-gray-100 flex-shrink-0`}>
                                     {item.image_url && !imageErrors.has(item.id) ? (
                                         <img
                                             src={item.image_url}
@@ -56,38 +56,32 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                 </div>
 
                                 {/* 정보 영역 */}
-                                <div className="flex-1 p-3">
-                                    <div className="flex items-start justify-between mb-1">
-                                        <h4 className="text-sm font-medium text-gray-800 line-clamp-1">
-                                            {item.name}
-                                        </h4>
-                                        {item.brand && (
-                                            <span className="text-xs text-gray-500 ml-2">
-                                                {item.brand}
-                                            </span>
-                                        )}
-                                    </div>
+                                <div className={`flex-1 ${isSelectedCategory ? 'p-4' : 'p-3'}`}>
+                                    {/* 이름 */}
+                                    <h4 className="text-sm font-medium text-gray-800 line-clamp-1 mb-1">
+                                        {item.name}
+                                    </h4>
 
-                                    {/* 설명 (있을 경우) */}
-                                    {item.description && (
-                                        <p className="text-xs text-gray-600 line-clamp-1 mb-1">
-                                            {item.description}
+                                    {/* 브랜드 */}
+                                    {item.brand && (
+                                        <p className="text-xs text-gray-500 line-clamp-1 mb-1">
+                                            {item.brand}
                                         </p>
                                     )}
 
-                                    {/* 가격과 사이즈 정보 */}
-                                    <div className="flex items-center justify-between text-xs">
-                                        {item.price && (
-                                            <span className="font-semibold text-gray-700">
-                                                ₩{Number(item.price).toLocaleString()}
-                                            </span>
-                                        )}
-                                        {(item.length_x && item.length_y && item.length_z) && (
-                                            <span className="text-gray-500">
-                                                {item.length_x}×{item.length_y}×{item.length_z}mm
-                                            </span>
-                                        )}
-                                    </div>
+                                    {/* 치수 정보 */}
+                                    {(item.length_x && item.length_y && item.length_z) && (
+                                        <p className="text-xs text-gray-500 mb-1">
+                                            {item.length_x}×{item.length_y}×{item.length_z}mm
+                                        </p>
+                                    )}
+
+                                    {/* 가격 정보 */}
+                                    {item.price && (
+                                        <p className="text-xs font-semibold text-gray-700 mb-1">
+                                            ₩{Number(item.price).toLocaleString()}
+                                        </p>
+                                    )}
 
                                     {/* 배치한 가구 목록에서만 쇼핑 링크 표시 */}
                                     {isSelectedCategory && (
