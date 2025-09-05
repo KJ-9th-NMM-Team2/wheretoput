@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from "react";
 import SearchBar from "./shared/SearchBar";
+import ContextMenu from "./shared/ContextMenu";
 import { ChatListItem, UserLite } from "../types/chat-types";
 import { formatRelativeTime, isUnread, recomputeChats } from "../utils/chat-utils";
 import { api } from "@/lib/client/api";
@@ -20,6 +21,7 @@ interface ChatListViewProps {
   peopleHits: UserLite[];
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
+  onDeleteChat: (chatId: string) => void;
   currentUserId: string | null;
 }
 
@@ -35,11 +37,18 @@ export default function ChatListView({
   peopleHits,
   onChatSelect,
   onStartDirect,
+  onDeleteChat,
   currentUserId,
 }: ChatListViewProps) {
   const [showUserList, setShowUserList] = useState(false);
   const [allUsers, setAllUsers] = useState<UserLite[]>([]);
   const [loading, setLoading] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    chatId: string;
+    chatName: string;
+  } | null>(null);
 
   // 유저 목록 로드
   const loadAllUsers = async () => {
@@ -235,6 +244,16 @@ export default function ChatListView({
                   <div
                     key={chat.chat_room_id}
                     onClick={() => onChatSelect(chat.chat_room_id)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      console.log(' 검색결과 우클릭 감지:', chat.name, chat.chat_room_id);
+                      setContextMenu({
+                        x: e.clientX,
+                        y: e.clientY,
+                        chatId: chat.chat_room_id,
+                        chatName: chat.name,
+                      });
+                    }}
                     className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
                   >
                     <div>
@@ -267,6 +286,16 @@ export default function ChatListView({
                 <div
                   key={chat.chat_room_id}
                   onClick={() => onChatSelect(chat.chat_room_id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    console.log(' 우클릭 감지:', chat.name, chat.chat_room_id);
+                    setContextMenu({
+                      x: e.clientX,
+                      y: e.clientY,
+                      chatId: chat.chat_room_id,
+                      chatName: chat.name,
+                    });
+                  }}
                   className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
                 >
                   <div>
@@ -290,6 +319,19 @@ export default function ChatListView({
         )}
       </div>
       
+      {/* 컨텍스트 메뉴 */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          chatName={contextMenu.chatName}
+          onClose={() => setContextMenu(null)}
+          onDeleteChat={() => {
+            onDeleteChat(contextMenu.chatId);
+            setContextMenu(null);
+          }}
+        />
+      )}
     </div>
   );
 }
