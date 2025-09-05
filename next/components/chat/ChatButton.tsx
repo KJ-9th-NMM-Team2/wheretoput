@@ -44,7 +44,6 @@ export default function ChatButton({
     text,
     setText,
     send,
-    onSendMessage,
     onEditorKeyDown
   } = useChatMessages(
     open,
@@ -83,7 +82,7 @@ export default function ChatButton({
   // 채팅방 변경 시 맨 아래로 스크롤
   useEffect(() => {
     if (!selectedChatId) return;
-
+    
     const scrollToBottom = () => {
       const el = listRef.current;
       if (el) {
@@ -178,7 +177,6 @@ export default function ChatButton({
             text={text}
             setText={setText}
             send={send}
-            onSendMessage={onSendMessage}
             onEditorKeyDown={onEditorKeyDown}
             onChatSelect={(chatId) => setselectedChatId(chatId)}
             onStartDirect={handleStartDirect}

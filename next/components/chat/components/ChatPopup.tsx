@@ -23,7 +23,6 @@ interface ChatPopupProps {
   text: string;
   setText: (text: string) => void;
   send: () => void;
-  onSendMessage: (roomId: string, content: string, messageType?: "text" | "image") => void;
   onEditorKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
@@ -49,7 +48,6 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
     text,
     setText,
     send,
-    onSendMessage,
     onEditorKeyDown,
     onChatSelect,
     onStartDirect,
@@ -111,7 +109,6 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 text={text}
                 setText={setText}
                 send={send}
-                onSendMessage={onSendMessage}
                 onEditorKeyDown={onEditorKeyDown}
                 onBack={onBack}
                 currentUserId={currentUserId}

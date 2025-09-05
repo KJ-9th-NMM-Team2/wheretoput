@@ -2,8 +2,6 @@
 // 채팅방에서 메시지를 표시하는 버블
 
 import { Message } from "../../types/chat-types";
-import { useState, useEffect } from "react";
-import ImageModal from "./ImageModal";
 
 interface MessageBubbleProps {
   message: Message;
@@ -19,35 +17,6 @@ export default function MessageBubble({
   currentUserId 
 }: MessageBubbleProps) {
   const isMine = String(message.senderId) === String(currentUserId);
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [imageLoading, setImageLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  // 이미지 메시지인 경우 S3 presigned URL 가져오기
-  useEffect(() => {
-    if (message.message_type === "image" && message.content) {
-      setImageLoading(true);
-      
-      // S3 키를 presigned URL로 변환
-      fetch('/api/upload-url/getFileUrl', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Key: message.content })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          setImageUrl(data.url);
-        }
-      })
-      .catch(err => {
-        console.error('이미지 URL 가져오기 실패:', err);
-      })
-      .finally(() => {
-        setImageLoading(false);
-      });
-    }
-  }, [message.content, message.message_type]);
 
   return (
     <div
@@ -83,36 +52,13 @@ export default function MessageBubble({
 
         <div
           className={[
-            message.message_type === "image" ? "p-1" : "px-3 py-2",
-            "rounded-2xl whitespace-pre-wrap break-words",
+            "px-3 py-2 rounded-2xl whitespace-pre-wrap break-words",
             isMine
               ? "bg-orange-500 text-white rounded-br-sm"
               : "bg-gray-100 text-gray-900 rounded-bl-sm",
           ].join(" ")}
         >
-          {message.message_type === "image" ? (
-            <div className="max-w-[200px]">
-              {imageLoading ? (
-                <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">로딩 중...</span>
-                </div>
-              ) : imageUrl ? (
-                <img 
-                  src={imageUrl} 
-                  alt="채팅 이미지"
-                  className="w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setModalOpen(true)}
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500 text-sm">이미지 로드 실패</span>
-                </div>
-              )}
-            </div>
-          ) : (
-            message.content
-          )}
+          {message.content}
         </div>
 
         {showTimestamp && (
@@ -132,16 +78,6 @@ export default function MessageBubble({
       </div>
 
       {isMine && <div className="h-8 w-8 flex-shrink-0" />}
-      
-      {/* 이미지 모달 */}
-      {message.message_type === "image" && (
-        <ImageModal 
-          isOpen={modalOpen}
-          imageUrl={imageUrl}
-          s3Key={message.content} // S3 키 전달
-          onClose={() => setModalOpen(false)}
-        />
-      )}
     </div>
   );
 }
