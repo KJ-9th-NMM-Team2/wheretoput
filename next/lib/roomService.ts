@@ -99,11 +99,6 @@ export async function deleteRoom(roomId: string): Promise<boolean> {
     return false;
   }
 
-  // 사용자 확인
-  if (!confirm('정말로 이 방을 삭제하시겠습니까?')) {
-    return false;
-  }
-
   try {
     const response = await fetch(`/api/rooms/${roomId}`, {
       method: 'DELETE'
@@ -111,8 +106,6 @@ export async function deleteRoom(roomId: string): Promise<boolean> {
 
     if (response.ok) {
       console.log('방 삭제 성공');
-      // 메인 페이지로 리다이렉트
-      window.location.href = '/';
       return true;
     } else {
       console.error('방 삭제 실패:', response.statusText);

@@ -2,11 +2,29 @@
 
 import Link from "next/link";
 
-export default function HouseCard({ house }: { house: any }) {
+export default function HouseCard({ 
+  house, 
+  isDeleteMode = false, 
+  onThumbnailClick 
+}: { 
+  house: any; 
+  isDeleteMode?: boolean; 
+  onThumbnailClick?: () => void; 
+}) {
+  const handleThumbnailClick = (e: React.MouseEvent) => {
+    if (isDeleteMode) {
+      e.preventDefault();
+      onThumbnailClick?.();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 pb-3 group w-full max-w-xs">
-      <Link href={`/rooms/${house.room_id}`}>
-        <div className="mb-2 w-full aspect-video rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105">
+      <Link href={isDeleteMode ? "#" : `/rooms/${house.room_id}`}>
+        <div 
+          className="mb-2 w-full aspect-video rounded-lg overflow-hidden transition-transform duration-200 group-hover:scale-105"
+          onClick={handleThumbnailClick}
+        >
           <img
             src={
               house.thumbnail_url
@@ -20,7 +38,7 @@ export default function HouseCard({ house }: { house: any }) {
             }}
           />
         </div>
-        <div>
+        <div onClick={handleThumbnailClick}>
           <p className="text-gray-900 dark:text-gray-100 text-base font-medium leading-normal">
             {house.title}
           </p>
