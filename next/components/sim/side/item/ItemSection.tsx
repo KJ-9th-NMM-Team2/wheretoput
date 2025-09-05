@@ -1,5 +1,6 @@
 import { ImageOff, Loader2 } from 'lucide-react';
 import type { ItemSectionProps } from '@/lib/types';
+import ShoppingLink from '@/components/sim/side/ShoppingLink';
 
 const ItemSection: React.FC<ItemSectionProps> = ({
     loading,
@@ -34,9 +35,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                             key={item.furniture_id}
                             onClick={!isSelectedCategory ? () => handleItemClick(item) : undefined}
                             className={`bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden ${
-                                isSelectedCategory 
-                                    ? 'cursor-not-allowed opacity-60' 
-                                    : 'cursor-pointer'
+                                !isSelectedCategory ? 'cursor-pointer' : ''
                             }`}
                         >
                             <div className="flex">
@@ -89,6 +88,16 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                             </span>
                                         )}
                                     </div>
+
+                                    {/* 배치한 가구 목록에서만 쇼핑 링크 표시 */}
+                                    {isSelectedCategory && (
+                                        <div className="flex justify-end mt-2">
+                                            <ShoppingLink 
+                                                furnitureName={item.name}
+                                                className="text-xs"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
