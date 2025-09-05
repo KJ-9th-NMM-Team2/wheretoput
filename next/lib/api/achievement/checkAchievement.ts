@@ -44,11 +44,11 @@ async function countUserHistory(userId: string) {
     const totalWalls = user.rooms.reduce((sum, room) => sum + room._count.room_walls, 0);
     const totalComments = user._count.room_comments;
     const totalLikes = user._count.room_likes;
-    // console.log(`유저의 총 댓글 수: ${user._count.room_comments}개`);
-    // console.log(`유저의 좋아요 수: ${user._count.room_likes}개`);
-    // console.log(`총 벽 개수: ${totalWalls}개`);
-    // console.log(`총 가구 개수: ${totalFurniture}개`);
-    // console.log(`총 벽 개수: ${totalWalls}개`);
+    console.log(`유저의 총 댓글 수: ${user._count.room_comments}개`);
+    console.log(`유저의 좋아요 수: ${user._count.room_likes}개`);
+    console.log(`총 벽 개수: ${totalWalls}개`);
+    console.log(`총 가구 개수: ${totalFurniture}개`);
+    console.log(`총 벽 개수: ${totalWalls}개`);
     
     return {
         totalRooms: user.rooms.length,
@@ -92,8 +92,11 @@ export async function checkAchievement(userId: string) {
         }
         
         // 조건 체크
-        const conditionFn = getConditionByTitle(achievement.title);
-        if (conditionFn) {
+        const titleConditions = getConditionByTitle();
+        const conditionFn = titleConditions[achievement.title];
+        console.log('conditionFn', conditionFn);
+        
+        if (conditionFn && conditionFn(userHistory)) {
             newlyUnlocked.push(achievement);
             
             // DB에 새 업적 추가
@@ -115,6 +118,7 @@ export async function checkAchievement(userId: string) {
         userHistory,
         newlyUnlocked,
         totalAchievements: allAchievements.length,
-        unlockedCount: userAchievements.length + newlyUnlocked.length
+        unlockedCount: userAchievements.length + newlyUnlocked.length,
+        icons: newlyUnlocked.map(a => a.icon)
     };
 }
