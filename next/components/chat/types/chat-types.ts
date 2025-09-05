@@ -19,6 +19,7 @@ export type Message = {
   senderName?: string;
   senderImage?: string;
   content: string;
+  message_type?: "text" | "image";
   createdAt: string;
   status?: "sending" | "sent" | "read";
   tempId?: string;
