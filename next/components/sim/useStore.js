@@ -128,7 +128,17 @@ export const useStore = create(
         state._throttledBroadcasts[throttleKey] = setTimeout(() => {
           const currentState = get();
           if (currentState.collaborationCallbacks[eventType]) {
-            currentState.collaborationCallbacks[eventType](modelId, data);
+            // 이벤트 타입에 따라 다른 파라미터 전달 방식 사용
+            if (eventType.includes('Add')) {
+              // 모델 추가의 경우 modelData만 전달
+              currentState.collaborationCallbacks[eventType](data);
+            } else if (eventType.includes('Remove')) {
+              // 모델 제거의 경우 modelId만 전달
+              currentState.collaborationCallbacks[eventType](modelId);
+            } else {
+              // 이동, 회전, 스케일의 경우 modelId와 data 전달
+              currentState.collaborationCallbacks[eventType](modelId, data);
+            }
           }
           delete currentState._throttledBroadcasts[throttleKey];
         }, throttleMs);

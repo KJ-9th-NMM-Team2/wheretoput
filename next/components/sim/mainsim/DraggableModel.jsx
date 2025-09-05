@@ -190,14 +190,14 @@ export function DraggableModel({
       }
     };
 
-    window.addEventListener('historyMoveFurniture', handleHistoryMove);
-    window.addEventListener('historyRotateFurniture', handleHistoryRotate);
-    window.addEventListener('historyScaleFurniture', handleHistoryScale);
+    window.addEventListener("historyMoveFurniture", handleHistoryMove);
+    window.addEventListener("historyRotateFurniture", handleHistoryRotate);
+    window.addEventListener("historyScaleFurniture", handleHistoryScale);
 
     return () => {
-      window.removeEventListener('historyMoveFurniture', handleHistoryMove);
-      window.removeEventListener('historyRotateFurniture', handleHistoryRotate);
-      window.removeEventListener('historyScaleFurniture', handleHistoryScale);
+      window.removeEventListener("historyMoveFurniture", handleHistoryMove);
+      window.removeEventListener("historyRotateFurniture", handleHistoryRotate);
+      window.removeEventListener("historyScaleFurniture", handleHistoryScale);
     };
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
