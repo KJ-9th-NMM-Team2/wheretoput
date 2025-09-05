@@ -103,7 +103,7 @@ const SideItems: React.FC<SideItemsProps> = ({
 
   // 아이템 클릭 핸들러
   const handleItemClick = useCallback(
-    async (item: Furniture) => {
+    async (item: Furniture, delta: number = 1) => {
       console.log("Selected item:", item);
       const toastId = toast.loading(`${item.name} 생성 중...`);
 
