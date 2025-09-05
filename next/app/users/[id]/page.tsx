@@ -283,6 +283,9 @@ export default function UserPage({
               >
                 팔로잉 <span className="font-semibold">{followingCount}</span>
               </button>
+
+                
+
             </div>
           </div>
 
@@ -295,7 +298,7 @@ export default function UserPage({
                 className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                   isFollowing
                     ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                    : "bg-amber-600 dark:bg-orange-600 text-white hover:bg-amber-700 dark:hover:bg-orange-700"
+                    : "bg-amber-600 dark:bg-blue-500 text-white hover:bg-amber-700 dark:hover:bg-blue-700"
                 } ${followLoading ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
@@ -303,6 +306,10 @@ export default function UserPage({
             </div>
           )}
         </div>
+
+
+
+
       </div>
 
       <div className="mb-6">
