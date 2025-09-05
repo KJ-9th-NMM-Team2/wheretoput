@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { getUserAchievements, UserStats } from "@/lib/achievements";
+import { getUserAchievements, UserStats, ACHIEVEMENTS } from "@/lib/achievements";
 
-export async function getUserStats(userId: string): Promise<UserStats> {
-  const user = await prisma.user.findUnique({
+async function getUserStats(userId: string): Promise<UserStats> {
+  const user = await prisma.achievements.findMany({
     where: { id: userId },
     include: {
       rooms: {
@@ -52,7 +52,28 @@ export async function getUserStats(userId: string): Promise<UserStats> {
   return stats;
 }
 
+async function createAchieves(datas: any[]) {
+  // console.log("createAchieves datas", datas);
+  // console.log("Available prisma models:", Object.keys(prisma));
+  // console.log("prisma.achievements:", prisma.achievements);
+  // console.log("prisma.achievement:", prisma.achievement);
+  return await prisma.achievements.createMany({
+    data: datas
+  });
+}
+
+export async function createAchievementsData(datas: any[]) {
+  try {
+    const result = await createAchieves(datas);
+    return result;
+  } catch (error) {
+    console.error('Error in createAchievementsData:', error);
+    throw error;
+  }
+}
+
+
 export async function getUserAchievementsData(userId: string) {
   const stats = await getUserStats(userId);
-  return getUserAchievements(stats);
+  return getUserAchievements();
 }

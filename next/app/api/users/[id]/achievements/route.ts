@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserAchievementsData } from "@/lib/api/achievements";
+import { createAchievementsData, getUserAchievementsData } from "@/lib/api/achievements";
+
+export async function POST(request: NextRequest) {
+  try {
+    const datas = await request.json();
+    if (await createAchievementsData(datas)) {
+      return NextResponse.json({message: "sccuesfully created", status:201});
+    }
+
+    return NextResponse.json("Create fail", {status: 500});
+    
+  } catch (error) {
+    console.error("Error creating achievements:", error);
+    return NextResponse.json(
+      { error: "Failed to create achievements", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 
 export async function GET(
   request: NextRequest,
@@ -18,3 +37,4 @@ export async function GET(
     );
   }
 }
+
