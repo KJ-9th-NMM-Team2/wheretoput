@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     });
 
     // 각 방에 대해 현재 사용자의 last_read_at 추가
-    const roomsWithReadStatus = chatRooms.map((room) => {
+    const roomsWithReadStatus = Array.isArray(chatRooms) ? chatRooms.map((room) => {
       const myParticipant = room.chat_participants.find(
         (p) => p.user_id === user.id
       );
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         ...room,
         last_read_at: myParticipant?.last_read_at || null,
       };
-    });
+    }) : [];
 
     console.log("반환:", roomsWithReadStatus);
     return NextResponse.json(roomsWithReadStatus);

@@ -79,7 +79,8 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // 정렬 옵션 설정
-    let orderBy: any = { updated_at: "desc" }; // 기본값: 최신순 (DB에 가구 업데이트 날짜)
+    let orderBy: any = { updated_at: "desc" }; 
+    // 기본값: 최신순 (DB에 가구 업데이트 날짜)
     switch (sortParam) {
       case "price_asc":
         orderBy = { price: "asc" };

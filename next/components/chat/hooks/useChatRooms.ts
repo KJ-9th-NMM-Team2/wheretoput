@@ -135,8 +135,8 @@ export const useChatRooms = (
             name: data?.name ?? otherUserName ?? "새 대화", // 채팅방 이름 우선, 없으면 상대방 이름
             is_private: true,
             lastMessage: "",
-            lastMessageAt: new Date().toISOString(),
-            last_read_at: "1970-01-01T00:00:00.000Z",
+            lastMessageAt: undefined, // 빈 채팅방은 마지막 메시지 시간이 없음
+            last_read_at: new Date().toISOString(), // 생성과 동시에 읽음 처리
             searchIndex: "",
           },
           ...prev,
@@ -161,6 +161,17 @@ export const useChatRooms = (
     });
   }, [query, select]);
 
+  // 채팅방 삭제 (로컬 상태에서 제거)
+  const deleteChatRoom = useCallback((roomId: string) => {
+    console.log('🗑️ useChatRooms: 채팅방 삭제', roomId);
+    setBaseChats((prev) => {
+      const filtered = prev.filter((c) => c.chat_room_id !== roomId);
+      console.log('✅ useChatRooms: baseChats 업데이트', prev.length, '→', filtered.length);
+      setChats(recomputeChats(filtered, query, select));
+      return filtered;
+    });
+  }, [query, select]);
+
   return {
     baseChats,
     chats,
@@ -168,5 +179,6 @@ export const useChatRooms = (
     setBaseChats,
     onStartDirect,
     updateChatRoom,
+    deleteChatRoom,
   };
 };
