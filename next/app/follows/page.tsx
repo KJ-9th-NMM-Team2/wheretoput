@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { fetchUserById, fetchFollowers, fetchFollowing, unfollowUser } from "@/lib/api/users";
 
 interface User {
@@ -80,6 +81,13 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
     }
   };
 
+  const router = useRouter();
+// 클릭하면 해당 사용자 마이페이지로 이동
+  const handleUserClick = (userId: string) => {
+    router.push(`/users/${userId}`);
+    onClose(); // 모달 닫기
+  };
+
   const UserCard = ({ 
     user, 
     isFollowing 
@@ -88,7 +96,10 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
     isFollowing: boolean;
   }) => (
     <div className="flex items-center justify-between py-2">
-      <div className="flex items-center gap-3">
+      <div 
+        className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
+        onClick={() => handleUserClick(user.id)}
+      >
         <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-orange-600 flex items-center justify-center overflow-hidden">
           {user.profile_image ? (
             <img
