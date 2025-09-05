@@ -82,7 +82,7 @@ export default function ChatButton({
   // 채팅방 변경 시 맨 아래로 스크롤
   useEffect(() => {
     if (!selectedChatId) return;
-    
+
     const scrollToBottom = () => {
       const el = listRef.current;
       if (el) {
