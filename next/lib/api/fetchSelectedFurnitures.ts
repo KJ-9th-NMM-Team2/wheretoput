@@ -1,8 +1,8 @@
 // 선택되어 있는 아이템들 가져오는 함수
-export async function fetchSelectedFurnitures(furnitureIds: string[]) {
+export async function fetchSelectedFurnitures(furnitureIds: string[], sortOption: string = 'updated_desc') {
     try {
         const idsParams = furnitureIds.join(',');
-        const response = await fetch(`/api/furnitures/selected?idsParams=${idsParams}`);
+        const response = await fetch(`/api/furnitures/selected?idsParams=${idsParams}&sort=${sortOption}`);
         if (!response) {
             throw new Response("Fetch ERROR", { status: 400});
         }

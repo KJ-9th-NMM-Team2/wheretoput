@@ -71,7 +71,7 @@ const SideItems: React.FC<SideItemsProps> = ({
         setTotalItems(pagination.totalItems);
         setTotalPages(pagination.totalPages);
         const furnitureId = loadedModels.map((item: any) => item.furniture_id);
-        const result = await fetchSelectedFurnitures(furnitureId);
+        const result = await fetchSelectedFurnitures(furnitureId, sortOption);
 
         if (result) {
           setSelectedItems(result.furnitures);
