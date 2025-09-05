@@ -110,7 +110,13 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
       await handleSaveRoom();
       console.log("방 저장 완료!");
     }
-    router.back();
+    
+    // 이전 페이지가 /create인 경우 메인 페이지로, 아니면 이전 페이지로
+    if (document.referrer && document.referrer.includes('/create')) {
+      router.push('/');
+    } else {
+      router.back();
+    }
   };
 
   return (
