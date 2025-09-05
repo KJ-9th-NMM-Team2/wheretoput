@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchUserById, fetchUserRooms } from "@/lib/api/users";
+import { fetchUserById, fetchUserRooms, fetchFollowers, fetchFollowing, followUser, unfollowUser } from "@/lib/api/users";
 import HouseCard from "@/components/search/HouseCard";
 import { auth } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -25,6 +25,10 @@ export default function UserPage({
   const [selectedRooms, setSelectedRooms] = useState<Set<string>>(new Set());
   const [followModalOpen, setFollowModalOpen] = useState(false);
   const [followModalTab, setFollowModalTab] = useState<"followers" | "following">("followers");
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -34,6 +38,7 @@ export default function UserPage({
 
       try {
         const userData = await fetchUserById(id);
+        console.log("가져온 사용자 데이터:", userData);
         setUser(userData);
 
         const ownerStatus = session?.user?.id === id;
@@ -42,6 +47,18 @@ export default function UserPage({
         // 접속한 사용자가 본인 페이지일 경우 비공개 방도 포함하여 조회
         const roomsData = await fetchUserRooms(id, "short", "new", ownerStatus);
         setUserRooms(roomsData);
+
+        // 팔로워/팔로잉 수 가져오기
+        const followersData = await fetchFollowers(id);
+        const followingData = await fetchFollowing(id);
+        setFollowersCount(followersData.length);
+        setFollowingCount(followingData.length);
+
+        // 현재 사용자가 이 프로필 사용자를 팔로우하고 있는지 확인
+        if (session?.user?.id && session.user.id !== id) {
+          const myFollowingData = await fetchFollowing(session.user.id);
+          setIsFollowing(myFollowingData.some(user => user.id === id));
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -157,6 +174,48 @@ export default function UserPage({
     }
   };
 
+  const handleFollowToggle = async () => {
+    console.log("팔로우 버튼 클릭됨!");
+    console.log("session?.user?.id:", session?.user?.id);
+    console.log("user?.user_id:", user?.user_id);
+    
+    if (!session?.user?.id || !user?.user_id) {
+      console.log("세션 또는 사용자 정보 없음 - 함수 종료");
+      return;
+    }
+    
+    console.log("팔로우 처리 시작, 현재 상태:", isFollowing ? "팔로잉 중" : "팔로우 안함");
+    setFollowLoading(true);
+    try {
+      let success;
+      if (isFollowing) {
+        console.log("언팔로우 시도");
+        success = await unfollowUser(user.user_id);
+        if (success) {
+          setIsFollowing(false);
+          setFollowersCount(prev => prev - 1);
+        }
+      } else {
+        console.log("팔로우 시도");
+        success = await followUser(user.user_id);
+        if (success) {
+          setIsFollowing(true);
+          setFollowersCount(prev => prev + 1);
+        }
+      }
+
+      console.log("작업 결과:", success ? "성공" : "실패");
+      if (!success) {
+        alert("작업에 실패했습니다. 다시 시도해주세요.");
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      alert("작업에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="px-40 py-5">Loading...</div>;
   }
@@ -213,7 +272,7 @@ export default function UserPage({
                 }}
                 className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
               >
-                팔로워 <span className="font-semibold">123</span>
+                팔로워 <span className="font-semibold">{followersCount}</span>
               </button>
               <button 
                 onClick={() => {
@@ -222,11 +281,27 @@ export default function UserPage({
                 }}
                 className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
               >
-                팔로잉 <span className="font-semibold">45</span>
+                팔로잉 <span className="font-semibold">{followingCount}</span>
               </button>
             </div>
           </div>
 
+          {/* 팔로우 버튼 (다른 사용자 프로필일 때만 표시) */}
+          {session?.user?.id && session.user.id !== user.user_id && (
+            <div className="mt-4">
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  isFollowing
+                    ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    : "bg-amber-600 dark:bg-orange-600 text-white hover:bg-amber-700 dark:hover:bg-orange-700"
+                } ${followLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -334,7 +409,7 @@ export default function UserPage({
         isOpen={followModalOpen}
         onClose={() => setFollowModalOpen(false)}
         initialTab={followModalTab}
-        userId={user?.id}
+        userId={user?.user_id}
       />
     </div>
   );

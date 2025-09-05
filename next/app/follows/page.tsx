@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { fetchUserById } from "@/lib/api/users";
+import { fetchUserById, fetchFollowers, fetchFollowing, unfollowUser } from "@/lib/api/users";
 
 interface User {
   id: string;
@@ -33,28 +33,11 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
       if (!targetUserId) return;
 
       try {
-        // TODO: API 엔드포인트가 구현되면 실제 데이터로 교체
-        // const followersData = await fetchFollowers(session.user.id);
-        // const followingData = await fetchFollowing(session.user.id);
+        const followersData = await fetchFollowers(targetUserId);
+        const followingData = await fetchFollowing(targetUserId);
         
-        // 임시 더미 데이터
-        const dummyUsers: User[] = [
-          {
-            id: "1",
-            name: "user1",
-            display_name: "사용자 1",
-            profile_image: undefined
-          },
-          {
-            id: "2", 
-            name: "user2",
-            display_name: "사용자 2",
-            profile_image: undefined
-          }
-        ];
-        
-        setFollowers(dummyUsers);
-        setFollowing(dummyUsers.slice(0, 1));
+        setFollowers(followersData);
+        setFollowing(followingData);
       } catch (error) {
         console.error("Error fetching follow data:", error);
       } finally {
@@ -65,29 +48,31 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
     loadFollowData();
   }, [isOpen, userId, session]);
 
-  const handleUnfollow = async (userId: string) => {
+  const handleUnfollow = async (targetUserId: string) => {
     if (!confirm("정말로 팔로우를 취소하시겠습니까?")) return;
 
     try {
-      // TODO: API 구현 후 실제 언팔로우 요청
-      // await unfollowUser(userId);
-      
-      setFollowing(prev => prev.filter(user => user.id !== userId));
-      alert("팔로우를 취소했습니다.");
+      const success = await unfollowUser(targetUserId);
+      if (success) {
+        setFollowing(prev => prev.filter(user => user.id !== targetUserId));
+        alert("팔로우를 취소했습니다.");
+      } else {
+        alert("팔로우 취소에 실패했습니다.");
+      }
     } catch (error) {
       console.error("Error unfollowing user:", error);
       alert("팔로우 취소에 실패했습니다.");
     }
   };
 
-  const handleRemoveFollower = async (userId: string) => {
+  const handleRemoveFollower = async (followerId: string) => {
     if (!confirm("정말로 이 팔로워를 제거하시겠습니까?")) return;
 
     try {
-      // TODO: API 구현 후 실제 팔로워 제거 요청  
-      // await removeFollower(userId);
-      
-      setFollowers(prev => prev.filter(user => user.id !== userId));
+      // 팔로워를 제거하는 것은 해당 팔로워가 나를 언팔로우하게 하는 것
+      // 하지만 일반적으로는 직접 팔로워를 제거하는 API가 필요함
+      // 여기서는 단순히 UI에서만 제거 (실제로는 별도 API 필요)
+      setFollowers(prev => prev.filter(user => user.id !== followerId));
       alert("팔로워를 제거했습니다.");
     } catch (error) {
       console.error("Error removing follower:", error);
