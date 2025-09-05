@@ -7,10 +7,12 @@ export function ColorControlPanel({ isPopup = false }) {
   const {
     wallColor,
     floorColor,
+    backgroundColor,
     setWallColor,
-    setFloorColor
+    setFloorColor,
+    setBackgroundColor
   } = useStore();
-  const [colorTarget, setColorTarget] = React.useState('wall'); // 'wall' or 'floor'
+  const [colorTarget, setColorTarget] = React.useState('wall'); // 'wall' | 'floor' | 'background'
 
   const baseStyle = {
     background: 'rgba(0,0,0,0.7)',
@@ -65,12 +67,21 @@ export function ColorControlPanel({ isPopup = false }) {
             >
               바닥
             </button>
+            <button
+              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "background"
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-600 hover:bg-gray-300"
+                }`}
+              onClick={() => setColorTarget("background")}
+            >
+              배경
+            </button>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div>
-            <p className="text-sm mb-1">{colorTarget === 'wall' ? '벽' : '바닥'} 색상</p>
-            <HexColorPicker style={{ width: '100%', height: '120px' }} color={colorTarget === 'wall' ? wallColor : floorColor} onChange={colorTarget === 'wall' ? setWallColor : setFloorColor} />
+            <p className="text-sm mb-1">{colorTarget === 'wall' ? '벽' : colorTarget === 'floor' ? '바닥' : '배경'} 색상</p>
+            <HexColorPicker style={{ width: '100%', height: '120px' }} color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor} onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
           </div>
         </div>
       </div>

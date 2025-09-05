@@ -25,7 +25,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#D2B48C" roughness={0.9} metalness={0.0} />
+        <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
       </mesh>
     );
   }
@@ -195,6 +195,7 @@ export function SimulatorCore({
   const controlsRef = useRef(null);
   const {
     viewOnly,
+    backgroundColor,
     environmentPreset,
     loadedModels,
     deselectModel,
@@ -332,7 +333,7 @@ export function SimulatorCore({
           <Environment preset={environmentPreset} background={false} />
 
           <CameraUpdater />
-          <color attach="background" args={["#87CEEB"]} />
+          <color attach="background" args={[backgroundColor]} />
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}
