@@ -1,4 +1,234 @@
-// 팔로워/팔로잉 관리 페이지
+"use client";
+
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { fetchUserById } from "@/lib/api/users";
+
+interface User {
+  id: string;
+  name: string;
+  display_name?: string;
+  profile_image?: string;
+}
+
+interface FollowsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialTab?: "followers" | "following";
+  userId?: string;
+}
+
+export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId }: FollowsModalProps) {
+  const [activeTab, setActiveTab] = useState<"followers" | "following">(initialTab);
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [following, setFollowing] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const loadFollowData = async () => {
+      const targetUserId = userId || session?.user?.id;
+      if (!targetUserId) return;
+
+      try {
+        // TODO: API 엔드포인트가 구현되면 실제 데이터로 교체
+        // const followersData = await fetchFollowers(session.user.id);
+        // const followingData = await fetchFollowing(session.user.id);
+        
+        // 임시 더미 데이터
+        const dummyUsers: User[] = [
+          {
+            id: "1",
+            name: "user1",
+            display_name: "사용자 1",
+            profile_image: undefined
+          },
+          {
+            id: "2", 
+            name: "user2",
+            display_name: "사용자 2",
+            profile_image: undefined
+          }
+        ];
+        
+        setFollowers(dummyUsers);
+        setFollowing(dummyUsers.slice(0, 1));
+      } catch (error) {
+        console.error("Error fetching follow data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFollowData();
+  }, [isOpen, userId, session]);
+
+  const handleUnfollow = async (userId: string) => {
+    if (!confirm("정말로 팔로우를 취소하시겠습니까?")) return;
+
+    try {
+      // TODO: API 구현 후 실제 언팔로우 요청
+      // await unfollowUser(userId);
+      
+      setFollowing(prev => prev.filter(user => user.id !== userId));
+      alert("팔로우를 취소했습니다.");
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+      alert("팔로우 취소에 실패했습니다.");
+    }
+  };
+
+  const handleRemoveFollower = async (userId: string) => {
+    if (!confirm("정말로 이 팔로워를 제거하시겠습니까?")) return;
+
+    try {
+      // TODO: API 구현 후 실제 팔로워 제거 요청  
+      // await removeFollower(userId);
+      
+      setFollowers(prev => prev.filter(user => user.id !== userId));
+      alert("팔로워를 제거했습니다.");
+    } catch (error) {
+      console.error("Error removing follower:", error);
+      alert("팔로워 제거에 실패했습니다.");
+    }
+  };
+
+  const UserCard = ({ 
+    user, 
+    isFollowing 
+  }: { 
+    user: User; 
+    isFollowing: boolean;
+  }) => (
+    <div className="flex items-center justify-between py-2">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-orange-600 flex items-center justify-center overflow-hidden">
+          {user.profile_image ? (
+            <img
+              src={user.profile_image}
+              alt={user.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="text-sm font-bold text-amber-700 dark:text-orange-200">
+              {user.name?.[0]?.toUpperCase() || "?"}
+            </span>
+          )}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+            {user.display_name || user.name}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            @{user.name}
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex gap-2">
+        {isFollowing ? (
+          <button
+            onClick={() => handleUnfollow(user.id)}
+            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+          >
+            언팔로우
+          </button>
+        ) : (
+          <button
+            onClick={() => handleRemoveFollower(user.id)}
+            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+          >
+            삭제
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md mx-4 max-h-[80vh] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            팔로워 / 팔로잉
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab("followers")}
+            className={`flex-1 px-4 py-3 font-medium transition-colors ${
+              activeTab === "followers"
+                ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            팔로워 ({followers.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("following")}
+            className={`flex-1 px-4 py-3 font-medium transition-colors ${
+              activeTab === "following"
+                ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            팔로잉 ({following.length})
+          </button>
+        </div>
+
+        <div className="overflow-y-auto max-h-96 p-4">
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">로딩 중...</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {activeTab === "followers" ? (
+                followers.length > 0 ? (
+                  followers.map(user => (
+                    <UserCard key={user.id} user={user} isFollowing={false} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      아직 팔로워가 없습니다.
+                    </p>
+                  </div>
+                )
+              ) : (
+                following.length > 0 ? (
+                  following.map(user => (
+                    <UserCard key={user.id} user={user} isFollowing={true} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400">
+                      아직 팔로우하는 사용자가 없습니다.
+                    </p>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FollowsPage() {
-  return <div>팔로워/팔로잉 관리 페이지</div>;
+  return <div>이 페이지는 직접 접근할 수 없습니다.</div>;
 }

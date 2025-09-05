@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { FaEye } from "react-icons/fa";
+import { FcLike } from "react-icons/fc";
+import { FaCommentDots } from "react-icons/fa6";
 
 export default function HouseCard({ 
   house, 
@@ -53,8 +56,8 @@ export default function HouseCard({
             )}
           </p>
 
-          <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
-            👀 {house.view_count} 👍 {house.num_likes} 💬 {house.num_comments}
+          <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal flex items-center gap-2">
+            <FaEye /> {house.view_count} <FcLike /> {house.num_likes} <FaCommentDots /> {house.num_comments}
           </p>
         </div>
       </Link>
