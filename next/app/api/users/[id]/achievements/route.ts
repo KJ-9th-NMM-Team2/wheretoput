@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAchievementsData, getUserAchievementsData } from "@/lib/api/achievements";
+import { createAchievementsData, getUserAchievementsWithStatus } from "@/lib/api/achievements";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,15 +19,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    console.log("achievement id", id);
-    const achievements = await getUserAchievementsData(id);
+    const achievements = await getUserAchievementsWithStatus(id);
     return NextResponse.json(achievements);
   } catch (error) {
     console.error("Error fetching achievements:", error);
