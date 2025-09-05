@@ -42,41 +42,56 @@ export const useChatMessages = (
     let cancelled = false;
 
     (async () => {
-      const { data } = await api.get(
-        `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
-        {
-          params: { limit: 50 },
-          headers: { Authorization: `Bearer ${token}` },
+      try {
+        const { data } = await api.get(
+          `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
+          {
+            params: { limit: 50 },
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (cancelled) return;
+        const history: Message[] = (data?.messages ?? data ?? []).map(
+          (m: any) => {
+            // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
+            const isImageMessage = m.content && m.content.startsWith('chat/') && 
+                                  /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+            
+            return {
+              id: m.id ?? String(m.message_id),
+              roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
+              senderId: m.senderId ?? String(m.user_id),
+              senderName: m.senderName ?? "이름 없음",
+              senderImage: m.senderImage ?? "",
+              content: m.content,
+              message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
+              createdAt: m.createdAt ?? m.created_at,
+              status: "read",
+            };
+          }
+        );
+        console.log(
+          "Messages with avatars:",
+          history.map((h) => ({
+            senderName: h.senderName,
+            senderImage: h.senderImage,
+          }))
+        );
+        setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
+
+        // 읽음 처리
+        s.emit("read", { roomId: selectedChatId });
+        onChatRoomUpdate(selectedChatId, {
+          last_read_at: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("메시지 히스토리 로드 실패:", error);
+        // 오류 발생시 빈 배열로 설정하여 앱이 크래시되지 않도록 처리
+        if (!cancelled) {
+          setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: [] }));
         }
-      );
-
-      if (cancelled) return;
-      const history: Message[] = (data?.messages ?? data ?? []).map(
-        (m: any) => ({
-          id: m.id ?? String(m.message_id),
-          roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
-          senderId: m.senderId ?? String(m.user_id),
-          senderName: m.senderName ?? "이름 없음",
-          senderImage: m.senderImage ?? "",
-          content: m.content,
-          createdAt: m.createdAt ?? m.created_at,
-          status: "read",
-        })
-      );
-      console.log(
-        "Messages with avatars:",
-        history.map((h) => ({
-          senderName: h.senderName,
-          senderImage: h.senderImage,
-        }))
-      );
-      setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
-
-      // 읽음 처리
-      s.emit("read", { roomId: selectedChatId });
-      onChatRoomUpdate(selectedChatId, {
-        last_read_at: new Date().toISOString()
-      });
+      }
     })();
 
     return () => {
@@ -92,6 +107,10 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
+      // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
+      const isImageMessage = m.content && m.content.startsWith('chat/') && 
+                            /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+      
       const msg: Message = {
         id: m.id ?? String(m.message_id),
         roomId: m.roomId ?? String(m.room_id),
@@ -99,6 +118,7 @@ export const useChatMessages = (
         senderName: m.sender?.name ?? m.user?.name,
         senderImage: m.sender?.image ?? m.user?.image,
         content: m.content,
+        message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,
         status: "sent",
       };
@@ -201,7 +221,7 @@ export const useChatMessages = (
 
   // 메시지 전송
   const onSendMessage = useCallback(
-    (roomId: string, content: string) => {
+    (roomId: string, content: string, messageType: "text" | "image" = "text") => {
       if (!token) return;
       const now = new Date().toISOString();
       const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
@@ -211,6 +231,7 @@ export const useChatMessages = (
         roomId,
         senderId: currentUserId,
         content,
+        message_type: messageType,
         createdAt: now,
         status: "sending",
       };

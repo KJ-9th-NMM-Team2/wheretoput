@@ -44,6 +44,7 @@ export default function ChatButton({
     text,
     setText,
     send,
+    onSendMessage,
     onEditorKeyDown
   } = useChatMessages(
     open,
@@ -177,6 +178,7 @@ export default function ChatButton({
             text={text}
             setText={setText}
             send={send}
+            onSendMessage={onSendMessage}
             onEditorKeyDown={onEditorKeyDown}
             onChatSelect={(chatId) => setselectedChatId(chatId)}
             onStartDirect={handleStartDirect}
