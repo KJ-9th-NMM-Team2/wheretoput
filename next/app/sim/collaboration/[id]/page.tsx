@@ -3,16 +3,11 @@
 import React, { useState, useEffect } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { SimulatorCore } from "@/components/sim/SimulatorCore";
-import {
-  CollaborativeCursors,
-  ConnectedUsersList,
-  CollaborativeSelectionHighlight,
-} from "@/components/sim/collaboration/CollaborationIndicators.jsx";
+import { ConnectedUsersList } from "@/components/sim/collaboration/CollaborationIndicators.jsx";
 import { useCollaboration } from "@/components/sim/collaboration/useCollaboration.js";
 import { HistoryProvider } from "@/components/sim/history";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { useSession } from "next-auth/react";
-
 
 function CollaborationPageContent({
   params,
@@ -130,7 +125,6 @@ function CollaborationPageContent({
       showSidebar={true}
       showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
       showEditControls={true}
-      canvasChildren={<CollaborativeCursors />}
       additionalUI={
         <>
           <ConnectedUsersList />
