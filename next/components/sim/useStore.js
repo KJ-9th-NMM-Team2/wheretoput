@@ -159,7 +159,7 @@ export const useStore = create(
       scaleValue: 1,
 
       // 방에 접근한 유저가 오너인지 확인
-      isOwnUserRoom: false,
+      isOwnUserRoom: false, //초기값 false
 
       // 현재 방의 협업 모드 활성화 상태
       isCollabModeActive: false,
@@ -167,12 +167,18 @@ export const useStore = create(
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          
+          // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
+          
+          
           if (!response.ok) throw new Error("Network response was not ok");
 
+          // 2. 응답 Json 파싱
           const result = await response.json();
+          
           if (result) {
             set({ isOwnUserRoom: true });
           } else {
@@ -181,7 +187,7 @@ export const useStore = create(
 
           return result ? true : false;
         } catch (error) {
-          console.error("FETCH ERROR:", error);
+          console.error("checkUserRoom FETCH ERROR:", error);
           set({ isOwnUserRoom: false });
         }
       },
@@ -500,6 +506,10 @@ export const useStore = create(
       shouldCaptureDownload: false,
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
+      
+      // 업적 상태
+      achievements: [],
+      setAchievements: (achievements) => set({ achievements }),
 
       // 저장/로드 액션
       setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),

@@ -55,9 +55,9 @@ export const useChatMessages = (
         const history: Message[] = (data?.messages ?? data ?? []).map(
           (m: any) => {
             // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
-            const isImageMessage = m.content && m.content.startsWith('chat/') && 
-                                  /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
-            
+            const isImageMessage = m.content && m.content.startsWith('chat/') &&
+              /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+
             return {
               id: m.id ?? String(m.message_id),
               roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
@@ -80,11 +80,14 @@ export const useChatMessages = (
         );
         setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
 
-        // 읽음 처리
-        s.emit("read", { roomId: selectedChatId });
-        onChatRoomUpdate(selectedChatId, {
-          last_read_at: new Date().toISOString()
-        });
+        // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
+        const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
+        if (receivedMessages.length > 0) {
+          s.emit("read", { roomId: selectedChatId });
+          onChatRoomUpdate(selectedChatId, {
+            last_read_at: new Date().toISOString()
+          });
+        }
       } catch (error) {
         console.error("메시지 히스토리 로드 실패:", error);
         // 오류 발생시 빈 배열로 설정하여 앱이 크래시되지 않도록 처리
@@ -108,9 +111,9 @@ export const useChatMessages = (
 
     const onMessage = (m: any) => {
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
-      const isImageMessage = m.content && m.content.startsWith('chat/') && 
-                            /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
-      
+      const isImageMessage = m.content && m.content.startsWith('chat/') &&
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+
       const msg: Message = {
         id: m.id ?? String(m.message_id),
         roomId: m.roomId ?? String(m.room_id),
@@ -150,9 +153,9 @@ export const useChatMessages = (
       onChatRoomUpdate(msg.roomId, {
         lastMessage: msg.content,
         lastMessageAt: msg.createdAt,
-        // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
+        // 현재 열린 채팅방의 메시지이고 내가 받은 메시지만 읽음 처리
         last_read_at:
-          msg.senderId === currentUserId || msg.roomId === selectedChatId
+          msg.roomId === selectedChatId && msg.senderId !== currentUserId
             ? msg.createdAt
             : undefined,
         searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
@@ -170,12 +173,12 @@ export const useChatMessages = (
         const next = arr.map((m) =>
           m.id === ack.tempId
             ? {
-                ...m,
-                id: ack.realId,
-                status: "sent",
-                createdAt: ack.createdAt ?? m.createdAt,
-                tempId: undefined,
-              }
+              ...m,
+              id: ack.realId,
+              status: "sent",
+              createdAt: ack.createdAt ?? m.createdAt,
+              tempId: undefined,
+            }
             : m
         );
         return { ...prev, [selectedChatId]: next };
@@ -244,7 +247,7 @@ export const useChatMessages = (
       onChatRoomUpdate(roomId, {
         lastMessage: content,
         lastMessageAt: now,
-        last_read_at: now,
+        // 내가 보낸 메시지는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
         searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
       });
 
