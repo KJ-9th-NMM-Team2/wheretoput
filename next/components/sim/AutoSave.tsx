@@ -7,6 +7,16 @@ interface AutoSaveProps {
   enabled?: boolean; // 자동저장 활성화 여부
 }
 
+interface ModelData {
+  id: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: [number, number, number];
+  url: string;
+  texturePath?: string;
+  length?: number;
+}
+
 // - ( interval)초마다 자동으로 상태 저장
 // - 상태 변경이 있을 때만 저장하여 불필요한 API 호출 방지
 // - 저장 중일 때는 중복 저장 방지
@@ -43,14 +53,13 @@ export default function AutoSave({
 
     // 가구의 모든 속성(position, rotation, scale 등)을 포함한 상태 비교
     const currentStateString = JSON.stringify(
-      currentLoadedModels.map(model => ({
+      currentLoadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
         scale: model.scale,
         url: model.url,
         texturePath: model.texturePath,
-        isCityKit: model.isCityKit,
         length: model.length
       }))
     );
@@ -86,14 +95,13 @@ export default function AutoSave({
     // 초기 상태 저장 (가구의 모든 속성 포함)
     const currentLoadedModels = useStore.getState().loadedModels;
     lastSaveStateRef.current = JSON.stringify(
-      currentLoadedModels.map(model => ({
+      currentLoadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
         scale: model.scale,
         url: model.url,
         texturePath: model.texturePath,
-        isCityKit: model.isCityKit,
         length: model.length
       }))
     );
