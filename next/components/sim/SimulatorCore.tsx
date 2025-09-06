@@ -17,6 +17,8 @@ import AutoSave from "@/components/sim/AutoSave";
 import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
+import { ArchievementToast } from "./achievement/components/ArchievementToast";
+
 
 type position = [number, number, number];
 
@@ -152,6 +154,7 @@ export function SimulatorCore({
     removeModel,
     collaborationMode,
     checkUserRoom,
+    achievements,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -269,6 +272,9 @@ export function SimulatorCore({
 
         {/* 커스텀 헤더 또는 기본 모드 컨트롤 */}
         {customHeader}
+        
+        {/* 조건 달성 토스트 팝업 - 모드 컨트롤 아래 중앙 */}
+        <ArchievementToast datas={achievements} />
 
         {/* 추가 UI 요소들 */}
         {additionalUI}

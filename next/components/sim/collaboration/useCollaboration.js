@@ -94,28 +94,21 @@ export function useCollaboration(roomId) {
 
     socket.current.on("user-left", async (data) => {
       console.log("🔴 user-left 이벤트 수신:", data);
-      console.log("현재 connectedUsers:", connectedUsers);
 
-      // 퇴장한 사용자가 선택한 모델이 있다면 선택 해제 (제거하기 전에 미리 처리)
-      const leavingUser = connectedUsers.get(data.userId);
-      if (leavingUser?.selectedModel) {
-        // 선택된 모델의 잠금 상태 해제 등 필요한 정리 작업
+      if (data.userId === currentUser.id && !isManualDisconnect.current) {
+        alert("비활성 상태로 방에서 퇴장되었습니다.");
+        window.location.href = "/";
+      } else {
+        // 사용자 정보 제거
+        removeConnectedUser(data.userId);
         console.log(
-          `🔓 ${data.userId}님이 선택한 모델 ${leavingUser.selectedModel} 선택 해제`
+          `👋 ${data.userData?.name || data.userId}님이 퇴장했습니다`
+        );
+        console.log(
+          "퇴장 후 connectedUsers:",
+          useStore.getState().connectedUsers
         );
       }
-
-      // 사용자 정보 제거
-      removeConnectedUser(data.userId);
-      console.log(
-        `👋 ${
-          leavingUser?.name || data.userData?.name || data.userId
-        }님이 퇴장했습니다`
-      );
-      console.log(
-        "퇴장 후 connectedUsers:",
-        useStore.getState().connectedUsers
-      );
     });
 
     socket.current.on("request-user-list", (data) => {
@@ -196,7 +189,7 @@ export function useCollaboration(roomId) {
           furniture_id: data.modelData?.furniture_id,
           position: data.modelData?.position,
           rotation: data.modelData?.rotation,
-          scale: data.modelData?.scale
+          scale: data.modelData?.scale,
         });
         addModel(data.modelData, false);
       }
@@ -205,15 +198,6 @@ export function useCollaboration(roomId) {
     socket.current.on("model-added-with-id", (data) => {
       if (data.userId !== currentUser.id) {
         console.log("➕ model-added-with-id 이벤트 수신:", data);
-        console.log("modelData 상세 정보:", {
-          id: data.modelData?.id,
-          name: data.modelData?.name,
-          url: data.modelData?.url,
-          furniture_id: data.modelData?.furniture_id,
-          position: data.modelData?.position,
-          rotation: data.modelData?.rotation,
-          scale: data.modelData?.scale
-        });
         addModelWithId(data.modelData, false); // shouldBroadcast = false
       }
     });
@@ -242,12 +226,24 @@ export function useCollaboration(roomId) {
       }
     });
 
-    // 후순위
-    socket.current.on("model-selected", (data) => {
+    socket.current.on("model-select", (data) => {
+      console.log("🔥 model-select 이벤트 수신:", data);
       if (data.userId !== currentUser.id) {
         updateConnectedUser(data.userId, {
-          ...data.userData,
-          selectedModel: data.modelId,
+          selectedModelId: data.modelId,
+          showTooltip: true,
+          tooltipModelId: data.modelId,
+        });
+      }
+    });
+
+    socket.current.on("model-deselect", (data) => {
+      console.log("🔥 model-deselect 이벤트 수신:", data);
+      if (data.userId !== currentUser.id) {
+        updateConnectedUser(data.userId, {
+          selectedModelId: null,
+          showTooltip: false,
+          tooltipModelId: null,
         });
       }
     });
@@ -291,7 +287,6 @@ export function useCollaboration(roomId) {
   // DB 로드 완료 시 사용자 입장 처리
   useEffect(() => {
     if (socket.current && socket.current.connected) {
-      console.log("DB 로드 완료, 사용자 입장 처리");
       socket.current.emit("user-join", {
         userId: currentUser.id,
         userData: {
@@ -304,11 +299,6 @@ export function useCollaboration(roomId) {
 
   // 협업 모드 변경시 연결/해제 처리
   useEffect(() => {
-    console.log("useEffect 트리거됨:", {
-      collaborationMode,
-      roomId,
-      currentUserId: currentUser.id,
-    });
     if (collaborationMode && roomId && currentUser.id) {
       isManualDisconnect.current = false;
       connectSocket();
@@ -336,6 +326,8 @@ export function useCollaboration(roomId) {
         broadcastModelMove,
         broadcastModelRotate,
         broadcastModelScale,
+        broadcastModelSelect,
+        broadcastModelDeselect,
       });
     } else {
       setCollaborationCallbacks({
@@ -345,6 +337,8 @@ export function useCollaboration(roomId) {
         broadcastModelMove: null,
         broadcastModelRotate: null,
         broadcastModelScale: null,
+        broadcastModelSelect: null,
+        broadcastModelDeselect: null,
       });
     }
   }, [collaborationMode]);
@@ -395,9 +389,19 @@ export function useCollaboration(roomId) {
     });
   };
 
-  // 일단 나중에 합시다
   const broadcastModelSelect = (modelId) => {
     emitEvent("model-select", {
+      userId: currentUser.id,
+      modelId,
+      userData: {
+        name: currentUser.name,
+        color: currentUser.color,
+      },
+    });
+  };
+
+  const broadcastModelDeselect = (modelId) => {
+    emitEvent("model-deselect", {
       userId: currentUser.id,
       modelId,
       userData: {
@@ -430,6 +434,7 @@ export function useCollaboration(roomId) {
     broadcastModelRotate,
     broadcastModelScale,
     broadcastModelSelect,
+    broadcastModelDeselect,
     broadcastCursorMove,
 
     // 연결 관리
