@@ -170,14 +170,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: body.content,
       },
       include: {
-        user: {
+        User: {
           select: {
             id: true,
             name: true,
             image: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // 메시지 보낸 사용자는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
@@ -187,8 +187,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: `mock-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       roomId: body.roomId,
       senderId: userId,
-      senderName: result.user?.name || '이름 없음',
-      senderImage: result.user?.image || '',
+      senderName: result.User?.name || '이름 없음',
+      senderImage: result.User?.image || '',
       content: body.content,
       createdAt: new Date().toISOString(),
       status: 'sent',
@@ -258,23 +258,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 채팅방 참가자들에게 목록 업데이트 이벤트 전송
   private async notifyParticipantsOfRoomUpdate(
-    roomId: string, 
+    roomId: string,
     messageData: {
       lastMessage: string;
       lastMessageAt: string;
       lastMessageSenderId: string;
       messageType: string;
-    }
+    },
   ) {
     try {
-      this.logger.log(`🔔 [notifyParticipants] 채팅방 목록 업데이트 시작 - roomId: ${roomId}`);
-      
+      this.logger.log(
+        `🔔 [notifyParticipants] 채팅방 목록 업데이트 시작 - roomId: ${roomId}`,
+      );
+
       // 채팅방 참가자들 조회
       const participants = await this.prisma.chat_participants.findMany({
         where: { chat_room_id: roomId },
-        select: { user_id: true }
+        select: { user_id: true },
       });
-      this.logger.log(`👥 [notifyParticipants] 참가자 수: ${participants.length}`);
+      this.logger.log(
+        `👥 [notifyParticipants] 참가자 수: ${participants.length}`,
+      );
 
       const updateData = {
         roomId,
@@ -282,15 +286,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         lastMessageAt: messageData.lastMessageAt,
         lastMessageSenderId: messageData.lastMessageSenderId,
         messageType: messageData.messageType,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // 모든 연결된 소켓 조회
       const allSockets = await this.server.fetchSockets();
-      this.logger.log(`🔗 [notifyParticipants] 총 연결된 소켓 수: ${allSockets.length}`);
-      
+      this.logger.log(
+        `🔗 [notifyParticipants] 총 연결된 소켓 수: ${allSockets.length}`,
+      );
+
       let notifiedCount = 0;
-      
+
       // 각 참가자의 모든 소켓에 이벤트 전송
       for (const participant of participants) {
         for (const socket of allSockets) {
@@ -298,16 +304,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.jwtService,
             socket.handshake.auth?.token,
           );
-          
+
           if (socketUserId === participant.user_id) {
             socket.emit('chatroom_list_update', updateData);
             notifiedCount++;
-            this.logger.log(`✅ [notifyParticipants] 전송 성공 - 사용자: ${participant.user_id}, 소켓: ${socket.id}`);
+            this.logger.log(
+              `✅ [notifyParticipants] 전송 성공 - 사용자: ${participant.user_id}, 소켓: ${socket.id}`,
+            );
           }
         }
       }
 
-      this.logger.log(`🔔 [notifyParticipants] 완료 - 총 ${notifiedCount}개 소켓에 전송됨`);
+      this.logger.log(
+        `🔔 [notifyParticipants] 완료 - 총 ${notifiedCount}개 소켓에 전송됨`,
+      );
     } catch (error) {
       this.logger.error(`❌ [notifyParticipants] 실패:`, error);
     }
