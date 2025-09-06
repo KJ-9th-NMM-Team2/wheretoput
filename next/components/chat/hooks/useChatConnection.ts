@@ -15,10 +15,12 @@ export const useChatConnection = (open: boolean) => {
     (async () => {
       try {
         // 1. 토큰을 받아오는 작업
+
         const r = await fetch("/api/chat/token", {
           cache: "no-store",
           credentials: "include",
         });
+
         // 2. response 응답 체크
         if (!r.ok) {
           console.error("token status", r.status);
@@ -45,10 +47,12 @@ export const useChatConnection = (open: boolean) => {
   // 초기 토큰 부트스트랩
   useEffect(() => {
     const bootstrap = async () => {
+
       const res = await fetch("/api/chat/token", {
         cache: "no-store",
         credentials: "include",
       });
+
       const data = await res.json();
       console.log("토큰 응답:", data);
       const token = data["tokenData"]?.["jti"] || data.token;

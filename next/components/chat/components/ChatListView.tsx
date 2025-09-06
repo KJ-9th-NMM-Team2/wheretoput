@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from "react";
 import SearchBar from "./shared/SearchBar";
-import ContextMenu from "./shared/ContextMenu";
 import { ChatListItem, UserLite } from "../types/chat-types";
 import { formatRelativeTime, isUnread, recomputeChats } from "../utils/chat-utils";
 import { api } from "@/lib/client/api";
@@ -21,7 +20,6 @@ interface ChatListViewProps {
   peopleHits: UserLite[];
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
-  onDeleteChat: (chatId: string) => void;
   currentUserId: string | null;
 }
 
@@ -37,15 +35,18 @@ export default function ChatListView({
   peopleHits,
   onChatSelect,
   onStartDirect,
-  onDeleteChat,
   currentUserId,
 }: ChatListViewProps) {
   const [showUserList, setShowUserList] = useState(false);
   const [allUsers, setAllUsers] = useState<UserLite[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
+    chatId: string;
     x: number;
     y: number;
+  } | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
     chatId: string;
     chatName: string;
   } | null>(null);
@@ -82,6 +83,68 @@ export default function ChatListView({
     setShowUserList(!showUserList);
   };
 
+  // 우클릭 컨텍스트 메뉴 표시
+  const handleContextMenu = (event: React.MouseEvent, chatId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setContextMenu({
+      chatId,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  // 컨텍스트 메뉴 닫기
+  const closeContextMenu = () => {
+    setContextMenu(null);
+  };
+
+  // 삭제 모달 열기
+  const openDeleteModal = (chatId: string) => {
+    closeContextMenu();
+    const chat = baseChats.find(c => c.chat_room_id === chatId);
+    if (chat) {
+      setDeleteModal({
+        chatId,
+        chatName: chat.name || "이름 없는 채팅방"
+      });
+    }
+  };
+
+  // 삭제 모달 닫기
+  const closeDeleteModal = () => {
+    setDeleteModal(null);
+  };
+
+  // 채팅방 완전 삭제 실행
+  const handleDeleteRoom = async (roomId: string) => {
+    closeDeleteModal();
+    
+    setDeleting(roomId);
+    try {
+      await api.delete(`http://localhost:3001/rooms/${roomId}/delete-completely`);
+      
+      // 채팅방 목록에서 제거
+      const updatedChats = baseChats.filter(chat => chat.chat_room_id !== roomId);
+      setBaseChats(updatedChats);
+      setChats(recomputeChats(updatedChats, query, select, currentUserId));
+      
+    } catch (error: any) {
+      console.error("채팅방 삭제 실패:", error);
+      const errorMsg = error.response?.data?.message || "채팅방 삭제에 실패했습니다.";
+      alert(`삭제 실패: ${errorMsg}`);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  // 클릭 시 컨텍스트 메뉴 닫기
+  useEffect(() => {
+    const handleClick = () => closeContextMenu();
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
 
   return (
     <div className="flex flex-col h-full">
@@ -104,11 +167,11 @@ export default function ChatListView({
         value={query}
         onChange={(q) => {
           setQuery(q);
-          setChats(recomputeChats(baseChats, q, select));
+          setChats(recomputeChats(baseChats, q, select, currentUserId));
         }}
         onClear={() => {
           setQuery("");
-          setChats(recomputeChats(baseChats, "", select));
+          setChats(recomputeChats(baseChats, "", select, currentUserId));
         }}
         placeholder="Messenger 검색"
       />
@@ -118,7 +181,7 @@ export default function ChatListView({
         <button
           onClick={() => {
             setSelect("전체");
-            setChats(recomputeChats(baseChats, query, "전체"));
+            setChats(recomputeChats(baseChats, query, "전체", currentUserId));
           }}
           className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
             ? "bg-gray-200 text-blue-500"
@@ -131,7 +194,7 @@ export default function ChatListView({
         <button
           onClick={() => {
             setSelect("읽지 않음");
-            setChats(recomputeChats(baseChats, query, "읽지 않음"));
+            setChats(recomputeChats(baseChats, query, "읽지 않음", currentUserId));
           }}
           className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
             ? "bg-gray-200 text-blue-500"
@@ -239,24 +302,18 @@ export default function ChatListView({
               </div>
             ) : (
               chats.map((chat) => {
-                const unread = isUnread(chat);
+                const unread = isUnread(chat, currentUserId);
+                const isDeleting = deleting === chat.chat_room_id;
                 return (
                   <div
                     key={chat.chat_room_id}
                     onClick={() => onChatSelect(chat.chat_room_id)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      console.log(' 검색결과 우클릭 감지:', chat.name, chat.chat_room_id);
-                      setContextMenu({
-                        x: e.clientX,
-                        y: e.clientY,
-                        chatId: chat.chat_room_id,
-                        chatName: chat.name,
-                      });
-                    }}
-                    className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                    onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
+                    className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${
+                      isDeleting ? "opacity-50 pointer-events-none" : ""
+                    }`}
                   >
-                    <div>
+                    <div className="flex-1">
                       <div className="font-semibold">
                         {chat.name}
                       </div>
@@ -265,6 +322,7 @@ export default function ChatListView({
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {isDeleting && <span className="text-xs">⏳</span>}
                       {unread && (
                         <span className="w-3 h-3 rounded-full bg-orange-500" />
                       )}
@@ -282,29 +340,24 @@ export default function ChatListView({
           <>
             {chats.map((chat) => {
               const unread = isUnread(chat);
+              const isDeleting = deleting === chat.chat_room_id;
               return (
                 <div
                   key={chat.chat_room_id}
                   onClick={() => onChatSelect(chat.chat_room_id)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    console.log(' 우클릭 감지:', chat.name, chat.chat_room_id);
-                    setContextMenu({
-                      x: e.clientX,
-                      y: e.clientY,
-                      chatId: chat.chat_room_id,
-                      chatName: chat.name,
-                    });
-                  }}
-                  className="flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                  onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
+                  className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${
+                    isDeleting ? "opacity-50 pointer-events-none" : ""
+                  }`}
                 >
-                  <div>
+                  <div className="flex-1">
                     <div className="font-semibold">{chat.name}</div>
                     <div className="text-sm text-gray-500 truncate w-40">
                       {chat.lastMessage}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    {isDeleting && <span className="text-xs">⏳</span>}
                     {unread && (
                       <span className="w-3 h-3 rounded-full bg-orange-500" />
                     )}
@@ -321,16 +374,54 @@ export default function ChatListView({
       
       {/* 컨텍스트 메뉴 */}
       {contextMenu && (
-        <ContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          chatName={contextMenu.chatName}
-          onClose={() => setContextMenu(null)}
-          onDeleteChat={() => {
-            onDeleteChat(contextMenu.chatId);
-            setContextMenu(null);
+        <div
+          className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
           }}
-        />
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => openDeleteModal(contextMenu.chatId)}
+            disabled={deleting === contextMenu.chatId}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            채팅방 삭제
+          </button>
+        </div>
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                채팅방 삭제
+              </h3>
+              <p className="text-gray-600">
+                "<span className="font-medium">{deleteModal.chatName}</span>" 채팅방과 모든 메시지를 완전히 삭제하시겠습니까?
+              </p>
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeDeleteModal}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => handleDeleteRoom(deleteModal.chatId)}
+                disabled={deleting === deleteModal.chatId}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleting === deleteModal.chatId ? "삭제 중..." : "삭제"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

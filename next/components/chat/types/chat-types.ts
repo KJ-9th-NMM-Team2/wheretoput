@@ -8,6 +8,7 @@ export type ChatListItem = {
   lastMessage?: string;
   lastMessageTime?: string;
   lastMessageAt?: string;
+  lastMessageSenderId?: string; // 마지막 메시지 발송자 ID
   last_read_at: string;
   searchIndex: string; //  검색 전용: 마지막 메시지 전용
 };

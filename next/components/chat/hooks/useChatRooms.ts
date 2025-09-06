@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { api } from "@/lib/client/api";
 import { ChatListItem } from "../types/chat-types";
 import { recomputeChats } from "../utils/chat-utils";
+import { getSocket } from "@/lib/client/socket";
 
 const NEXT_API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
@@ -43,7 +44,16 @@ export const useChatRooms = (
           console.log("메시지 데이터:", r.creator_id, currentUserId);
           r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
           console.log("마지막 메시지: ", r.last_message);
-          const lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
+
+          // 마지막 메시지가 이미지인지 확인
+          let lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
+          const messageType = r.last_message?.message_type;
+
+          // 이미지 메시지인 경우 "사진"으로 표시
+          if (messageType === "image" || (lastMsg && lastMsg.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))) {
+            lastMsg = "사진";
+          }
+
           const chatRoomName = r.chat_participants
             .filter((participant: any) => participant.user_id !== currentUserId)
             .map((participant: any) => participant.user?.name || "이름 없음")
@@ -56,9 +66,15 @@ export const useChatRooms = (
             lastMessage: lastMsg,
             lastMessageAt:
               r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
+            lastMessageSenderId: r.last_message?.user_id ?? undefined,
             last_read_at: r.last_read_at ?? "1970-01-01T00:00:00.000Z",
             searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
           };
+
+          // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
+          if (result.lastMessageSenderId === currentUserId && result.lastMessageAt) {
+            result.last_read_at = result.lastMessageAt;
+          }
 
           console.log(
             "lastMessageAt:",
@@ -71,7 +87,7 @@ export const useChatRooms = (
         });
 
         setBaseChats(mapped);
-        setChats(recomputeChats(mapped, "", "전체"));
+        setChats(recomputeChats(mapped, "", "전체", currentUserId));
 
         console.log("[ROOMS] OK", mapped.length);
       } catch (e: any) {
@@ -85,6 +101,79 @@ export const useChatRooms = (
       }
     })();
   }, [open, token, currentUserId]);
+
+  // 실시간 폴링 (5초마다) - 안정적인 채팅방 목록 업데이트
+  useEffect(() => {
+    if (!open || !token) return;
+
+    const loadRooms = async () => {
+      try {
+        console.log("[POLLING] 채팅방 목록 업데이트 시작");
+        const response = await fetch(
+          "http://localhost:3000/api/backend/rooms",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await response.json();
+
+        const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
+          r.last_message = r.chat_messages[0] ?? null;
+
+          // 마지막 메시지가 이미지인지 확인
+          let lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
+          const messageType = r.last_message?.message_type;
+
+          // 이미지 메시지인 경우 "사진"으로 표시
+          if (messageType === "image" || (lastMsg && lastMsg.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))) {
+            lastMsg = "사진";
+          }
+
+          const chatRoomName = r.chat_participants
+            .filter((participant: any) => participant.user_id !== currentUserId)
+            .map((participant: any) => participant.user?.name || "이름 없음")
+            .join(", ");
+
+          const result = {
+            chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
+            name: chatRoomName,
+            is_private: Boolean(r.is_private),
+            lastMessage: lastMsg,
+            lastMessageAt:
+              r.last_message?.created_at ?? r.lastMessageAt ?? undefined,
+            lastMessageSenderId: r.last_message?.user_id ?? undefined,
+            last_read_at: r.last_read_at ?? "1970-01-01T00:00:00.000Z",
+            searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
+          };
+
+          // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
+          if (result.lastMessageSenderId === currentUserId && result.lastMessageAt) {
+            result.last_read_at = result.lastMessageAt;
+          }
+
+          return result;
+        });
+
+        setBaseChats(mapped);
+        setChats(recomputeChats(mapped, query, select, currentUserId));
+        console.log("[POLLING] 채팅방 목록 업데이트 완료 -", mapped.length, "개 방");
+      } catch (e) {
+        console.error("[POLLING] FAIL", e);
+      }
+    };
+
+    // 즉시 한 번 실행
+    loadRooms();
+
+    // 1초마다 폴링 - 실시간 업데이트
+    const interval = setInterval(loadRooms, 3000);
+
+    return () => {
+      console.log("[POLLING] 폴링 중단");
+      clearInterval(interval);
+    };
+  }, [open, token, currentUserId, query, select]);
+
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
@@ -126,7 +215,7 @@ export const useChatRooms = (
             ...next[existingIndex],
             name: data?.name ?? otherUserName ?? next[existingIndex].name,
           };
-          setChats(recomputeChats(next, "", "전체"));
+          setChats(recomputeChats(next, "", "전체", currentUserId));
           return next;
         }
         const next = [
@@ -141,7 +230,7 @@ export const useChatRooms = (
           },
           ...prev,
         ];
-        setChats(recomputeChats(next, "", "전체"));
+        setChats(recomputeChats(next, "", "전체", currentUserId));
         return next;
       });
 
@@ -156,10 +245,10 @@ export const useChatRooms = (
       const updated = prev.map((c) =>
         c.chat_room_id === roomId ? { ...c, ...updates } : c
       );
-      setChats(recomputeChats(updated, query, select));
+      setChats(recomputeChats(updated, query, select, currentUserId));
       return updated;
     });
-  }, [query, select]);
+  }, [query, select, currentUserId]);
 
   // 채팅방 삭제 (로컬 상태에서 제거)
   const deleteChatRoom = useCallback((roomId: string) => {
@@ -167,10 +256,10 @@ export const useChatRooms = (
     setBaseChats((prev) => {
       const filtered = prev.filter((c) => c.chat_room_id !== roomId);
       console.log('✅ useChatRooms: baseChats 업데이트', prev.length, '→', filtered.length);
-      setChats(recomputeChats(filtered, query, select));
+      setChats(recomputeChats(filtered, query, select, currentUserId));
       return filtered;
     });
-  }, [query, select]);
+  }, [query, select, currentUserId]);
 
   return {
     baseChats,
