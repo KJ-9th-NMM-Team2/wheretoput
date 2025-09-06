@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useStore } from './useStore.js';
+import { useState, useEffect } from "react";
+import { useStore } from "./useStore.js";
 
 interface AutoSaveIndicatorProps {
-  position?: 'top-right' | 'bottom-right' | 'top-left' | 'bottom-left';
+  position?: "top-right" | "bottom-right" | "top-left" | "bottom-left";
 }
 
 //  자동저장 상태를 시각적으로 표시
-//  저장 중일 때 메시지표시 , 3초후 사라짐
-export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSaveIndicatorProps) {
+//  저장 중일 때 알림 표시
+export default function AutoSaveIndicator({
+  position,
+}: AutoSaveIndicatorProps) {
   const isSaving = useStore((state) => state.isSaving);
   const lastSavedAt = useStore((state) => state.lastSavedAt);
   const [showIndicator, setShowIndicator] = useState(false);
@@ -15,12 +17,13 @@ export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSav
   useEffect(() => {
     if (isSaving || lastSavedAt) {
       setShowIndicator(true);
-      
+
+      // 5초 후 저장알림 숨김
       if (!isSaving && lastSavedAt) {
         const timer = setTimeout(() => {
           setShowIndicator(false);
-        }, 3000); // 3초 후 숨김
-        
+        }, 5000);
+
         return () => clearTimeout(timer);
       }
     }
@@ -28,33 +31,27 @@ export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSav
 
   if (!showIndicator) return null;
 
-  const positionStyles = {
-    'top-right': 'right-4',
-    'bottom-right': 'bottom-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-left': 'bottom-4 left-4'
-  };
-
   const formatTime = (date: Date | null) => {
-    if (!date) return '';
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+    if (!date) return "";
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
   return (
-    <div 
-      className={`fixed z-50 px-3 py-2 rounded-lg shadow-lg transition-all duration-300 ${positionStyles[position]}`}
-      style={{
-        backgroundColor: isSaving ? '#3B82F6' : '#10B981',
-        color: 'white',
-        fontSize: '12px',
-        opacity: showIndicator ? 1 : 0,
-        transform: showIndicator ? 'translateY(0)' : 'translateY(10px)',
-        top: position === 'top-right' ? '60px' : undefined
-      }}
+    <div
+      className={`
+        fixed z-50 px-3 py-2 rounded-lg shadow-lg transition-all duration-300 right-4 text-white text-xs
+        ${isSaving ? "bg-blue-500" : "bg-green-500"}
+        ${
+          showIndicator
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-2"
+        }
+        ${position === "top-right" ? "top-15" : ""}
+      `}
     >
       <div className="flex items-center gap-2">
         {isSaving ? (
