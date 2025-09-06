@@ -27,14 +27,15 @@ model chat_messages {
 }
 
 model chat_participants {
-  participant_id String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  chat_room_id   String     @db.Uuid
-  user_id        String
-  joined_at      DateTime?  @default(now()) @db.Timestamp(6)
-  last_read_at   DateTime?  @db.Timestamp(6)
-  is_admin       Boolean?   @default(false)
-  chat_rooms     chat_rooms @relation(fields: [chat_room_id], references: [chat_room_id], onDelete: Cascade, onUpdate: NoAction)
-  user           User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  participant_id   String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  chat_room_id     String     @db.Uuid
+  user_id          String
+  joined_at        DateTime?  @default(now()) @db.Timestamp(6)
+  last_read_at     DateTime?  @db.Timestamp(6)
+  is_admin         Boolean?   @default(false)
+  custom_room_name String?    @db.VarChar(100)
+  chat_rooms       chat_rooms @relation(fields: [chat_room_id], references: [chat_room_id], onDelete: Cascade, onUpdate: NoAction)
+  user             User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([chat_room_id, user_id])
   @@index([chat_room_id], map: "idx_chat_participants_room")
@@ -169,6 +170,7 @@ model rooms {
   created_at    DateTime?       @default(now()) @db.Timestamp(6)
   updated_at    DateTime?       @default(now()) @db.Timestamp(6)
   root_room_id  String?         @db.Uuid
+  collab_on     Boolean?        @default(false)
   room_comments room_comments[]
   room_likes    room_likes[]
   room_objects  room_objects[]
@@ -211,6 +213,7 @@ model User {
   sessions          Session[]
   following         follows[]           @relation("follows_follower")
   followers         follows[]           @relation("follows_following")
+  user_achievements user_achievements[]
   chat_messages     chat_messages[]
   chat_participants chat_participants[]
   chat_rooms        chat_rooms[]
@@ -258,5 +261,32 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+  @@schema("auth")
+}
+
+model achievements {
+  id                String              @id @default(dbgenerated("(gen_random_uuid())::text")) @db.VarChar
+  title             String              @db.VarChar
+  description       String?
+  category          String?             @db.VarChar
+  points            Int?                @default(0)
+  icon              String?             @db.VarChar
+  is_active         Boolean?            @default(true)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  user_achievements user_achievements[]
+
+  @@index([category], map: "idx_achievements_category")
+  @@schema("auth")
+}
+
+model user_achievements {
+  id             String       @id @default(dbgenerated("(gen_random_uuid())::text")) @db.VarChar
+  user_id        String       @db.VarChar
+  achievement_id String       @db.VarChar
+  unlocked_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  achievements   achievements @relation(fields: [achievement_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_achievements_achievement_id")
+  User           User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_achievements_user_id")
+
   @@schema("auth")
 }

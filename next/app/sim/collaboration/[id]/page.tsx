@@ -3,21 +3,36 @@
 import React, { useState, useEffect } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { SimulatorCore } from "@/components/sim/SimulatorCore";
-import { ConnectedUsersList } from "@/components/sim/collaboration/CollaborationIndicators.jsx";
+import {
+  ConnectedUsersList,
+  CollaborationEndButton,
+} from "@/components/sim/collaboration/CollaborationIndicators.jsx";
 import { useCollaboration } from "@/components/sim/collaboration/useCollaboration.js";
 import { HistoryProvider } from "@/components/sim/history";
 import { connectSocket, getSocket } from "@/lib/client/socket";
 import { useSession } from "next-auth/react";
+import { getColab, toggleColab } from "@/lib/api/toggleColab";
+import { useRouter } from "next/navigation";
 
 function CollaborationPageContent({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { setCollaborationMode, setViewOnly, setCurrentUser } = useStore();
+  const {
+    setCollaborationMode,
+    setViewOnly,
+    setCurrentUser,
+    checkUserRoom,
+    saveSimulatorState,
+  } = useStore();
 
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [isAccessChecking, setIsAccessChecking] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const { data: session } = useSession();
+  const router = useRouter();
 
   // 협업 모드 초기 설정
   useEffect(() => {
@@ -35,89 +50,130 @@ function CollaborationPageContent({
   // 협업 훅 활성화
   const collaboration = useCollaboration(roomId);
 
-  // URL 파라미터에서 room_id 추출
+  // 협업 모드 접근 권한 체크
   useEffect(() => {
-    const initializeCollaboration = async () => {
+    const checkCollaborationAccess = async () => {
       try {
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
 
-        console.log(`협업 모드 시뮬레이터 초기화: room_id = ${currentRoomId}`);
-        setRoomId(currentRoomId);
+        // 1. 방 소유자인지 확인
+        let ownerStatus = false;
+        if (!session?.user.id) {
+          ownerStatus = false;
+        } else {
+          ownerStatus = await checkUserRoom(currentRoomId, session.user.id);
+        }
+
+        setIsOwner(ownerStatus); // 소유자 상태 저장
+
+        if (ownerStatus) {
+          // 방 소유자인 경우: 협업 모드 상태 확인 후 자동으로 켜기
+          const collabResult = await getColab(currentRoomId);
+
+          if (collabResult.success) {
+            if (!collabResult.data.collab_on) {
+              // 협업 모드가 꺼져있으면 켜기
+              const toggleResult = await toggleColab(currentRoomId, true);
+              if (toggleResult.success) {
+                console.log(
+                  "방 주인이므로 협업 모드를 자동으로 활성화했습니다"
+                );
+              } else {
+                console.error("협업 모드 활성화 실패:", toggleResult.error);
+              }
+            }
+            setRoomId(currentRoomId);
+            setIsAccessChecking(false);
+          } else {
+            console.error("협업 상태 확인 실패:", collabResult.error);
+            setAccessDenied(true);
+            setIsAccessChecking(false);
+          }
+        } else {
+          // 일반 사용자인 경우: 협업 모드가 켜져있는지 확인
+          const collabResult = await getColab(currentRoomId);
+
+          if (collabResult.success && collabResult.data.collab_on) {
+            // 협업 모드가 켜져있으면 접근 허용
+            setRoomId(currentRoomId);
+            setIsAccessChecking(false);
+          } else {
+            // 협업 모드가 꺼져있거나 오류 시 접근 거부
+            console.log("협업 모드가 비활성화되어 있습니다");
+            console.log("setAccessDenied(true) 호출");
+            setAccessDenied(true);
+            setIsAccessChecking(false);
+            console.log("상태 업데이트 완료");
+          }
+        }
       } catch (error) {
-        console.error("협업 모드 시뮬레이터 초기화 실패:", error);
+        console.error("협업 모드 접근 권한 체크 실패:", error);
+        setAccessDenied(true);
+        setIsAccessChecking(false);
       }
     };
 
-    initializeCollaboration();
-  }, [params]);
+    if (session !== undefined) {
+      checkCollaborationAccess();
+    }
+  }, [params, session, checkUserRoom]);
 
-  if (!roomId) {
-    return <div>Loading...</div>;
+  // 접근 거부 (우선순위 높게)
+  if (accessDenied) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen gap-5">
+        <div className="text-2xl font-bold">
+          🚫 협업 모드에 접근할 수 없습니다
+        </div>
+        <div className="text-base text-gray-600">
+          방 소유자가 협업 모드를 활성화해야 접근할 수 있습니다
+        </div>
+        <button
+          onClick={() => router.back()}
+          className="px-5 py-2.5 bg-blue-500 text-white border-none rounded-md cursor-pointer hover:bg-blue-600 transition-colors"
+        >
+          이전 페이지로 돌아가기
+        </button>
+      </div>
+    );
   }
 
-  // socket 통신 테스트 해보던거 아직 정확한 작동 X
-  // useEffect(() => {
-  //   let alive = true;
+  // 통합된 로딩 및 상태 관리
+  if (isAccessChecking || !roomId) {
+    return (
+      <div className="flex justify-center items-center h-screen text-lg">
+        🤝 협업 모드 시뮬레이터 로딩 중...
+      </div>
+    );
+  }
 
-  //   const initSocketAndJoinRoom = async () => {
-  //     try {
-  //       // 1. 토큰 가져오기
-  //       const r = await fetch("/api/chat/token", { cache: "no-store" });
-  //       if (!r.ok) {
-  //         console.error("token status", r.status);
-  //         return;
-  //       }
+  // 협업 종료 핸들러
+  const handleEndCollaboration = async () => {
+    if (!roomId) return;
 
-  //       const data = await r.json();
-  //       const token = data.token;
-  //       if (!alive || !token) return;
-
-  //       // 2. 소켓 연결
-  //       const socket = connectSocket(token);
-
-  //       socket.emit('socketConnect', { roomId });
-
-  //       // 3. 연결 대기
-  //       socket.on('connect', () => {
-  //         console.log('Socket connected, joining room:', roomId);
-  //         socket.emit('joinRoom', { roomId });
-  //       });
-
-  //       // 4. 이벤트 리스너 등록
-  //       socket.on('userJoined', (data) => {
-  //         console.log(`사용자 입장:`, data);
-  //       });
-
-  //       socket.on('furnitureUpdated', (data) => {
-  //         console.log('가구 업데이트:', data);
-  //       });
-
-  //       // 이미 연결되어 있다면 바로 방 입장
-  //       if (socket.connected) {
-  //         socket.emit('joinRoom', { roomId });
-  //       }
-
-  //     } catch (e) {
-  //       console.error("Socket init error:", e);
-  //     }
-  //   };
-
-  //   initSocketAndJoinRoom();
-
-  //   return () => {
-  //     alive = false;
-  //     // 소켓 정리
-  //     const socket = getSocket();
-  //     if (socket) {
-  //       socket.emit('leaveRoom', { roomId });
-  //       socket.off('userJoined');
-  //       socket.off('furnitureUpdated');
-  //       socket.off('connect');
-  //       socket.disconnect();
-  //     }
-  //   };
-  // }, [roomId]);
+    if (
+      confirm(
+        "협업 모드를 종료하시겠습니까? 종료 시 현재 집의 상태가 저장됩니다. 종료 시 함께 작업 중인 사용자 모두 퇴장됩니다."
+      )
+    ) {
+      try {
+        const result = await toggleColab(roomId, false);
+        if (result.success) {
+          collaboration.broadcastCollaborationEnd();
+          await saveSimulatorState(); // 종료 전 DB에 저장
+          console.log("협업 모드를 종료했습니다");
+          router.push(`/sim/${roomId}`);
+        } else {
+          console.error("협업 모드 종료 실패:", result.error);
+          alert("협업 모드 종료에 실패했습니다");
+        }
+      } catch (error) {
+        console.error("협업 종료 중 오류:", error);
+        alert("협업 모드 종료 중 오류가 발생했습니다");
+      }
+    }
+  };
 
   return (
     <SimulatorCore
@@ -128,6 +184,12 @@ function CollaborationPageContent({
       additionalUI={
         <>
           <ConnectedUsersList />
+          {/* 방 소유자에게만 협업 종료 버튼 표시 */}
+          {isOwner && (
+            <CollaborationEndButton
+              onEndCollaboration={handleEndCollaboration}
+            />
+          )}
         </>
       }
       loadingMessage="협업 모드 로딩 중..."

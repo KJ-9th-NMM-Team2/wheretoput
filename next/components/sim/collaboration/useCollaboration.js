@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { io } from "socket.io-client";
 import { connectSocket as startSocket } from "@/lib/client/socket";
+import { useRouter } from "next/navigation";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
@@ -34,6 +35,20 @@ export function useCollaboration(roomId) {
     connectedUsers,
     saveSimulatorState,
   } = useStore();
+
+  const router = useRouter();
+
+  // 협업 종료 브로드캐스트 함수
+  const broadcastCollaborationEnd = () => {
+    if (socket.current && socket.current.connected) {
+      console.log("🔚 협업 종료 알림을 다른 사용자들에게 전송");
+      socket.current.emit("collaboration-ended", {
+        ownerId: currentUser.id,
+        roomId,
+        message: "방 소유자가 협업 모드를 종료했습니다",
+      });
+    }
+  };
 
   // Socket.IO 연결 초기화
   const connectSocket = async () => {
@@ -96,8 +111,13 @@ export function useCollaboration(roomId) {
       console.log("🔴 user-left 이벤트 수신:", data);
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
-        alert("비활성 상태로 방에서 퇴장되었습니다.");
-        window.location.href = "/";
+        // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
+        const message =
+          data.reason === "collaboration-ended"
+            ? "협업 모드가 종료되어 방에서 나갔습니다."
+            : "비활성 상태로 인해 방에서 퇴장되었습니다.";
+        alert(message);
+        router.push(roomId ? `/sim/${roomId}` : `/`);
       } else {
         // 사용자 정보 제거
         removeConnectedUser(data.userId);
@@ -436,6 +456,7 @@ export function useCollaboration(roomId) {
     broadcastModelSelect,
     broadcastModelDeselect,
     broadcastCursorMove,
+    broadcastCollaborationEnd,
 
     // 연결 관리
     disconnect,

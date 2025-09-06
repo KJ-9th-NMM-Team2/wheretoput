@@ -446,6 +446,30 @@ export class CollabGateway {
     });
   }
 
+  // 협업 종료
+  @SubscribeMessage('collaboration-ended')
+  async onCollaborationEnded(
+    @MessageBody() data: { ownerId: string; roomId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🚪 COLLABORATION ENDED for room ${data.roomId}`);
+    // 모든 사용자 퇴장 처리
+    const roomState = await this.redisService.getRoomState(data.roomId);
+    if (roomState) {
+      for (const [userId, userData] of roomState.connectedUsers.entries()) {
+        await this.redisService.removeConnectedUser(data.roomId, userId);
+        // 다른 사용자들에게 퇴장 알림 브로드캐스트 (userData 포함)
+        this.server.to(data.roomId).emit('user-left', {
+          userId,
+          userData: userData || { name: userId }, // fallback으로 userId 사용
+          reason: 'collaboration-ended', // 협업 종료로 인한 퇴장임을 명시
+        });
+      }
+    }
+    // 레디스에서 방 상태 제거
+    await this.redisService.clearRoomState(data.roomId);
+  }
+
   // 모델선택해제
   @SubscribeMessage('model-deselect')
   async onModelDeselect(
@@ -504,7 +528,7 @@ export class CollabGateway {
   }
 
   // 미활동 사용자 연결해제
-  @Cron('0 */5 * * * *') // 0.1초마다 실행
+  @Cron('0 */5 * * * *') // 5분에 1번씩 실행
   async cleanupInactiveUsers() {
     this.logger.log('🧹 Checking for inactive users');
     const allRooms = await this.redisService.getAllRooms();
@@ -515,10 +539,9 @@ export class CollabGateway {
       const roomState = await this.redisService.getRoomState(roomId);
       if (roomState) {
         for (const [userId, userData] of roomState.connectedUsers.entries()) {
-          if (
-            !userData.lastActivity ||
-            now - userData.lastActivity > INACTIVE_TIMEOUT
-          ) {
+          if (!userData.lastActivity) {
+            userData.lastActivity = now;
+          } else if (now - userData.lastActivity > INACTIVE_TIMEOUT) {
             // 비활성 사용자 퇴장 처리
             await this.redisService.removeConnectedUser(roomId, userId);
 
