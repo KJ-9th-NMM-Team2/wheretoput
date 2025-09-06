@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Delete,
   Param,
   Query,
   UseGuards,
@@ -33,18 +32,5 @@ export class ChatController {
     });
     console.log('확인한 메시지', messages);
     return { roomId, messages };
-  }
-
-  // 채팅방 완전 삭제 (개발자용)
-  @Delete(':roomId/delete-completely')
-  async deleteRoomCompletely(
-    @Param('roomId') roomId: string,
-    @Request() req: any,
-  ) {
-    const result = await this.chatService.deleteRoomCompletely(
-      roomId,
-      req.user.userId,
-    );
-    return result;
   }
 }

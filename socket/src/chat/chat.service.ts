@@ -209,32 +209,4 @@ export class ChatService {
       throw new Error(`Failed to get messages: ${error.message}`);
     }
   }
-
-  // 채팅방 완전 삭제 (개발자용 - DB에서 히스토리까지 모두 삭제)
-  async deleteRoomCompletely(roomId: string, userId: string) {
-    try {
-      // 채팅방 존재 확인
-      const room = await this.prisma.chat_rooms.findUnique({
-        where: { chat_room_id: roomId },
-        select: { chat_room_id: true }
-      });
-
-      if (!room) {
-        throw new BadRequestException('Chat room not found');
-      }
-
-      // 개발자용 기능이므로 권한 체크 없이 삭제
-      // CASCADE 설정으로 chat_messages와 chat_participants도 함께 삭제됨
-      await this.prisma.chat_rooms.delete({
-        where: { chat_room_id: roomId }
-      });
-
-      return { success: true, message: 'Chat room and all history deleted completely' };
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new Error(`Failed to delete room completely: ${error.message}`);
-    }
-  }
 }
