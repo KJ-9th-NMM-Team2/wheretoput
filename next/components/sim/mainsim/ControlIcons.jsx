@@ -19,98 +19,19 @@ export function ControlIcons() {
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [showCapturePopup, setShowCapturePopup] = useState(false);
 
-  const iconStyle = {
-    position: 'fixed',
-    top: '10px',
-    background: 'rgba(0, 0, 0, 0.7)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    width: '60px', // "저장" 텍스트에 맞게 조정
-    height: '35px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '14px',
-    zIndex: 101,
-    transition: 'background 0.2s ease',
-    padding: '0 8px' // 좌우 여백 추가
-  };
-
-  const bottomIconStyle = {
-    position: 'fixed',
-    bottom: '20px',
-    background: 'rgba(0, 0, 0, 0.7)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    width: '40px',
-    height: '40px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    zIndex: 101,
-    transition: 'background 0.2s ease'
-  };
-
-  const hoverStyle = {
-    background: 'rgba(0,0,0,0.9)'
-  };
-
-  const popupOverlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.3)',
-    zIndex: 200,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
-
-  const popupContentStyle = {
-    position: 'relative',
-    background: 'rgba(0,0,0,0.9)',
-    borderRadius: '10px',
-    padding: '0',
-    maxWidth: '90vw',
-    maxHeight: '90vh',
-    overflow: 'hidden'
-  };
-
-  const closeButtonStyle = {
-    position: 'absolute',
-    top: '10px',
-    right: '10px',
-    background: 'rgba(255,255,255,0.2)',
-    border: 'none',
-    color: 'white',
-    borderRadius: '50%',
-    width: '25px',
-    height: '25px',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '14px',
-    zIndex: 210
-  };
+  // 공통 스타일 클래스들
+  const baseIconStyle = "fixed top-[10px] bg-black/70 text-white border-none rounded-[5px] cursor-pointer flex items-center justify-center z-[101] transition-all duration-200 ease-in-out hover:bg-black/90";
+  const saveButtonStyle = `${baseIconStyle} right-[20px] w-[60px] h-[40px] text-base px-2`;
+  const controlIconStyle = `${baseIconStyle} w-[40px] h-[40px] text-lg`;
+  const popupContainerStyle = "relative bg-black/90 rounded-[10px] p-0 max-w-[90vw] max-h-[90vh] overflow-hidden";
+  const closeButtonStyle = "absolute top-[10px] right-[10px] bg-white/20 border-none text-white rounded-full w-[25px] h-[25px] cursor-pointer flex items-center justify-center text-sm z-[210]";
+  const popupContentStyle = "static bg-transparent";
 
   return (
     <>
       {/* 방 상태 저장 , 모든가구 제거 패널 */}
       <button
-        style={{
-          ...iconStyle,
-          right: '20px',
-          height: '40px',
-          fontSize: '16px'
-        }}
+        className={saveButtonStyle}
         onClick={() => {
           setShowControlPopup(true);
           setShowLightPopup(false);
@@ -118,8 +39,6 @@ export function ControlIcons() {
           setShowColorPopup(false);
           setShowCapturePopup(false);
         }}
-        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = iconStyle.background}
         title="저장하기"
       >
         저장
@@ -127,12 +46,7 @@ export function ControlIcons() {
 
       {/* Light Control Icon - 저장 버튼 왼쪽 */}
       <button
-        style={{
-          ...bottomIconStyle,
-          top: '10px',
-          right: '90px',
-          bottom: 'auto'
-        }}
+        className={`${controlIconStyle} right-[90px]`}
         onClick={() => {
           setShowControlPopup(false);
           setShowLightPopup(true);
@@ -140,21 +54,14 @@ export function ControlIcons() {
           setShowColorPopup(false);
           setShowCapturePopup(false);
         }}
-        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="조명 설정"
       >
-        <MdSunny></MdSunny>
+        <MdSunny />
       </button>
 
       {/* Camera Control Icon - 조명 버튼 왼쪽 */}
       <button
-        style={{
-          ...bottomIconStyle,
-          top: '10px',
-          right: '140px',
-          bottom: 'auto'
-        }}
+        className={`${controlIconStyle} right-[140px]`}
         onClick={() => {
           setShowControlPopup(false);
           setShowLightPopup(false);
@@ -162,8 +69,6 @@ export function ControlIcons() {
           setShowColorPopup(false);
           setShowCapturePopup(false);
         }}
-        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="카메라 설정"
       >
         <FaCameraRetro />
@@ -171,12 +76,7 @@ export function ControlIcons() {
 
       {/* Color Control Icon - 카메라 버튼 왼쪽 */}
       <button
-        style={{
-          ...bottomIconStyle,
-          top: '10px',
-          right: '190px',
-          bottom: 'auto'
-        }}
+        className={`${controlIconStyle} right-[190px]`}
         onClick={() => {
           setShowControlPopup(false);
           setShowLightPopup(false);
@@ -184,8 +84,6 @@ export function ControlIcons() {
           setShowColorPopup(true);
           setShowCapturePopup(false);
         }}
-        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="색상 설정"
       >
         <FaPalette />
@@ -193,12 +91,7 @@ export function ControlIcons() {
 
       {/* Capture Control Icon - 색상 버튼 왼쪽 */}
       <button
-        style={{
-          ...bottomIconStyle,
-          top: '10px',
-          right: '240px',
-          bottom: 'auto'
-        }}
+        className={`${controlIconStyle} right-[240px]`}
         onClick={() => {
           setShowControlPopup(false);
           setShowLightPopup(false);
@@ -206,8 +99,6 @@ export function ControlIcons() {
           setShowColorPopup(false);
           setShowCapturePopup(true);
         }}
-        onMouseEnter={(e) => e.target.style.background = hoverStyle.background}
-        onMouseLeave={(e) => e.target.style.background = bottomIconStyle.background}
         title="화면 캡쳐"
       >
         <TbScreenshot /> 
@@ -215,43 +106,37 @@ export function ControlIcons() {
 
       {/* Control Panel 팝업 결정 */}
       {showControlPopup && (
-        <div style={popupOverlayStyle} onClick={() => setShowControlPopup(false)}>
-          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/30 z-[200] flex items-center justify-center" onClick={() => setShowControlPopup(false)}>
+          <div className={popupContainerStyle} onClick={(e) => e.stopPropagation()}>
             <button 
-              style={closeButtonStyle}
+              className={closeButtonStyle}
               onClick={() => setShowControlPopup(false)}
               title="닫기"
             >
               ×
             </button>
-            <div style={{ position: 'static', background: 'transparent' }}>
+            <div className={popupContentStyle}>
               <ControlPanel isPopup={true} />
             </div>
           </div>
         </div>
       )}
 
-
       {/* Light Control Popup */}
       {showLightPopup && (
         <div 
-          style={{
-            position: 'fixed',
-            top: '60px',
-            right: '90px',
-            zIndex: 200
-          }} 
+          className="fixed top-[60px] right-[90px] z-[200]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div className={popupContainerStyle} onClick={(e) => e.stopPropagation()}>
             <button 
-              style={closeButtonStyle}
+              className={closeButtonStyle}
               onClick={() => setShowLightPopup(false)}
               title="닫기"
             >
               ×
             </button>
-            <div style={{ position: 'static', background: 'transparent' }}>
+            <div className={popupContentStyle}>
               <LightControlPanel isPopup={true} />
             </div>
           </div>
@@ -261,23 +146,18 @@ export function ControlIcons() {
       {/* Camera Control Popup */}
       {showCameraPopup && (
         <div 
-          style={{
-            position: 'fixed',
-            top: '60px',
-            right: '140px', // 오른쪽으로부터 140px
-            zIndex: 200
-          }} 
+          className="fixed top-[60px] right-[140px] z-[200]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div className={popupContainerStyle} onClick={(e) => e.stopPropagation()}>
             <button 
-              style={closeButtonStyle}
+              className={closeButtonStyle}
               onClick={() => setShowCameraPopup(false)}
               title="닫기"
             >
               ×
             </button>
-            <div style={{ position: 'static', background: 'transparent' }}>
+            <div className={popupContentStyle}>
               <CameraControlPanel isPopup={true} />
             </div>
           </div>
@@ -287,23 +167,18 @@ export function ControlIcons() {
       {/* Color Control Popup */}
       {showColorPopup && (
         <div 
-          style={{
-            position: 'fixed',
-            top: '60px',
-            right: '190px',
-            zIndex: 200
-          }} 
+          className="fixed top-[60px] right-[190px] z-[200]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div className={popupContainerStyle} onClick={(e) => e.stopPropagation()}>
             <button 
-              style={closeButtonStyle}
+              className={closeButtonStyle}
               onClick={() => setShowColorPopup(false)}
               title="닫기"
             >
               ×
             </button>
-            <div style={{ position: 'static', background: 'transparent' }}>
+            <div className={popupContentStyle}>
               <ColorControlPanel isPopup={true} />
             </div>
           </div>
@@ -313,23 +188,18 @@ export function ControlIcons() {
       {/* Capture Control Popup */}
       {showCapturePopup && (
         <div 
-          style={{
-            position: 'fixed',
-            top: '60px',
-            right: '240px',
-            zIndex: 200
-          }} 
+          className="fixed top-[60px] right-[240px] z-[200]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={popupContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div className={popupContainerStyle} onClick={(e) => e.stopPropagation()}>
             <button 
-              style={closeButtonStyle}
+              className={closeButtonStyle}
               onClick={() => setShowCapturePopup(false)}
               title="닫기"
             >
               ×
             </button>
-            <div style={{ position: 'static', background: 'transparent' }}>
+            <div className={popupContentStyle}>
               <CaptureControlPanel isPopup={true} />
             </div>
           </div>
