@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { ArchievementToast } from "../achievement/components/ArchievementToast";
 
 const handleSave = async () => {
   if (!currentRoomId) {
@@ -48,6 +49,7 @@ export function ControlPanel({ isPopup = false }) {
     loadSimulatorState,
     checkUserRoom,
     isOwnUserRoom,
+    setAchievements,
   } = useStore();
 
   useEffect(() => {
@@ -101,6 +103,9 @@ export function ControlPanel({ isPopup = false }) {
 
     try {
       await saveSimulatorState();
+      const res = await fetch(`/api/achievement/${session?.user?.id}`);
+      const datas = await res.json();
+      setAchievements(datas);
 
       // 저장 완료 후 캔버스 캡처 트리거
       setShouldCapture(true);
