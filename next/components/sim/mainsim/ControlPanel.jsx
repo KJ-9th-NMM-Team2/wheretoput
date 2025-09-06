@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { getColab } from "@/lib/api/toggleColab";
 import { ArchievementToast } from "../achievement/components/ArchievementToast";
+
 
 const handleSave = async () => {
   if (!currentRoomId) {
@@ -49,6 +51,9 @@ export function ControlPanel({ isPopup = false }) {
     loadSimulatorState,
     checkUserRoom,
     isOwnUserRoom,
+    collaborationMode,
+    checkCollabMode,
+    isCollabModeActive,
     setAchievements,
   } = useStore();
 
@@ -61,6 +66,13 @@ export function ControlPanel({ isPopup = false }) {
     };
     useCheckUserRoom();
   }, [isOwnUserRoom, currentRoomId]);
+
+  // 방의 협업 모드 상태 확인
+  useEffect(() => {
+    if (currentRoomId) {
+      checkCollabMode(currentRoomId);
+    }
+  }, [currentRoomId, checkCollabMode]);
 
   // GLB 파일 업로드 처리
   const handleFileUpload = (event) => {
@@ -133,11 +145,12 @@ export function ControlPanel({ isPopup = false }) {
   };
 
   return (
-    <div className={`
+    <div
+      className={`
       bg-black bg-opacity-70 p-4 rounded text-white text-xs w-[250px]
-      ${isPopup ? 'static' : 'absolute top-2.5 right-2.5 z-[100]'}
-    `}>
-     
+      ${isPopup ? "static" : "absolute top-2.5 right-2.5 z-[100]"}
+    `}
+    >
       {/* 벽 스케일 설정 */}
       <div className="mb-2.5">
         <label className="text-white">벽 크기 조정:</label>
@@ -166,32 +179,48 @@ export function ControlPanel({ isPopup = false }) {
       <div className="mb-2.5">
         <button
           onClick={handleSave}
-          disabled={!isOwnUserRoom || !currentRoomId}
+          disabled={
+            !isOwnUserRoom ||
+            !currentRoomId ||
+            (isCollabModeActive && !collaborationMode)
+          }
           className={`
             w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
-            ${currentRoomId
-              ? isSaving
-                ? "bg-gray-500 cursor-not-allowed"
-                : isOwnUserRoom
-                ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
-                : "bg-gray-500 cursor-not-allowed"
-              : "bg-gray-600 cursor-not-allowed"
+            ${
+              currentRoomId
+                ? isSaving
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : isCollabModeActive && !collaborationMode
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : isOwnUserRoom
+                  ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                  : "bg-gray-500 cursor-not-allowed"
+                : "bg-gray-600 cursor-not-allowed"
             }
           `}
+          title={
+            isCollabModeActive && !collaborationMode
+              ? "협업 모드에서 저장해주세요."
+              : ""
+          }
         >
           {isSaving
             ? "저장 중..."
+            : isCollabModeActive && !collaborationMode
+            ? "협업 모드에서 저장해주세요."
             : isOwnUserRoom
             ? `방 상태 저장 (${loadedModels.length}개)`
-            : `가구 개수 (${loadedModels.length}개)`}
+            : `복제 후 저장해주세요.`}
         </button>
 
         {/* 저장 상태 메시지 */}
         {saveMessage && (
-          <div className={`
+          <div
+            className={`
             text-sm text-center mb-1.5
             ${saveMessage.includes("실패") ? "text-red-400" : "text-green-500"}
-          `}>
+          `}
+          >
             {saveMessage}
           </div>
         )}
@@ -211,11 +240,12 @@ export function ControlPanel({ isPopup = false }) {
           disabled={!currentRoomId}
           className={`
             w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
-            ${currentRoomId
-              ? isCloning
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600 cursor-pointer"
-              : "bg-gray-600 cursor-not-allowed"
+            ${
+              currentRoomId
+                ? isCloning
+                  ? "bg-gray-500 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-green-600 cursor-pointer"
+                : "bg-gray-600 cursor-not-allowed"
             }
           `}
         >

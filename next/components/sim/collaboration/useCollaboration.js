@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { io } from "socket.io-client";
 import { connectSocket as startSocket } from "@/lib/client/socket";
+import { useRouter } from "next/navigation";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
@@ -35,13 +36,30 @@ export function useCollaboration(roomId) {
     saveSimulatorState,
   } = useStore();
 
+  const router = useRouter();
+
+  // 협업 종료 브로드캐스트 함수
+  const broadcastCollaborationEnd = () => {
+    if (socket.current && socket.current.connected) {
+      console.log("🔚 협업 종료 알림을 다른 사용자들에게 전송");
+      socket.current.emit("collaboration-ended", {
+        ownerId: currentUser.id,
+        roomId,
+        message: "방 소유자가 협업 모드를 종료했습니다",
+      });
+    }
+  };
+
   // Socket.IO 연결 초기화
   const connectSocket = async () => {
     console.log("소켓접속 시도중");
     if (!roomId || !collaborationMode) return;
 
     try {
-      const res = await fetch("/api/chat/token", { cache: "no-store" });
+      const res = await fetch("/api/chat/token", {
+        cache: "no-store",
+        credentials: "include",
+      });
       const data = await res.json();
       // console.log("토큰 응답:", data);
       const token = data["tokenData"]?.["jti"] || data.token;
@@ -96,8 +114,19 @@ export function useCollaboration(roomId) {
       console.log("🔴 user-left 이벤트 수신:", data);
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
-        alert("비활성 상태로 방에서 퇴장되었습니다.");
-        window.location.href = "/";
+        // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
+        if (data.reason === "collaboration-ended") {
+          alert("방 소유자가 협업 모드를 종료하여 방에서 나갔습니다.");
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        } else if (data.reason === "time-out") {
+          alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        } else if (data.reason === "duplicate-connection") {
+          alert(
+            "동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다."
+          );
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        }
       } else {
         // 사용자 정보 제거
         removeConnectedUser(data.userId);
@@ -176,6 +205,8 @@ export function useCollaboration(roomId) {
         console.log(
           `📋 기존 사용자 확인: ${data.userData.name}님이 이미 접속해 있습니다`
         );
+      } else {
+        console.log(`🔄 자신의 정보는 무시: ${data.userData.name}`);
       }
     });
 
@@ -436,6 +467,7 @@ export function useCollaboration(roomId) {
     broadcastModelSelect,
     broadcastModelDeselect,
     broadcastCursorMove,
+    broadcastCollaborationEnd,
 
     // 연결 관리
     disconnect,

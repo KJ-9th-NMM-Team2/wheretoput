@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import * as THREE from "three";
+import { getColab } from "@/lib/api/toggleColab";
 
 function sphericalToCartesian(radius, azimuth, elevation) {
   const x =
@@ -158,17 +159,26 @@ export const useStore = create(
       scaleValue: 1,
 
       // 방에 접근한 유저가 오너인지 확인
-      isOwnUserRoom: false,
+      isOwnUserRoom: false, //초기값 false
+
+      // 현재 방의 협업 모드 활성화 상태
+      isCollabModeActive: false,
 
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          
+          // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
+          
+          
           if (!response.ok) throw new Error("Network response was not ok");
 
+          // 2. 응답 Json 파싱
           const result = await response.json();
+          
           if (result) {
             set({ isOwnUserRoom: true });
           } else {
@@ -177,8 +187,28 @@ export const useStore = create(
 
           return result ? true : false;
         } catch (error) {
-          console.error("FETCH ERROR:", error);
+          console.error("checkUserRoom FETCH ERROR:", error);
           set({ isOwnUserRoom: false });
+        }
+      },
+
+      // 방의 협업 모드 상태 확인
+      checkCollabMode: async (roomId) => {
+        try {
+          const { getColab } = await import("@/lib/api/toggleColab");
+          const collabResult = await getColab(roomId);
+
+          if (collabResult.success) {
+            set({ isCollabModeActive: collabResult.data.collab_on });
+            return collabResult.data.collab_on;
+          } else {
+            set({ isCollabModeActive: false });
+            return false;
+          }
+        } catch (error) {
+          console.error("협업 모드 상태 확인 실패:", error);
+          set({ isCollabModeActive: false });
+          return false;
         }
       },
 
@@ -619,6 +649,15 @@ export const useStore = create(
       // 시뮬레이터 상태 저장
       saveSimulatorState: async () => {
         const state = get();
+
+        const collabResult = await getColab(state.currentRoomId);
+        if (collabResult.success && collabResult.data.collab_on) {
+          if (!state.collaborationMode) {
+            console.log("협업 모드 중에선 협업 모드에서만 저장 가능");
+            return;
+          }
+        }
+
         if (!state.currentRoomId) {
           throw new Error("방 ID가 설정되지 않았습니다");
         }
