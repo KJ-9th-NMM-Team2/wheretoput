@@ -64,6 +64,7 @@ const SideViewContent: React.FC<{roomId: string}> = ({ roomId }) => {
           furnitures={searchResults} 
           setTotalPrice={setTotalPrice} 
           sortOption={sortOption}
+          roomId={roomId}
         />
       </div>
     </div>

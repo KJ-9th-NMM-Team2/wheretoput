@@ -154,7 +154,6 @@ export function SimulatorCore({
     removeModel,
     collaborationMode,
     checkUserRoom,
-    achievements,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -274,7 +273,7 @@ export function SimulatorCore({
         {customHeader}
         
         {/* 조건 달성 토스트 팝업 - 모드 컨트롤 아래 중앙 */}
-        <ArchievementToast datas={achievements} />
+        <ArchievementToast />
 
         {/* 추가 UI 요소들 */}
         {additionalUI}

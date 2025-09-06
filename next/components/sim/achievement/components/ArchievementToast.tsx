@@ -1,37 +1,43 @@
 "use client"
-import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { useStore } from "../../useStore";
 
-interface AchievementToastProps {
-    datas: {
-        newlyUnlocked?: any[];
-    };
-}
-
-export function ArchievementToast({ datas }: AchievementToastProps) {
+export function ArchievementToast() {
+    const {data: session} = useSession();
     const [achievementToast, setAchievementToast] = useState(null);
-    const processedRef = useRef(new Set());
+    const { achievements } = useStore();
 
     // 업적 토스트 표시 함수
-    const showAchievementToasts = (achievements: any[]) => {
-        achievements.forEach((achievement, index) => {
-            setTimeout(() => {
-                setAchievementToast(achievement);
-                setTimeout(() => setAchievementToast(null), 3000);
-            }, index * 3000);
-        });
+    const showAchievementToast = (achievement: any) => {
+        setAchievementToast(achievement);
+        setTimeout(() => {
+            console.log("🔫 토스트 숨기기:", achievement.title);
+            setAchievementToast(null);
+        }, 2000); // 2초 표시
     };
 
-    // 새로 달성한 업적이 있으면 토스트 표시 (한 번만)
+    // SSE 연결 및 실시간 업적 알림 수신
     useEffect(() => {
-        if (datas?.newlyUnlocked && datas.newlyUnlocked.length > 0) {
-            const achievementIds = datas.newlyUnlocked.map(a => a.id).join(',');
-
-            if (!processedRef.current.has(achievementIds)) {
-                processedRef.current.add(achievementIds);
-                showAchievementToasts(datas.newlyUnlocked);
+        // session이 로드될 때까지 기다리기
+        const checkSession = () => {
+            
+            if (!session?.user?.id) {
+                setTimeout(checkSession, 1000);
+                return;
             }
-        }
-    }, [datas?.newlyUnlocked]);
+            console.log("achievements", achievements);
+
+            for (let i=0; i<achievements.length; i++) {
+                setTimeout(() => {
+                    console.log(`🔫 ${i}번째 토스트 표시:`, achievements[i].title);
+                    showAchievementToast(achievements[i]);
+                }, i * 3500); // 0초, 3.5초, 7초
+            }
+        };
+        
+        checkSession();
+    }, [achievements]);
 
     return <>
         {/* 업적 토스트 */}

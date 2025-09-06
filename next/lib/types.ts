@@ -16,11 +16,12 @@ export interface BaseItemProps {
     selectedCategory: string | null;
     handleItemClick: (item: Furniture, delta: number) => void;
     handleImageError: (itemId: string) => void;
+    roomId: string,
 }
 
 // 각 컴포넌트별 필요한 속성만 선택
 export type ItemSectionProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError'
+    'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError' | 'roomId'
 > & {
     handleSelectModel?: (item: Furniture) => void;
 };
