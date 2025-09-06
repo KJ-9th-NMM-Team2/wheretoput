@@ -150,15 +150,21 @@ export const useChatMessages = (
       }
 
       // 채팅방 목록 업데이트
+      const displayMessage = msg.message_type === "image" ||
+        (msg.content && msg.content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(msg.content))
+        ? "사진"
+        : msg.content;
+
       onChatRoomUpdate(msg.roomId, {
-        lastMessage: msg.content,
+        lastMessage: displayMessage,
         lastMessageAt: msg.createdAt,
+        lastMessageSenderId: msg.senderId, // 마지막 메시지 발송자 ID 업데이트
         // 현재 열린 채팅방의 메시지이고 내가 받은 메시지만 읽음 처리
         last_read_at:
           msg.roomId === selectedChatId && msg.senderId !== currentUserId
             ? msg.createdAt
             : undefined,
-        searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
+        searchIndex: (displayMessage ?? "").toLocaleLowerCase("ko-KR"),
       });
     };
 
@@ -244,11 +250,18 @@ export const useChatMessages = (
         [roomId]: [...(prev[roomId] ?? []), tempMsg],
       }));
 
+      const displayMessage = messageType === "image" ||
+        (content && content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(content))
+        ? "사진"
+        : content;
+
       onChatRoomUpdate(roomId, {
-        lastMessage: content,
+        lastMessage: displayMessage,
         lastMessageAt: now,
-        // 내가 보낸 메시지는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
-        searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+        lastMessageSenderId: currentUserId, // 내가 보낸 메시지의 발송자 ID
+        // 내가 보낸 메시지는 자동으로 읽음 처리 (알림이 뜨지 않도록)
+        last_read_at: now,
+        searchIndex: (displayMessage ?? "").toLocaleLowerCase("ko-KR"),
       });
 
       const s = getSocket() ?? connectSocket(token);
