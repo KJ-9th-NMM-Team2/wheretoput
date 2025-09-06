@@ -110,6 +110,10 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
+      console.log('🔍 [DEBUG] 실시간 메시지 받은 데이터:', m);
+      console.log('🔍 [DEBUG] senderName:', m.senderName);
+      console.log('🔍 [DEBUG] senderImage:', m.senderImage);
+      
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
       const isImageMessage = m.content && m.content.startsWith('chat/') &&
         /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
@@ -118,8 +122,8 @@ export const useChatMessages = (
         id: m.id ?? String(m.message_id),
         roomId: m.roomId ?? String(m.room_id),
         senderId: m.senderId ?? String(m.user_id),
-        senderName: m.sender?.name ?? m.user?.name,
-        senderImage: m.sender?.image ?? m.user?.image,
+        senderName: m.senderName ?? m.sender?.name ?? m.user?.name,
+        senderImage: m.senderImage ?? m.sender?.image ?? m.user?.image,
         content: m.content,
         message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,
@@ -150,15 +154,21 @@ export const useChatMessages = (
       }
 
       // 채팅방 목록 업데이트
+      const displayMessage = msg.message_type === "image" ||
+        (msg.content && msg.content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(msg.content))
+        ? "사진"
+        : msg.content;
+
       onChatRoomUpdate(msg.roomId, {
-        lastMessage: msg.content,
+        lastMessage: displayMessage,
         lastMessageAt: msg.createdAt,
+        lastMessageSenderId: msg.senderId, // 마지막 메시지 발송자 ID 업데이트
         // 현재 열린 채팅방의 메시지이고 내가 받은 메시지만 읽음 처리
         last_read_at:
           msg.roomId === selectedChatId && msg.senderId !== currentUserId
             ? msg.createdAt
             : undefined,
-        searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
+        searchIndex: (displayMessage ?? "").toLocaleLowerCase("ko-KR"),
       });
     };
 
@@ -244,11 +254,18 @@ export const useChatMessages = (
         [roomId]: [...(prev[roomId] ?? []), tempMsg],
       }));
 
+      const displayMessage = messageType === "image" ||
+        (content && content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(content))
+        ? "사진"
+        : content;
+
       onChatRoomUpdate(roomId, {
-        lastMessage: content,
+        lastMessage: displayMessage,
         lastMessageAt: now,
-        // 내가 보낸 메시지는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
-        searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
+        lastMessageSenderId: currentUserId, // 내가 보낸 메시지의 발송자 ID
+        // 내가 보낸 메시지는 자동으로 읽음 처리 (알림이 뜨지 않도록)
+        last_read_at: now,
+        searchIndex: (displayMessage ?? "").toLocaleLowerCase("ko-KR"),
       });
 
       const s = getSocket() ?? connectSocket(token);

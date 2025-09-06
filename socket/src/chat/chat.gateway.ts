@@ -161,7 +161,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     console.log(userId);
 
-    // 메시지를 저장
+    // 메시지를 저장하고 사용자 정보도 함께 조회
     console.log('userId:', userId);
     const result = await this.prisma.chat_messages.create({
       data: {
@@ -169,15 +169,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         user_id: userId,
         content: body.content,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          }
+        }
+      }
     });
 
     // 메시지 보낸 사용자는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
 
-    // ACK/브로드캐스트 테스트
+    // 사용자 정보를 포함한 브로드캐스트 메시지 생성
     const mockMsg = {
       id: `mock-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       roomId: body.roomId,
       senderId: userId,
+      senderName: result.user?.name || '이름 없음',
+      senderImage: result.user?.image || '',
       content: body.content,
       createdAt: new Date().toISOString(),
       status: 'sent',
@@ -242,6 +253,63 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
     } catch (error) {
       this.logger.error(`❌ READ STATUS UPDATE FAILED:`, error);
+    }
+  }
+
+  // 채팅방 참가자들에게 목록 업데이트 이벤트 전송
+  private async notifyParticipantsOfRoomUpdate(
+    roomId: string, 
+    messageData: {
+      lastMessage: string;
+      lastMessageAt: string;
+      lastMessageSenderId: string;
+      messageType: string;
+    }
+  ) {
+    try {
+      this.logger.log(`🔔 [notifyParticipants] 채팅방 목록 업데이트 시작 - roomId: ${roomId}`);
+      
+      // 채팅방 참가자들 조회
+      const participants = await this.prisma.chat_participants.findMany({
+        where: { chat_room_id: roomId },
+        select: { user_id: true }
+      });
+      this.logger.log(`👥 [notifyParticipants] 참가자 수: ${participants.length}`);
+
+      const updateData = {
+        roomId,
+        lastMessage: messageData.lastMessage,
+        lastMessageAt: messageData.lastMessageAt,
+        lastMessageSenderId: messageData.lastMessageSenderId,
+        messageType: messageData.messageType,
+        timestamp: new Date().toISOString()
+      };
+
+      // 모든 연결된 소켓 조회
+      const allSockets = await this.server.fetchSockets();
+      this.logger.log(`🔗 [notifyParticipants] 총 연결된 소켓 수: ${allSockets.length}`);
+      
+      let notifiedCount = 0;
+      
+      // 각 참가자의 모든 소켓에 이벤트 전송
+      for (const participant of participants) {
+        for (const socket of allSockets) {
+          const socketUserId = extractUserIdFromToken(
+            this.jwtService,
+            socket.handshake.auth?.token,
+          );
+          
+          if (socketUserId === participant.user_id) {
+            socket.emit('chatroom_list_update', updateData);
+            notifiedCount++;
+            this.logger.log(`✅ [notifyParticipants] 전송 성공 - 사용자: ${participant.user_id}, 소켓: ${socket.id}`);
+          }
+        }
+      }
+
+      this.logger.log(`🔔 [notifyParticipants] 완료 - 총 ${notifiedCount}개 소켓에 전송됨`);
+    } catch (error) {
+      this.logger.error(`❌ [notifyParticipants] 실패:`, error);
     }
   }
 

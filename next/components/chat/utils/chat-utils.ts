@@ -11,8 +11,16 @@ export const ts = (s?: string): number => {
 };
 
 // 읽지 않은 메시지 체크
-export const isUnread = (chat: ChatListItem): boolean =>
-  ts(chat.lastMessageAt) > ts(chat.last_read_at);
+export const isUnread = (chat: ChatListItem, currentUserId?: string | null): boolean => {
+  // 마지막 메시지가 없으면 읽은 것으로 처리
+  if (!chat.lastMessageAt) return false;
+  
+  // 마지막 메시지가 내가 보낸 메시지라면 읽은 것으로 처리 (알림 안 뜸)
+  if (chat.lastMessageSenderId === currentUserId) return false;
+  
+  // 그 외의 경우만 읽지 않음 체크
+  return ts(chat.lastMessageAt) > ts(chat.last_read_at);
+};
 
 // 최신 메시지 순으로 정렬
 export const byLatest = (a: ChatListItem, b: ChatListItem): number =>
@@ -81,9 +89,10 @@ export const dayKey = (iso: string): string =>
 export const recomputeChats = (
   raw: ChatListItem[],
   q: string,
-  mode: "전체" | "읽지 않음"
+  mode: "전체" | "읽지 않음",
+  currentUserId?: string | null
 ): ChatListItem[] => {
-  const src = mode === "읽지 않음" ? raw.filter(isUnread) : raw;
+  const src = mode === "읽지 않음" ? raw.filter(chat => isUnread(chat, currentUserId)) : raw;
   const k = q.trim().toLocaleLowerCase("ko-KR");
 
   if (!k) {
