@@ -96,7 +96,7 @@ jobs:
           AUTH_TRUST_HOST=true
           NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-          NEXT_PUBLIC_IMAGE_BASE_URL=${ secrets.NEXT_PUBLIC_IMAGE_BASE_URL }}
+          NEXT_PUBLIC_IMAGE_BASE_URL=${{ secrets.NEXT_PUBLIC_IMAGE_BASE_URL }}
           EOF
 
       - name: Upload files to Next.js EC2
