@@ -14,6 +14,11 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 
+# ARG 추가 (변경점)
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_IMAGE_BASE_URL
+
 # 개발 의존성 복사 (빌드 시에만 필요)
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
