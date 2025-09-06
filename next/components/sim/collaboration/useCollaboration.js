@@ -56,7 +56,10 @@ export function useCollaboration(roomId) {
     if (!roomId || !collaborationMode) return;
 
     try {
-      const res = await fetch("/api/chat/token", { cache: "no-store" });
+      const res = await fetch("/api/chat/token", {
+        cache: "no-store",
+        credentials: "include",
+      });
       const data = await res.json();
       // console.log("토큰 응답:", data);
       const token = data["tokenData"]?.["jti"] || data.token;
@@ -119,7 +122,9 @@ export function useCollaboration(roomId) {
           alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
           router.push(roomId ? `/sim/${roomId}` : `/`);
         } else if (data.reason === "duplicate-connection") {
-          alert("동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다.");
+          alert(
+            "동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다."
+          );
           router.push(roomId ? `/sim/${roomId}` : `/`);
         }
       } else {
