@@ -504,7 +504,7 @@ export class CollabGateway {
   }
 
   // 미활동 사용자 연결해제
-  @Cron('0 */5 * * * *') // 0.1초마다 실행
+  @Cron('0 */5 * * * *') // 5분마다 실행
   async cleanupInactiveUsers() {
     this.logger.log('🧹 Checking for inactive users');
     const allRooms = await this.redisService.getAllRooms();
