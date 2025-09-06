@@ -29,7 +29,7 @@ export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSav
   if (!showIndicator) return null;
 
   const positionStyles = {
-    'top-right': 'top-4 right-4',
+    'top-right': 'right-4',
     'bottom-right': 'bottom-4 right-4',
     'top-left': 'top-4 left-4',
     'bottom-left': 'bottom-4 left-4'
@@ -52,7 +52,8 @@ export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSav
         color: 'white',
         fontSize: '12px',
         opacity: showIndicator ? 1 : 0,
-        transform: showIndicator ? 'translateY(0)' : 'translateY(10px)'
+        transform: showIndicator ? 'translateY(0)' : 'translateY(10px)',
+        top: position === 'top-right' ? '60px' : undefined
       }}
     >
       <div className="flex items-center gap-2">
@@ -64,7 +65,7 @@ export default function AutoSaveIndicator({ position = 'bottom-right' }: AutoSav
         ) : (
           <>
             <div className="w-3 h-3 bg-white rounded-full opacity-80"></div>
-            <span>자동저장 완료 ({formatTime(lastSavedAt)})</span>
+            <span>자동저장 완료! ({formatTime(lastSavedAt)})</span>
           </>
         )}
       </div>

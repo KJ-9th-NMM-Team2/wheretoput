@@ -286,7 +286,8 @@ export function SimulatorCore({
         {!viewOnly && <AutoSave enabled={!viewOnly} />}
         
         {/* [09.06] 자동저장 상태 표시 */}
-        {!viewOnly && <AutoSaveIndicator position="top-left" />}
+        {/* 팝업 알림은 ControIcons 아래에 위치 */}
+        {!viewOnly && <AutoSaveIndicator position="top-right" />}
 
         {/* 편집 컨트롤 아이콘 */}
         {showEditControls && !viewOnly && <ControlIcons />}

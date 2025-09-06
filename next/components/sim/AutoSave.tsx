@@ -27,49 +27,46 @@ export default function AutoSave({
   const lastSaveStateRef = useRef<string>('');
 
   const performAutoSave = useCallback(async () => {
-    
-    console.log('자동저장 체크:', {
-      enabled,
-      currentRoomId,
-      isSaving,
-      isOwnUserRoom,
-      modelsCount: loadedModels.length
-    });
-    
-    // 방 소유권 체크가 안 되어 있다면 디버그 정보 출력
-    if (!currentRoomId) {
-      console.log('currentRoomId가 null입니다. SimulatorCore에서 setCurrentRoomId가 호출되었는지 확인하세요');
-    }
-    if (!isOwnUserRoom) {
-      console.log('방 소유권 확인 필요 - checkUserRoom 함수가 호출되었는지 확인하세요');
-      console.log('현재 currentRoomId:', currentRoomId);
-    }
+    // 최신 상태를 항상 가져오기
+    const currentState = useStore.getState();
+    const {
+      loadedModels: currentLoadedModels,
+      isSaving: currentIsSaving,
+      isOwnUserRoom: currentIsOwnUserRoom,
+      currentRoomId: currentRoomIdState
+    } = currentState;
     
     // 방이 존재하고, 저장중이 아니고, 자신의 방일때만 활성화
-    if (!enabled || !currentRoomId || isSaving || !isOwnUserRoom) {
-      console.log('자동저장 조건 미충족으로 건너뜀');
+    if (!enabled || !currentRoomIdState || currentIsSaving || !currentIsOwnUserRoom) {
       return;
     }
 
-    // 현재 상태를 문자열로 변환하여 이전 상태와 비교
-    const currentStateString = JSON.stringify(loadedModels);
+    // 가구의 모든 속성(position, rotation, scale 등)을 포함한 상태 비교
+    const currentStateString = JSON.stringify(
+      currentLoadedModels.map(model => ({
+        id: model.id,
+        position: model.position,
+        rotation: model.rotation,
+        scale: model.scale,
+        url: model.url,
+        texturePath: model.texturePath,
+        isCityKit: model.isCityKit,
+        length: model.length
+      }))
+    );
     
     // 상태가 변경되지 않았으면 저장하지 않음
     if (currentStateString === lastSaveStateRef.current) {
-      console.log('자동저장: 상태 변경 없어서 건너뜀');
       return;
     }
-    
-    console.log('자동저장 시작...');
 
     try {
-      await saveSimulatorState();
+      await currentState.saveSimulatorState();
       lastSaveStateRef.current = currentStateString;
-      console.log('자동저장 완료:', new Date().toLocaleTimeString());
     } catch (error) {
       console.error('자동저장 실패:', error);
     }
-  }, [enabled, currentRoomId, isSaving, loadedModels, saveSimulatorState, isOwnUserRoom]);
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled || !currentRoomId) {
@@ -86,11 +83,22 @@ export default function AutoSave({
       intervalRef.current = null;
     }
 
-    // 초기 상태 저장
-    lastSaveStateRef.current = JSON.stringify(loadedModels);
+    // 초기 상태 저장 (가구의 모든 속성 포함)
+    const currentLoadedModels = useStore.getState().loadedModels;
+    lastSaveStateRef.current = JSON.stringify(
+      currentLoadedModels.map(model => ({
+        id: model.id,
+        position: model.position,
+        rotation: model.rotation,
+        scale: model.scale,
+        url: model.url,
+        texturePath: model.texturePath,
+        isCityKit: model.isCityKit,
+        length: model.length
+      }))
+    );
 
     // 자동저장 인터벌 설정
-    console.log(`자동저장 인터벌 시작: ${interval}ms (roomId: ${currentRoomId}, isOwnUserRoom: ${isOwnUserRoom})`);
     intervalRef.current = setInterval(performAutoSave, interval);
 
     return () => {
@@ -99,7 +107,8 @@ export default function AutoSave({
         intervalRef.current = null;
       }
     };
-  }, [enabled, interval, currentRoomId, isOwnUserRoom]);
+  }, [enabled, interval, currentRoomId, isOwnUserRoom, performAutoSave]);
+
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {

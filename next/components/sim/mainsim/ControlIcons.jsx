@@ -264,7 +264,7 @@ export function ControlIcons() {
           style={{
             position: 'fixed',
             top: '60px',
-            right: '140px',
+            right: '140px', // 오른쪽으로부터 140px
             zIndex: 200
           }} 
           onClick={(e) => e.stopPropagation()}
