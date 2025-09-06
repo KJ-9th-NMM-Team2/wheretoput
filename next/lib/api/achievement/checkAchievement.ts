@@ -65,11 +65,16 @@ async function countUserHistory(userId: string) {
     };
 }
 
-export async function checkAchievement(userId: string) {
+export async function checkAchievement(userId: string, isFurniture: boolean) {
     const userHistory = await countUserHistory(userId);
-    
     if (!userHistory) {
         return { error: 'User not found' };
+    }
+
+    if (isFurniture) {
+        userHistory.totalFurniture += 1;
+    } else {
+        userHistory.totalRooms += 1;
     }
     
     // DB에서 모든 업적 가져오기
@@ -81,6 +86,8 @@ export async function checkAchievement(userId: string) {
     });
     
     const unlockedAchievementIds = new Set(userAchievements.map(ua => ua.achievement_id));
+
+
     
     // 새로 달성한 업적들 찾기
     const newlyUnlocked = [];
@@ -108,7 +115,7 @@ export async function checkAchievement(userId: string) {
             });
         }
     }
-    
+
     console.log(`새로 달성한 업적: ${newlyUnlocked.length}개`);
     newlyUnlocked.forEach(achievement => {
         console.log(`🏆 ${achievement.title} - ${achievement.description}`);

@@ -18,6 +18,7 @@ interface SideItemsProps {
   furnitures: Furniture[];
   setTotalPrice: (price: number) => void;
   sortOption: string;
+  roomId: string;
 }
 
 const SideItems: React.FC<SideItemsProps> = ({
@@ -26,6 +27,7 @@ const SideItems: React.FC<SideItemsProps> = ({
   furnitures,
   setTotalPrice,
   sortOption,
+  roomId,
 }) => {
   const [items, setItems] = useState<Furniture[]>([]);
   const [selectedItems, setSelectedItems] = useState<Furniture[]>([]);
@@ -207,6 +209,7 @@ const SideItems: React.FC<SideItemsProps> = ({
         handleItemClick={handleItemClick}
         handleImageError={handleImageError}
         handleSelectModel={handleSelectModel}
+        roomId={roomId}
       />
 
       {/* 페이지네이션 */}

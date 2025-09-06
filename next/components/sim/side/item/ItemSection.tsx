@@ -1,6 +1,8 @@
 import { ImageOff, Loader2 } from 'lucide-react';
 import type { ItemSectionProps } from '@/lib/types';
 import ShoppingLink from '@/components/sim/side/ShoppingLink';
+import { useSession } from 'next-auth/react';
+import { useStore } from '../../useStore';
 
 const ItemSection: React.FC<ItemSectionProps> = ({
     loading,
@@ -12,9 +14,35 @@ const ItemSection: React.FC<ItemSectionProps> = ({
     handleItemClick,
     handleImageError,
     handleSelectModel,
+    roomId,
 }) => {
     const itemsToRender = selectedItems?.length > 0 ? selectedItems : filteredItems;
     const isSelectedCategory = selectedItems?.length > 0;
+    const { data: session } = useSession();
+    const { setAchievements } = useStore();
+
+    const handleSaveFurniture = async (furniture: any) => {
+        try {
+            const response = await fetch('/api/sim/furnitures/click', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: session?.user?.id,
+                    roomId,
+                    newFurniture: furniture
+                })
+            });
+            
+            if (response.ok) {
+                const achievementResult = await response.json();
+                setAchievements(achievementResult.newlyUnlocked);
+            }
+        } catch (error) {
+            console.error('업적 처리 에러:', error);
+        }
+    }
     return <>
         {/* 아이템 목록 - 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -34,11 +62,12 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                     {itemsToRender.map((item) => (
                         <div
                             key={item.furniture_id}
-                            onClick={
+                            onClick={() => {
+                                handleSaveFurniture(item);
                                 !isSelectedCategory 
-                                    ? () => handleItemClick(item) 
-                                    : () => handleSelectModel && handleSelectModel(item)
-                            }
+                                    ? handleItemClick(item) 
+                                    : handleSelectModel && handleSelectModel(item);
+                            }}
                             className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden cursor-pointer"
                         >
                             <div className="flex">
