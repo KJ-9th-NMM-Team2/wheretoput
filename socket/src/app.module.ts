@@ -7,6 +7,8 @@ import { PrismaModule } from './prisma/prisma.module';
 import { CollabModule } from './collab/collab.module';
 import { RedisModule } from './redis/redis.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { HealthModule } from './health/health.module';
+
 
 @Module({
   imports: [
@@ -16,6 +18,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CollabModule,
     RedisModule,
     ScheduleModule.forRoot(),
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
