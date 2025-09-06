@@ -93,6 +93,21 @@ export function ModelTooltip({ modelId, position, boundingBox }) {
   );
 }
 
+// 협업 종료 버튼 컴포넌트 (방 소유자에게만 표시)
+export function CollaborationEndButton({ onEndCollaboration }) {
+  return (
+    <div className="fixed top-16 right-4 z-50">
+      <button
+        onClick={onEndCollaboration}
+        className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-lg font-medium hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all shadow-lg"
+        title="협업 모드를 종료하고 개인 편집 모드로 돌아갑니다"
+      >
+        협업 종료
+      </button>
+    </div>
+  );
+}
+
 // 연결된 사용자 목록을 UI 상단에 표시
 export function ConnectedUsersList() {
   const { connectedUsers, collaborationMode, isConnected } = useStore();
@@ -112,40 +127,10 @@ export function ConnectedUsersList() {
     >
       {/* 연결된 사용자 목록 */}
       {connectedUsers.size > 0 ? (
-        <div
-          style={{
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            borderRadius: "12px",
-            padding: "8px 12px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "6px",
-            }}
-          >
-            <div
-              style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                background: "#10b981",
-                animation: "pulse 2s infinite",
-              }}
-            ></div>
-            <span
-              style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "#374151",
-              }}
-            >
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/20">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span className="text-xs font-semibold text-gray-700">
               협업 중 • {connectedUsers.size}명
             </span>
           </div>
