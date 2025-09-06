@@ -8,7 +8,8 @@ import { ChatListItem } from "../types/chat-types";
 import { recomputeChats } from "../utils/chat-utils";
 import { getSocket } from "@/lib/client/socket";
 
-const NEXT_API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const NEXT_API_URL =
+  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 export const useChatRooms = (
   open: boolean,
@@ -32,12 +33,9 @@ export const useChatRooms = (
       const path = "/backend/rooms";
       try {
         console.log("[ROOMS] GET", path);
-        const response = await fetch(
-          "/api/backend/rooms",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await fetch("/api/backend/rooms", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
@@ -50,7 +48,12 @@ export const useChatRooms = (
           const messageType = r.last_message?.message_type;
 
           // 이미지 메시지인 경우 "사진"으로 표시
-          if (messageType === "image" || (lastMsg && lastMsg.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))) {
+          if (
+            messageType === "image" ||
+            (lastMsg &&
+              lastMsg.startsWith("chat/") &&
+              /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))
+          ) {
             lastMsg = "사진";
           }
 
@@ -72,7 +75,10 @@ export const useChatRooms = (
           };
 
           // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          if (result.lastMessageSenderId === currentUserId && result.lastMessageAt) {
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
             result.last_read_at = result.lastMessageAt;
           }
 
@@ -109,12 +115,9 @@ export const useChatRooms = (
     const loadRooms = async () => {
       try {
         console.log("[POLLING] 채팅방 목록 업데이트 시작");
-        const response = await fetch(
-          "http://localhost:3000/api/backend/rooms",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await fetch("api/backend/rooms", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const data = await response.json();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
@@ -125,7 +128,12 @@ export const useChatRooms = (
           const messageType = r.last_message?.message_type;
 
           // 이미지 메시지인 경우 "사진"으로 표시
-          if (messageType === "image" || (lastMsg && lastMsg.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))) {
+          if (
+            messageType === "image" ||
+            (lastMsg &&
+              lastMsg.startsWith("chat/") &&
+              /\.(jpg|jpeg|png|gif|webp)$/i.test(lastMsg))
+          ) {
             lastMsg = "사진";
           }
 
@@ -147,7 +155,10 @@ export const useChatRooms = (
           };
 
           // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          if (result.lastMessageSenderId === currentUserId && result.lastMessageAt) {
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
             result.last_read_at = result.lastMessageAt;
           }
 
@@ -156,7 +167,11 @@ export const useChatRooms = (
 
         setBaseChats(mapped);
         setChats(recomputeChats(mapped, query, select, currentUserId));
-        console.log("[POLLING] 채팅방 목록 업데이트 완료 -", mapped.length, "개 방");
+        console.log(
+          "[POLLING] 채팅방 목록 업데이트 완료 -",
+          mapped.length,
+          "개 방"
+        );
       } catch (e) {
         console.error("[POLLING] FAIL", e);
       }
@@ -173,7 +188,6 @@ export const useChatRooms = (
       clearInterval(interval);
     };
   }, [open, token, currentUserId, query, select]);
-
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
@@ -240,26 +254,37 @@ export const useChatRooms = (
   );
 
   // 채팅방 업데이트 (메시지 수신 시 사용)
-  const updateChatRoom = useCallback((roomId: string, updates: Partial<ChatListItem>) => {
-    setBaseChats((prev) => {
-      const updated = prev.map((c) =>
-        c.chat_room_id === roomId ? { ...c, ...updates } : c
-      );
-      setChats(recomputeChats(updated, query, select, currentUserId));
-      return updated;
-    });
-  }, [query, select, currentUserId]);
+  const updateChatRoom = useCallback(
+    (roomId: string, updates: Partial<ChatListItem>) => {
+      setBaseChats((prev) => {
+        const updated = prev.map((c) =>
+          c.chat_room_id === roomId ? { ...c, ...updates } : c
+        );
+        setChats(recomputeChats(updated, query, select, currentUserId));
+        return updated;
+      });
+    },
+    [query, select, currentUserId]
+  );
 
   // 채팅방 삭제 (로컬 상태에서 제거)
-  const deleteChatRoom = useCallback((roomId: string) => {
-    console.log('🗑️ useChatRooms: 채팅방 삭제', roomId);
-    setBaseChats((prev) => {
-      const filtered = prev.filter((c) => c.chat_room_id !== roomId);
-      console.log('✅ useChatRooms: baseChats 업데이트', prev.length, '→', filtered.length);
-      setChats(recomputeChats(filtered, query, select, currentUserId));
-      return filtered;
-    });
-  }, [query, select, currentUserId]);
+  const deleteChatRoom = useCallback(
+    (roomId: string) => {
+      console.log("🗑️ useChatRooms: 채팅방 삭제", roomId);
+      setBaseChats((prev) => {
+        const filtered = prev.filter((c) => c.chat_room_id !== roomId);
+        console.log(
+          "✅ useChatRooms: baseChats 업데이트",
+          prev.length,
+          "→",
+          filtered.length
+        );
+        setChats(recomputeChats(filtered, query, select, currentUserId));
+        return filtered;
+      });
+    },
+    [query, select, currentUserId]
+  );
 
   return {
     baseChats,
