@@ -14,7 +14,7 @@ export async function fetchPostLike(
   user_id: string
 ): Promise<LikeResult> {
   try {
-    const response = await fetch(`${BASE_URL}/api/likes`, {
+    const response = await fetch(`api/likes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

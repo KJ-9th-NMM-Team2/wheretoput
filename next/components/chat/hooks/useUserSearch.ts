@@ -25,7 +25,7 @@ export const useUserSearch = (
 
     const t = setTimeout(async () => {
       try {
-        const { data } = await api.get("http://localhost:3000/api/backend", {
+        const { data } = await api.get("api/backend", {
           params: { q, limit: 20 },
         });
         const users = data ?? [];

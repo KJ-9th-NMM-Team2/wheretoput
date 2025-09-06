@@ -5,7 +5,11 @@
 import { useState, useEffect } from "react";
 import SearchBar from "./shared/SearchBar";
 import { ChatListItem, UserLite } from "../types/chat-types";
-import { formatRelativeTime, isUnread, recomputeChats } from "../utils/chat-utils";
+import {
+  formatRelativeTime,
+  isUnread,
+  recomputeChats,
+} from "../utils/chat-utils";
 import { api } from "@/lib/client/api";
 
 interface ChatListViewProps {
@@ -55,8 +59,8 @@ export default function ChatListView({
   const loadAllUsers = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get("http://localhost:3000/api/backend", {
-        params: { limit: 100 } // 모든 유저 가져오기
+      const { data } = await api.get("api/backend", {
+        params: { limit: 100 }, // 모든 유저 가져오기
       });
       const users = data ?? [];
       const rows: UserLite[] = (users ?? []).map((u: any) => ({
@@ -65,7 +69,7 @@ export default function ChatListView({
         image: u.image ?? undefined,
       }));
       // 현재 사용자는 제외
-      const filteredUsers = rows.filter(user => user.id !== currentUserId);
+      const filteredUsers = rows.filter((user) => user.id !== currentUserId);
       setAllUsers(filteredUsers);
     } catch (error) {
       console.error("유저 목록 로드 실패:", error);
@@ -102,11 +106,11 @@ export default function ChatListView({
   // 삭제 모달 열기
   const openDeleteModal = (chatId: string) => {
     closeContextMenu();
-    const chat = baseChats.find(c => c.chat_room_id === chatId);
+    const chat = baseChats.find((c) => c.chat_room_id === chatId);
     if (chat) {
       setDeleteModal({
         chatId,
-        chatName: chat.name || "이름 없는 채팅방"
+        chatName: chat.name || "이름 없는 채팅방",
       });
     }
   };
@@ -119,19 +123,23 @@ export default function ChatListView({
   // 채팅방 완전 삭제 실행
   const handleDeleteRoom = async (roomId: string) => {
     closeDeleteModal();
-    
+
     setDeleting(roomId);
     try {
-      await api.delete(`http://localhost:3001/rooms/${roomId}/delete-completely`);
-      
+      await api.delete(
+        `http://localhost:3001/rooms/${roomId}/delete-completely`
+      );
+
       // 채팅방 목록에서 제거
-      const updatedChats = baseChats.filter(chat => chat.chat_room_id !== roomId);
+      const updatedChats = baseChats.filter(
+        (chat) => chat.chat_room_id !== roomId
+      );
       setBaseChats(updatedChats);
       setChats(recomputeChats(updatedChats, query, select, currentUserId));
-      
     } catch (error: any) {
       console.error("채팅방 삭제 실패:", error);
-      const errorMsg = error.response?.data?.message || "채팅방 삭제에 실패했습니다.";
+      const errorMsg =
+        error.response?.data?.message || "채팅방 삭제에 실패했습니다.";
       alert(`삭제 실패: ${errorMsg}`);
     } finally {
       setDeleting(null);
@@ -141,10 +149,9 @@ export default function ChatListView({
   // 클릭 시 컨텍스트 메뉴 닫기
   useEffect(() => {
     const handleClick = () => closeContextMenu();
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, []);
-
 
   return (
     <div className="flex flex-col h-full">
@@ -152,10 +159,9 @@ export default function ChatListView({
         <b>채팅</b>
         <button
           onClick={handleUserListClick}
-          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${showUserList
-            ? "bg-orange-600"
-            : "bg-orange-500 hover:bg-orange-600"
-            }`}
+          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${
+            showUserList ? "bg-orange-600" : "bg-orange-500 hover:bg-orange-600"
+          }`}
           aria-label="유저 목록"
         >
           👥
@@ -183,10 +189,11 @@ export default function ChatListView({
             setSelect("전체");
             setChats(recomputeChats(baseChats, query, "전체", currentUserId));
           }}
-          className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-            ? "bg-gray-200 text-blue-500"
-            : "bg-transparent hover:bg-gray-200"
-            }`}
+          className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+            select === "전체"
+              ? "bg-gray-200 text-blue-500"
+              : "bg-transparent hover:bg-gray-200"
+          }`}
         >
           전체
         </button>
@@ -194,12 +201,15 @@ export default function ChatListView({
         <button
           onClick={() => {
             setSelect("읽지 않음");
-            setChats(recomputeChats(baseChats, query, "읽지 않음", currentUserId));
+            setChats(
+              recomputeChats(baseChats, query, "읽지 않음", currentUserId)
+            );
           }}
-          className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-            ? "bg-gray-200 text-blue-500"
-            : "bg-transparent hover:bg-gray-200"
-            }`}
+          className={`px-3 py-2 rounded-xl transition cursor-pointer ${
+            select === "읽지 않음"
+              ? "bg-gray-200 text-blue-500"
+              : "bg-transparent hover:bg-gray-200"
+          }`}
         >
           읽지 않음
         </button>
@@ -244,9 +254,7 @@ export default function ChatListView({
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{user.name}</div>
                   </div>
-                  <div className="text-xs text-orange-500 opacity-75">
-                    💬
-                  </div>
+                  <div className="text-xs text-orange-500 opacity-75">💬</div>
                 </div>
               ))
             )}
@@ -254,9 +262,7 @@ export default function ChatListView({
         ) : query.trim() ? (
           <>
             {/* 사람 섹션 */}
-            <div className="px-1 py-2 text-xs text-gray-500">
-              사람
-            </div>
+            <div className="px-1 py-2 text-xs text-gray-500">사람</div>
             {peopleHits.length === 0 ? (
               <div className="px-2 pb-2 text-sm text-gray-400">
                 일치하는 사람이 없습니다.
@@ -281,9 +287,7 @@ export default function ChatListView({
                         />
                       ) : null}
                     </div>
-                    <div className="font-medium truncate">
-                      {u.name}
-                    </div>
+                    <div className="font-medium truncate">{u.name}</div>
                   </div>
                 </div>
               ))
@@ -293,9 +297,7 @@ export default function ChatListView({
             <div className="my-2 border-t border-gray-200" />
 
             {/* 채팅 섹션 */}
-            <div className="px-1 py-2 text-xs text-gray-500">
-              채팅
-            </div>
+            <div className="px-1 py-2 text-xs text-gray-500">채팅</div>
             {chats.length === 0 ? (
               <div className="px-2 pb-2 text-sm text-gray-400">
                 일치하는 채팅이 없습니다.
@@ -308,15 +310,15 @@ export default function ChatListView({
                   <div
                     key={chat.chat_room_id}
                     onClick={() => onChatSelect(chat.chat_room_id)}
-                    onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
+                    onContextMenu={(e) =>
+                      handleContextMenu(e, chat.chat_room_id)
+                    }
                     className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${
                       isDeleting ? "opacity-50 pointer-events-none" : ""
                     }`}
                   >
                     <div className="flex-1">
-                      <div className="font-semibold">
-                        {chat.name}
-                      </div>
+                      <div className="font-semibold">{chat.name}</div>
                       <div className="text-sm text-gray-500 truncate w-40">
                         {chat.lastMessage}
                       </div>
@@ -371,7 +373,7 @@ export default function ChatListView({
           </>
         )}
       </div>
-      
+
       {/* 컨텍스트 메뉴 */}
       {contextMenu && (
         <div
@@ -401,10 +403,11 @@ export default function ChatListView({
                 채팅방 삭제
               </h3>
               <p className="text-gray-600">
-                "<span className="font-medium">{deleteModal.chatName}</span>" 채팅방과 모든 메시지를 완전히 삭제하시겠습니까?
+                "<span className="font-medium">{deleteModal.chatName}</span>"
+                채팅방과 모든 메시지를 완전히 삭제하시겠습니까?
               </p>
             </div>
-            
+
             <div className="flex gap-3 justify-end">
               <button
                 onClick={closeDeleteModal}
