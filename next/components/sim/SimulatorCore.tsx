@@ -13,7 +13,10 @@ import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSi
 import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
+import AutoSave from "@/components/sim/AutoSave";
+import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 import { Environment } from "@react-three/drei";
+import { useSession } from "next-auth/react";
 
 type position = [number, number, number];
 
@@ -131,6 +134,7 @@ export function SimulatorCore({
   loadingIcon = "🏠",
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
+  const { data: session } = useSession();
   const {
     viewOnly,
     backgroundColor,
@@ -147,6 +151,7 @@ export function SimulatorCore({
     addModelWithId,
     removeModel,
     collaborationMode,
+    checkUserRoom,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -168,6 +173,22 @@ export function SimulatorCore({
               await loadSimulatorState(roomId);
             }
             console.log(`방 ${roomId}의 데이터 로드 완료`);
+            
+            // 방 소유권 확인 (자동저장을 위해 필요)
+            console.log('세션 상태 확인:', { 
+              hasSession: !!session, 
+              hasUser: !!session?.user, 
+              hasUserId: !!session?.user?.id,
+              userId: session?.user?.id 
+            });
+            
+            if (session?.user?.id) {
+              console.log(`방 소유권 확인 중... (roomId: ${roomId}, userId: ${session.user.id})`);
+              await checkUserRoom(roomId, session.user.id);
+              console.log(`checkUserRoom 호출 완료`);
+            } else {
+              console.log('세션 또는 사용자 ID가 없어서 방 소유권 확인을 건너뜀');
+            }
           } catch (loadError) {
             console.log(
               `방 ${roomId}의 저장된 데이터 없음:`,
@@ -185,7 +206,7 @@ export function SimulatorCore({
     if (roomId) {
       initializeSimulator();
     }
-  }, [roomId, setCurrentRoomId, loadSimulatorState, collaborationMode]);
+  }, [roomId, setCurrentRoomId, loadSimulatorState, collaborationMode, session?.user?.id, checkUserRoom]);
 
   // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
   useEffect(() => {
@@ -260,6 +281,12 @@ export function SimulatorCore({
 
         {/* 추가 UI 요소들 */}
         {additionalUI}
+
+        {/* [09.06] 자동저장  - 편집 모드일 때만 활성화 */}
+        {!viewOnly && <AutoSave enabled={!viewOnly} />}
+        
+        {/* [09.06] 자동저장 상태 표시 */}
+        {!viewOnly && <AutoSaveIndicator position="top-left" />}
 
         {/* 편집 컨트롤 아이콘 */}
         {showEditControls && !viewOnly && <ControlIcons />}

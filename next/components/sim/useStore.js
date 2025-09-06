@@ -153,26 +153,37 @@ export const useStore = create(
       scaleValue: 1,
 
       // 방에 접근한 유저가 오너인지 확인
-      isOwnUserRoom: false,
+      isOwnUserRoom: false, //초기값 false
 
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          console.log(`checkUserRoom API 요청: /api/rooms/user?roomId=${roomId}&userId=${userId}`);
+          
+          // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
+          
+          console.log(`checkUserRoom API 응답 상태: ${response.status}`);
+          
           if (!response.ok) throw new Error("Network response was not ok");
 
+          // 2. 응답 Json 파싱
           const result = await response.json();
+          console.log(`checkUserRoom API 결과:`, result);
+          
           if (result) {
+            console.log(`방 소유권 확인: true - isOwnUserRoom 설정`);
             set({ isOwnUserRoom: true });
           } else {
+            console.log(`방 소유권 확인: false - isOwnUserRoom 설정`);
             set({ isOwnUserRoom: false });
           }
 
           return result ? true : false;
         } catch (error) {
-          console.error("FETCH ERROR:", error);
+          console.error("checkUserRoom FETCH ERROR:", error);
           set({ isOwnUserRoom: false });
         }
       },
