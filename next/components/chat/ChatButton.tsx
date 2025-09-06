@@ -62,6 +62,7 @@ export default function ChatButton({
   }, [selectedChatId, baseChats]);
 
 
+
   // UI 관련 refs와 스크롤 처리
   const listRef = useRef<HTMLDivElement | null>(null);
   const userAtBottomRef = useRef(true);
@@ -128,6 +129,50 @@ export default function ChatButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+  // 채팅방 삭제 (나가기) 핸들러
+  const handleDeleteChat = async (chatId: string) => {
+    console.log('🗑️ 채팅방 삭제 시작:', chatId);
+    
+    if (!token) {
+      console.error('❌ 토큰 없음');
+      return;
+    }
+    
+    try {
+      console.log('📡 API 호출 중...');
+      const response = await fetch(`/api/backend/rooms/${chatId}/leave`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      });
+
+      console.log('📡 API 응답:', response.status, response.ok);
+
+      if (response.ok) {
+        console.log('✅ API 성공, 로컬 상태 업데이트 중...');
+        
+        // useChatRooms의 deleteChatRoom 함수 사용
+        deleteChatRoom(chatId);
+        
+        // 현재 선택된 채팅방이면 목록으로 돌아가기
+        if (selectedChatId === chatId) {
+          console.log('🔙 현재 선택된 채팅방이므로 목록으로 돌아감');
+          setselectedChatId(null);
+        }
+        
+        console.log('✅ 채팅방 삭제 완료');
+      } else {
+        const errorText = await response.text();
+        console.error('❌ API 실패:', response.status, errorText);
+        alert('채팅방을 나갈 수 없습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error('❌ 네트워크 오류:', error);
+      alert('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+  };
 
   // 1:1 채팅 시작 핸들러
   const handleStartDirect = async (otherUserId: string, otherUserName?: string) => {
@@ -150,7 +195,7 @@ export default function ChatButton({
             const next = !prev;
             if (next) {
               setSelect("전체");
-              setChats(recomputeChats(baseChats, "", "전체", currentUserId));
+              setChats(recomputeChats(baseChats, "", "전체"));
             } else {
               setselectedChatId(null);
             }
@@ -182,15 +227,8 @@ export default function ChatButton({
             onEditorKeyDown={onEditorKeyDown}
             onChatSelect={(chatId) => setselectedChatId(chatId)}
             onStartDirect={handleStartDirect}
-            onBack={() => {
-              // 채팅방에서 나갈 때 해당 채팅방의 읽음 상태를 현재 시간으로 업데이트
-              if (selectedChatId) {
-                updateChatRoom(selectedChatId, {
-                  last_read_at: new Date().toISOString()
-                });
-              }
-              setselectedChatId(null);
-            }}
+            onDeleteChat={handleDeleteChat}
+            onBack={() => setselectedChatId(null)}
             currentUserId={currentUserId}
             listRef={listRef}
           />
