@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { Achievement } from "@/lib/achievements";
 
-export async function createAchievementsData(datas: Achievement[]) {
+export async function createAchievementsData(datas: any[]) {
   const result = await prisma.achievements.createMany({
     data: datas,
   });
