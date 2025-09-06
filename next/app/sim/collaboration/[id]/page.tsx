@@ -14,6 +14,23 @@ import { useSession } from "next-auth/react";
 import { getColab, toggleColab } from "@/lib/api/toggleColab";
 import { useRouter } from "next/navigation";
 
+// 가독성 있는 색상 생성 함수
+function generateReadableColor() {
+  const colors = [
+    '#3B82F6', // blue
+    '#EF4444', // red  
+    '#10B981', // green
+    '#F59E0B', // yellow
+    '#8B5CF6', // violet
+    '#EC4899', // pink
+    '#06B6D4', // cyan
+    '#84CC16', // lime
+    '#F97316', // orange
+    '#6366F1', // indigo
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
 function CollaborationPageContent({
   params,
 }: {
@@ -43,7 +60,7 @@ function CollaborationPageContent({
     setCurrentUser({
       id: session?.user.id || `user_${Math.floor(Math.random() * 10000)}`,
       name: session?.user.name || `Guest_${Math.floor(Math.random() * 1000)}`,
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+      color: generateReadableColor(),
     });
   }, [setViewOnly, setCollaborationMode, setCurrentUser]);
 

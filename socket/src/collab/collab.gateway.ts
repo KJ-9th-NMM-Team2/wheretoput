@@ -146,7 +146,36 @@ export class CollabGateway {
       userData: data.userData,
       roomId: roomId,
     };
+    
+    // 동일한 userId가 이미 Redis에 있는지 확인
+    let isAlreadyConnected = false;
+    
     if (roomId) {
+      let roomState = await this.redisService.getRoomState(roomId);
+      isAlreadyConnected = roomState?.connectedUsers.has(data.userId) || false;
+      
+      if (isAlreadyConnected) {
+        this.logger.log(`🔄 User ${data.userId} already connected, disconnecting previous connection`);
+        
+        // 기존 연결된 소켓들을 찾아서 강제 퇴장
+        const socketsInRoom = await this.server.in(roomId).fetchSockets();
+        for (const existingSocket of socketsInRoom) {
+          if (existingSocket.data?.userId === data.userId && existingSocket.id !== socket.id) {
+            this.logger.log(`🚪 Disconnecting previous socket ${existingSocket.id} for user ${data.userId}`);
+            
+            // 기존 소켓에 퇴장 이벤트 전송
+            existingSocket.emit('user-left', {
+              userId: data.userId,
+              userData: data.userData,
+              reason: 'duplicate-connection'
+            });
+            
+            // 기존 소켓 연결 해제
+            existingSocket.disconnect(true);
+          }
+        }
+      }
+      
       // Redis에 사용자 정보 저장 (lastActivity 초기값 포함)
       await this.redisService.updateConnectedUser(roomId, data.userId, {
         ...data.userData,
@@ -154,7 +183,7 @@ export class CollabGateway {
       });
 
       // Redis에 방 상태가 없다면 DB에서 전체 로드하여 Redis에 저장
-      let roomState = await this.redisService.getRoomState(roomId);
+      roomState = await this.redisService.getRoomState(roomId);
       if (!roomState || roomState.models.length === 0) {
         this.logger.log(`🔄 Loading room data from DB for room ${roomId}`);
 
@@ -214,12 +243,13 @@ export class CollabGateway {
       }
     }
 
-    // 방의 다른 사용자들에게 브로드캐스트
-    socket.rooms.forEach((room) => {
-      if (room !== socket.id) {
-        socket.to(room).emit('user-join', data);
-      }
-    });
+    // 방의 다른 사용자들에게 브로드캐스트 (이미 연결된 사용자는 제외)
+    if (roomId && !isAlreadyConnected) {
+      socket.to(roomId).emit('user-join', data);
+      this.logger.log(`📤 User-join broadcasted to room ${roomId}`);
+    } else if (isAlreadyConnected) {
+      this.logger.log(`⚠️ Skipping broadcast for already connected user ${data.userId}`);
+    }
   }
 
   // 사용자 퇴장 알림 (수동 퇴장 시에만 사용, 자동 단절은 handleDisconnect에서 처리)
@@ -548,7 +578,8 @@ export class CollabGateway {
             // 다른 사용자들에게 퇴장 알림 브로드캐스트 (userData 포함)
             this.server.to(roomId).emit('user-left', {
               userId,
-              userData: userData || { name: userId }, // fallback으로 userId 사용
+              userData: userData || { name: userId }, // fallback으로 userId 사용,
+              reason: 'time-out', // 시간 종료로 인한 퇴장임을 명시
             });
 
             this.logger.log(

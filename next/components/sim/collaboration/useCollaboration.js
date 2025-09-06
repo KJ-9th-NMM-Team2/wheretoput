@@ -112,12 +112,16 @@ export function useCollaboration(roomId) {
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
         // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
-        const message =
-          data.reason === "collaboration-ended"
-            ? "협업 모드가 종료되어 방에서 나갔습니다."
-            : "비활성 상태로 인해 방에서 퇴장되었습니다.";
-        alert(message);
-        router.push(roomId ? `/sim/${roomId}` : `/`);
+        if (data.reason === "collaboration-ended") {
+          alert("방 소유자가 협업 모드를 종료하여 방에서 나갔습니다.");
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        } else if (data.reason === "time-out") {
+          alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        } else if (data.reason === "duplicate-connection") {
+          alert("동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다.");
+          router.push(roomId ? `/sim/${roomId}` : `/`);
+        }
       } else {
         // 사용자 정보 제거
         removeConnectedUser(data.userId);
@@ -196,6 +200,8 @@ export function useCollaboration(roomId) {
         console.log(
           `📋 기존 사용자 확인: ${data.userData.name}님이 이미 접속해 있습니다`
         );
+      } else {
+        console.log(`🔄 자신의 정보는 무시: ${data.userData.name}`);
       }
     });
 
