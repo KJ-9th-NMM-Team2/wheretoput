@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 function generateReadableColor() {
   const colors = [
     '#3B82F6', // blue
-    '#EF4444', // red  
+    '#EF4444', // red
     '#10B981', // green
     '#F59E0B', // yellow
     '#8B5CF6', // violet
