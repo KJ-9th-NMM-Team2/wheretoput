@@ -6,9 +6,17 @@ import { RoomModule } from './room/room.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { CollabModule } from './collab/collab.module';
 import { RedisModule } from './redis/redis.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, ChatModule, RoomModule, CollabModule, RedisModule],
+  imports: [
+    PrismaModule,
+    ChatModule,
+    RoomModule,
+    CollabModule,
+    RedisModule,
+    ScheduleModule.forRoot(),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

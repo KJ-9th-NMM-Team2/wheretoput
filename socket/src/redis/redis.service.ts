@@ -67,6 +67,12 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  // 모든 방
+  async getAllRooms(): Promise<string[]> {
+    const keys = await this.client.keys('room:*:state');
+    return keys.map((key) => key.split(':')[1]);
+  }
+
   // 모델 추가/업데이트
   async updateRoomModel(roomId: string, model: any): Promise<RoomState> {
     const currentState = (await this.getRoomState(roomId)) || {
@@ -91,6 +97,29 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       // 새 모델 추가
       currentState.models.push(model);
     }
+
+    const newState: RoomState = {
+      ...currentState,
+      lastUpdated: Date.now(),
+      version: currentState.version + 1,
+    };
+
+    await this.setRoomState(roomId, newState);
+    return newState;
+  }
+
+  // 🆕 사용자 상태 업데이트 메서드
+  async updateRoomUser(roomId: string, userId: string, userData: any): Promise<RoomState> {
+    const currentState = (await this.getRoomState(roomId)) || {
+      models: [] as any[],
+      connectedUsers: new Map(),
+      lastUpdated: Date.now(),
+      version: 0,
+    };
+
+    // 기존 사용자 데이터와 병합
+    const existingUser = currentState.connectedUsers.get(userId) || {};
+    currentState.connectedUsers.set(userId, { ...existingUser, ...userData });
 
     const newState: RoomState = {
       ...currentState,

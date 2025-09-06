@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
+import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 
 export function DraggableModel({
   modelId,
@@ -238,6 +239,11 @@ export function DraggableModel({
           scale={safeScale}
         >
           <primitive object={scene.clone()} />
+          <ModelTooltip 
+            modelId={modelId} 
+            position={position} 
+            boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
+          />
         </group>
       ) : (
         <group
@@ -269,6 +275,12 @@ export function DraggableModel({
               />
             </mesh>
           )}
+          
+          <ModelTooltip 
+            modelId={modelId} 
+            position={position} 
+            boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
+          />
         </group>
       )}
     </>

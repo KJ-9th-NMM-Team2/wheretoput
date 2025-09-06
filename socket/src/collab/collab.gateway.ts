@@ -16,6 +16,7 @@ import { extractUserIdFromToken } from '../utils/jwt.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomService } from '../room/room.service';
 import { RedisService } from '../redis/redis.service';
+import { Cron } from '@nestjs/schedule';
 
 @WebSocketGateway({
   namespace: '/collab',
@@ -146,12 +147,11 @@ export class CollabGateway {
       roomId: roomId,
     };
     if (roomId) {
-      // Redis에 사용자 정보 저장
-      await this.redisService.updateConnectedUser(
-        roomId,
-        data.userId,
-        data.userData,
-      );
+      // Redis에 사용자 정보 저장 (lastActivity 초기값 포함)
+      await this.redisService.updateConnectedUser(roomId, data.userId, {
+        ...data.userData,
+        lastActivity: Date.now(),
+      });
 
       // Redis에 방 상태가 없다면 DB에서 전체 로드하여 Redis에 저장
       let roomState = await this.redisService.getRoomState(roomId);
@@ -266,6 +266,11 @@ export class CollabGateway {
         id: data.modelId,
         position: data.position,
       });
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     // 방의 다른 사용자들에게 브로드캐스트
@@ -292,6 +297,11 @@ export class CollabGateway {
         id: data.modelId,
         rotation: data.rotation,
       });
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     socket.rooms.forEach((room) => {
@@ -316,6 +326,11 @@ export class CollabGateway {
         id: data.modelId,
         scale: data.scale,
       });
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     socket.rooms.forEach((room) => {
@@ -337,6 +352,11 @@ export class CollabGateway {
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
       await this.redisService.updateRoomModel(roomId, data.modelData);
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     socket.rooms.forEach((room) => {
@@ -358,6 +378,11 @@ export class CollabGateway {
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
       await this.redisService.updateRoomModel(roomId, data.modelData);
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     socket.rooms.forEach((room) => {
@@ -379,6 +404,11 @@ export class CollabGateway {
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
       await this.redisService.removeRoomModel(roomId, data.modelId);
+
+      // 사용자 활동 시간 업데이트
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
     }
 
     socket.rooms.forEach((room) => {
@@ -386,5 +416,124 @@ export class CollabGateway {
         socket.to(room).emit('model-removed', data);
       }
     });
+  }
+
+  // 모델 선택
+  @SubscribeMessage('model-select')
+  async onModelSelect(
+    @MessageBody() data: { userId: string; modelId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`✅ MODEL SELECT: ${data.modelId} by ${data.userId}`);
+
+    // 현재 사용자 상태 업데이트 (Redis)
+    // lockTimeStamp, lastActivity는 락 시간제한 용도
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        selectedModelId: data.modelId,
+        showTooltip: true,
+        tooltipModelId: data.modelId,
+        lockTimeStamp: Date.now(),
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('model-select', data);
+      }
+    });
+  }
+
+  // 모델선택해제
+  @SubscribeMessage('model-deselect')
+  async onModelDeselect(
+    @MessageBody() data: { userId: string; modelId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`✅ MODEL DESELECT: ${data.modelId} by ${data.userId}`);
+
+    // 현재 사용자 상태 업데이트 (Redis)
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        selectedModelId: null,
+        showTooltip: false,
+        tooltipModelId: null,
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('model-deselect', data);
+      }
+    });
+  }
+
+  // 락 타임아웃 (1분에 1번씩 체크)
+  @Cron('0 * * * * *') // 매 분 0초마다 실행
+  async cleanupExpiredLocks() {
+    this.logger.log('🧹 Running cleanupExpiredLocks cron job');
+    const allRooms = await this.redisService.getAllRooms();
+    const now = Date.now();
+    const LOCK_TIMEOUT = 60 * 1000; // 1분
+
+    for (const roomId of allRooms) {
+      const roomState = await this.redisService.getRoomState(roomId);
+      if (roomState) {
+        for (const [userId, userData] of roomState.connectedUsers.entries()) {
+          if (userData.selectedModelId && userData.lockTimeStamp) {
+            if (now - userData.lockTimeStamp > LOCK_TIMEOUT) {
+              await this.redisService.updateRoomUser(roomId, userId, {
+                selectedModelId: null,
+                showTooltip: false,
+                tooltipModelId: null,
+                lockTimeStamp: null,
+              });
+
+              this.server.to(roomId).emit('model-deselect', {
+                userId,
+                modelId: userData.selectedModelId,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 미활동 사용자 연결해제
+  @Cron('0 */5 * * * *') // 5분마다 실행
+  async cleanupInactiveUsers() {
+    this.logger.log('🧹 Checking for inactive users');
+    const allRooms = await this.redisService.getAllRooms();
+    const now = Date.now();
+    const INACTIVE_TIMEOUT = 5 * 60 * 1000; // 5분
+
+    for (const roomId of allRooms) {
+      const roomState = await this.redisService.getRoomState(roomId);
+      if (roomState) {
+        for (const [userId, userData] of roomState.connectedUsers.entries()) {
+          if (
+            !userData.lastActivity ||
+            now - userData.lastActivity > INACTIVE_TIMEOUT
+          ) {
+            // 비활성 사용자 퇴장 처리
+            await this.redisService.removeConnectedUser(roomId, userId);
+
+            // 다른 사용자들에게 퇴장 알림 브로드캐스트 (userData 포함)
+            this.server.to(roomId).emit('user-left', {
+              userId,
+              userData: userData || { name: userId }, // fallback으로 userId 사용
+            });
+
+            this.logger.log(
+              `⏰Kicked inactive user ${userId} from room ${roomId}`,
+            );
+          }
+        }
+      }
+    }
   }
 }

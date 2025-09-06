@@ -28,99 +28,68 @@ if (
  * - 연결된 사용자 목록 표시
  */
 
-// 다른 사용자의 커서를 3D 공간에 표시
-export function CollaborativeCursors() {
-  const { connectedUsers } = useStore();
+// 모델 위에 표시되는 사용자 이름 말풍선
+export function ModelTooltip({ modelId, position, boundingBox }) {
+  const { connectedUsers, loadedModels } = useStore();
 
-  return (
-    <>
-      {Array.from(connectedUsers.entries()).map(([userId, userData]) => {
-        if (!userData.cursor) return null;
-
-        return (
-          <group key={`cursor-${userId}`} position={userData.cursor}>
-            {/* 3D 커서 포인터 */}
-            <mesh>
-              <coneGeometry args={[0.1, 0.3, 8]} />
-              <meshBasicMaterial color={userData.color} />
-            </mesh>
-
-            {/* 사용자 이름 라벨 */}
-            <Html
-              position={[0, 0.5, 0]}
-              style={{
-                pointerEvents: "none",
-                userSelect: "none",
-              }}
-            >
-              <div
-                style={{
-                  background: userData.color,
-                  color: "white",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
-                  transform: "translate(-50%, -100%)",
-                }}
-              >
-                {userData.name}
-              </div>
-            </Html>
-          </group>
-        );
-      })}
-    </>
-  );
-}
-
-// 다른 사용자가 선택한 모델 주변에 표시되는 하이라이트
-export function CollaborativeSelectionHighlight({ modelId, position }) {
-  const { connectedUsers } = useStore();
-
-  // 이 모델을 선택한 사용자 찾기
-  const selectingUser = Array.from(connectedUsers.entries()).find(
-    ([userId, userData]) => userData.selectedModel === modelId
+  // 이 모델에 말풍선을 표시할 사용자 찾기
+  const tooltipUser = Array.from(connectedUsers.entries()).find(
+    ([userId, userData]) =>
+      userData.showTooltip && userData.tooltipModelId === modelId
   );
 
-  if (!selectingUser) return null;
+  if (!tooltipUser) return null;
 
-  const [userId, userData] = selectingUser;
+  const [userId, userData] = tooltipUser;
+
+  // boundingBox만으로 위치 계산 (position 무시)
+  const tooltipPosition = boundingBox
+    ? [
+        (boundingBox.max.x + boundingBox.min.x) / 2, // 중앙 X
+        boundingBox.max.y, // 최상단 Y
+        (boundingBox.max.z + boundingBox.min.z) / 2, // 중앙 Z
+      ]
+    : [position[0], position[1] + 1, position[2]]; // fallback
 
   return (
-    <group position={position}>
-      {/* 선택 링 애니메이션 */}
-      <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1, 1.2, 32]} />
-        <meshBasicMaterial color={userData.color} transparent opacity={0.6} />
-      </mesh>
-
-      {/* 선택한 사용자 표시 */}
-      <Html
-        position={[0, 2, 0]}
-        style={{
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
-      >
+    <Html
+      position={tooltipPosition}
+      center
+      distanceFactor={8}
+      zIndexRange={[100, 0]}
+      style={{
+        pointerEvents: "none",
+        userSelect: "none",
+      }}
+    >
+      <div className="relative flex flex-col items-center">
+        {/* 말풍선 */}
         <div
+          className="px-2 py-1 text-white text-xs font-medium rounded shadow-lg border border-white/20 whitespace-nowrap"
           style={{
-            background: userData.color,
-            color: "white",
-            padding: "3px 6px",
-            borderRadius: "3px",
-            fontSize: "11px",
-            fontWeight: "bold",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-            transform: "translate(-50%, 0)",
-            opacity: 0.9,
+            background: `linear-gradient(135deg, ${userData.color}ee, ${userData.color}cc)`,
+            transform: "translateY(-30px)",
+            backdropFilter: "blur(4px)",
+            borderRadius: "8px",
+            fontSize: "14px",
           }}
         >
-          {userData.name}이 선택함
+          {userData.name}
         </div>
-      </Html>
-    </group>
+
+        {/* 화살표 */}
+        <div
+          className="w-0 h-0"
+          style={{
+            borderLeft: "4px solid transparent",
+            borderRight: "4px solid transparent",
+            borderTop: `4px solid ${userData.color}ee`,
+            transform: "translateY(-26px)",
+            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))",
+          }}
+        />
+      </div>
+    </Html>
   );
 }
 
