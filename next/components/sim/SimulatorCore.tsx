@@ -175,19 +175,10 @@ export function SimulatorCore({
             console.log(`방 ${roomId}의 데이터 로드 완료`);
             
             // 방 소유권 확인 (자동저장을 위해 필요)
-            console.log('세션 상태 확인:', { 
-              hasSession: !!session, 
-              hasUser: !!session?.user, 
-              hasUserId: !!session?.user?.id,
-              userId: session?.user?.id 
-            });
             
             if (session?.user?.id) {
-              console.log(`방 소유권 확인 중... (roomId: ${roomId}, userId: ${session.user.id})`);
               await checkUserRoom(roomId, session.user.id);
-              console.log(`checkUserRoom 호출 완료`);
             } else {
-              console.log('세션 또는 사용자 ID가 없어서 방 소유권 확인을 건너뜀');
             }
           } catch (loadError) {
             console.log(
