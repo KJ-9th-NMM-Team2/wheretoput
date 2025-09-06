@@ -1,6 +1,7 @@
 name: CD — deploy on dev→main merge
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: ["main"]
     types: [closed]
