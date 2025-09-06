@@ -66,7 +66,11 @@ export default function MessageBubble({
               className="h-full w-full object-cover"
               loading="lazy"
             />
-          ) : null}
+          ) : (
+            <div className="h-full w-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-medium">
+              {message.senderName?.charAt(0)?.toUpperCase() || "?"}
+            </div>
+          )}
         </div>
       )}
 

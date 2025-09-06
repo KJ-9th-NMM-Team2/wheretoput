@@ -61,32 +61,6 @@ export default function ChatButton({
     return baseChats.find((c) => c.chat_room_id === selectedChatId) ?? null;
   }, [selectedChatId, baseChats]);
 
-  // 전역 메시지 리스너 (팝업이 열린 상태에서 다른 채팅방 메시지 수신)
-  useEffect(() => {
-    if (!open || !token) return;
-    
-    const { getSocket } = require("@/lib/client/socket");
-    const s = getSocket();
-    if (!s) return;
-
-    const onGlobalMessage = (msg: any) => {
-      // 현재 열린 채팅방이 아닌 다른 채팅방의 메시지인 경우에만 처리
-      if (msg.roomId !== selectedChatId) {
-        updateChatRoom(msg.roomId, {
-          lastMessage: msg.content,
-          lastMessageAt: msg.createdAt,
-          lastMessageSenderId: msg.senderId,
-          searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
-        });
-      }
-    };
-
-    s.on("message", onGlobalMessage);
-
-    return () => {
-      s.off("message", onGlobalMessage);
-    };
-  }, [open, token, selectedChatId, updateChatRoom]);
 
   // UI 관련 refs와 스크롤 처리
   const listRef = useRef<HTMLDivElement | null>(null);

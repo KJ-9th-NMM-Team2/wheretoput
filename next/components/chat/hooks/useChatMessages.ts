@@ -110,6 +110,10 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
+      console.log('🔍 [DEBUG] 실시간 메시지 받은 데이터:', m);
+      console.log('🔍 [DEBUG] senderName:', m.senderName);
+      console.log('🔍 [DEBUG] senderImage:', m.senderImage);
+      
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
       const isImageMessage = m.content && m.content.startsWith('chat/') &&
         /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
@@ -118,8 +122,8 @@ export const useChatMessages = (
         id: m.id ?? String(m.message_id),
         roomId: m.roomId ?? String(m.room_id),
         senderId: m.senderId ?? String(m.user_id),
-        senderName: m.sender?.name ?? m.user?.name,
-        senderImage: m.sender?.image ?? m.user?.image,
+        senderName: m.senderName ?? m.sender?.name ?? m.user?.name,
+        senderImage: m.senderImage ?? m.sender?.image ?? m.user?.image,
         content: m.content,
         message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,

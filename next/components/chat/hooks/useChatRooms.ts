@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { api } from "@/lib/client/api";
 import { ChatListItem } from "../types/chat-types";
 import { recomputeChats } from "../utils/chat-utils";
+import { getSocket } from "@/lib/client/socket";
 
 const NEXT_API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
@@ -101,12 +102,13 @@ export const useChatRooms = (
     })();
   }, [open, token, currentUserId]);
 
-  // 1초마다 채팅방 목록 자동 업데이트
+  // 실시간 폴링 (5초마다) - 안정적인 채팅방 목록 업데이트
   useEffect(() => {
     if (!open || !token) return;
 
     const loadRooms = async () => {
       try {
+        console.log("[POLLING] 채팅방 목록 업데이트 시작");
         const response = await fetch(
           "http://localhost:3000/api/backend/rooms",
           {
@@ -154,15 +156,24 @@ export const useChatRooms = (
 
         setBaseChats(mapped);
         setChats(recomputeChats(mapped, query, select, currentUserId));
+        console.log("[POLLING] 채팅방 목록 업데이트 완료 -", mapped.length, "개 방");
       } catch (e) {
-        console.error("[AUTO-REFRESH] FAIL", e);
+        console.error("[POLLING] FAIL", e);
       }
     };
 
-    const interval = setInterval(loadRooms, 1000); // 1초마다 실행
+    // 즉시 한 번 실행
+    loadRooms();
 
-    return () => clearInterval(interval);
+    // 1초마다 폴링 - 실시간 업데이트
+    const interval = setInterval(loadRooms, 3000);
+
+    return () => {
+      console.log("[POLLING] 폴링 중단");
+      clearInterval(interval);
+    };
   }, [open, token, currentUserId, query, select]);
+
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
