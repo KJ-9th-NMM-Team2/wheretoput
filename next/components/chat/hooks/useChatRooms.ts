@@ -32,7 +32,7 @@ export const useChatRooms = (
       try {
         console.log("[ROOMS] GET", path);
         const response = await fetch(
-          "http://localhost:3000/api/backend/rooms",
+          "/api/backend/rooms",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
