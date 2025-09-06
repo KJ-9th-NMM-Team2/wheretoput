@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import EditPopup from "./EditPopup";
+import ExitConfirmModal from "./ExitConfirmModal";
 import { useStore } from "@/components/sim/useStore.js";
 import {
   fetchRoomInfo,
@@ -23,6 +24,8 @@ interface SideTitleProps {
 const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
   // 팝업창 뜨기 여부
   const [showPopup, setShowPopup] = useState(false);
+  // 나가기 확인 모달 상태
+  const [showExitModal, setShowExitModal] = useState(false);
   // 현재 방 정보
   const [roomInfo, setRoomInfo] = useState<RoomInfo>({
     title: "",
@@ -102,15 +105,33 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     });
   };
 
-  // 방 나가기
-  const handleOutofRoomClick = async () => {
+  // 방 나가기 경고창
+  const handleOutofRoomClick = () => {
+    setShowExitModal(true);
+  };
+
+  // 실제 방 나가기 처리
+  const handleConfirmExit = async () => {
+    setShowExitModal(false);
+    
     const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
     
+    // 자신의 방일때는 저장후 나가기
     if (isOwnUserRoom) {
       await handleSaveRoom();
       console.log("방 저장 완료!");
     }
-    router.back();
+    
+    // URL에서 from 파라미터 확인하거나 sessionStorage 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const fromStorage = sessionStorage.getItem('previousPage');
+    
+    if (fromParam === 'create' || fromStorage === 'create') {
+      router.push('/');
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -171,6 +192,13 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
           onClose={() => setShowPopup(false)}
         />
       )}
+
+      {/* 나가기 확인 모달 */}
+      <ExitConfirmModal
+        isOpen={showExitModal}
+        onConfirm={handleConfirmExit}
+        onCancel={() => setShowExitModal(false)}
+      />
     </>
   );
 };

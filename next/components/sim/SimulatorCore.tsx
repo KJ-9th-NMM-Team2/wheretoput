@@ -6,6 +6,7 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
+import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
@@ -13,6 +14,7 @@ import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx"
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import { Environment } from "@react-three/drei";
+import { ArchievementToast } from "./achievement/components/ArchievementToast";
 
 type position = [number, number, number];
 
@@ -25,7 +27,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#D2B48C" roughness={0.9} metalness={0.0} />
+        <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
       </mesh>
     );
   }
@@ -82,69 +84,6 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   );
 }
 
-// 도면 기반 3D 벽 컴포넌트
-function Wall({
-  width,
-  height,
-  depth = 0.1,
-  position,
-  rotation = [0, 0, 0],
-}: {
-  width: number;
-  height: number;
-  depth?: number;
-  position: position;
-  rotation?: [number, number, number];
-}) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const { camera } = useThree();
-  const { enableWallTransparency, wallColor } = useStore();
-
-  useFrame(() => {
-    if (!meshRef.current || !materialRef.current) return;
-    if (!enableWallTransparency) {
-      materialRef.current.opacity = 1.0;
-      return;
-    }
-
-    const wallWorldPosition = new THREE.Vector3();
-    meshRef.current.getWorldPosition(wallWorldPosition);
-    const distance = camera.position.distanceTo(wallWorldPosition);
-
-    const minOpacity = 0.2;
-    const maxOpacity = 0.95;
-    const minDistanceThreshold = 15;
-    const maxDistanceThreshold = 30;
-
-    if (distance > maxDistanceThreshold) {
-      materialRef.current.opacity = maxOpacity;
-    } else if (distance < minDistanceThreshold) {
-      materialRef.current.opacity = minOpacity;
-    } else {
-      const newOpacity =
-        ((maxOpacity - minOpacity) /
-          (maxDistanceThreshold - minDistanceThreshold)) *
-          (distance - minDistanceThreshold) +
-        minOpacity;
-      materialRef.current.opacity = newOpacity;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
-      <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        ref={materialRef}
-        color={wallColor}
-        transparent
-        roughness={0.8}
-        metalness={0.1}
-      />
-    </mesh>
-  );
-}
-
 function CameraUpdater() {
   const fov = useStore((state) => state.cameraFov);
   const { camera } = useThree();
@@ -195,6 +134,7 @@ export function SimulatorCore({
   const controlsRef = useRef(null);
   const {
     viewOnly,
+    backgroundColor,
     environmentPreset,
     loadedModels,
     deselectModel,
@@ -207,6 +147,8 @@ export function SimulatorCore({
     addModel,
     addModelWithId,
     removeModel,
+    collaborationMode,
+    achievements,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -220,7 +162,13 @@ export function SimulatorCore({
         // 임시 방이 아닌 경우에만 데이터 로드 시도
         if (!roomId.startsWith("temp_")) {
           try {
-            await loadSimulatorState(roomId);
+            if (collaborationMode) {
+              console.log(`협업 모드이므로 벽 데이터만 로드하고 가구는 Redis에서 받습니다.`);
+              await loadSimulatorState(roomId, { wallsOnly: true });
+            } else {
+              console.log(`일반 모드로 전체 데이터를 로드합니다.`);
+              await loadSimulatorState(roomId);
+            }
             console.log(`방 ${roomId}의 데이터 로드 완료`);
           } catch (loadError) {
             console.log(
@@ -239,7 +187,7 @@ export function SimulatorCore({
     if (roomId) {
       initializeSimulator();
     }
-  }, [roomId, setCurrentRoomId, loadSimulatorState]);
+  }, [roomId, setCurrentRoomId, loadSimulatorState, collaborationMode]);
 
   // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
   useEffect(() => {
@@ -311,6 +259,9 @@ export function SimulatorCore({
 
         {/* 커스텀 헤더 또는 기본 모드 컨트롤 */}
         {customHeader}
+        
+        {/* 조건 달성 토스트 팝업 - 모드 컨트롤 아래 중앙 */}
+        <ArchievementToast datas={achievements} />
 
         {/* 추가 UI 요소들 */}
         {additionalUI}
@@ -332,7 +283,7 @@ export function SimulatorCore({
           <Environment preset={environmentPreset} background={false} />
 
           <CameraUpdater />
-          <color attach="background" args={["#87CEEB"]} />
+          <color attach="background" args={[backgroundColor]} />
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}

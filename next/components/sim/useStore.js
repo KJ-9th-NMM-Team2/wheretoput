@@ -54,7 +54,7 @@ export const useStore = create(
       // ===== 동시편집(실시간 협업) 관련 상태 =====
       collaborationMode: false, // 동시편집 모드 활성화 여부
       isConnected: false, // WebSocket 연결 상태
-      connectedUsers: new Map(), // 접속중인 다른 사용자들 (userId -> { name, cursor, selectedModel, color })
+      connectedUsers: new Map(), // 접속중인 다른 사용자들
       currentUser: {
         id: null,
         name: null,
@@ -74,7 +74,12 @@ export const useStore = create(
       updateConnectedUser: (userId, userData) =>
         set((state) => {
           const newUsers = new Map(state.connectedUsers);
-          newUsers.set(userId, userData);
+          const existingData = newUsers.get(userId) || {};
+          newUsers.set(userId, { ...existingData, ...userData });
+          console.log("👥 Updated connected user:", userId, {
+            ...existingData,
+            ...userData,
+          });
           return { connectedUsers: newUsers };
         }),
 
@@ -107,15 +112,18 @@ export const useStore = create(
         set({ collaborationCallbacks: callbacks }),
 
       // 통합 브로드캐스트 관리 함수
-      broadcastWithThrottle: (eventType, modelId, data, throttleMs = 50) => {
+      broadcastWithThrottle: (eventType, modelId, data, throttleMs = 30) => {
         const state = get();
-        
-        if (!state.collaborationMode || !state.collaborationCallbacks[eventType]) {
+
+        if (
+          !state.collaborationMode ||
+          !state.collaborationCallbacks[eventType]
+        ) {
           return;
         }
 
         const throttleKey = `${eventType}_${modelId}`;
-        
+
         // 기존 타이머 클리어
         if (state._throttledBroadcasts[throttleKey]) {
           clearTimeout(state._throttledBroadcasts[throttleKey]);
@@ -125,7 +133,17 @@ export const useStore = create(
         state._throttledBroadcasts[throttleKey] = setTimeout(() => {
           const currentState = get();
           if (currentState.collaborationCallbacks[eventType]) {
-            currentState.collaborationCallbacks[eventType](modelId, data);
+            // 이벤트 타입에 따라 다른 파라미터 전달 방식 사용
+            if (eventType.includes("Add")) {
+              // 모델 추가의 경우 modelData만 전달
+              currentState.collaborationCallbacks[eventType](data);
+            } else if (eventType.includes("Remove")) {
+              // 모델 제거의 경우 modelId만 전달
+              currentState.collaborationCallbacks[eventType](modelId);
+            } else {
+              // 이동, 회전, 스케일의 경우 modelId와 data 전달
+              currentState.collaborationCallbacks[eventType](modelId, data);
+            }
           }
           delete currentState._throttledBroadcasts[throttleKey];
         }, throttleMs);
@@ -183,6 +201,7 @@ export const useStore = create(
               {
                 ...model,
                 id: model.id || crypto.randomUUID(),
+                furniture_id: model.furniture_id || null, // null일 수 있음
                 position: model.position || [
                   (Math.random() - 0.5) * 15,
                   0,
@@ -196,7 +215,12 @@ export const useStore = create(
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelAdd', model.id, model, 0);
+            get().broadcastWithThrottle(
+              "broadcastModelAdd",
+              model.id,
+              model,
+              0
+            );
           }
 
           return result;
@@ -206,8 +230,10 @@ export const useStore = create(
       addModelWithId: (model, shouldBroadcast = true) =>
         set((state) => {
           // 같은 ID의 기존 모델 제거 (중복 방지)
-          const filteredModels = state.loadedModels.filter((m) => m.id !== model.id);
-          
+          const filteredModels = state.loadedModels.filter(
+            (m) => m.id !== model.id
+          );
+
           // scale 값 검증 및 최소값 보장
           let scale = model.scale || state.scaleValue;
           if (Array.isArray(scale)) {
@@ -225,6 +251,7 @@ export const useStore = create(
                 ...model,
                 // ID를 유지 (히스토리 복원용)
                 id: model.id,
+                furniture_id: model.furniture_id || null, // null일 수 있음
                 position: model.position || [0, 0, 0],
                 rotation: model.rotation || [0, 0, 0],
                 scale: scale,
@@ -234,7 +261,12 @@ export const useStore = create(
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelAddWithId', model.id, model, 0);
+            get().broadcastWithThrottle(
+              "broadcastModelAddWithId",
+              model.id,
+              model,
+              0
+            );
           }
 
           return result;
@@ -251,7 +283,12 @@ export const useStore = create(
           };
 
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelRemove', modelId, null, 0);
+            get().broadcastWithThrottle(
+              "broadcastModelRemove",
+              modelId,
+              null,
+              0
+            );
           }
 
           return result;
@@ -265,11 +302,7 @@ export const useStore = create(
           return { loadedModels: [] };
         }),
 
-      updateModelPosition: (
-        modelId,
-        newPosition,
-        shouldBroadcast = true
-      ) => {
+      updateModelPosition: (modelId, newPosition, shouldBroadcast = true) => {
         set((state) => {
           // 상태 업데이트
           const newState = {
@@ -280,7 +313,12 @@ export const useStore = create(
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelMove', modelId, newPosition, 50);
+            get().broadcastWithThrottle(
+              "broadcastModelMove",
+              modelId,
+              newPosition,
+              30
+            );
           }
 
           return newState;
@@ -300,7 +338,12 @@ export const useStore = create(
 
           // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelRotate', modelId, newRotation, 50);
+            get().broadcastWithThrottle(
+              "broadcastModelRotate",
+              modelId,
+              newRotation,
+              30
+            );
           }
 
           return newState;
@@ -325,16 +368,51 @@ export const useStore = create(
           };
 
           if (shouldBroadcast) {
-            get().broadcastWithThrottle('broadcastModelScale', modelId, scale, 50);
+            get().broadcastWithThrottle(
+              "broadcastModelScale",
+              modelId,
+              scale,
+              30
+            );
           }
 
           return newState;
         }),
 
       // 선택, 마우스 호버링 관련
-      selectModel: (modelId) => set({ selectedModelId: modelId }),
-      deselectModel: () => set({ selectedModelId: null }),
+      selectModel: (modelId, shouldBroadcast = true) => {
+        console.log("📍 selectModel called:", { modelId, shouldBroadcast });
+        set({ selectedModelId: modelId });
+        if (shouldBroadcast) {
+          console.log("📡 Calling broadcastWithThrottle for select");
+          get().broadcastWithThrottle("broadcastModelSelect", modelId, null, 0);
+        }
+      },
+
+      deselectModel: (shouldBroadcast = true) => {
+        const currentSelectedId = get().selectedModelId;
+        set({ selectedModelId: null });
+        if (shouldBroadcast) {
+          get().broadcastWithThrottle(
+            "broadcastModelDeselect",
+            currentSelectedId,
+            null,
+            0
+          );
+        }
+      },
+
       hoveringModel: (modelId) => set({ hoveringModelId: modelId }),
+
+      // 🔒 락 체크 헬퍼 함수
+      isModelLocked: (modelId) => {
+        const state = get();
+        return Array.from(state.connectedUsers.entries()).some(
+          ([userId, userData]) =>
+            userData.selectedModelId === modelId &&
+            userId !== state.currentUser.id
+        );
+      },
 
       // 스케일 값 설정
       setScaleValue: (value) => set({ scaleValue: value }),
@@ -379,12 +457,14 @@ export const useStore = create(
       setEnableWallTransparency: (enable) =>
         set({ enableWallTransparency: enable }),
 
-      // 벽, 바닥 상태
+      // 색상 관련 상태
       wallColor: "#FFFFFF",
       floorColor: "#D2B48C",
+      backgroundColor: "#87CEEB",
 
       setWallColor: (color) => set({ wallColor: color }),
       setFloorColor: (color) => set({ floorColor: color }),
+      setBackgroundColor: (color) => set({ backgroundColor: color }),
 
       //[09.01] wallscalefactor 로 벽 조정 가능합니다.
       currentRoomId: null,
@@ -393,8 +473,13 @@ export const useStore = create(
       isLoading: false,
       lastSavedAt: null,
       shouldCapture: false,
+      shouldCaptureDownload: false,
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
+      
+      // 업적 상태
+      achievements: [],
+      setAchievements: (achievements) => set({ achievements }),
 
       // 저장/로드 액션
       setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
@@ -406,6 +491,8 @@ export const useStore = create(
       setLoading: (loading) => set({ isLoading: loading }),
 
       setShouldCapture: (capture) => set({ shouldCapture: capture }),
+      setShouldCaptureDownload: (capture) =>
+        set({ shouldCaptureDownload: capture }),
 
       // 시뮬레이터 상태 복제
       cloneSimulatorState: async () => {
@@ -711,7 +798,8 @@ export const useStore = create(
       },
 
       // 시뮬레이터 상태 로드
-      loadSimulatorState: async (roomId) => {
+      loadSimulatorState: async (roomId, options = {}) => {
+        const { wallsOnly = false } = options;
         set({ isLoading: true });
 
         try {
@@ -723,45 +811,53 @@ export const useStore = create(
 
           const result = await response.json();
 
-          // 기존 모델들 정리
-          const currentState = get();
-          currentState.loadedModels.forEach((model) => {
-            if (model.url) URL.revokeObjectURL(model.url);
-          });
+          let loadedModels = [];
 
-          // 로드된 객체들을 loadedModels에 설정
-          const loadedModels = result.objects.map((obj) => {
-            // scale 값 검증 및 최소값 보장
-            let scale = obj.scale;
-            if (Array.isArray(scale)) {
-              // 배열 형태의 scale에서 0이나 매우 작은 값들을 1로 대체
-              scale = scale.map((s) => (s <= 0 || s < 0.01 ? 1 : s));
-            } else if (typeof scale === "number") {
-              // 단일 숫자 scale에서 0이나 매우 작은 값을 1로 대체
-              scale = scale <= 0 || scale < 0.01 ? 1 : scale;
-            } else {
-              // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
-              scale = 1;
-            }
-            console.log("obj", obj);
+          // wallsOnly가 아닐 때만 객체 로드
+          if (!wallsOnly) {
+            // 기존 모델들 정리
+            const currentState = get();
+            currentState.loadedModels.forEach((model) => {
+              if (model.url) URL.revokeObjectURL(model.url);
+            });
 
-            return {
-              id: obj.id,
-              object_id: obj.object_id,
-              furniture_id: obj.furniture_id,
-              name: obj.name,
-              position: obj.position,
-              rotation: obj.rotation,
-              scale: scale,
-              length: [obj.length[0], obj.length[1], obj.length[2]],
-              url: obj.url,
-              isCityKit: obj.isCityKit,
-              texturePath: obj.texturePath,
-              type: obj.type,
-              furnitureName: obj.furnitureName,
-              categoryId: obj.categoryId,
-            };
-          });
+            // 로드된 객체들을 loadedModels에 설정
+            loadedModels = result.objects.map((obj) => {
+              // scale 값 검증 및 최소값 보장
+              let scale = obj.scale;
+              if (Array.isArray(scale)) {
+                // 배열 형태의 scale에서 0이나 매우 작은 값들을 1로 대체
+                scale = scale.map((s) => (s <= 0 || s < 0.01 ? 1 : s));
+              } else if (typeof scale === "number") {
+                // 단일 숫자 scale에서 0이나 매우 작은 값을 1로 대체
+                scale = scale <= 0 || scale < 0.01 ? 1 : scale;
+              } else {
+                // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
+                scale = 1;
+              }
+              console.log("obj", obj);
+
+              return {
+                id: obj.id,
+                object_id: obj.object_id,
+                furniture_id: obj.furniture_id,
+                name: obj.name,
+                position: obj.position,
+                rotation: obj.rotation,
+                scale: scale,
+                length: [obj.length[0], obj.length[1], obj.length[2]],
+                url: obj.url,
+                isCityKit: obj.isCityKit,
+                texturePath: obj.texturePath,
+                type: obj.type,
+                furnitureName: obj.furnitureName,
+                categoryId: obj.categoryId,
+              };
+            });
+          } else {
+            // wallsOnly 모드일 때는 기존 모델 유지
+            loadedModels = get().loadedModels;
+          }
 
           // 벽 데이터 처리
           let wallsData = [];

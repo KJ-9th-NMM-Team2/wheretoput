@@ -19,6 +19,12 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
         const currentRoomId = resolvedParams.id;
 
         console.log(`일반 시뮬레이터 초기화: room_id = ${currentRoomId}`);
+        
+        // /rooms/{id}에서 온 경우 sessionStorage 초기화 (create가 아님을 명시)
+        if (document.referrer && document.referrer.includes('/rooms/')) {
+          sessionStorage.setItem('previousPage', 'rooms');
+        }
+        
         setRoomId(currentRoomId);
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);

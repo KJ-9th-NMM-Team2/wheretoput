@@ -42,41 +42,59 @@ export const useChatMessages = (
     let cancelled = false;
 
     (async () => {
-      const { data } = await api.get(
-        `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
-        {
-          params: { limit: 50 },
-          headers: { Authorization: `Bearer ${token}` },
+      try {
+        const { data } = await api.get(
+          `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
+          {
+            params: { limit: 50 },
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (cancelled) return;
+        const history: Message[] = (data?.messages ?? data ?? []).map(
+          (m: any) => {
+            // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
+            const isImageMessage = m.content && m.content.startsWith('chat/') &&
+              /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+
+            return {
+              id: m.id ?? String(m.message_id),
+              roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
+              senderId: m.senderId ?? String(m.user_id),
+              senderName: m.senderName ?? "이름 없음",
+              senderImage: m.senderImage ?? "",
+              content: m.content,
+              message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
+              createdAt: m.createdAt ?? m.created_at,
+              status: "read",
+            };
+          }
+        );
+        console.log(
+          "Messages with avatars:",
+          history.map((h) => ({
+            senderName: h.senderName,
+            senderImage: h.senderImage,
+          }))
+        );
+        setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
+
+        // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
+        const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
+        if (receivedMessages.length > 0) {
+          s.emit("read", { roomId: selectedChatId });
+          onChatRoomUpdate(selectedChatId, {
+            last_read_at: new Date().toISOString()
+          });
         }
-      );
-
-      if (cancelled) return;
-      const history: Message[] = (data?.messages ?? data ?? []).map(
-        (m: any) => ({
-          id: m.id ?? String(m.message_id),
-          roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
-          senderId: m.senderId ?? String(m.user_id),
-          senderName: m.senderName ?? "이름 없음",
-          senderImage: m.senderImage ?? "",
-          content: m.content,
-          createdAt: m.createdAt ?? m.created_at,
-          status: "read",
-        })
-      );
-      console.log(
-        "Messages with avatars:",
-        history.map((h) => ({
-          senderName: h.senderName,
-          senderImage: h.senderImage,
-        }))
-      );
-      setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
-
-      // 읽음 처리
-      s.emit("read", { roomId: selectedChatId });
-      onChatRoomUpdate(selectedChatId, {
-        last_read_at: new Date().toISOString()
-      });
+      } catch (error) {
+        console.error("메시지 히스토리 로드 실패:", error);
+        // 오류 발생시 빈 배열로 설정하여 앱이 크래시되지 않도록 처리
+        if (!cancelled) {
+          setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: [] }));
+        }
+      }
     })();
 
     return () => {
@@ -92,6 +110,10 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
+      // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
+      const isImageMessage = m.content && m.content.startsWith('chat/') &&
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
+
       const msg: Message = {
         id: m.id ?? String(m.message_id),
         roomId: m.roomId ?? String(m.room_id),
@@ -99,6 +121,7 @@ export const useChatMessages = (
         senderName: m.sender?.name ?? m.user?.name,
         senderImage: m.sender?.image ?? m.user?.image,
         content: m.content,
+        message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,
         status: "sent",
       };
@@ -130,9 +153,9 @@ export const useChatMessages = (
       onChatRoomUpdate(msg.roomId, {
         lastMessage: msg.content,
         lastMessageAt: msg.createdAt,
-        // 내가 보낸 메시지이거나 현재 열린 채팅방의 메시지라면 읽음 처리
+        // 현재 열린 채팅방의 메시지이고 내가 받은 메시지만 읽음 처리
         last_read_at:
-          msg.senderId === currentUserId || msg.roomId === selectedChatId
+          msg.roomId === selectedChatId && msg.senderId !== currentUserId
             ? msg.createdAt
             : undefined,
         searchIndex: (msg.content ?? "").toLocaleLowerCase("ko-KR"),
@@ -150,12 +173,12 @@ export const useChatMessages = (
         const next = arr.map((m) =>
           m.id === ack.tempId
             ? {
-                ...m,
-                id: ack.realId,
-                status: "sent",
-                createdAt: ack.createdAt ?? m.createdAt,
-                tempId: undefined,
-              }
+              ...m,
+              id: ack.realId,
+              status: "sent",
+              createdAt: ack.createdAt ?? m.createdAt,
+              tempId: undefined,
+            }
             : m
         );
         return { ...prev, [selectedChatId]: next };
@@ -201,7 +224,7 @@ export const useChatMessages = (
 
   // 메시지 전송
   const onSendMessage = useCallback(
-    (roomId: string, content: string) => {
+    (roomId: string, content: string, messageType: "text" | "image" = "text") => {
       if (!token) return;
       const now = new Date().toISOString();
       const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
@@ -211,6 +234,7 @@ export const useChatMessages = (
         roomId,
         senderId: currentUserId,
         content,
+        message_type: messageType,
         createdAt: now,
         status: "sending",
       };
@@ -223,7 +247,7 @@ export const useChatMessages = (
       onChatRoomUpdate(roomId, {
         lastMessage: content,
         lastMessageAt: now,
-        last_read_at: now,
+        // 내가 보낸 메시지는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
         searchIndex: (content ?? "").toLocaleLowerCase("ko-KR"),
       });
 

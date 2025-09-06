@@ -1,88 +1,121 @@
-import { fetchUserById, fetchUserRooms } from "@/lib/api/users";
-import HouseCard from "@/components/search/HouseCard";
-import { auth } from "@/lib/auth";
+"use client";
 
-export default async function UserPage({
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import EditPopup from "@/components/sim/side/EditPopup";
+import UserTabs from "@/components/users/components/UserTabs";
+import UserNotFound from "@/components/users/UserNotFound";
+import { FollowsModal } from "@/app/follows/page";
+import { Follow } from "@/components/users/components/Follow";
+
+import { useFetchFollowing } from "@/components/users/hooks/useFetchFollowing";
+import { useRoomManagement } from "@/components/users/hooks/useRoomManagement";
+import { useFollowLogic } from "@/components/users/hooks/useFollowLogic";
+
+export default function UserPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const [user, setUser] = useState<any>(null);
+  const [userRooms, setUserRooms] = useState<any[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [followModalOpen, setFollowModalOpen] = useState(false);
+  const [followModalTab, setFollowModalTab] = useState<"followers" | "following">("followers");
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const { data: session } = useSession();
 
-  try {
-    const user = await fetchUserById(id);
+  // 1. 팔로워 목록 로딩 커스텀훅
+  useFetchFollowing({
+    params,
+    session,
+    setUser,
+    setUserRooms,
+    setIsOwner,
+    setFollowersCount,
+    setFollowingCount,
+    setIsFollowing,
+    setLoading
+  });
 
-    const session = await auth();
+  // 2. 방 삭제, 수정기능
+  const {
+    editingRoom,
+    setEditingRoom,
+    isDeleteMode,
+    selectedRooms,
+    setSelectedRooms,
+    handleSaveRoom,
+    handleDeleteRoom,
+    handleToggleDeleteMode,
+    handleBulkDelete
+  } = useRoomManagement({ userRooms, setUserRooms });
 
-    const isOwner = session?.user?.id === id;
+  // 3. 팔로우 / 언팔로우 로직
+  const {
+    followLoading,
+    handleFollowToggle
+  } = useFollowLogic({
+    user,
+    session,
+    isFollowing,
+    setIsFollowing,
+    setFollowersCount
+  });
 
-    // 접속한 사용자가 본인 페이지일 경우 비공개 방도 포함하여 조회
-    const userRooms = await fetchUserRooms(id, "short", "new", isOwner);
-    return (
-      <div className="px-40 py-5">
-        <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-amber-100 dark:bg-orange-600 flex items-center justify-center overflow-hidden">
-              {user.profile_image ? (
-                <img
-                  src={user.profile_image}
-                  alt={user.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl font-bold text-amber-700 dark:text-orange-200">
-                  {user.name?.[0]?.toUpperCase() || "?"}
-                </span>
-              )}
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                {user.display_name || user.name}
-              </h1>
-              <p className="text-amber-700 dark:text-orange-300 text-lg">
-                @{user.name}
-              </p>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">
-                공개 방 {user.public_rooms_count}개
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {user.display_name || user.name}님의 방들
-          </h2>
-        </div>
-
-        {userRooms.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
-            {userRooms.map((house: any) => (
-              <HouseCard key={house.room_id} house={house} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">
-              아직 공개된 방이 없습니다.
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error("Error fetching user data:", error);
-    return (
-      <div className="px-40 py-5">
-        <div className="text-center py-12">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            사용자를 찾을 수 없습니다
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            요청하신 사용자 정보를 불러올 수 없습니다.
-          </p>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <div className="px-40 py-5">Loading...</div>;
   }
+
+  if (!user) {
+    return <UserNotFound />;
+  }
+  return (
+    <div className="px-40 py-5">
+      <Follow 
+        user={user}
+        followersCount={followersCount}
+        followingCount={followingCount}
+        isFollowing={isFollowing}
+        followLoading={followLoading}
+        session={session}
+        setFollowModalTab={setFollowModalTab}
+        setFollowModalOpen={setFollowModalOpen}
+        handleFollowToggle={handleFollowToggle}
+      />
+
+      <UserTabs 
+        user={user} 
+        userRooms={userRooms}
+        isOwner={isOwner}
+        isDeleteMode={isDeleteMode}
+        selectedRooms={selectedRooms}
+        handleToggleDeleteMode={handleToggleDeleteMode}
+        handleBulkDelete={handleBulkDelete}
+        setSelectedRooms={setSelectedRooms}
+        setEditingRoom={setEditingRoom}
+      />
+
+      {editingRoom && (
+        <EditPopup
+          initialTitle={editingRoom.title}
+          initialDescription={editingRoom.description}
+          initialIsPublic={editingRoom.is_public}
+          onSave={handleSaveRoom}
+          onDelete={handleDeleteRoom}
+          onClose={() => setEditingRoom(null)}
+        />
+      )}
+
+      <FollowsModal
+        isOpen={followModalOpen}
+        onClose={() => setFollowModalOpen(false)}
+        initialTab={followModalTab}
+        userId={user?.user_id}
+      />
+    </div>
+  );
 }

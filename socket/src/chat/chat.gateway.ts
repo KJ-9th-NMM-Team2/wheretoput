@@ -171,16 +171,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       },
     });
 
-    // 메시지 보낸 사용자의 last_read_at 갱신 (자신이 보낸 메시지는 읽음 처리)
-    await this.prisma.chat_participants.updateMany({
-      where: {
-        chat_room_id: body.roomId,
-        user_id: userId,
-      },
-      data: {
-        last_read_at: new Date(),
-      },
-    });
+    // 메시지 보낸 사용자는 읽음 처리하지 않음 (상대방이 읽어야 읽음으로 표시)
 
     // ACK/브로드캐스트 테스트
     const mockMsg = {

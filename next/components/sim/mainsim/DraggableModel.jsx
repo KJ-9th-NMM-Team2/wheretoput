@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
+import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 
 export function DraggableModel({
   modelId,
@@ -190,14 +191,14 @@ export function DraggableModel({
       }
     };
 
-    window.addEventListener('historyMoveFurniture', handleHistoryMove);
-    window.addEventListener('historyRotateFurniture', handleHistoryRotate);
-    window.addEventListener('historyScaleFurniture', handleHistoryScale);
+    window.addEventListener("historyMoveFurniture", handleHistoryMove);
+    window.addEventListener("historyRotateFurniture", handleHistoryRotate);
+    window.addEventListener("historyScaleFurniture", handleHistoryScale);
 
     return () => {
-      window.removeEventListener('historyMoveFurniture', handleHistoryMove);
-      window.removeEventListener('historyRotateFurniture', handleHistoryRotate);
-      window.removeEventListener('historyScaleFurniture', handleHistoryScale);
+      window.removeEventListener("historyMoveFurniture", handleHistoryMove);
+      window.removeEventListener("historyRotateFurniture", handleHistoryRotate);
+      window.removeEventListener("historyScaleFurniture", handleHistoryScale);
     };
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
@@ -238,6 +239,11 @@ export function DraggableModel({
           scale={safeScale}
         >
           <primitive object={scene.clone()} />
+          <ModelTooltip 
+            modelId={modelId} 
+            position={position} 
+            boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
+          />
         </group>
       ) : (
         <group
@@ -269,6 +275,12 @@ export function DraggableModel({
               />
             </mesh>
           )}
+          
+          <ModelTooltip 
+            modelId={modelId} 
+            position={position} 
+            boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
+          />
         </group>
       )}
     </>

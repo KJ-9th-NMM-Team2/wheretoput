@@ -1,7 +1,8 @@
 // 채팅방 대화 화면 컴포넌트
 // 개별 채팅방에서 메시지들을 보여주고 메시지를 입력할 수 있는 화면
 
-import { forwardRef } from "react";
+import { forwardRef, useRef, useState } from "react";
+import { MdImage, MdClose } from "react-icons/md";
 import MessageBubble from "./shared/MessageBubble";
 import { ChatListItem, Message } from "../types/chat-types";
 import { shouldShowAvatar, shouldShowTimestamp } from "../utils/chat-utils";
@@ -12,6 +13,7 @@ interface ChatRoomViewProps {
   text: string;
   setText: (text: string) => void;
   send: () => void;
+  onSendMessage: (roomId: string, content: string, messageType?: "text" | "image") => void;
   onEditorKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onBack: () => void;
   currentUserId: string | null;
@@ -24,10 +26,101 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
     text,
     setText,
     send,
+    onSendMessage,
     onEditorKeyDown,
     onBack,
     currentUserId,
   }, listRef) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedImage, setSelectedImage] = useState<{
+      file: File;
+      preview: string;
+    } | null>(null);
+
+    const handleImageClick = () => {
+      fileInputRef.current?.click();
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendWithImage();
+      }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        // URL.createObjectURL로 미리보기 생성
+        const imageUrl = URL.createObjectURL(file);
+        setSelectedImage({
+          file,
+          preview: imageUrl
+        });
+
+        // input 값 초기화 (같은 파일을 다시 선택할 수 있도록)
+        e.target.value = '';
+      }
+    };
+
+    const removeSelectedImage = () => {
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage.preview);
+        setSelectedImage(null);
+      }
+    };
+
+    const sendWithImage = async () => {
+      try {
+
+        // 1. 이미지가 있으면 별도 메시지로 전송
+        if (selectedImage) {
+          console.log('이미지 전송 시작:', selectedImage.file);
+
+          // FormData 생성
+          const formData = new FormData();
+          formData.append('image', selectedImage.file);
+
+          // TODO: 실제 이미지 업로드 API 호출
+          const response = await fetch('/api/chat/upload-image', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (response.ok) {
+            const { imageUrl } = await response.json();
+
+            // 이미지 메시지 전송 
+            console.log('이미지 업로드 완료, S3 Key:', imageUrl);
+
+            if (selectedChat?.chat_room_id) {
+              // 이미지 메시지는 content에 S3 키를 저장, 타입은 "image"
+              onSendMessage(selectedChat.chat_room_id, imageUrl, "image");
+            }
+
+            // 2. 이미지 전송후 메시지 보내기
+            if (text.trim()) {
+              send();
+              setText('');
+            }
+
+          } else {
+            console.error('이미지 업로드 실패');
+          }
+
+          // 전송 후 정리
+          removeSelectedImage();
+        } else {
+          // 3. 이미지가 없으면 텍스트만 전송
+          if (text.trim()) {
+            send();
+            setText('');
+          }
+        }
+      } catch (error) {
+        console.error('메시지 전송 오류:', error);
+      }
+    };
     return (
       <div className="flex flex-col h-full">
         <header className="px-3 py-2 flex items-center justify-between text-xl">
@@ -38,7 +131,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
           </div>
           <button
             onClick={onBack}
-            className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer"
+            className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer transition-transform hover:scale-110"
           >
             ←
           </button>
@@ -71,23 +164,62 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
 
         {/* 푸터 */}
         <footer className="border-t border-gray-200 p-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
+
+          {/* 이미지 미리보기 */}
+          {selectedImage && (
+            <div className="mb-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+              <div className="flex items-start gap-3">
+                <img
+                  src={selectedImage.preview}
+                  alt="미리보기"
+                  className="w-20 h-20 object-cover rounded-lg border"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{selectedImage.file.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {(selectedImage.file.size / 1024 / 1024).toFixed(2)}MB
+                  </p>
+                </div>
+                <button
+                  onClick={removeSelectedImage}
+                  className="p-1 rounded-full hover:bg-gray-200 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <MdClose size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2 items-end">
+            {/* 이미지 버튼 */}
+            <button
+              onClick={handleImageClick}
+              className="px-2 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer transition-transform hover:scale-110"
+            >
+              <MdImage size={20} />
+            </button>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              onKeyDown={onEditorKeyDown}
+              onKeyDown={handleKeyDown}
               placeholder="메시지 입력..."
               rows={1}
               className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 max-h-40"
             />
             <button
-              onClick={send}
-              disabled={!text.trim()}
-              className={`px-3 py-2 rounded-lg text-white cursor-pointer ${
-                text.trim()
-                  ? "bg-orange-500 hover:bg-orange-600"
-                  : "bg-gray-300 cursor-not-allowed"
-              }`}
+              onClick={sendWithImage}
+              disabled={!text.trim() && !selectedImage}
+              className={`px-3 py-2 rounded-lg text-white cursor-pointer transition-transform ${text.trim() || selectedImage
+                ? "bg-orange-500 hover:bg-orange-600 hover:scale-105"
+                : "bg-gray-300 cursor-not-allowed"
+                }`}
             >
               전송
             </button>
