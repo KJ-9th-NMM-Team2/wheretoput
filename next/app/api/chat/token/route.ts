@@ -23,9 +23,15 @@ import jwt from "jsonwebtoken";
 
 // 토큰이 유효한지 체크하는 API
 export async function GET(req: Request) {
+  const cookieName =
+    process.env.NODE_ENV === "production"
+      ? "__Secure-authjs.session-token"
+      : "authjs.session-token";
+
   const token = await getToken({
     req: req,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName: cookieName,
   });
 
   if (!token) {
