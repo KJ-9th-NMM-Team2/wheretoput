@@ -13,6 +13,9 @@ async function bootstrap() {
       credentials: true,
     });
 
+    console.log('Setting global prefix...');
+    app.setGlobalPrefix('api/socket');
+
     console.log('Starting server on port 3001...');
     await app.listen(3001, '0.0.0.0');
     console.log('✅ Socket server is running on port 3001');
