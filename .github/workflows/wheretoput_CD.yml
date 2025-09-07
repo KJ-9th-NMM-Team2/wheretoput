@@ -98,6 +98,7 @@ jobs:
           REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           AUTH_TRUST_HOST=true
+          IMAGE=latest
           EOF
 
       - name: Upload files to Next.js EC2
@@ -151,6 +152,7 @@ jobs:
           REDIS_URL=${{ secrets.REDIS_URL }}
           ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
           ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
+          IMAGE=latest
           EOF
 
       - name: Upload files to NestJS EC2
