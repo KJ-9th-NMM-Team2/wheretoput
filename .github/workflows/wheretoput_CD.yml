@@ -103,7 +103,7 @@ jobs:
       - name: Upload files to Next.js EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_NEXT }}
+          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           source: "docker-compose.next.yml,.env.production"
@@ -113,7 +113,7 @@ jobs:
       - name: Deploy Next.js on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_NEXT }}
+          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           script: |
@@ -156,7 +156,7 @@ jobs:
       - name: Upload files to NestJS EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_SOCKET }}
+          host: ${{ secrets.EC2_SSH_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           source: "docker-compose.socket.yml,.env.production"
@@ -166,7 +166,7 @@ jobs:
       - name: Deploy NestJS on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_SOCKET }}
+          host: ${{ secrets.EC2_SSH_HOST_SOCKET }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           script: |
