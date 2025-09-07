@@ -1,6 +1,7 @@
 name: CD — deploy on dev→main merge
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: ["main"]
     types: [closed]
@@ -19,7 +20,7 @@ concurrency:
 jobs:
   build-and-push:
     if: >-
-      ${{ github.event.pull_request.merged == true &&
+      ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true &&
           github.event.pull_request.base.ref == 'main' &&
           github.event.pull_request.head.ref == 'dev' }}
     runs-on: ubuntu-latest
@@ -49,6 +50,10 @@ jobs:
           context: next
           file: next/Dockerfile.prod
           push: true
+          build-args: |
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_IMAGE_BASE_URL=${{ secrets.NEXT_PUBLIC_IMAGE_BASE_URL }}
           tags: |
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:${{ github.sha }}
             ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:latest
@@ -93,8 +98,6 @@ jobs:
           REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           AUTH_TRUST_HOST=true
-          NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
-          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           EOF
 
       - name: Upload files to Next.js EC2
