@@ -60,6 +60,9 @@ COPY --from=builder /app/prisma ./prisma
 # package.json 복사 (실행 시 필요)
 COPY --from=builder /app/package.json ./
 
+# reflect-metadata 복사
+COPY --from=builder /app/node_modules/reflect-metadata ./node_modules/reflect-metadata
+
 USER nestjs
 
 EXPOSE 3001
