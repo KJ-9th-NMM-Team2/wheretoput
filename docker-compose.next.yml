@@ -4,7 +4,7 @@ services:
   next:
     image: ${ECR_REGISTRY}/${ECR_REPO_NEXT}:${IMAGE_TAG}
     ports:
-      - "${EC2_HOST_NEXT:-3000}:3000"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
