@@ -45,6 +45,9 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs \
    && adduser --system --uid 1001 nestjs
 
+# node_modules 복사 (런타임 deps만)
+COPY --from=deps /app/node_modules ./node_modules
+
 # 생성된 Prisma 클라이언트 복사
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
@@ -53,15 +56,8 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# 빌드된 애플리케이션 복사
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
-
 # package.json 복사 (실행 시 필요)
 COPY --from=builder /app/package.json ./
-
-# reflect-metadata 복사
-COPY --from=builder /app/node_modules/reflect-metadata ./node_modules/reflect-metadata
 
 USER nestjs
 
