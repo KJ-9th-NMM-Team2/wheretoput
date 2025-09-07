@@ -24,6 +24,8 @@ WORKDIR /app
 COPY --from=dev-deps /app/node_modules ./node_modules
 COPY . .
 
+# 이 위치에서 reflect-metadata 패키지 설치
+RUN npm install reflect-metadata
 # Prisma 클라이언트 생성 (빌드 전에)
 RUN npx prisma generate
 
