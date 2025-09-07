@@ -161,7 +161,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
           source: "docker-compose.socket.yml,.env.production"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/socket/
-          timeout: 120s
+          timeout: 60s
       
       - name: Deploy NestJS on EC2
         uses: appleboy/ssh-action@v1.0.3
