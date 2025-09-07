@@ -148,6 +148,9 @@ jobs:
           EC2_HOST_NEXT=${{ secrets.EC2_HOST_NEXT }}
           NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+          ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
           EOF
 
       - name: Upload files to NestJS EC2
