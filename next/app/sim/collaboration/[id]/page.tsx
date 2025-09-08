@@ -13,6 +13,12 @@ import { connectSocket, getSocket } from "@/lib/client/socket";
 import { useSession } from "next-auth/react";
 import { getColab, toggleColab } from "@/lib/api/toggleColab";
 import { useRouter } from "next/navigation";
+import GameStyleChatPopup from "@/components/chat/components/GameStyleChatPopup";
+import CollaborationChatRoomSelector from "@/components/chat/components/CollaborationChatRoomSelector";
+import { useChatConnection } from "@/components/chat/hooks/useChatConnection";
+import { useChatMessages } from "@/components/chat/hooks/useChatMessages";
+import { useChatRooms } from "@/components/chat/hooks/useChatRooms";
+import { formatRelativeTime } from "@/components/chat/utils/chat-utils";
 
 // 가독성 있는 색상 생성 함수
 function generateReadableColor() {
@@ -50,6 +56,26 @@ function CollaborationPageContent({
   const [isOwner, setIsOwner] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
+
+  // 채팅 관련 상태와 훅
+  const [isChatFocused, setIsChatFocused] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  
+  const { token } = useChatConnection(true); // 항상 연결
+  
+  const {
+    selectedMessages,
+    text,
+    setText,
+    onSendMessage,
+    onEditorKeyDown
+  } = useChatMessages(
+    true, // 항상 활성화
+    selectedChatId, // 선택된 채팅방 ID
+    token,
+    session?.user?.id || null,
+    () => {} // updateChatRoom은 빈 함수로
+  );
 
   // 협업 모드 초기 설정
   useEffect(() => {
@@ -193,25 +219,49 @@ function CollaborationPageContent({
   };
 
   return (
-    <SimulatorCore
-      roomId={roomId}
-      showSidebar={true}
-      showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
-      showEditControls={true}
-      additionalUI={
-        <>
-          <ConnectedUsersList />
-          {/* 방 소유자에게만 협업 종료 버튼 표시 */}
-          {isOwner && (
-            <CollaborationEndButton
-              onEndCollaboration={handleEndCollaboration}
-            />
-          )}
-        </>
-      }
-      loadingMessage="협업 모드 로딩 중..."
-      loadingIcon="🤝"
-    />
+    <>
+      <SimulatorCore
+        roomId={roomId}
+        showSidebar={true}
+        showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
+        showEditControls={true}
+        keyboardControlsDisabled={isChatFocused} // 채팅 입력 중일 때 키보드 컨트롤 비활성화
+        additionalUI={
+          <>
+            <ConnectedUsersList />
+            {/* 방 소유자에게만 협업 종료 버튼 표시 */}
+            {isOwner && (
+              <CollaborationEndButton
+                onEndCollaboration={handleEndCollaboration}
+              />
+            )}
+            {/* 채팅방 선택 버튼 - 로그인한 사용자에게만 표시 */}
+            {session?.user?.id && (
+              <CollaborationChatRoomSelector
+                selectedChatId={selectedChatId}
+                onChatSelect={setSelectedChatId}
+                currentUserId={session.user.id}
+              />
+            )}
+          </>
+        }
+        loadingMessage="협업 모드 로딩 중..."
+        loadingIcon="🤝"
+      />
+      
+      {/* 게임 스타일 채팅 UI - 로그인한 사용자가 채팅방을 선택한 경우에만 표시 */}
+      {session?.user?.id && selectedChatId && (
+        <GameStyleChatPopup
+          isVisible={true}
+          messages={selectedMessages}
+          text={text}
+          setText={setText}
+          onSendMessage={(content) => selectedChatId && onSendMessage(selectedChatId, content)}
+          onChatFocus={setIsChatFocused}
+          currentUserId={session.user.id}
+        />
+      )}
+    </>
   );
 }
 
