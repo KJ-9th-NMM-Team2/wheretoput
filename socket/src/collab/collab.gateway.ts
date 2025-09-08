@@ -569,6 +569,98 @@ export class CollabGateway {
     }
   }
 
+  // 벽 색상 변경
+  @SubscribeMessage('wall-color-changed')
+  async onWallColorChanged(
+    @MessageBody() data: { userId: string; color: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🎨 WALL COLOR CHANGED: ${data.color} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('wall-color-changed', data);
+      }
+    });
+  }
+
+  // 바닥 색상 변경
+  @SubscribeMessage('floor-color-changed')
+  async onFloorColorChanged(
+    @MessageBody() data: { userId: string; color: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🎨 FLOOR COLOR CHANGED: ${data.color} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('floor-color-changed', data);
+      }
+    });
+  }
+
+  // 배경 색상 변경
+  @SubscribeMessage('background-color-changed')
+  async onBackgroundColorChanged(
+    @MessageBody() data: { userId: string; color: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🎨 BACKGROUND COLOR CHANGED: ${data.color} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('background-color-changed', data);
+      }
+    });
+  }
+
+  // 환경 프리셋 변경
+  @SubscribeMessage('environment-preset-changed')
+  async onEnvironmentPresetChanged(
+    @MessageBody() data: { userId: string; preset: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🌟 ENVIRONMENT PRESET CHANGED: ${data.preset} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('environment-preset-changed', data);
+      }
+    });
+  }
+
   // 미활동 사용자 연결해제
   // @Cron('0 */5 * * * *') // 5분에 1번씩 실행
   // async cleanupInactiveUsers() {

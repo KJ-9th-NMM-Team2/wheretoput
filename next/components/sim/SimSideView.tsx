@@ -22,6 +22,7 @@ const SideViewContent: React.FC<{roomId: string}> = ({ roomId }) => {
   const handleCategorySelect = (category: string) => {
     setSearchResults([]);
     setSelectedCategory(category);
+    setSearchQuery("");
   }
 
   const handleSearchResults = (results: Furniture[]) => {
@@ -43,12 +44,11 @@ const SideViewContent: React.FC<{roomId: string}> = ({ roomId }) => {
         <SideSearch collapsed={collapsed} onSearchResults={handleSearchResults} resetQuery={searchQuery} selectedCategory={selectedCategory} />
         
         {/* 히스토리 컨트롤 - 카테고리 바로 위에 배치 */}
-        <HistoryControls collapsed={collapsed} />
+        <HistoryControls collapsed={collapsed} onCategorySelect={handleCategorySelect}/>
         
         <SideCategories 
           collapsed={collapsed}
           onCategorySelect={handleCategorySelect}
-          setSearchQuery={setSearchQuery}
           totalPrice={totalPrice}
         />
         
