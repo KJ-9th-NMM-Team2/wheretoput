@@ -65,7 +65,7 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
           rotateSpeed={0.8} // 회전 속도 증가
           panSpeed={1.0}
           zoomSpeed={0.8} // 줌 속도 증가
-          minDistance={5} // 최소 거리 줄임
+          minDistance={1} // 최소 거리 줄임
           maxDistance={50} // 최대 거리 증가
           maxPolarAngle={Math.PI * 0.95} // 바닥 아래로 안 가게
           minPolarAngle={Math.PI * 0.05} // 천장 너무 위로 안 가게

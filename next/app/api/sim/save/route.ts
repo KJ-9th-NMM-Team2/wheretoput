@@ -89,7 +89,14 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { room_id, objects } = body;
+    const {
+      room_id,
+      objects,
+      wallColor,
+      floorColor,
+      backgroundColor,
+      environmentPreset,
+    } = body;
 
     // 필수 파라미터 확인
     if (!room_id || !objects || !Array.isArray(objects)) {
@@ -155,10 +162,16 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 3. rooms 테이블의 updated_at 갱신
+      // 3. rooms 테이블의 updated_at 및 색상 갱신
       await tx.rooms.update({
         where: { room_id: room_id },
-        data: { updated_at: new Date() },
+        data: {
+          updated_at: new Date(),
+          wall_color: wallColor,
+          floor_color: floorColor,
+          background_color: backgroundColor,
+          environment_preset: environmentPreset,
+        },
       });
     });
 

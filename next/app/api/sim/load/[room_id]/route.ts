@@ -271,6 +271,11 @@ export async function GET(
 
     console.log(`최종 변환된 벽 개수: ${walls.length}`);
 
+    // 6. 벽, 바닥, 배경색 정보
+    const wall_color = room.wall_color || "#ffffff";
+    const floor_color = room.floor_color || "#d2b48c";
+    const background_color = room.background_color || "#87ceeb";
+    const environment_preset = room.environment_preset || "apartment";
     const result: any = {
       success: true,
       room_id: room_id,
@@ -284,6 +289,10 @@ export async function GET(
         is_public: room.is_public,
         updated_at: room.updated_at,
       },
+      wall_color: wall_color,
+      floor_color: floor_color,
+      background_color: background_color,
+      environment_preset: environment_preset,
     };
     return Response.json(result);
   } catch (error) {
