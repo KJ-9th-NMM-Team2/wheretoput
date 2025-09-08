@@ -26,7 +26,6 @@ export function ArchievementToast() {
                 setTimeout(checkSession, 1000);
                 return;
             }
-            console.log("achievements", achievements);
 
             for (let i=0; i<achievements.length; i++) {
                 setTimeout(() => {

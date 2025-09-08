@@ -54,9 +54,9 @@ export const useChatConnection = (open: boolean) => {
       });
 
       const data = await res.json();
-      console.log("토큰 응답:", data);
+      
       const token = data["tokenData"]?.["jti"] || data.token;
-      console.log("추출된 토큰:", token);
+      
       setToken(token);
       setAuthToken(token);
       // 이후부터 api.get/post가 자동으로 Authorization 포함

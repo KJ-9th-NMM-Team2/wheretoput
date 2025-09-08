@@ -411,10 +411,10 @@ export const useStore = create(
 
       // 선택, 마우스 호버링 관련
       selectModel: (modelId, shouldBroadcast = true) => {
-        console.log("📍 selectModel called:", { modelId, shouldBroadcast });
+    
         set({ selectedModelId: modelId });
         if (shouldBroadcast) {
-          console.log("📡 Calling broadcastWithThrottle for select");
+         
           get().broadcastWithThrottle("broadcastModelSelect", modelId, null, 0);
         }
       },
@@ -636,7 +636,7 @@ export const useStore = create(
             throw new Error(`복제 실패: ${furnResponse.statusText}`);
           }
 
-          console.log("시뮬레이터 상태 복제 완료:");
+          
           return { room_id: clonedId };
         } catch (error) {
           console.error("복제 중 오류:", error);
@@ -826,7 +826,7 @@ export const useStore = create(
 
           const result = await response.json();
           set({ lastSavedAt: new Date() });
-          console.log("시뮬레이터 상태 저장 완료:", result);
+          // console.log("시뮬레이터 상태 저장 완료:", result);
           return result;
         } catch (error) {
           console.error("저장 중 오류:", error);
@@ -874,7 +874,6 @@ export const useStore = create(
                 // scale이 없거나 잘못된 형태인 경우 기본값 1 사용
                 scale = 1;
               }
-              console.log("obj", obj);
 
               return {
                 id: obj.id,
@@ -930,9 +929,6 @@ export const useStore = create(
             },
           });
 
-          console.log(
-            `시뮬레이터 상태 로드 완료: ${result.loaded_count}개 객체, ${wallsData.length}개 벽`
-          );
           return result;
         } catch (error) {
           console.error("로드 중 오류:", error);

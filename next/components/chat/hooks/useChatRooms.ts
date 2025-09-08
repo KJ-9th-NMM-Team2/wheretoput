@@ -25,7 +25,6 @@ export const useChatRooms = (
   // 방 목록 로드
   useEffect(() => {
     if (!open || !token) {
-      console.log("[ROOMS] 스킵 - open:", open, "token:", !!token);
       return;
     }
 

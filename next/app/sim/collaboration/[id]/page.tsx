@@ -17,16 +17,16 @@ import { useRouter } from "next/navigation";
 // 가독성 있는 색상 생성 함수
 function generateReadableColor() {
   const colors = [
-    '#3B82F6', // blue
-    '#EF4444', // red
-    '#10B981', // green
-    '#F59E0B', // yellow
-    '#8B5CF6', // violet
-    '#EC4899', // pink
-    '#06B6D4', // cyan
-    '#84CC16', // lime
-    '#F97316', // orange
-    '#6366F1', // indigo
+    "#3B82F6", // blue
+    "#EF4444", // red
+    "#10B981", // green
+    "#F59E0B", // yellow
+    "#8B5CF6", // violet
+    "#EC4899", // pink
+    "#06B6D4", // cyan
+    "#84CC16", // lime
+    "#F97316", // orange
+    "#6366F1", // indigo
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 }
@@ -179,7 +179,7 @@ function CollaborationPageContent({
         if (result.success) {
           collaboration.broadcastCollaborationEnd();
           await saveSimulatorState(); // 종료 전 DB에 저장
-          console.log("협업 모드를 종료했습니다");
+
           router.push(`/sim/${roomId}`);
         } else {
           console.error("협업 모드 종료 실패:", result.error);
