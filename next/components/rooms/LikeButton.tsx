@@ -33,6 +33,7 @@ export default function LikeButton({
     setIsLoading(true);
     try {
       console.log(session);
+      // fetchPostLike (/lib/api/likes.ts) 호출
       const result = await fetchPostLike(room.room_id, session.user.id);
       if (result.success) {
         // 성공 시에만 UI 업데이트

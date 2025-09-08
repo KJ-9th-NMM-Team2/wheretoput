@@ -6,10 +6,13 @@ async function bootstrap() {
   try {
     console.log('Starting NestJS application...');
     const app = await NestFactory.create(AppModule);
-    
+
     console.log('Setting up CORS...');
     app.enableCors({
-      origin: process.env.EC2_HOST_NEXT || '*',
+      origin: [
+        /^http:\/\/localhost:\d+$/,
+        process.env.EC2_HOST_NEXT || 'https://wheretoput.store',
+      ],
       credentials: true,
     });
 

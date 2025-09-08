@@ -4,8 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { generateTrellisModel } from '../../trellis_api.js'
 import path from 'path'
 import fs from 'fs/promises'
-import https from 'https'
-import { createWriteStream } from 'fs'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 import { readFileSync } from 'fs'
 
@@ -40,33 +38,6 @@ async function uploadToS3(filePath, key, contentType) {
   }
 }
 
-// URL에서 이미지를 다운로드하는 함수
-async function downloadImage(imageUrl, localPath) {
-  return new Promise((resolve, reject) => {
-    const file = createWriteStream(localPath)
-    
-    https.get(imageUrl, (response) => {
-      if (response.statusCode !== 200) {
-        reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`))
-        return
-      }
-      
-      response.pipe(file)
-      
-      file.on('finish', () => {
-        file.close()
-        resolve(localPath)
-      })
-      
-      file.on('error', (err) => {
-        fs.unlink(localPath).catch(() => {}) // 실패한 파일 삭제
-        reject(err)
-      })
-    }).on('error', (err) => {
-      reject(err)
-    })
-  })
-}
 
 export async function POST(request) {
   try {
@@ -133,44 +104,13 @@ export async function POST(request) {
 
     console.log('가구 정보:', furniture.name, furniture.image_url)
 
-    // 2. 이미지 URL에서 로컬로 다운로드
-    const timestamp = Date.now()
-    const imageExtension = path.extname(new URL(furniture.image_url).pathname) || '.png'
-    const localImageName = `temp_${furniture_id}_${timestamp}${imageExtension}`
-    const localImagePath = path.join(process.cwd(), 'temp', localImageName)
-    
-    // temp 폴더가 없으면 생성
-    const tempDir = path.join(process.cwd(), 'temp')
-    try {
-      await fs.access(tempDir)
-    } catch {
-      await fs.mkdir(tempDir, { recursive: true })
-    }
+    console.log('가구 이미지 URL 확인됨:', furniture.image_url)
 
-    console.log('이미지 다운로드 중...', furniture.image_url)
-    await downloadImage(furniture.image_url, localImagePath)
-    console.log('이미지 다운로드 완료:', localImageName)
-
-    // 3. 임시 폴더 생성 (3D 모델 변환용)
-    const tempModelDir = path.join(process.cwd(), 'temp')
-    try {
-      await fs.access(tempModelDir)
-    } catch {
-      await fs.mkdir(tempModelDir, { recursive: true })
-      console.log('temp 폴더 생성됨')
-    }
-
-    // 4. 깔끔한 3D 모델 파일명 생성 (S3 업로드용)
-    const cleanName = furniture.name.replace(/[^a-zA-Z0-9가-힣]/g, '').substring(0, 20) // 특수문자 제거, 20자 제한
-    const randomId = Math.random().toString(36).substring(2, 15)
-    const modelBaseName = `${cleanName}_${furniture_id.substring(0, 8)}` // furniture_id 앞 8자리만 사용
-    const tempModelPath = path.join(tempModelDir, `${modelBaseName}.temp`) // 임시 경로
-    
-    // 5. Trellis API를 사용해 3D 모델로 변환
+    // 2. Trellis API를 사용해 3D 모델로 변환
     console.log('이미지를 3D 모델로 변환 중...')
     const result = await generateTrellisModel(furniture_id, furniture.image_url)
     
-    // 6. Trellis API 결과 처리 (이미 S3 업로드 및 DB 업데이트가 완료됨)
+    // 3. Trellis API 결과 처리 (이미 S3 업로드 및 DB 업데이트가 완료됨)
     if (result.success && result.model_url) {
       console.log('Trellis API 3D 변환 및 S3 업로드 완료:', result.model_url)
       const s3Url = result.model_url
@@ -178,13 +118,6 @@ export async function POST(request) {
       
       console.log('3D 변환 성공:', finalFilename)
 
-      // 7. 임시 파일 정리
-      try {
-        await fs.unlink(localImagePath)
-        console.log('임시 이미지 파일 삭제 완료')
-      } catch (err) {
-        console.warn('임시 이미지 파일 삭제 실패:', err.message)
-      }
 
       console.log('S3 업로드 및 DB 업데이트 완료:', s3Url)
 

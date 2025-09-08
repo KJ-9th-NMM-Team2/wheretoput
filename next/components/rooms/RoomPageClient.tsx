@@ -8,7 +8,7 @@ import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
 import { View } from "lucide-react";
-import { Span } from "next/dist/trace";
+import { FaEye } from "react-icons/fa";
 
 interface RoomPageClientProps {
   room: any;
@@ -105,7 +105,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   </button>
                 </Link>
                 <span className="flex items-center gap-1">
-                  <View size={20} />
+                  <FaEye size={20} className="mr-1"/>
                   {room.view_count}
                 </span>
                 {!loading && <LikeButton room={room} liked={liked} />}

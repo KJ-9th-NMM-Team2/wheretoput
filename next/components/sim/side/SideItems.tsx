@@ -137,18 +137,18 @@ const SideItems: React.FC<SideItemsProps> = ({
           const newModel = createNewModel(item, result.model_url);
           const modelId = crypto.randomUUID();
           const modelWithId = { ...newModel, id: modelId };
-          
+
           toast.success(`${item.name} 생성 완료`, { id: toastId });
           addModel(modelWithId);
-          
+
           // 히스토리에 가구 추가 액션 기록
           addAction({
             type: ActionType.FURNITURE_ADD,
             data: {
               furnitureId: modelId,
-              previousData: modelWithId
+              previousData: modelWithId,
             },
-            description: `${item.name} 추가`
+            description: `${item.name} 추가`,
           });
         } else {
           throw new Error(result.error || `${item.name} 생성 실패`);
@@ -160,17 +160,17 @@ const SideItems: React.FC<SideItemsProps> = ({
         const newModel = createNewModel(item);
         const modelId = crypto.randomUUID();
         const modelWithId = { ...newModel, id: modelId };
-        
+
         addModel(modelWithId);
-        
+
         // 히스토리에 가구 추가 액션 기록
         addAction({
           type: ActionType.FURNITURE_ADD,
           data: {
             furnitureId: modelId,
-            previousData: modelWithId
+            previousData: modelWithId,
           },
-          description: `${item.name} 추가`
+          description: `${item.name} 추가`,
         });
       }
     },
@@ -183,14 +183,19 @@ const SideItems: React.FC<SideItemsProps> = ({
   }, []);
 
   // 가구 선택 핸들러 (배치한 가구목록에서 카드 클릭 시)
-  const handleSelectModel = useCallback((item: Furniture) => {
-    // loadedModels에서 해당 furniture_id를 가진 모델 찾기
-    const modelToSelect = loadedModels.find(model => model.furniture_id === item.furniture_id);
-    
-    if (modelToSelect) {
-      selectModel(modelToSelect.id);
-    }
-  }, [loadedModels, selectModel]);
+  const handleSelectModel = useCallback(
+    (item: Furniture) => {
+      // loadedModels에서 해당 furniture_id를 가진 모델 찾기
+      const modelToSelect = loadedModels.find(
+        (model) => model.furniture_id === item.furniture_id
+      );
+
+      if (modelToSelect) {
+        selectModel(modelToSelect.id);
+      }
+    },
+    [loadedModels, selectModel]
+  );
 
   // collapsed 상태일 때는 아무것도 렌더링하지 않음
   if (collapsed) {
