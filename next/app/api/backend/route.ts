@@ -22,10 +22,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
     try {
+        console.log("유저 목록 불러오기 111111");
         const searchParams = new URL(req.url).searchParams;
         const query = searchParams.get('q') || '';
         const limit = parseInt(searchParams.get('limit') || "10");
-
+        console.log("유저 목록 불러오기 2222222");
         const users = await prisma.user.findMany({
             where: {
                 name: {
@@ -35,6 +36,9 @@ export async function GET(req: Request) {
             },
             take: limit,
         })
+
+        console.log("유저 목록 불러오기 33333333");
+        console.log("유저 목록 보기", users);
 
         if (!users) {
             return Response.json({ error: "사용자를 찾을 수 없습니다." }, { status: 404 })
