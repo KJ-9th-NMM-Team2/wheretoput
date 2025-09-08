@@ -15,7 +15,6 @@ export function DraggableModel({
   length = [1, 1, 1],
   controlsRef,
   texturePath = null,
-  isCityKit = false,
   type = "glb",
 }) {
   // scale 값을 안전하게 처리
@@ -121,36 +120,13 @@ export function DraggableModel({
             }
             child.material.needsUpdate = true;
           }
-
-          // City Kit 텍스처 적용
-          if (isCityKit && texture) {
-            const newMaterial = child.material.clone();
-            newMaterial.map = texture;
-            newMaterial.transparent = false;
-            newMaterial.opacity = 1;
-            newMaterial.needsUpdate = true;
-            child.material = newMaterial;
-          }
         }
       });
 
       // 전체 group도 visible 설정
       meshRef.current.visible = true;
     }
-  }, [scene, animations, modelId, isCityKit, texture, type, safeScale]);
-
-  // City Kit 텍스처 재적용 (선택된 경우)
-  useFrame((state, delta) => {
-    // City Kit 텍스처 재적용
-    if (isSelected && meshRef.current && isCityKit && texture) {
-      meshRef.current.traverse((child) => {
-        if (child.isMesh && child.material && !child.material.map) {
-          child.material.map = texture;
-          child.material.needsUpdate = true;
-        }
-      });
-    }
-  });
+  }, [scene, animations, modelId, texture, type, safeScale]);
 
   // 전역 이벤트 리스너
   useEffect(() => {
