@@ -90,7 +90,7 @@
 ┌────────────────────┐
 │  External Services │
 └────────────────────┘
-├── 🤖 AI: Claude Sonnet 4 (Image-to-3D)
+├── 🤖 AI: Trellis (Image-to-3D)
 ├── 🗄️ DB: PostgreSQL (Metadata Storage)
 └── 📦 Storage: Amazon S3 (File Storage)
 ```
@@ -100,7 +100,7 @@
 - **Frontend**: Next.js, React, React Three Fiber, OpenCV.js, Socket.io-client
 - **Backend (Socket)**: NestJS, Socket.io
 - **Database**: PostgreSQL
-- **AI**: Claude Sonnet 4
+- **AI**: Trellis
 - **Storage**: Amazon S3
 - **DevOps**: Docker, Amazon EC2
 
