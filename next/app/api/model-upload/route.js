@@ -4,39 +4,6 @@ import { prisma } from '@/lib/prisma'
 import { generateTrellisModel } from '../../trellis_api.js'
 import path from 'path'
 import fs from 'fs/promises'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { readFileSync } from 'fs'
-
-// S3 클라이언트 설정
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-// S3에 파일 업로드 함수
-async function uploadToS3(filePath, key, contentType) {
-  try {
-    const fileContent = readFileSync(filePath);
-    
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: key,
-      Body: fileContent,
-      ContentType: contentType,
-    });
-    
-    await s3Client.send(command);
-    
-    // S3 URL 반환
-    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-  } catch (error) {
-    console.error('S3 업로드 실패:', error);
-    throw error;
-  }
-}
 
 
 export async function POST(request) {
