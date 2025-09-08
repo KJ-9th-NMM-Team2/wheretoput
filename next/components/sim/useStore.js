@@ -50,7 +50,8 @@ export const useStore = create(
     return {
       // 선택된 카테고리
       selectedCategory: -2,
-      setSelectedCategory: (categoryId) => set({ selectedCategory: categoryId }),
+      setSelectedCategory: (categoryId) =>
+        set({ selectedCategory: categoryId }),
 
       // 보기/편집 모드
       viewOnly: false,
@@ -461,7 +462,9 @@ export const useStore = create(
       setEnvironmentPreset: (preset, shouldBroadcast = true) => {
         set({ environmentPreset: preset });
         if (shouldBroadcast) {
-          get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(preset);
+          get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(
+            preset
+          );
         }
       },
       setDirectionalLightAzimuth: (azimuth) =>
@@ -961,6 +964,7 @@ export const useStore = create(
             wallColor: result.wall_color || "#FFFFFF",
             floorColor: result.floor_color || "#D2B48C",
             backgroundColor: result.background_color || "#87CEEB",
+            environmentPreset: result.environment_preset || "apartment",
           });
 
           return result;
