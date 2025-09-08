@@ -8,7 +8,7 @@ import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
 import { View } from "lucide-react";
-import { Span } from "next/dist/trace";
+import { FaEye } from "react-icons/fa";
 
 interface RoomPageClientProps {
   room: any;
@@ -105,7 +105,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   </button>
                 </Link>
                 <span className="flex items-center gap-1">
-                  <View size={20} />
+                  <FaEye size={20} className="mr-1"/>
                   {room.view_count}
                 </span>
                 {!loading && <LikeButton room={room} liked={liked} />}
@@ -132,7 +132,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 {room.user.name} on {room.updated_at.slice(0, 10)}
               </span>
               {!room.is_public && (
-                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-grya-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
                 </span>
               )}
