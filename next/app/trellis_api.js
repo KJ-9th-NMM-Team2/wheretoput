@@ -72,29 +72,11 @@ async function main(furnitureId = null, imageUrl = null) {
                 throw new Error(`다운로드 실패: ${response.statusText}`);
             }
 
-            // 🔽🔽🔽 파일 저장 경로 수정 🔽🔽🔽
-            // 저장할 디렉토리 경로 설정 ('next/public/trellis')
-            const outputDir = path.join(process.cwd(),'public', 'trellis');
+            console.log(`✅ 모델 파일 다운로드 완료`);
             
-            // 디렉토리가 없으면 생성
-            fs.mkdirSync(outputDir, { recursive: true });
-
-            // 최종 파일 경로 조합 (name 컬럼 값 사용)
-            const fileName = `${furnitureName}.glb`;
-            const filePath = path.join(outputDir, fileName);
-            const writer = fs.createWriteStream(filePath);
-            
-            await new Promise((resolve, reject) => {
-                response.body.pipe(writer);
-                writer.on('finish', resolve);
-                writer.on('error', reject);
-            });
-
-            console.log(`✅ GLB 파일이 다음 경로에 저장되었습니다: ${filePath}`);
-            
-            // S3에 업로드 (name 컬럼 값 사용)
+            // 직접 S3에 업로드 (로컬 파일 저장 없이)
             const s3Key = `uploads/${furnitureName}.glb`;
-            const s3Url = await uploadToS3(filePath, s3Key);
+            const s3Url = await uploadToS3(await response.arrayBuffer(), s3Key);
             console.log(`✅ S3 업로드 완료: ${s3Url}`);
             
             // DB에 저장
@@ -119,8 +101,9 @@ async function main(furnitureId = null, imageUrl = null) {
 }
 
 // S3 업로드 함수
-async function uploadToS3(filePath, s3Key) {
-    const fileContent = fs.readFileSync(filePath);
+async function uploadToS3(fileData, s3Key) {
+    // fileData는 파일 경로(string) 또는 ArrayBuffer일 수 있음
+    const fileContent = typeof fileData === 'string' ? fs.readFileSync(fileData) : Buffer.from(fileData);
     
     const uploadParams = {
         Bucket: 'wheretoput-bucket',
