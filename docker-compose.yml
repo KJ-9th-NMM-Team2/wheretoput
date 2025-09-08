@@ -12,6 +12,9 @@ services:
       - "${FRONTEND_PORT}:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://socket:3001
+    volumes:
+      - ./next:/app
+      - /app/node_modules
     networks:
       - app-network
 
