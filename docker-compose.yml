@@ -4,6 +4,7 @@ services:
       - "${BACKEND_PORT}:3001"
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
     networks:
       - app-network
 
@@ -12,6 +13,14 @@ services:
       - "${FRONTEND_PORT}:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://socket:3001
+      - AUTH_TRUST_HOST=true
+    networks:
+      - app-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
     networks:
       - app-network
 
