@@ -23,7 +23,10 @@ type SendPayload = { roomId: string; content: string; tempId?: string };
 
 // @UseGuards(JwtAuthGuard) // 임시 비활성화
 @WebSocketGateway({
-  cors: { origin: [/^http:\/\/localhost:\d+$/], credentials: true },
+  cors: {
+    origin: [/^http:\/\/localhost:\d+$/, 'https://wheretoput.store'],
+    credentials: true,
+  },
   namespace: '/',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {

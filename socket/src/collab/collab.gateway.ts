@@ -20,7 +20,10 @@ import { Cron } from '@nestjs/schedule';
 
 @WebSocketGateway({
   namespace: '/collab',
-  cors: { origin: [/^http:\/\/localhost:\d+$/], credentials: true },
+  cors: {
+    origin: [/^http:\/\/localhost:\d+$/, 'https://wheretoput.store'],
+    credentials: true,
+  },
 })
 export class CollabGateway {
   @WebSocketServer() server: Server;
@@ -146,36 +149,43 @@ export class CollabGateway {
       userData: data.userData,
       roomId: roomId,
     };
-    
+
     // 동일한 userId가 이미 Redis에 있는지 확인
     let isAlreadyConnected = false;
-    
+
     if (roomId) {
       let roomState = await this.redisService.getRoomState(roomId);
       isAlreadyConnected = roomState?.connectedUsers.has(data.userId) || false;
-      
+
       if (isAlreadyConnected) {
-        this.logger.log(`🔄 User ${data.userId} already connected, disconnecting previous connection`);
-        
+        this.logger.log(
+          `🔄 User ${data.userId} already connected, disconnecting previous connection`,
+        );
+
         // 기존 연결된 소켓들을 찾아서 강제 퇴장
         const socketsInRoom = await this.server.in(roomId).fetchSockets();
         for (const existingSocket of socketsInRoom) {
-          if (existingSocket.data?.userId === data.userId && existingSocket.id !== socket.id) {
-            this.logger.log(`🚪 Disconnecting previous socket ${existingSocket.id} for user ${data.userId}`);
-            
+          if (
+            existingSocket.data?.userId === data.userId &&
+            existingSocket.id !== socket.id
+          ) {
+            this.logger.log(
+              `🚪 Disconnecting previous socket ${existingSocket.id} for user ${data.userId}`,
+            );
+
             // 기존 소켓에 퇴장 이벤트 전송
             existingSocket.emit('user-left', {
               userId: data.userId,
               userData: data.userData,
-              reason: 'duplicate-connection'
+              reason: 'duplicate-connection',
             });
-            
+
             // 기존 소켓 연결 해제
             existingSocket.disconnect(true);
           }
         }
       }
-      
+
       // Redis에 사용자 정보 저장 (lastActivity 초기값 포함)
       await this.redisService.updateConnectedUser(roomId, data.userId, {
         ...data.userData,
@@ -248,7 +258,9 @@ export class CollabGateway {
       socket.to(roomId).emit('user-join', data);
       this.logger.log(`📤 User-join broadcasted to room ${roomId}`);
     } else if (isAlreadyConnected) {
-      this.logger.log(`⚠️ Skipping broadcast for already connected user ${data.userId}`);
+      this.logger.log(
+        `⚠️ Skipping broadcast for already connected user ${data.userId}`,
+      );
     }
   }
 
