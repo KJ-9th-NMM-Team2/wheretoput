@@ -98,12 +98,13 @@ jobs:
           REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           AUTH_TRUST_HOST=true
+          IMAGE=latest
           EOF
 
       - name: Upload files to Next.js EC2
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_NEXT }}
+          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           source: "docker-compose.next.yml,.env.production"
@@ -113,7 +114,7 @@ jobs:
       - name: Deploy Next.js on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_NEXT }}
+          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
           script: |
@@ -148,6 +149,10 @@ jobs:
           EC2_HOST_NEXT=${{ secrets.EC2_HOST_NEXT }}
           NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
           NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          REDIS_URL=${{ secrets.REDIS_URL }}
+          ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+          ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
+          IMAGE_TAG=latest
           EOF
 
       - name: Upload files to NestJS EC2
@@ -170,6 +175,8 @@ jobs:
             docker system prune -f
             set -e
             cd ${{ secrets.EC2_DEPLOY_PATH }}/socket
+
+            mkdir -p ./temp && chmod 755 ./temp
             
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
