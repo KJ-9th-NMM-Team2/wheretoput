@@ -15,7 +15,7 @@ async function bootstrap() {
       ],
       credentials: true,
     });
-    app.setGlobalPrefix('/api/socket');
+    // app.setGlobalPrefix('/api/socket');
 
     console.log('Starting server on port 3001...');
     await app.listen(3001, '0.0.0.0');
