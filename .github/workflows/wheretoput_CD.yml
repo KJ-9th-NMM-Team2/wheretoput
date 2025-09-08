@@ -175,6 +175,8 @@ jobs:
             docker system prune -f
             set -e
             cd ${{ secrets.EC2_DEPLOY_PATH }}/socket
+
+            mkdir -p ./temp && chmod 755 ./temp
             
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
