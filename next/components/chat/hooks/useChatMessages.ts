@@ -18,6 +18,7 @@ export const useChatMessages = (
 ) => {
   const [messagesByRoom, setMessagesByRoom] = useState<Record<string, Message[]>>({});
   const [text, setText] = useState("");
+  const [lastMessage, setLastMessage] = useState("");
 
   const selectedMessages: Message[] = selectedChatId
     ? messagesByRoom[selectedChatId] ?? []
@@ -51,7 +52,6 @@ export const useChatMessages = (
           }
         );
 
-        console.log("🔫 useChatMessages get datas: ", data);
 
         if (cancelled) return;
         const history: Message[] = (data?.messages ?? data ?? []).map(
@@ -60,7 +60,6 @@ export const useChatMessages = (
             const isImageMessage = m.content && m.content.startsWith('chat/') &&
               /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
 
-              console.log("🔫 isImageMessage: ", isImageMessage);
             return {
               id: m.id ?? String(m.message_id),
               roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
@@ -92,7 +91,7 @@ export const useChatMessages = (
           });
         }
 
-        console.log("🔫 receivedMessages: ", receivedMessages);
+
 
       } catch (error) {
         console.error("메시지 히스토리 로드 실패:", error);
@@ -284,9 +283,18 @@ export const useChatMessages = (
 
   // 메시지 전송 래퍼
   const send = useCallback(() => {
+
     const trimmed = text.trim();
+    
+    if (trimmed === lastMessage.at(-1)) {
+      return;
+    }
+
+    setLastMessage(trimmed)
+
     if (!trimmed || !selectedChatId) return;
-    onSendMessage(selectedChatId, trimmed);
+      onSendMessage(selectedChatId, trimmed);
+
     setText("");
   }, [text, selectedChatId, onSendMessage]);
 

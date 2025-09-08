@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       };
     }) : [];
 
-    console.log("반환:", roomsWithReadStatus);
+    // console.log("반환:", roomsWithReadStatus);
     return NextResponse.json(roomsWithReadStatus);
   } catch (error) {
     console.error("Error fetching chat rooms:", error);
