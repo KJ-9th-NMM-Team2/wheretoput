@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma'
 // Trellis API 사용으로 변경
 import { generateTrellisModel } from '../../trellis_api.js'
 import path from 'path'
-import fs from 'fs/promises'
-
 
 export async function POST(request) {
   try {
@@ -46,20 +44,6 @@ export async function POST(request) {
         })
       }
       
-      // 로컬 파일인 경우 존재 확인 후 S3로 업로드할지 결정
-      const modelPath = path.join(process.cwd(), 'public', furniture.model_url)
-      try {
-        await fs.access(modelPath)
-        console.log('기존 로컬 파일 발견. S3로 마이그레이션하지 않고 기존 URL 사용:', furniture.model_url)
-        return NextResponse.json({
-          success: true,
-          furniture_id: furniture_id,
-          model_url: furniture.model_url,
-          message: '기존 로컬 3D 모델을 사용합니다.'
-        })
-      } catch (error) {
-        console.log('기존 로컬 파일이 없음. 새로 생성합니다.')
-      }
     }
 
     if (!furniture.image_url) {
