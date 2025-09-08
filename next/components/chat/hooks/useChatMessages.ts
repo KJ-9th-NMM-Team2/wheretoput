@@ -51,6 +51,8 @@ export const useChatMessages = (
           }
         );
 
+        console.log("🔫 useChatMessages get datas: ", data);
+
         if (cancelled) return;
         const history: Message[] = (data?.messages ?? data ?? []).map(
           (m: any) => {
@@ -58,6 +60,7 @@ export const useChatMessages = (
             const isImageMessage = m.content && m.content.startsWith('chat/') &&
               /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
 
+              console.log("🔫 isImageMessage: ", isImageMessage);
             return {
               id: m.id ?? String(m.message_id),
               roomId: m.roomId ?? String(m.room_id ?? selectedChatId),
@@ -79,7 +82,7 @@ export const useChatMessages = (
           }))
         );
         setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
-
+        
         // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
         const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
         if (receivedMessages.length > 0) {
@@ -88,6 +91,9 @@ export const useChatMessages = (
             last_read_at: new Date().toISOString()
           });
         }
+
+        console.log("🔫 receivedMessages: ", receivedMessages);
+
       } catch (error) {
         console.error("메시지 히스토리 로드 실패:", error);
         // 오류 발생시 빈 배열로 설정하여 앱이 크래시되지 않도록 처리
