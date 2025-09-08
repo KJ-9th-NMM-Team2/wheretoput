@@ -284,7 +284,7 @@ export function SimulatorCore({
         {!viewOnly && <AutoSaveIndicator position="top-right" />}
 
         {/* 편집 컨트롤 아이콘 */}
-        {showEditControls && !viewOnly && <ControlIcons />}
+        {showEditControls && !viewOnly && <ControlIcons controlsRef={ controlsRef }/>}
 
         <SelectedModelEditModal />
 
@@ -391,6 +391,9 @@ export function SimulatorCore({
             ref={controlsRef}
             enableZoom={true}
             enableRotate={true}
+            enableDamping={false}
+            rotateSpeed={0.3}
+            panSpeed={0.5}
             minDistance={8}
             maxDistance={50}
           />
