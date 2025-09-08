@@ -1329,7 +1329,7 @@ const FloorPlanEditor = () => {
                     축척 설정 도구
                   </h4>
                   {!scaleWall ? (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    <p className="text-sm text-gray-100 dark:text-gray-100 mb-3">
                       기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
                     </p>
                   ) : (
@@ -1513,29 +1513,29 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "eraser" && (
-                <div className="bg-white p-4 rounded-lg border border-orange-200">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight ">
                     지우기 모드
                   </h4>
-                  <p className="text-sm text-orange-600">
+                  <p className="text-sm text-gray-300">
                     클릭하여 벽을 삭제할 수 있습니다.
                   </p>
                 </div>
               )}
 
               {tool === "partial_eraser" && (
-                <div className="bg-white p-4 rounded-lg border border-orange-200">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     부분 지우기 모드
                   </h4>
                   {!partialEraserSelectedWall ? (
-                    <p className="text-sm text-orange-600">
+                    <p className="text-sm text-gray-300">
                       1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로
                       표시됩니다)
                     </p>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-100 mb-2">
                         2단계: 지울 영역을 드래그하여 선택하세요.
                       </p>
                       <button
