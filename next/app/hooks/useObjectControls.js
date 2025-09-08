@@ -21,43 +21,30 @@ export function useObjectControls(
     (e) => {
       e.stopPropagation();
 
-      if (isModelLocked(modelId)) {
-        alert("다른 사용자가 이 모델을 편집 중입니다.");
-        return;
-      }
-
       onSelect(modelId);
 
       if (controlsRef.current) {
         controlsRef.current.enabled = false;
       }
 
-      if (e.shiftKey) {
-        // Shift + 클릭으로 크기 조정 모드
-        setIsScaling(true);
-        setInitialMouseY(e.clientY);
-        setInitialScale(e.currentTarget.scale || 1);
-        gl.domElement.style.cursor = "ns-resize";
-      } else {
-        // 일반 클릭으로 이동 모드
-        setIsDragging(true);
+      // 일반 클릭으로 이동 모드
+      setIsDragging(true);
 
-        const rect = gl.domElement.getBoundingClientRect();
-        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      const rect = gl.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
-        raycaster.setFromCamera(mouse, camera);
+      raycaster.setFromCamera(mouse, camera);
 
-        const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-        const intersectPoint = new THREE.Vector3();
-        raycaster.ray.intersectPlane(floorPlane, intersectPoint);
+      const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersectPoint = new THREE.Vector3();
+      raycaster.ray.intersectPlane(floorPlane, intersectPoint);
 
-        if (intersectPoint && e.currentTarget && e.currentTarget.position) {
-          setDragOffset(intersectPoint.clone().sub(e.currentTarget.position));
-        }
-
-        gl.domElement.style.cursor = "grabbing";
+      if (intersectPoint && e.currentTarget && e.currentTarget.position) {
+        setDragOffset(intersectPoint.clone().sub(e.currentTarget.position));
       }
+
+      gl.domElement.style.cursor = "grabbing";
     },
     [modelId, onSelect, camera, gl, raycaster, mouse, controlsRef]
   );
