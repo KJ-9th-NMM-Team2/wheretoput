@@ -203,7 +203,7 @@ export function SimulatorCore({
   useEffect(() => {
     const handleHistoryAddFurniture = (event) => {
       const { furnitureData } = event.detail;
-      console.log("History: Adding furniture back:", furnitureData);
+      
 
       const modelToAdd = {
         ...furnitureData,
@@ -215,7 +215,6 @@ export function SimulatorCore({
 
     const handleHistoryRemoveFurniture = (event) => {
       const { furnitureId } = event.detail;
-      console.log("History: Removing furniture:", furnitureId);
       removeModel(furnitureId);
     };
 
