@@ -132,7 +132,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 {room.user.name} on {room.updated_at.slice(0, 10)}
               </span>
               {!room.is_public && (
-                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-grya-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
                 </span>
               )}
