@@ -1089,7 +1089,7 @@ const FloorPlanEditor = () => {
         throw new Error("올바르지 않은 방 ID입니다.");
       }
 
-      console.log("Using room ID for navigation:", roomId);
+      //console.log("Using room ID for navigation:", roomId);
 
       // 이전 페이지가 create임을 저장
       sessionStorage.setItem('previousPage', 'create');
