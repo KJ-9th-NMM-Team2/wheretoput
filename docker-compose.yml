@@ -16,11 +16,15 @@ services:
       - AUTH_TRUST_HOST=true
     networks:
       - app-network
+    volumes:
+      - ./next:/app
+      - /app/node_modules
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
+
     networks:
       - app-network
 

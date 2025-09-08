@@ -2,11 +2,17 @@ import { checkAchievement } from "@/lib/api/achievement/checkAchievement";
 import { sendSSEToUser } from "@/lib/api/achievement/utils/sse";
 import { NextRequest } from "next/server";
 import { getFurniture } from "@/lib/api/furniture/getFurnitures";
+import { checkUserOwnRoom } from "@/lib/api/achievement/checkUserOwnRoom";
 
 export async function POST(request: NextRequest) {
     try {
         const { userId, roomId, newFurniture } = await request.json();
         let isFurniture = false;
+
+        const result = await checkUserOwnRoom(roomId, userId);
+        if (!result) {
+            return Response.json("유저의 방이 아니기 떄문에 업적 달성이 불가능합니다.", {status: 403});
+        }
         
         const furnitures = await getFurniture(roomId);
         const newFurnitures = [...furnitures, newFurniture];

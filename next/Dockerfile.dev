@@ -28,6 +28,9 @@ COPY . .
 ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# temp 디렉토리 생성 및 권한 설정
+RUN mkdir -p /app/temp && chmod 755 /app/temp
+
 # 포트 노출
 EXPOSE 3000
 

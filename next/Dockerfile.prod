@@ -54,6 +54,9 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Next.js 빌드 결과물 복사
 COPY --from=builder /app/public ./public
 
+# temp 디렉토리 생성 및 권한 설정 (nextjs 사용자로 변경 전에)
+RUN mkdir -p /app/temp && chown -R nextjs:nodejs /app/temp && chmod 755 /app/temp
+
 # 권한 변경
 USER nextjs
 
