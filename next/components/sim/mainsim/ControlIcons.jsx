@@ -24,7 +24,12 @@ export function ControlIcons({ controlsRef }) {
 
   // 공유 링크 (사용자가 설정)
   const { currentRoomId } = useStore();
-  const shareLink = `https://wheretoput.store/sim/mobile/${currentRoomId}`; // TODO: 실제 링크로 변경
+  let shareLink;
+  if (process.env.NODE_ENV === "development") {
+    shareLink = `http://localhost:3000/sim/mobile/${currentRoomId}`;
+  } else {
+    shareLink = `https://wheretoput.store/sim/mobile/${currentRoomId}`;
+  }
 
   const copyToClipboard = async () => {
     try {
