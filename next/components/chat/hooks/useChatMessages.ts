@@ -18,7 +18,7 @@ export const useChatMessages = (
 ) => {
   const [messagesByRoom, setMessagesByRoom] = useState<Record<string, Message[]>>({});
   const [text, setText] = useState("");
-  const [lastMessage, setLastMessage] = useState("");
+  const [chatLastMessage, setChatLastMessage] = useState("");
 
   const selectedMessages: Message[] = selectedChatId
     ? messagesByRoom[selectedChatId] ?? []
@@ -286,11 +286,11 @@ export const useChatMessages = (
 
     const trimmed = text.trim();
     
-    if (trimmed === lastMessage.at(-1)) {
+    if (trimmed === chatLastMessage.at(-1)) {
       return;
     }
 
-    setLastMessage(trimmed)
+    setChatLastMessage(trimmed)
 
     if (!trimmed || !selectedChatId) return;
       onSendMessage(selectedChatId, trimmed);
