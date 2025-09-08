@@ -117,6 +117,8 @@ interface SimulatorCoreProps {
   // 로딩 메시지 커스터마이징
   loadingMessage?: string;
   loadingIcon?: string;
+  // 키보드 컨트롤 비활성화 옵션
+  keyboardControlsDisabled?: boolean;
 }
 
 /**
@@ -134,6 +136,7 @@ export function SimulatorCore({
   additionalUI,
   loadingMessage = "방 데이터 로딩 중...",
   loadingIcon = "🏠",
+  keyboardControlsDisabled = false,
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const { data: session } = useSession();
@@ -386,7 +389,7 @@ export function SimulatorCore({
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
 
-          <KeyboardControls controlsRef={controlsRef} />
+          <KeyboardControls controlsRef={controlsRef} disabled={keyboardControlsDisabled} />
           <OrbitControls
             ref={controlsRef}
             enableZoom={true}

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
 
 // 분리된 훅들과 유틸들 import
 import { useChatConnection } from "./hooks/useChatConnection";
@@ -20,7 +21,14 @@ export default function ChatButton({
 }: {
   currentUserId: string | null;
 }) {
+  const pathname = usePathname();
+  
   if (!currentUserId) return null;
+  
+  // sim/collaboration 페이지에서는 채팅 버튼을 숨김
+  if (pathname?.includes('/sim/collaboration/')) {
+    return null;
+  }
 
   const [open, setOpen] = useState(false);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");

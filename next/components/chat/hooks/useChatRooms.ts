@@ -16,7 +16,8 @@ export const useChatRooms = (
   token: string | null,
   currentUserId: string | null,
   query: string,
-  select: "전체" | "읽지 않음"
+  select: "전체" | "읽지 않음",
+  enablePolling: boolean = true
 ) => {
   const { data: session } = useSession();
   const [baseChats, setBaseChats] = useState<ChatListItem[]>([]);
@@ -109,12 +110,12 @@ export const useChatRooms = (
 
   // 실시간 폴링 (5초마다) - 안정적인 채팅방 목록 업데이트
   useEffect(() => {
-    if (!open || !token) return;
+    if (!open || !token || !enablePolling) return;
 
     const loadRooms = async () => {
       try {
         console.log("[POLLING] 채팅방 목록 업데이트 시작");
-        const response = await fetch("api/backend/rooms", {
+        const response = await fetch("/api/backend/rooms", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
@@ -186,7 +187,7 @@ export const useChatRooms = (
       console.log("[POLLING] 폴링 중단");
       clearInterval(interval);
     };
-  }, [open, token, currentUserId, query, select]);
+  }, [open, token, currentUserId, query, select, enablePolling]);
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
