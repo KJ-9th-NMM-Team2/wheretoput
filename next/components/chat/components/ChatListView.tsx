@@ -59,11 +59,9 @@ export default function ChatListView({
   const loadAllUsers = async () => {
     setLoading(true);
     try {
-      console.log("🥶 유저 목록 로드 API 호출 전 api/backend NEXT 서버");
       const { data } = await api.get("api/backend", {
         params: { limit: 100 }, // 모든 유저 가져오기
       });
-      console.log("🥶 유저 목록 로드 API 호출 후");
       const users = data ?? [];
       const rows: UserLite[] = (users ?? []).map((u: any) => ({
         id: String(u.id),
