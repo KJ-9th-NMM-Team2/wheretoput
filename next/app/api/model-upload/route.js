@@ -3,41 +3,6 @@ import { prisma } from '@/lib/prisma'
 // Trellis API 사용으로 변경
 import { generateTrellisModel } from '../../trellis_api.js'
 import path from 'path'
-import fs from 'fs/promises'
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { readFileSync } from 'fs'
-
-// S3 클라이언트 설정
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-// S3에 파일 업로드 함수
-async function uploadToS3(filePath, key, contentType) {
-  try {
-    const fileContent = readFileSync(filePath);
-    
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: key,
-      Body: fileContent,
-      ContentType: contentType,
-    });
-    
-    await s3Client.send(command);
-    
-    // S3 URL 반환
-    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-  } catch (error) {
-    console.error('S3 업로드 실패:', error);
-    throw error;
-  }
-}
-
 
 export async function POST(request) {
   try {
@@ -79,20 +44,6 @@ export async function POST(request) {
         })
       }
       
-      // 로컬 파일인 경우 존재 확인 후 S3로 업로드할지 결정
-      const modelPath = path.join(process.cwd(), 'public', furniture.model_url)
-      try {
-        await fs.access(modelPath)
-        console.log('기존 로컬 파일 발견. S3로 마이그레이션하지 않고 기존 URL 사용:', furniture.model_url)
-        return NextResponse.json({
-          success: true,
-          furniture_id: furniture_id,
-          model_url: furniture.model_url,
-          message: '기존 로컬 3D 모델을 사용합니다.'
-        })
-      } catch (error) {
-        console.log('기존 로컬 파일이 없음. 새로 생성합니다.')
-      }
     }
 
     if (!furniture.image_url) {
