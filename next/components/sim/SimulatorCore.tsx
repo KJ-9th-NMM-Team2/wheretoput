@@ -425,11 +425,20 @@ export function SimulatorCore({
             ref={controlsRef}
             enableZoom={true}
             enableRotate={true}
-            enableDamping={false}
-            rotateSpeed={0.3}
-            panSpeed={0.5}
-            minDistance={8}
+            enablePan={true}
+            enableDamping={isMobile ? true : false}
+            dampingFactor={isMobile ? 0.05 : undefined}
+            rotateSpeed={isMobile ? 0.8 : 0.3}
+            panSpeed={isMobile ? 1.0 : 0.5}
+            zoomSpeed={isMobile ? 0.8 : undefined}
+            minDistance={isMobile ? 1 : 8}
             maxDistance={50}
+            maxPolarAngle={isMobile ? Math.PI * 0.95 : undefined}
+            minPolarAngle={isMobile ? Math.PI * 0.05 : undefined}
+            touches={isMobile ? {
+              ONE: 0, // 한 손가락으로 회전
+              TWO: 2, // 두 손가락으로 확대축소, 이동
+            } : undefined}
           />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}

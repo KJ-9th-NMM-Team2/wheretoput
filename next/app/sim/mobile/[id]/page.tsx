@@ -55,27 +55,6 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
       loadingIcon="🏠"
       keyboardControlsDisabled={true}
       isMobile={true}
-      canvasChildren={
-        <OrbitControls
-          enableZoom={true}
-          enableRotate={true}
-          enablePan={true}
-          enableDamping={true}
-          dampingFactor={0.05} // 더 부드러운 댐핑
-          rotateSpeed={0.8} // 회전 속도 증가
-          panSpeed={1.0}
-          zoomSpeed={0.8} // 줌 속도 증가
-          minDistance={1} // 최소 거리 줄임
-          maxDistance={50} // 최대 거리 증가
-          maxPolarAngle={Math.PI * 0.95} // 바닥 아래로 안 가게
-          minPolarAngle={Math.PI * 0.05} // 천장 너무 위로 안 가게
-          // 모바일 터치 최적화
-          touches={{
-            ONE: 0, // 한 손가락으로 회전
-            TWO: 2, // 두 손가락으로 확대축소, 이동
-          }}
-        />
-      }
     />
   );
 }
