@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { SimulatorCore } from "@/components/sim/SimulatorCore";
 import {
@@ -61,7 +61,7 @@ function CollaborationPageContent({
   const [isChatFocused, setIsChatFocused] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
-  const { token } = useChatConnection(true); // 항상 연결
+  const { token } = useChatConnection(!!selectedChatId); // 채팅방 선택 시에만 연결
   
   const {
     selectedMessages,
@@ -70,11 +70,11 @@ function CollaborationPageContent({
     onSendMessage,
     onEditorKeyDown
   } = useChatMessages(
-    true, // 항상 활성화
+    !!selectedChatId, // 채팅방 선택 시에만 활성화
     selectedChatId, // 선택된 채팅방 ID
     token,
     session?.user?.id || null,
-    () => {} // updateChatRoom은 빈 함수로
+    useCallback(() => {}, []) // updateChatRoom은 빈 함수로
   );
 
   // 협업 모드 초기 설정

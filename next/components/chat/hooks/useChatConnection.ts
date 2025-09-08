@@ -47,16 +47,15 @@ export const useChatConnection = (open: boolean) => {
   // 초기 토큰 부트스트랩
   useEffect(() => {
     const bootstrap = async () => {
-
       const res = await fetch("/api/chat/token", {
         cache: "no-store",
         credentials: "include",
       });
 
       const data = await res.json();
-      
+
       const token = data["tokenData"]?.["jti"] || data.token;
-      
+
       setToken(token);
       setAuthToken(token);
       // 이후부터 api.get/post가 자동으로 Authorization 포함
