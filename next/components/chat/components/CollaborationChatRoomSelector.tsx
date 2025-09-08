@@ -101,50 +101,44 @@ export default function CollaborationChatRoomSelector({
           ref={dropdownRef}
           className="absolute bottom-full mb-2 right-0 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-[1001]"
         >
-            {chats.length === 0 ? (
-              <div className="p-3 text-sm text-gray-500 text-center">
-                채팅방이 없습니다
-              </div>
-            ) : (
-              chats.map((chat) => (
-                <button
-                  key={chat.chat_room_id}
-                  onClick={() => {
-                    // 이미 선택된 채팅방이면 선택 해제, 아니면 선택
-                    onChatSelect(selectedChatId === chat.chat_room_id ? null : chat.chat_room_id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+          {chats.length === 0 ? (
+            <div className="p-3 text-sm text-gray-500 text-center">
+              채팅방이 없습니다
+            </div>
+          ) : (
+            chats.map((chat) => (
+              <button
+                key={chat.chat_room_id}
+                onClick={() => {
+                  // 이미 선택된 채팅방이면 선택 해제, 아니면 선택
+                  onChatSelect(
                     selectedChatId === chat.chat_room_id
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex-shrink-0 flex items-center justify-center">
-                      <span className="text-xs text-gray-600">
-                        {chat.name?.charAt(0) || "U"}
-                      </span>
+                      ? null
+                      : chat.chat_room_id
+                  );
+                  setIsOpen(false);
+                }}
+                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                  selectedChatId === chat.chat_room_id
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700"
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {chat.name}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {chat.name}
-                      </div>
-                      {chat.lastMessage && (
-                        <div className="text-xs text-gray-500 truncate">
-                          {chat.lastMessage}
-                        </div>
-                      )}
-                    </div>
-                    {chat.unread_count > 0 && (
-                      <div className="flex-shrink-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {chat.unread_count}
+                    {chat.lastMessage && (
+                      <div className="text-xs text-gray-500 truncate">
+                        {chat.lastMessage}
                       </div>
                     )}
                   </div>
-                </button>
-              ))
-            )}
+                </div>
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>
