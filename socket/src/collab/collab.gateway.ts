@@ -570,36 +570,36 @@ export class CollabGateway {
   }
 
   // 미활동 사용자 연결해제
-  @Cron('0 */5 * * * *') // 5분에 1번씩 실행
-  async cleanupInactiveUsers() {
-    this.logger.log('🧹 Checking for inactive users');
-    const allRooms = await this.redisService.getAllRooms();
-    const now = Date.now();
-    const INACTIVE_TIMEOUT = 5 * 60 * 1000; // 5분
+  // @Cron('0 */5 * * * *') // 5분에 1번씩 실행
+  // async cleanupInactiveUsers() {
+  //   this.logger.log('🧹 Checking for inactive users');
+  //   const allRooms = await this.redisService.getAllRooms();
+  //   const now = Date.now();
+  //   const INACTIVE_TIMEOUT = 5 * 60 * 1000; // 5분
 
-    for (const roomId of allRooms) {
-      const roomState = await this.redisService.getRoomState(roomId);
-      if (roomState) {
-        for (const [userId, userData] of roomState.connectedUsers.entries()) {
-          if (!userData.lastActivity) {
-            userData.lastActivity = now;
-          } else if (now - userData.lastActivity > INACTIVE_TIMEOUT) {
-            // 비활성 사용자 퇴장 처리
-            await this.redisService.removeConnectedUser(roomId, userId);
+  //   for (const roomId of allRooms) {
+  //     const roomState = await this.redisService.getRoomState(roomId);
+  //     if (roomState) {
+  //       for (const [userId, userData] of roomState.connectedUsers.entries()) {
+  //         if (!userData.lastActivity) {
+  //           userData.lastActivity = now;
+  //         } else if (now - userData.lastActivity > INACTIVE_TIMEOUT) {
+  //           // 비활성 사용자 퇴장 처리
+  //           await this.redisService.removeConnectedUser(roomId, userId);
 
-            // 다른 사용자들에게 퇴장 알림 브로드캐스트 (userData 포함)
-            this.server.to(roomId).emit('user-left', {
-              userId,
-              userData: userData || { name: userId }, // fallback으로 userId 사용,
-              reason: 'time-out', // 시간 종료로 인한 퇴장임을 명시
-            });
+  //           // 다른 사용자들에게 퇴장 알림 브로드캐스트 (userData 포함)
+  //           this.server.to(roomId).emit('user-left', {
+  //             userId,
+  //             userData: userData || { name: userId }, // fallback으로 userId 사용,
+  //             reason: 'time-out', // 시간 종료로 인한 퇴장임을 명시
+  //           });
 
-            this.logger.log(
-              `⏰Kicked inactive user ${userId} from room ${roomId}`,
-            );
-          }
-        }
-      }
-    }
-  }
+  //           this.logger.log(
+  //             `⏰Kicked inactive user ${userId} from room ${roomId}`,
+  //           );
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 }

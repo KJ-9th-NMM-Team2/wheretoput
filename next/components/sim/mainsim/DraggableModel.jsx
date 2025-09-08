@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from "react";
-import { useGLTF, useTexture } from "@react-three/drei";
+import React, { useRef, useEffect, useMemo } from "react";
+import { useGLTF, useTexture, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
@@ -15,7 +15,6 @@ export function DraggableModel({
   length = [1, 1, 1],
   controlsRef,
   texturePath = null,
-  isCityKit = false,
   type = "glb",
 }) {
   // scale 값을 안전하게 처리
@@ -121,36 +120,13 @@ export function DraggableModel({
             }
             child.material.needsUpdate = true;
           }
-
-          // City Kit 텍스처 적용
-          if (isCityKit && texture) {
-            const newMaterial = child.material.clone();
-            newMaterial.map = texture;
-            newMaterial.transparent = false;
-            newMaterial.opacity = 1;
-            newMaterial.needsUpdate = true;
-            child.material = newMaterial;
-          }
         }
       });
 
       // 전체 group도 visible 설정
       meshRef.current.visible = true;
     }
-  }, [scene, animations, modelId, isCityKit, texture, type, safeScale]);
-
-  // City Kit 텍스처 재적용 (선택된 경우)
-  useFrame((state, delta) => {
-    // City Kit 텍스처 재적용
-    if (isSelected && meshRef.current && isCityKit && texture) {
-      meshRef.current.traverse((child) => {
-        if (child.isMesh && child.material && !child.material.map) {
-          child.material.map = texture;
-          child.material.needsUpdate = true;
-        }
-      });
-    }
-  });
+  }, [scene, animations, modelId, texture, type, safeScale]);
 
   // 전역 이벤트 리스너
   useEffect(() => {
@@ -265,15 +241,10 @@ export function DraggableModel({
           </mesh>
 
           {(isSelected || isHovering) && (
-            <mesh>
-              <boxGeometry args={getSelectionBoxSize()} />
-              <meshBasicMaterial
-                color={isSelected ? "#00ff00" : "#0000ff"}
-                wireframe
-                transparent
-                opacity={0.5}
-              />
-            </mesh>
+            <SelectionBox
+              isSelected={isSelected}
+              getSelectionBoxSize={getSelectionBoxSize}
+            />
           )}
           
           <ModelTooltip 
@@ -284,5 +255,37 @@ export function DraggableModel({
         </group>
       )}
     </>
+  );
+}
+
+function SelectionBox({ isSelected, getSelectionBoxSize, lineWidth = 3 }) {
+  const points = useMemo(() => {
+    const [w, h, d] = getSelectionBoxSize();
+
+    const vertices = [
+      [-w / 2, -h / 2, -d / 2],
+      [ w / 2, -h / 2, -d / 2],
+      [ w / 2,  h / 2, -d / 2],
+      [-w / 2,  h / 2, -d / 2],
+      [-w / 2, -h / 2,  d / 2],
+      [ w / 2, -h / 2,  d / 2],
+      [ w / 2,  h / 2,  d / 2],
+      [-w / 2,  h / 2,  d / 2],
+    ];
+
+    const edges = [
+      [0, 1], [2, 3], [0, 4], [5, 6], [7, 4],
+      [5, 1], [2, 6], [7, 3]
+    ];
+
+    return edges.flatMap(([start, end]) => [vertices[start], vertices[end]]).flat();
+  }, [getSelectionBoxSize]);
+
+  return (
+    <Line
+      points={points}
+      color={isSelected ? "#0000ff" : "#00eeff"}
+      lineWidth={lineWidth}
+    />
   );
 }

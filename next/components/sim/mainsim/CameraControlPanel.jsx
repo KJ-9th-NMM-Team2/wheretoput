@@ -2,7 +2,7 @@ import React from "react";
 import { useStore } from '@/components/sim/useStore';
 
 
-export function CameraControlPanel({ isPopup = false }) {
+export function CameraControlPanel({ isPopup = false, controlsRef }) {
   const {
     enableWallTransparency,
     cameraFov,
@@ -59,6 +59,9 @@ export function CameraControlPanel({ isPopup = false }) {
             step={1}
             onChange={setCameraFov}
             displayValue={cameraFov}
+          />
+          <CameraResetButton
+            controlsRef={controlsRef}
           />
         </div>
 
@@ -130,4 +133,16 @@ function WallTransparencyToggle({ enabled, onToggle }) {
       </button>
     </div>
   )
+}
+
+function CameraResetButton({ controlsRef }) {
+
+  return (
+    <button
+      onClick={() => controlsRef.current.reset()}
+      className="w-full px-4 py-2.5 bg-red-500 hover:bg-blue-600 text-white border-none rounded text-sm cursor-pointer transition-colors duration-200"
+    >
+      카메라 위치 리셋
+    </button>
+  );
 }

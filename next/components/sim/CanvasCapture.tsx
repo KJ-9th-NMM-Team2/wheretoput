@@ -5,12 +5,16 @@ import { postThumbnailImage } from "@/lib/api/thumbnailImage";
 
 export default function CanvasImageLogger() {
   const { gl, scene, camera } = useThree();
-  const { currentRoomId, shouldCapture, setShouldCapture, shouldCaptureDownload, setShouldCaptureDownload } = useStore();
+  const {
+    currentRoomId,
+    shouldCapture,
+    setShouldCapture,
+    shouldCaptureDownload,
+    setShouldCaptureDownload,
+  } = useStore();
 
   const captureAndUpload = useCallback(async () => {
     try {
-      console.log("캡쳐 시작.");
-
       // 현재 프레임을 강제 렌더링
       gl.render(scene, camera);
 
@@ -24,7 +28,7 @@ export default function CanvasImageLogger() {
       // 파일명에 방 ID와 타임스탬프 포함
       const fileName = `room-${currentRoomId}.png`;
 
-      console.log(`캔버스 이미지 업로드 중: ${fileName}`);
+      //console.log(`캔버스 이미지 업로드 중: ${fileName}`);
       const result = await postThumbnailImage(dataURL, fileName, currentRoomId);
 
       if (result.success) {
@@ -55,7 +59,7 @@ export default function CanvasImageLogger() {
       }
 
       // 다운로드 링크 생성 및 클릭
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.download = `room-${currentRoomId}-${Date.now()}.png`;
       link.href = dataURL;
       document.body.appendChild(link);

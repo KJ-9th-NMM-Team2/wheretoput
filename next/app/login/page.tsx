@@ -44,9 +44,10 @@ export default async function SignInPage(props: {
                 key={provider.id}
                 action={async () => {
                   "use server";
+                  const params = await props.searchParams;
                   try {
                     await signIn(provider.id, {
-                      redirectTo: props.searchParams?.callbackUrl ?? "",
+                      redirectTo: params?.callbackUrl ?? "",
                     });
                   } catch (error) {
                     if (error instanceof AuthError) {

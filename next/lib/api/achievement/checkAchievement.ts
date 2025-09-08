@@ -29,16 +29,6 @@ async function countUserHistory(userId: string) {
         return;
     }
     
-    // console.log(`사용자: ${user.name}`);
-    // console.log(`총 방 개수: ${user.rooms.length}`);
-    
-    // 각 방별 가구와 벽 개수
-    // user.rooms.forEach((room, index) => {
-    //     console.log(`방 ${index + 1}: ${room.title}`);
-    //     console.log(`  - 가구 개수: ${room._count.room_objects}개`);
-    //     console.log(`  - 벽 개수: ${room._count.room_walls}개`);
-    // });
-    
     // 총 가구 개수
     const totalFurniture = user.rooms.reduce((sum, room) => sum + room._count.room_objects, 0);
     const totalWalls = user.rooms.reduce((sum, room) => sum + room._count.room_walls, 0);
@@ -56,12 +46,6 @@ async function countUserHistory(userId: string) {
         totalWalls,
         totalComments,
         totalLikes,
-        // roomDetails: user.rooms.map(room => ({
-        //     roomId: room.room_id,
-        //     title: room.title,
-        //     furnitureCount: room._count.room_objects,
-        //     wallCount: room._count.room_walls
-        // }))
     };
 }
 

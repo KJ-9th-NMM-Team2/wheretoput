@@ -27,9 +27,12 @@ export function Wall({
       return;
     }
 
-    const wallWorldPosition = new THREE.Vector3();
-    meshRef.current.getWorldPosition(wallWorldPosition);
-    const distance = camera.position.distanceTo(wallWorldPosition);
+    // const wallWorldPosition = meshRef.current.getWorldPosition(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(meshRef.current);
+    const closestPoint = box.clampPoint(camera.position, new THREE.Vector3());
+    const distance = camera.position.distanceTo(closestPoint);
+
+    meshRef.current.renderOrder = -distance;
 
     const minOpacity = 0.2;
     const maxOpacity = 0.95;

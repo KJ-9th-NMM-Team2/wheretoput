@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-export function KeyboardControls({ controlsRef }) {
+export function KeyboardControls({ controlsRef, disabled = false }) {
   const keys = useRef({});
   const { camera } = useThree();
 
@@ -24,6 +24,9 @@ export function KeyboardControls({ controlsRef }) {
   }, [camera, controlsRef]);
 
   useFrame((_, delta) => {
+    // 키보드 컨트롤이 비활성화된 경우 movement 처리하지 않음
+    if (disabled) return;
+
     const speed = 10;
 
     const forward = new THREE.Vector3();

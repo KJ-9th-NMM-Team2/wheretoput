@@ -12,7 +12,7 @@ import { FaSave } from "react-icons/fa";
 import { TbScreenshot } from "react-icons/tb";
 // =====================================
 
-export function ControlIcons() {
+export function ControlIcons({ controlsRef }) {
   const [showControlPopup, setShowControlPopup] = useState(false);
   const [showLightPopup, setShowLightPopup] = useState(false);
   const [showCameraPopup, setShowCameraPopup] = useState(false);
@@ -278,7 +278,7 @@ export function ControlIcons() {
               ×
             </button>
             <div style={{ position: 'static', background: 'transparent' }}>
-              <CameraControlPanel isPopup={true} />
+              <CameraControlPanel isPopup={true} controlsRef={controlsRef}/>
             </div>
           </div>
         </div>
