@@ -115,7 +115,7 @@ export const useChatRooms = (
     const loadRooms = async () => {
       try {
         console.log("[POLLING] 채팅방 목록 업데이트 시작");
-        const response = await fetch("/api/backend/rooms", {
+        const response = await fetch(`${NEXT_API_URL}/api/backend/rooms`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
