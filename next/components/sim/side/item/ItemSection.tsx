@@ -1,5 +1,5 @@
 import { ImageOff, Loader2 } from 'lucide-react';
-import type { ItemSectionProps } from '@/lib/types';
+import type { ItemSectionProps } from '@/lib/itemTypes';
 import ShoppingLink from '@/components/sim/side/ShoppingLink';
 import { useSession } from 'next-auth/react';
 import { useStore } from '../../useStore';

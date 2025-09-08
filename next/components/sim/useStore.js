@@ -48,6 +48,10 @@ export const useStore = create(
     }
 
     return {
+      // 선택된 카테고리
+      selectedCategory: -2,
+      setSelectedCategory: (categoryId) => set({ selectedCategory: categoryId }),
+
       // 보기/편집 모드
       viewOnly: false,
       setViewOnly: (value) => set({ viewOnly: value }),
@@ -506,7 +510,7 @@ export const useStore = create(
       shouldCaptureDownload: false,
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
-      
+
       // 업적 상태
       achievements: [],
       setAchievements: (achievements) => set({ achievements }),
