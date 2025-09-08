@@ -152,7 +152,7 @@ jobs:
           REDIS_URL=${{ secrets.REDIS_URL }}
           ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
           ECR_REPO_SOCKET=${{ secrets.ECR_REPO_SOCKET }}
-          IMAGE=latest
+          IMAGE_TAG=latest
           EOF
 
       - name: Upload files to NestJS EC2
