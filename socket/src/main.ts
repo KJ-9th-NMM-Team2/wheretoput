@@ -12,10 +12,10 @@ async function bootstrap() {
       origin: [
         /^http:\/\/localhost:\d+$/,
         process.env.EC2_HOST_NEXT || 'https://wheretoput.store',
+        'https://wheretoput.store:444', // 명시적으로 444 포트 추가
       ],
       credentials: true,
     });
-    // app.setGlobalPrefix('/api/socket');
 
     console.log('Starting server on port 3001...');
     await app.listen(3001, '0.0.0.0');
