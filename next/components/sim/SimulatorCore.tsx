@@ -160,7 +160,6 @@ export function SimulatorCore({
   useEffect(() => {
     const initializeSimulator = async () => {
       try {
-        console.log(`시뮬레이터 초기화: room_id = ${roomId}`);
 
         setCurrentRoomId(roomId);
 
@@ -171,10 +170,9 @@ export function SimulatorCore({
               console.log(`협업 모드이므로 벽 데이터만 로드하고 가구는 Redis에서 받습니다.`);
               await loadSimulatorState(roomId, { wallsOnly: true });
             } else {
-              console.log(`일반 모드로 전체 데이터를 로드합니다.`);
               await loadSimulatorState(roomId);
             }
-            console.log(`방 ${roomId}의 데이터 로드 완료`);
+            
             
             // 방 소유권 확인 (자동저장을 위해 필요)
             

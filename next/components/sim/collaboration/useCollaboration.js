@@ -151,11 +151,6 @@ export function useCollaboration(roomId) {
 
     // Redis 기반 초기 방 상태 수신 (전체 상태 적용)
     socket.current.on("initial-room-state", (data) => {
-      console.log(
-        `📦 Redis 전체 상태 수신: ${data.models?.length || 0}개 모델`
-      );
-      console.log("Redis 모델 정보:", data.models);
-      console.log("방 접속자 정보:", data.connectedUsers);
 
       const store = useStore.getState();
 
@@ -166,15 +161,8 @@ export function useCollaboration(roomId) {
 
       // Redis의 모든 모델을 새로 추가
       if (data.models && data.models.length > 0) {
-        console.log(`🔄 Redis의 ${data.models.length}개 모델로 전체 교체`);
+        
         data.models.forEach((redisModel, index) => {
-          console.log(`Redis 모델 ${index}:`, redisModel);
-          console.log(
-            `모델 ID: ${redisModel.id}, furniture_id: ${redisModel.furniture_id}`
-          );
-          console.log(`position:`, redisModel.position);
-          console.log(`rotation:`, redisModel.rotation);
-          console.log(`scale:`, redisModel.scale);
 
           try {
             addModelWithId(redisModel, false);
