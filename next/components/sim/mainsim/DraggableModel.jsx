@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from "react";
-import { useGLTF, useTexture } from "@react-three/drei";
+import React, { useRef, useEffect, useMemo } from "react";
+import { useGLTF, useTexture, Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
@@ -241,15 +241,10 @@ export function DraggableModel({
           </mesh>
 
           {(isSelected || isHovering) && (
-            <mesh>
-              <boxGeometry args={getSelectionBoxSize()} />
-              <meshBasicMaterial
-                color={isSelected ? "#00ff00" : "#0000ff"}
-                wireframe
-                transparent
-                opacity={0.5}
-              />
-            </mesh>
+            <SelectionBox
+              isSelected={isSelected}
+              getSelectionBoxSize={getSelectionBoxSize}
+            />
           )}
           
           <ModelTooltip 
@@ -260,5 +255,37 @@ export function DraggableModel({
         </group>
       )}
     </>
+  );
+}
+
+function SelectionBox({ isSelected, getSelectionBoxSize, lineWidth = 3 }) {
+  const points = useMemo(() => {
+    const [w, h, d] = getSelectionBoxSize();
+
+    const vertices = [
+      [-w / 2, -h / 2, -d / 2],
+      [ w / 2, -h / 2, -d / 2],
+      [ w / 2,  h / 2, -d / 2],
+      [-w / 2,  h / 2, -d / 2],
+      [-w / 2, -h / 2,  d / 2],
+      [ w / 2, -h / 2,  d / 2],
+      [ w / 2,  h / 2,  d / 2],
+      [-w / 2,  h / 2,  d / 2],
+    ];
+
+    const edges = [
+      [0, 1], [2, 3], [0, 4], [5, 6], [7, 4],
+      [5, 1], [2, 6], [7, 3]
+    ];
+
+    return edges.flatMap(([start, end]) => [vertices[start], vertices[end]]).flat();
+  }, [getSelectionBoxSize]);
+
+  return (
+    <Line
+      points={points}
+      color={isSelected ? "#0000ff" : "#00eeff"}
+      lineWidth={lineWidth}
+    />
   );
 }
