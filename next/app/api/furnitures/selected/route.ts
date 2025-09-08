@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
-import { furnitures as Furniture } from "@prisma/client";
 
 /**
  * @swagger
@@ -23,6 +22,7 @@ import { furnitures as Furniture } from "@prisma/client";
 export async function GET(req: NextRequest) {
     const searchParams = new URL(req.url).searchParams;
     const idsParams = searchParams.get('idsParams');
+    const roomId = searchParams.get('roomId');
     const sortParam = searchParams.get('sort') || 'updated_desc';
 
     if (!idsParams) {
@@ -45,21 +45,41 @@ export async function GET(req: NextRequest) {
         break;
     }
 
-    const [furnitures, priceSum] = await Promise.all([
+    const [furnitures, mergedCounts] = await Promise.all([
         prisma.furnitures.findMany({
             where: { furniture_id: { in: furnitureIds } },
             orderBy: orderBy
         }),
-        prisma.furnitures.aggregate({
-            where: { furniture_id: { in: furnitureIds } },
-            _sum: { price: true }
-        })
+        prisma.room_objects.groupBy({
+            by: ['furniture_id'],            
+            where: { room_id : roomId || "" },
+            _count: { furniture_id: true },
+        }),
     ]);
 
+    // count Map 생성
+    const countMap = mergedCounts.reduce<Record<string, number>>((acc, item) => {
+        acc[item.furniture_id] = item._count.furniture_id;
+        return acc;
+    }, {});
+
+    // furnitures에 count 정보 추가
+    const furnituresWithCount = furnitures.map(furniture => ({
+        ...furniture,
+        count: countMap[furniture.furniture_id] || 0
+    }));
+
+
+    // 실제 총액 = 각 가구의 (가격 × 개수)의 합
+    const actualTotalPrice = furnituresWithCount.reduce((sum, furniture) => 
+        sum + (furniture.price * furniture.count), 0
+    );
+
+
     return Response.json({
-        furnitures: furnitures,
-        totalPrice: priceSum,
-        count: (await furnitures).length
+        furnitures: furnituresWithCount,
+        totalPrice: actualTotalPrice,
+        count: (await furnitures).length,
     })
     
 }
