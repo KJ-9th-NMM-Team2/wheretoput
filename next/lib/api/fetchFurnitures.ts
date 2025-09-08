@@ -55,7 +55,6 @@ export async function fetchFurnitures({
         }
 
         const data = await response.json();
-        console.log('API Response:', data);
 
         // 개선된 API 응답 구조 처리
         if (data.items && data.pagination) {
