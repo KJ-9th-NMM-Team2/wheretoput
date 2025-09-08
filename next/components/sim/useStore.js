@@ -48,6 +48,10 @@ export const useStore = create(
     }
 
     return {
+      // 선택된 카테고리
+      selectedCategory: -2,
+      setSelectedCategory: (categoryId) => set({ selectedCategory: categoryId }),
+
       // 보기/편집 모드
       viewOnly: false,
       setViewOnly: (value) => set({ viewOnly: value }),
