@@ -13,7 +13,7 @@ export type ChatMessageDTO = {
   senderName: string;
   content: string;
   createdAt: string;
-  status: 'sent';
+  status: 'sent' | 'read'; // ********이거 추가(수정)********
 };
 
 @Injectable()
@@ -191,17 +191,36 @@ export class ChatService {
         },
       });
 
+      // ********이거 추가********
+      const othersLastRead = await this.prisma.chat_participants.findMany({
+        where: { 
+          chat_room_id: roomId,
+          user_id: { not : params.userId },
+        }, 
+        select: {last_read_at: true}
+      })
+      const lastRead = othersLastRead[0]['last_read_at']
+      // ********이거 추가********
+
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return rows.reverse().map((r) => ({
-        id: r.message_id,
-        roomId: r.chat_room_id,
-        senderId: r.user_id,
-        senderName: r.User?.name || '',
-        senderImage: r.User?.image || null,
-        content: r.content,
-        createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
-        status: 'sent',
-      }));
+      return rows.reverse().map((r) => {
+        // ********이거 추가********
+        const createAt = r.created_at ?? new Date(); 
+        return {
+          id: r.message_id,
+          roomId: r.chat_room_id,
+          senderId: r.user_id,
+          senderName: r.User?.name || '',
+          senderImage: r.User?.image || null,
+          content: r.content,
+          createdAt: createAt.toISOString(),
+          status: lastRead && createAt <= lastRead
+            ? 'read'
+            : 'sent',
+        }
+        // ********이거 수정********
+      });
     } catch (error) {
       if (error instanceof ForbiddenException) {
         throw error;

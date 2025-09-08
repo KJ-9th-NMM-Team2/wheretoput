@@ -45,13 +45,12 @@ export const useChatMessages = (
     (async () => {
       try {
         const { data } = await api.get(
-          `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
+          `${SOCKET_API_URL}/rooms/${selectedChatId}/messages/`,
           {
-            params: { limit: 50 },
-            headers: { Authorization: `Bearer ${token}` },
+            params: { limit: 50, currentUserId },
+            headers: { Authorization: `Bearer ${token}` }, // token에는 token 값만 들어가 있음
           }
         );
-
 
         if (cancelled) return;
         const history: Message[] = (data?.messages ?? data ?? []).map(
@@ -69,29 +68,27 @@ export const useChatMessages = (
               content: m.content,
               message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
               createdAt: m.createdAt ?? m.created_at,
-              status: "read",
+              status: m.status,
             };
           }
         );
-        console.log(
-          "Messages with avatars:",
-          history.map((h) => ({
-            senderName: h.senderName,
-            senderImage: h.senderImage,
-          }))
-        );
+        // console.log(
+        //   "Messages with avatars:",
+        //   history.map((h) => ({
+        //     senderName: h.senderName,
+        //     senderImage: h.senderImage,
+        //   }))
+        // );
         setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
         
         // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
-        const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
-        if (receivedMessages.length > 0) {
-          s.emit("read", { roomId: selectedChatId });
-          onChatRoomUpdate(selectedChatId, {
-            last_read_at: new Date().toISOString()
-          });
-        }
-
-
+        // const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
+        // if (receivedMessages.length > 0) {
+        //   s.emit("read", { roomId: selectedChatId });
+        //   onChatRoomUpdate(selectedChatId, {
+        //     last_read_at: new Date().toISOString()
+        //   });
+        // }
 
       } catch (error) {
         console.error("메시지 히스토리 로드 실패:", error);
@@ -132,7 +129,7 @@ export const useChatMessages = (
         content: m.content,
         message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,
-        status: "sent",
+        status: m.status, // ********이거 수정********
       };
 
       setMessagesByRoom((prev) => {
@@ -151,12 +148,12 @@ export const useChatMessages = (
       });
 
       // 현재 열린 채팅방의 메시지이고 내가 보낸 메시지가 아니라면 자동으로 읽음 처리
-      if (msg.roomId === selectedChatId && msg.senderId !== currentUserId) {
-        const s = getSocket();
-        if (s) {
-          s.emit("read", { roomId: msg.roomId });
-        }
-      }
+      // if (msg.roomId === selectedChatId && msg.senderId !== currentUserId) {
+      //   const s = getSocket();
+      //   if (s) {
+      //     s.emit("read", { roomId: msg.roomId });
+      //   }
+      // }
 
       // 채팅방 목록 업데이트
       const displayMessage = msg.message_type === "image" ||
@@ -210,7 +207,7 @@ export const useChatMessages = (
         setMessagesByRoom((prev) => {
           const arr = prev[evt.roomId] ?? [];
           const next = arr.map((m) =>
-            m.senderId === currentUserId && m.status !== "read"
+            m.senderId !== currentUserId && m.status !== "read"
               ? { ...m, status: "read" }
               : m
           );
