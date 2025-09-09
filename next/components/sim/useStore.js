@@ -49,7 +49,7 @@ export const useStore = create(
 
     return {
       // 선택된 카테고리
-      selectedCategory: -2,
+      selectedCategory: 99,
       setSelectedCategory: (categoryId) =>
         set({ selectedCategory: categoryId }),
 

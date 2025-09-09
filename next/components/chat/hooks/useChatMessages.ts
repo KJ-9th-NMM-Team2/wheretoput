@@ -69,7 +69,7 @@ export const useChatMessages = (
               content: m.content,
               message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
               createdAt: m.createdAt ?? m.created_at,
-              status: "read",
+              status: m.status, // ******* 이거 수정 *******
             };
           }
         );
@@ -132,7 +132,7 @@ export const useChatMessages = (
         content: m.content,
         message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
         createdAt: m.createdAt ?? m.created_at,
-        status: "sent",
+        status: m.status,
       };
 
       setMessagesByRoom((prev) => {
