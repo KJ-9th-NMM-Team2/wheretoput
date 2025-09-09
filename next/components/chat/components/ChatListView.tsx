@@ -293,14 +293,14 @@ export default function ChatListView({
                     onClick={() => toggleUserSelection(user.id)}
                     className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
                       isSelected 
-                        ? "bg-blue-50 border-2 border-blue-200" 
+                        ? "bg-orange-50 border-2 border-orange-200" 
                         : "hover:bg-gray-100 border-2 border-transparent"
                     }`}
                   >
                     {/* 체크박스 */}
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                       isSelected 
-                        ? "bg-blue-500 border-blue-500" 
+                        ? "bg-orange-500 border-orange-500" 
                         : "border-gray-300 hover:border-gray-400"
                     }`}>
                       {isSelected && (
@@ -328,7 +328,7 @@ export default function ChatListView({
                     {/* 사용자 이름 */}
                     <div className="flex-1 min-w-0">
                       <div className={`font-medium truncate ${
-                        isSelected ? "text-blue-700" : "text-gray-900"
+                        isSelected ? "text-orange-700" : "text-gray-900"
                       }`}>
                         {user.name}
                       </div>

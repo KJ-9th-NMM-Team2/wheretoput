@@ -4,7 +4,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "@/lib/client/api";
 import { connectSocket, getSocket } from "@/lib/client/socket";
-import { Message } from "../types/chat-types";
+import { Socket } from "socket.io-client";
+import { Message, ChatListItem } from "../types/chat-types";
 import { dayKey } from "../utils/chat-utils";
 
 const SOCKET_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -14,7 +15,7 @@ export const useChatMessages = (
   selectedChatId: string | null,
   token: string | null,
   currentUserId: string | null,
-  onChatRoomUpdate: (roomId: string, updates: any) => void
+  onChatRoomUpdate: (roomId: string, updates: Partial<ChatListItem>) => void
 ) => {
   const [messagesByRoom, setMessagesByRoom] = useState<Record<string, Message[]>>({});
   const [text, setText] = useState("");
@@ -33,17 +34,39 @@ export const useChatMessages = (
     return acc;
   }, [selectedMessages]);
 
-  // 방 선택 시 join + 히스토리 로드
+  // 방 선택 시 join + 히스토리 로드 (순차적 처리로 타이밍 문제 해결)
   useEffect(() => {
     if (!open || !selectedChatId || !token) return;
-    const s = connectSocket(token);
-    console.log("🚪 FRONTEND JOIN:", selectedChatId);
-    s.emit("join", { roomId: selectedChatId });
-
+    
     let cancelled = false;
+    let currentSocket: Socket | null = null;
 
-    (async () => {
+    const joinRoom = async () => {
       try {
+        currentSocket = connectSocket(token);
+        
+        // 소켓 연결 대기 (연결이 불안정할 경우 대비)
+        await new Promise(resolve => {
+          if (currentSocket.connected) {
+            resolve(null);
+          } else {
+            currentSocket.once('connect', resolve);
+            // 타임아웃 설정 (3초 후 강제 진행)
+            setTimeout(resolve, 3000);
+          }
+        });
+
+        if (cancelled) return;
+
+        console.log("🚪 FRONTEND JOIN:", selectedChatId);
+        currentSocket.emit("join", { roomId: selectedChatId });
+
+        // join 명령 처리 대기 (서버 처리 시간 확보)
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        if (cancelled) return;
+
+        // 히스토리 로드
         const { data } = await api.get(
           `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
           {
@@ -52,8 +75,8 @@ export const useChatMessages = (
           }
         );
 
-
         if (cancelled) return;
+        
         const history: Message[] = (data?.messages ?? data ?? []).map(
           (m: any) => {
             // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
@@ -73,6 +96,7 @@ export const useChatMessages = (
             };
           }
         );
+        
         console.log(
           "Messages with avatars:",
           history.map((h) => ({
@@ -80,18 +104,17 @@ export const useChatMessages = (
             senderImage: h.senderImage,
           }))
         );
+        
         setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
         
         // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
         const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
-        if (receivedMessages.length > 0) {
-          s.emit("read", { roomId: selectedChatId });
+        if (receivedMessages.length > 0 && !cancelled) {
+          currentSocket.emit("read", { roomId: selectedChatId });
           onChatRoomUpdate(selectedChatId, {
             last_read_at: new Date().toISOString()
           });
         }
-
-
 
       } catch (error) {
         console.error("메시지 히스토리 로드 실패:", error);
@@ -100,11 +123,18 @@ export const useChatMessages = (
           setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: [] }));
         }
       }
-    })();
+    };
+
+    // 비동기 함수 실행
+    joinRoom();
 
     return () => {
       cancelled = true;
-      s.emit("leave", { roomId: selectedChatId });
+      // leave 이벤트 전송 (순차 처리)
+      if (currentSocket && currentSocket.connected) {
+        console.log("🚪 FRONTEND LEAVE:", selectedChatId);
+        currentSocket.emit("leave", { roomId: selectedChatId });
+      }
     };
   }, [open, selectedChatId, token, onChatRoomUpdate]);
 
@@ -226,21 +256,51 @@ export const useChatMessages = (
       }
     };
 
+    // 서버 이벤트 처리 (연결 상태 확인)
+    const onJoined = (data: { roomId: string }) => {
+      console.log('🟢 JOINED ROOM:', data.roomId);
+    };
+
+    const onLeft = (data: { roomId: string }) => {
+      console.log('🔴 LEFT ROOM:', data.roomId);
+    };
+
+    const onSystem = (data: { type: string; roomId: string; userId?: string; at: string }) => {
+      console.log('🔔 SYSTEM EVENT:', data.type, data.roomId);
+      // 시스템 메시지는 필요에 따라 UI에 표시 가능
+    };
+
+    const onWelcome = (data: { id: string; time: string }) => {
+      console.log('👋 WELCOME:', data.id, data.time);
+    };
+
     s.on("message", onMessage);
     s.on("message:ack", onAck);
     s.on("read:updated", onRead);
+    s.on("joined", onJoined);
+    s.on("left", onLeft);
+    s.on("system", onSystem);
+    s.on("welcome", onWelcome);
 
     return () => {
       s.off("message", onMessage);
       s.off("message:ack", onAck);
       s.off("read:updated", onRead);
+      s.off("joined", onJoined);
+      s.off("left", onLeft);
+      s.off("system", onSystem);
+      s.off("welcome", onWelcome);
     };
   }, [open, currentUserId, selectedChatId, onChatRoomUpdate]);
 
   // 메시지 전송
   const onSendMessage = useCallback(
     (roomId: string, content: string, messageType: "text" | "image" = "text") => {
-      if (!token) return;
+      if (!token || !currentUserId) {
+        console.error("메시지 전송 실패: 토큰 또는 사용자 ID 없음");
+        return;
+      }
+      
       const now = new Date().toISOString();
       const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
       const tempMsg: Message = {
