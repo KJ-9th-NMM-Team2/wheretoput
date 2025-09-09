@@ -32,6 +32,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
     currentUserId,
   }, listRef) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const sendButtonRef = useRef<HTMLButtonElement>(null);
     const [selectedImage, setSelectedImage] = useState<{
       file: File;
       preview: string;
@@ -60,6 +61,11 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
 
         // input 값 초기화 (같은 파일을 다시 선택할 수 있도록)
         e.target.value = '';
+
+        // 이미지 선택 후 전송 버튼으로 포커스 이동
+        setTimeout(() => {
+          sendButtonRef.current?.focus();
+        }, 100);
       }
     };
 
@@ -214,6 +220,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
               className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 max-h-40"
             />
             <button
+              ref={sendButtonRef}
               onClick={sendWithImage}
               disabled={!text.trim() && !selectedImage}
               className={`px-3 py-2 rounded-lg text-white cursor-pointer transition-transform ${text.trim() || selectedImage

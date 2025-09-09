@@ -34,16 +34,47 @@ export default function ChatButton({
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
   // 분리된 훅들 사용
   const { token } = useChatConnection(open);
+
+  // 새 메시지 알림 처리
+  const handleNewMessage = (roomId: string, room: any) => {
+    console.log("🔔 새 메시지 알림:", room.name, room.lastMessage);
+    
+    // 읽지 않은 메시지 뱃지 표시
+    setHasUnreadMessages(true);
+    
+    // 브라우저 알림 권한 확인 후 알림 표시
+    if (Notification.permission === "granted") {
+      new Notification(`${room.name}에서 새 메시지`, {
+        body: room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+        icon: "/favicon.ico", // 앱 아이콘
+        tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
+      });
+    } else if (Notification.permission === "default") {
+      // 알림 권한 요청
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          new Notification(`${room.name}에서 새 메시지`, {
+            body: room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+            icon: "/favicon.ico",
+            tag: roomId,
+          });
+        }
+      });
+    }
+  };
 
   const { baseChats, chats, setChats, setBaseChats, onStartDirect, updateChatRoom, deleteChatRoom } = useChatRooms(
     open,
     token,
     currentUserId,
     query,
-    select
+    select,
+    true, // enablePolling
+    handleNewMessage // 새 메시지 콜백
   );
 
   const {
@@ -68,6 +99,21 @@ export default function ChatButton({
     if (!selectedChatId) return null;
     return baseChats.find((c) => c.chat_room_id === selectedChatId) ?? null;
   }, [selectedChatId, baseChats]);
+
+  // 읽지 않은 메시지 수 계산
+  const unreadCount = useMemo(() => {
+    if (!currentUserId) return 0;
+    return baseChats.filter(chat => {
+      if (!chat.lastMessageAt || !chat.last_read_at) return false;
+      return new Date(chat.lastMessageAt) > new Date(chat.last_read_at) && 
+             chat.lastMessageSenderId !== currentUserId;
+    }).length;
+  }, [baseChats, currentUserId]);
+
+  // 읽지 않은 메시지가 있으면 뱃지 표시
+  useEffect(() => {
+    setHasUnreadMessages(unreadCount > 0);
+  }, [unreadCount]);
 
 
   // UI 관련 refs와 스크롤 처리
@@ -153,6 +199,7 @@ export default function ChatButton({
     <>
       <ChatFloatingButton
         ref={buttonRef}
+        hasUnreadMessages={hasUnreadMessages}
         onClick={() =>
           setOpen((prev) => {
             const next = !prev;

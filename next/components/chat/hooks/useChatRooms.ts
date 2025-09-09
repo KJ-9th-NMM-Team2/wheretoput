@@ -1,7 +1,7 @@
 // 채팅방 목록 관리 훅
 // 채팅방 로드, 필터링, 정렬, 1:1 채팅 시작을 담당
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/lib/client/api";
 import { ChatListItem } from "../types/chat-types";
@@ -17,11 +17,13 @@ export const useChatRooms = (
   currentUserId: string | null,
   query: string,
   select: "전체" | "읽지 않음",
-  enablePolling: boolean = true
+  enablePolling: boolean = true,
+  onNewMessage?: (roomId: string, message: any) => void // 새 메시지 콜백 추가
 ) => {
   const { data: session } = useSession();
   const [baseChats, setBaseChats] = useState<ChatListItem[]>([]);
   const [chats, setChats] = useState<ChatListItem[]>([]);
+  const prevChatsRef = useRef<ChatListItem[]>([]);
 
   // 방 목록 로드
   useEffect(() => {
@@ -108,9 +110,9 @@ export const useChatRooms = (
     })();
   }, [open, token, currentUserId]);
 
-  // 실시간 폴링 (5초마다) - 안정적인 채팅방 목록 업데이트
+  // 실시간 폴링 - 팝업 열림: 3초마다, 닫힘: 30초마다 백그라운드 폴링
   useEffect(() => {
-    if (!open || !token || !enablePolling) return;
+    if (!token || !enablePolling) return;
 
     const loadRooms = async () => {
       try {
@@ -119,6 +121,8 @@ export const useChatRooms = (
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
+
+        const prevChats = prevChatsRef.current; // 이전 채팅방 목록 참조
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
           r.last_message = r.chat_messages[0] ?? null;
@@ -165,7 +169,23 @@ export const useChatRooms = (
           return result;
         });
 
+        // 새 메시지 감지 및 알림
+        if (!open && onNewMessage && prevChats.length > 0) {
+          mapped.forEach(currentRoom => {
+            const prevRoom = prevChats.find(p => p.chat_room_id === currentRoom.chat_room_id);
+            if (prevRoom && 
+                currentRoom.lastMessageAt && 
+                prevRoom.lastMessageAt &&
+                new Date(currentRoom.lastMessageAt) > new Date(prevRoom.lastMessageAt) &&
+                currentRoom.lastMessageSenderId !== currentUserId) {
+              // 새 메시지가 있고, 내가 보낸 메시지가 아닌 경우 알림
+              onNewMessage(currentRoom.chat_room_id, currentRoom);
+            }
+          });
+        }
+
         setBaseChats(mapped);
+        prevChatsRef.current = mapped; // 현재 상태를 이전 상태로 저장
         setChats(recomputeChats(mapped, query, select, currentUserId));
         console.log(
           "[POLLING] 채팅방 목록 업데이트 완료 -",
@@ -180,14 +200,15 @@ export const useChatRooms = (
     // 즉시 한 번 실행
     loadRooms();
 
-    // 1초마다 폴링 - 실시간 업데이트
-    const interval = setInterval(loadRooms, 3000);
+    // 팝업 열림: 3초마다, 닫힘: 30초마다 폴링
+    const pollInterval = open ? 3000 : 30000;
+    const interval = setInterval(loadRooms, pollInterval);
 
     return () => {
       console.log("[POLLING] 폴링 중단");
       clearInterval(interval);
     };
-  }, [open, token, currentUserId, query, select, enablePolling]);
+  }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
