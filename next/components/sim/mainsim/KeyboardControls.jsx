@@ -8,15 +8,31 @@ export function KeyboardControls({ controlsRef, disabled = false }) {
   const velocityRef = useRef(new THREE.Vector3());
   const lastDirectionRef = useRef(new THREE.Vector3());
   const lastTargetRef = useRef(new THREE.Vector3());
+  const isMovingRef = useRef(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // 키 반복 이벤트 무시
+      if (e.repeat) return;
+      
       keys.current[e.code] = true;
-      // 키 입력 시 velocity 리셋하지 않고 즉시 렌더링 요청
-      invalidate();
+      if (!isMovingRef.current) {
+        isMovingRef.current = true;
+        invalidate();
+      }
     };
     const handleKeyUp = (e) => {
       keys.current[e.code] = false;
+      
+      // 모든 이동 키가 해제되었는지 확인
+      const anyKeyPressed = 
+        keys.current["KeyW"] || keys.current["KeyS"] || 
+        keys.current["KeyA"] || keys.current["KeyD"] ||
+        keys.current["KeyQ"] || keys.current["KeyE"];
+      
+      if (!anyKeyPressed) {
+        isMovingRef.current = false;
+      }
       invalidate();
     };
 
@@ -31,6 +47,9 @@ export function KeyboardControls({ controlsRef, disabled = false }) {
 
   useFrame((state, delta) => {
     if (disabled) return;
+
+    // delta 값이 너무 클 때 보정 (초기 프레임에서 발생할 수 있음)
+    delta = Math.min(delta, 1/30); // 최대 30fps 기준으로 제한
 
     // OrbitControls 타겟 변화 감지 및 velocity 리셋
     if (controlsRef?.current?.target) {
@@ -76,7 +95,9 @@ export function KeyboardControls({ controlsRef, disabled = false }) {
       const targetVelocity = inputDirection.clone().multiplyScalar(baseSpeed);
       const velocityDiff = targetVelocity.clone().sub(velocityRef.current);
       
-      velocityRef.current.add(velocityDiff.multiplyScalar(acceleration * delta));
+      // 부드러운 가속을 위한 lerp 방식 사용
+      const lerpFactor = Math.min(acceleration * delta, 1.0);
+      velocityRef.current.lerp(targetVelocity, lerpFactor);
       
       if (velocityRef.current.length() > maxSpeed) {
         velocityRef.current.normalize().multiplyScalar(maxSpeed);
@@ -84,7 +105,10 @@ export function KeyboardControls({ controlsRef, disabled = false }) {
       
       lastDirectionRef.current.copy(inputDirection);
     } else {
-      velocityRef.current.multiplyScalar(Math.max(0, 1 - deceleration * delta));
+      // 감속도 lerp 방식으로 부드럽게
+      const stopTarget = new THREE.Vector3(0, 0, 0);
+      const lerpFactor = Math.min(deceleration * delta, 1.0);
+      velocityRef.current.lerp(stopTarget, lerpFactor);
     }
 
     if (velocityRef.current.lengthSq() > 0.001) {
