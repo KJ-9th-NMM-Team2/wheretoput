@@ -25,13 +25,28 @@ export const useChatRooms = (
   const [chats, setChats] = useState<ChatListItem[]>([]);
   const prevChatsRef = useRef<ChatListItem[]>([]);
 
-  // 방 목록 로드
+  // 방 목록 로드 - 요청 제한 추가
   useEffect(() => {
     if (!open || !token) {
       return;
     }
 
-    (async () => {
+    let isLoading = false;
+    let lastLoadTime = 0;
+    
+    const loadRooms = async () => {
+      // 중복 요청 방지
+      if (isLoading) return;
+      
+      // 최소 간격 제한 (3초)
+      const now = Date.now();
+      if (now - lastLoadTime < 3000) {
+        return;
+      }
+      
+      isLoading = true;
+      lastLoadTime = now;
+
       const path = "/backend/rooms";
       try {
         console.log("[ROOMS] GET", path);
@@ -106,12 +121,17 @@ export const useChatRooms = (
           message: e?.message,
           tokenExists: !!token,
         });
+      } finally {
+        isLoading = false;
       }
-    })();
+    };
+
+    // 초기 로드
+    loadRooms();
   }, [open, token, currentUserId]);
 
-  // 개선된 폴링 시스템 - 소켓 상태 기반 동적 폴링
-  useEffect(() => {
+  // 개선된 폴링 시스템 - 소켓 상태 기반 동적 폴링 (주석처리)
+  /*useEffect(() => {
     if (!token || !enablePolling) return;
 
     let isPolling = false; // 폴링 중복 실행 방지
@@ -244,7 +264,7 @@ export const useChatRooms = (
       if (statusCheckInterval) clearInterval(statusCheckInterval);
       isPolling = false;
     };
-  }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);
+  }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);*/
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
@@ -351,5 +371,6 @@ export const useChatRooms = (
     onStartDirect,
     updateChatRoom,
     deleteChatRoom,
+    refreshRooms: () => {}, // 폴링 비활성화로 인해 빈 함수 반환
   };
 };
