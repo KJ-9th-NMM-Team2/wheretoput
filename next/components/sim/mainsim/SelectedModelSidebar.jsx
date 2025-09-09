@@ -4,6 +4,7 @@ import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
 import { useDeleteKey } from "./useDeleteKey";
 import { RotationControl } from "./RotationControl";
+import { CollapsibleSidebar } from "./CollapsibleSidebar";
 
 
 export function SelectedModelEditModal() {
@@ -132,22 +133,12 @@ export function SelectedModelEditModal() {
   }
 
   return (
-    <div className="fixed top-1/2 right-4 w-80 max-h-[80vh] -translate-y-1/2 z-[200]">
-      <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl rounded-xl overflow-hidden">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-          <span className="text-base font-bold"> 가구 편집</span>
-          <button
-            onClick={deselectModel}
-            className="text-gray-500 hover:text-gray-700 transition-colors text-lg"
-            title="닫기"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* 스크롤 가능한 콘텐츠 영역 */}
-        <div className="flex-1 overflow-y-auto p-4">
+    <CollapsibleSidebar
+      title="가구 편집"
+      onClose={deselectModel}
+      defaultCollapsed={false}
+    >
+      <div className="p-4">
 
         {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
@@ -310,9 +301,8 @@ export function SelectedModelEditModal() {
             가구 삭제
           </button>
         </div>
-        </div>
       </div>
-    </div>
+    </CollapsibleSidebar>
   );
 }
 
