@@ -59,7 +59,7 @@ export function DraggableModel({
   const isHovering = hoveringModelId === modelId;
 
   const originalSizeRef = useRef([1, 1, 1]);
-  // 선택 표시 박스 크기 결정
+  // 선택 표시 박스 크기 결정 (회전 고려)
   const getSelectionBoxSize = useCallback(() => {
     if (!meshRef.current) {
       return [1, 1, 1]; // 기본값
@@ -71,10 +71,21 @@ export function DraggableModel({
       const sy = meshRef.current.scale.y;
       const sz = meshRef.current.scale.z;
 
+      // 회전 고려한 실제 바운딩 박스 크기 계산
+      const rotationY = meshRef.current.rotation.y;
+      
+      // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
+      const cos = Math.cos(rotationY);
+      const sin = Math.sin(rotationY);
+      
+      // 회전된 바운딩 박스 크기 (절댓값으로 계산)
+      const rotatedWidth = Math.abs(ox * cos) + Math.abs(oz * sin);
+      const rotatedDepth = Math.abs(ox * sin) + Math.abs(oz * cos);
+
       return [
-        Math.max(ox * sx, 0.001),
+        Math.max(rotatedWidth * sx, 0.001),
         Math.max(oy * sy, 0.001),
-        Math.max(oz * sz, 0.001),
+        Math.max(rotatedDepth * sz, 0.001),
       ];
     } catch (error) {
       console.warn("Failed to calculate selection box size:", error);
@@ -250,7 +261,7 @@ export function DraggableModel({
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
           >
-            <boxGeometry args={getSelectionBoxSize()} />
+            <boxGeometry args={originalSizeRef.current} />
             <meshBasicMaterial transparent={true} opacity={0} visible={false} />
           </mesh>
 
