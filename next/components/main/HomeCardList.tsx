@@ -24,7 +24,7 @@ export function HomeCard({ room }: { room: any }) {
           >
             {/* 호버 시 오버레이 */}
             {isHovered && (
-              <div className="absolute inset-0 bg-black bg-opacity-20 transition-opacity duration-200 flex items-end p-3">
+              <div className="absolute inset-0  transition-opacity duration-200 flex items-end p-3">
                 <div className="text-white text-xs bg-black bg-opacity-50 rounded px-2 py-1">
                   클릭해서 자세히 보기
                 </div>
