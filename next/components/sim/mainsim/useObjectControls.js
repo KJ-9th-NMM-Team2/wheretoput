@@ -44,21 +44,38 @@ export function useObjectControls(
       const SNAP_DISTANCE = 0.3; // 30cm 이내에서 자석 효과 발동
       const WALL_OFFSET = 0.05; // 벽에서 5cm 떨어진 위치에 스냅
 
-      // SelectionBox에서 회전을 고려한 정확한 크기 정보 가져오기
-      let furnitureWidth, furnitureHeight, furnitureDepth;
+      // 원본 크기 정보를 geometry에서 직접 가져와서 OBB 계산에 사용
+      let originalWidth, originalHeight, originalDepth;
       try {
-        [furnitureWidth, furnitureHeight, furnitureDepth] =
-          getSelectionBoxSize();
+        if (meshRef.current) {
+          // rotation을 임시로 0으로 설정하여 원본 크기 계산
+          const originalRotation = meshRef.current.rotation.clone();
+          meshRef.current.rotation.set(0, 0, 0);
+
+          const bbox = new THREE.Box3().setFromObject(meshRef.current);
+          const size = bbox.getSize(new THREE.Vector3());
+          originalWidth = size.x;
+          originalHeight = size.y;
+          originalDepth = size.z;
+
+          // 원래 rotation으로 복원
+          meshRef.current.rotation.copy(originalRotation);
+        } else {
+          // fallback으로 SelectionBox 사용
+          [originalWidth, originalHeight, originalDepth] =
+            getSelectionBoxSize();
+        }
       } catch (error) {
-        console.warn("Failed to get selection box size:", error);
+        console.warn("Failed to get original size:", error);
         return null;
       }
 
-      const furnitureHalfWidth = furnitureWidth / 2;
-      const furnitureHalfDepth = furnitureDepth / 2;
+      const furnitureHalfWidth = originalWidth / 2;
+      const furnitureHalfDepth = originalDepth / 2;
 
-      // 가구의 현재 회전각 가져오기
-      const furnitureRotationY = meshRef.current?.rotation?.y || 0;
+      // 가구의 현재 회전각 가져오기 - 파라미터로 받은 rotation 우선 사용
+      const furnitureRotationY =
+        rotation?.y || meshRef.current?.rotation?.y || 0;
 
       // 모든 벽의 모든 면에 대한 후보들을 수집
       const allCandidates = [];
@@ -95,8 +112,12 @@ export function useObjectControls(
         const furnitureSin = Math.sin(relativeRotation);
 
         // 회전된 가구의 실제 바운딩 박스 크기 (벽의 로컬 좌표계에서)
-        const rotatedFurnitureWidth = Math.abs(furnitureHalfWidth * furnitureCos) + Math.abs(furnitureHalfDepth * furnitureSin);
-        const rotatedFurnitureDepth = Math.abs(furnitureHalfWidth * furnitureSin) + Math.abs(furnitureHalfDepth * furnitureCos);
+        const rotatedFurnitureWidth =
+          Math.abs(furnitureHalfWidth * furnitureCos) +
+          Math.abs(furnitureHalfDepth * furnitureSin);
+        const rotatedFurnitureDepth =
+          Math.abs(furnitureHalfWidth * furnitureSin) +
+          Math.abs(furnitureHalfDepth * furnitureCos);
 
         // Z축 방향 (벽의 앞뒤) 스냅 계산
         if (Math.abs(localX) <= wallHalfWidth + rotatedFurnitureWidth) {
@@ -105,8 +126,12 @@ export function useObjectControls(
           const wallFrontEdge = wallHalfDepth;
           const frontDistance = Math.abs(furnitureBackEdge - wallFrontEdge);
 
-          if (furnitureBackEdge > wallFrontEdge && frontDistance < SNAP_DISTANCE) {
-            const snapLocalZ = wallFrontEdge + WALL_OFFSET + rotatedFurnitureDepth;
+          if (
+            furnitureBackEdge > wallFrontEdge &&
+            frontDistance < SNAP_DISTANCE
+          ) {
+            const snapLocalZ =
+              wallFrontEdge + WALL_OFFSET + rotatedFurnitureDepth;
             const snapWorldPos = {
               x: wallPos.x + (localX * wallCos - snapLocalZ * wallSin),
               y: position.y,
@@ -126,8 +151,12 @@ export function useObjectControls(
           const wallBackEdge = -wallHalfDepth;
           const backDistance = Math.abs(furnitureFrontEdge - wallBackEdge);
 
-          if (furnitureFrontEdge < wallBackEdge && backDistance < SNAP_DISTANCE) {
-            const snapLocalZ = wallBackEdge - WALL_OFFSET - rotatedFurnitureDepth;
+          if (
+            furnitureFrontEdge < wallBackEdge &&
+            backDistance < SNAP_DISTANCE
+          ) {
+            const snapLocalZ =
+              wallBackEdge - WALL_OFFSET - rotatedFurnitureDepth;
             const snapWorldPos = {
               x: wallPos.x + (localX * wallCos - snapLocalZ * wallSin),
               y: position.y,
@@ -150,8 +179,12 @@ export function useObjectControls(
           const wallRightEdge = wallHalfWidth;
           const rightDistance = Math.abs(furnitureLeftEdge - wallRightEdge);
 
-          if (furnitureLeftEdge > wallRightEdge && rightDistance < SNAP_DISTANCE) {
-            const snapLocalX = wallRightEdge + WALL_OFFSET + rotatedFurnitureWidth;
+          if (
+            furnitureLeftEdge > wallRightEdge &&
+            rightDistance < SNAP_DISTANCE
+          ) {
+            const snapLocalX =
+              wallRightEdge + WALL_OFFSET + rotatedFurnitureWidth;
             const snapWorldPos = {
               x: wallPos.x + (snapLocalX * wallCos - localZ * wallSin),
               y: position.y,
@@ -171,8 +204,12 @@ export function useObjectControls(
           const wallLeftEdge = -wallHalfWidth;
           const leftDistance = Math.abs(furnitureRightEdge - wallLeftEdge);
 
-          if (furnitureRightEdge < wallLeftEdge && leftDistance < SNAP_DISTANCE) {
-            const snapLocalX = wallLeftEdge - WALL_OFFSET - rotatedFurnitureWidth;
+          if (
+            furnitureRightEdge < wallLeftEdge &&
+            leftDistance < SNAP_DISTANCE
+          ) {
+            const snapLocalX =
+              wallLeftEdge - WALL_OFFSET - rotatedFurnitureWidth;
             const snapWorldPos = {
               x: wallPos.x + (snapLocalX * wallCos - localZ * wallSin),
               y: position.y,
@@ -310,8 +347,15 @@ export function useObjectControls(
         if (intersectPoint) {
           const newPosition = intersectPoint.clone().sub(dragOffset);
 
-          // 벽 자석 기능 적용
-          const wallSnap = findNearestWallSnap(newPosition);
+          // 벽 자석 기능 적용 - useStore에서 현재 모델의 rotation 정보 가져오기
+          const currentModel = loadedModels.find(
+            (model) => model.id === modelId
+          );
+          const currentRotation = currentModel?.rotation
+            ? { y: currentModel.rotation[1] }
+            : meshRef?.current?.rotation;
+          console.log("현재 회전각도: ", currentRotation);
+          const wallSnap = findNearestWallSnap(newPosition, currentRotation);
           const finalPosition = wallSnap ? wallSnap.snapPosition : newPosition;
 
           // 벽에 스냅되었는지 상태 업데이트
@@ -359,6 +403,7 @@ export function useObjectControls(
       dragOffset,
       loadedModels,
       findNearestWallSnap,
+      meshRef,
     ]
   );
 
