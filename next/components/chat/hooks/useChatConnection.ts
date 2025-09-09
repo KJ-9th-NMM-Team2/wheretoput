@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { setAuthToken } from "@/lib/client/api";
-import { connectSocket, getSocket } from "@/lib/client/socket";
+import { connectSocket, getSocket, disconnectSocket } from "@/lib/client/socket";
 
 export const useChatConnection = (open: boolean) => {
   const [token, setToken] = useState<string | null>(null);
@@ -34,7 +34,14 @@ export const useChatConnection = (open: boolean) => {
         if (!alive || !token) return;
         setToken(token);
         setAuthToken(token);
-        connectSocket(token);
+        const socket = connectSocket(token);
+        
+        // 소켓 연결 상태 확인 (일관성을 위해 추가)
+        if (!socket.connected) {
+          socket.once('connect', () => {
+            console.log('🟢 CHAT CONNECTION: Socket connected');
+          });
+        }
       } catch (e) {
         console.error("token error", e);
       }
@@ -67,8 +74,7 @@ export const useChatConnection = (open: boolean) => {
   // 팝업 닫힐 때 소켓 정리
   useEffect(() => {
     if (open) return;
-    const s = getSocket();
-    if (s) s.disconnect();
+    disconnectSocket(); // 개선된 소켓 정리 함수 사용
   }, [open]);
 
   return { token };

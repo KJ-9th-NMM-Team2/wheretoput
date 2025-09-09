@@ -110,11 +110,22 @@ export const useChatRooms = (
     })();
   }, [open, token, currentUserId]);
 
-  // 실시간 폴링 - 팝업 열림: 3초마다, 닫힘: 30초마다 백그라운드 폴링
+  // 개선된 폴링 시스템 - 실시간 이벤트와 충돌 방지
   useEffect(() => {
     if (!token || !enablePolling) return;
 
+    let isPolling = false; // 폴링 중복 실행 방지
+    let lastUpdateTime = 0; // 마지막 업데이트 시간
+
     const loadRooms = async () => {
+      // 폴링 중복 실행 방지
+      if (isPolling) {
+        console.log("[POLLING] 이미 실행 중이므로 건너뜀");
+        return;
+      }
+
+      isPolling = true;
+      
       try {
         console.log("[POLLING] 채팅방 목록 업데이트 시작");
         const response = await fetch(`${NEXT_API_URL}/api/backend/rooms`, {
@@ -122,7 +133,8 @@ export const useChatRooms = (
         });
         const data = await response.json();
 
-        const prevChats = prevChatsRef.current; // 이전 채팅방 목록 참조
+        const prevChats = prevChatsRef.current;
+        const currentTime = Date.now();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
           r.last_message = r.chat_messages[0] ?? null;
@@ -169,7 +181,7 @@ export const useChatRooms = (
           return result;
         });
 
-        // 새 메시지 감지 및 알림
+        // 새 메시지 감지 및 알림 (백그라운드일 때만)
         if (!open && onNewMessage && prevChats.length > 0) {
           mapped.forEach(currentRoom => {
             const prevRoom = prevChats.find(p => p.chat_room_id === currentRoom.chat_room_id);
@@ -184,9 +196,19 @@ export const useChatRooms = (
           });
         }
 
+        // 실시간 이벤트로 인한 최근 업데이트가 있다면 폴링 데이터보다 우선
+        const timeSinceLastUpdate = currentTime - lastUpdateTime;
+        if (timeSinceLastUpdate < 1000 && open) {
+          console.log("[POLLING] 최근 실시간 업데이트가 있어 폴링 데이터 무시");
+          isPolling = false;
+          return;
+        }
+
         setBaseChats(mapped);
-        prevChatsRef.current = mapped; // 현재 상태를 이전 상태로 저장
+        prevChatsRef.current = mapped;
         setChats(recomputeChats(mapped, query, select, currentUserId));
+        lastUpdateTime = currentTime;
+
         console.log(
           "[POLLING] 채팅방 목록 업데이트 완료 -",
           mapped.length,
@@ -194,19 +216,22 @@ export const useChatRooms = (
         );
       } catch (e) {
         console.error("[POLLING] FAIL", e);
+      } finally {
+        isPolling = false;
       }
     };
 
     // 즉시 한 번 실행
     loadRooms();
 
-    // 팝업 열림: 3초마다, 닫힘: 30초마다 폴링
-    const pollInterval = open ? 3000 : 30000;
+    // 동적 폴링 간격 - 팝업 열림: 5초마다, 닫힘: 30초마다 (실시간 이벤트와 충돌 방지)
+    const pollInterval = open ? 5000 : 30000;
     const interval = setInterval(loadRooms, pollInterval);
 
     return () => {
       console.log("[POLLING] 폴링 중단");
       clearInterval(interval);
+      isPolling = false;
     };
   }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);
 
