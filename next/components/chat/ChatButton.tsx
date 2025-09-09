@@ -22,11 +22,14 @@ export default function ChatButton({
   currentUserId: string | null;
 }) {
   const pathname = usePathname();
-  
+
   if (!currentUserId) return null;
-  
-  // sim/collaboration 페이지에서는 채팅 버튼을 숨김
-  if (pathname?.includes('/sim/collaboration/')) {
+
+  // sim/collaboration, sim/mobile 페이지에서는 채팅 버튼을 숨김
+  if (
+    pathname?.includes("/sim/collaboration/") ||
+    pathname?.includes("/sim/mobile/")
+  ) {
     return null;
   }
 
@@ -42,23 +45,27 @@ export default function ChatButton({
   // 새 메시지 알림 처리
   const handleNewMessage = (roomId: string, room: any) => {
     console.log("🔔 새 메시지 알림:", room.name, room.lastMessage);
-    
+
     // 읽지 않은 메시지 뱃지 표시
     setHasUnreadMessages(true);
-    
+
     // 브라우저 알림 권한 확인 후 알림 표시
     if (Notification.permission === "granted") {
       new Notification(`${room.name}에서 새 메시지`, {
-        body: room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+        body:
+          room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
         icon: "/favicon.ico", // 앱 아이콘
         tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
       });
     } else if (Notification.permission === "default") {
       // 알림 권한 요청
-      Notification.requestPermission().then(permission => {
+      Notification.requestPermission().then((permission) => {
         if (permission === "granted") {
           new Notification(`${room.name}에서 새 메시지`, {
-            body: room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+            body:
+              room.lastMessage === "사진"
+                ? "사진을 보냈습니다"
+                : room.lastMessage,
             icon: "/favicon.ico",
             tag: roomId,
           });
@@ -67,7 +74,15 @@ export default function ChatButton({
     }
   };
 
-  const { baseChats, chats, setChats, setBaseChats, onStartDirect, updateChatRoom, deleteChatRoom } = useChatRooms(
+  const {
+    baseChats,
+    chats,
+    setChats,
+    setBaseChats,
+    onStartDirect,
+    updateChatRoom,
+    deleteChatRoom,
+  } = useChatRooms(
     open,
     token,
     currentUserId,
@@ -84,7 +99,7 @@ export default function ChatButton({
     setText,
     send,
     onSendMessage,
-    onEditorKeyDown
+    onEditorKeyDown,
   } = useChatMessages(
     open,
     selectedChatId,
@@ -103,10 +118,12 @@ export default function ChatButton({
   // 읽지 않은 메시지 수 계산
   const unreadCount = useMemo(() => {
     if (!currentUserId) return 0;
-    return baseChats.filter(chat => {
+    return baseChats.filter((chat) => {
       if (!chat.lastMessageAt || !chat.last_read_at) return false;
-      return new Date(chat.lastMessageAt) > new Date(chat.last_read_at) && 
-             chat.lastMessageSenderId !== currentUserId;
+      return (
+        new Date(chat.lastMessageAt) > new Date(chat.last_read_at) &&
+        chat.lastMessageSenderId !== currentUserId
+      );
     }).length;
   }, [baseChats, currentUserId]);
 
@@ -114,7 +131,6 @@ export default function ChatButton({
   useEffect(() => {
     setHasUnreadMessages(unreadCount > 0);
   }, [unreadCount]);
-
 
   // UI 관련 refs와 스크롤 처리
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -146,9 +162,9 @@ export default function ChatButton({
     };
 
     // 여러 시점에서 스크롤 시도
-    setTimeout(scrollToBottom, 0);    // 즉시
-    setTimeout(scrollToBottom, 50);   // 50ms 후
-    setTimeout(scrollToBottom, 200);  // 200ms 후
+    setTimeout(scrollToBottom, 0); // 즉시
+    setTimeout(scrollToBottom, 50); // 50ms 후
+    setTimeout(scrollToBottom, 200); // 200ms 후
   }, [selectedChatId]);
 
   // 새 메시지 추가 시 맨 아래로 스크롤
@@ -182,9 +198,11 @@ export default function ChatButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-
   // 1:1 채팅 시작 핸들러
-  const handleStartDirect = async (otherUserId: string, otherUserName?: string) => {
+  const handleStartDirect = async (
+    otherUserId: string,
+    otherUserName?: string
+  ) => {
     // 필터 초기화
     setQuery("");
     setSelect("전체");
@@ -241,7 +259,7 @@ export default function ChatButton({
               // 채팅방에서 나갈 때 해당 채팅방의 읽음 상태를 현재 시간으로 업데이트
               if (selectedChatId) {
                 updateChatRoom(selectedChatId, {
-                  last_read_at: new Date().toISOString()
+                  last_read_at: new Date().toISOString(),
                 });
               }
               setselectedChatId(null);
