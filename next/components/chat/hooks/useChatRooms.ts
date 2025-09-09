@@ -155,12 +155,12 @@ export const useChatRooms = (
           };
 
           // // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          // if (
-          //   result.lastMessageSenderId === currentUserId &&
-          //   result.lastMessageAt
-          // ) {
-          //   result.last_read_at = result.lastMessageAt;
-          // }
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
+            result.last_read_at = result.lastMessageAt;
+          }
 
           return result;
         });
