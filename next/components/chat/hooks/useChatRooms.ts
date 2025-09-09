@@ -75,19 +75,23 @@ export const useChatRooms = (
           };
 
           // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          if (
-            result.lastMessageSenderId === currentUserId &&
-            result.lastMessageAt
-          ) {
-            result.last_read_at = result.lastMessageAt;
-          }
+          // console.log("마지막 메시지가 누가 보냈을까?");
+          // console.log("result.lastMessageSenderId", result.lastMessageSenderId);
+          // console.log("currentUserId", currentUserId);
+          // console.log("result.lastMessageAt", result.lastMessageAt);
+          // if (
+          //   result.lastMessageSenderId === currentUserId &&
+          //   result.lastMessageAt
+          // ) {
+          //   result.last_read_at = result.lastMessageAt;
+          // }
 
-          console.log(
-            "lastMessageAt:",
-            result.lastMessageAt,
-            "last_read_at:",
-            result.last_read_at
-          );
+          // console.log(
+          //   "lastMessageAt:",
+          //   result.lastMessageAt,
+          //   "last_read_at:",
+          //   result.last_read_at
+          // );
 
           return result;
         });
@@ -154,13 +158,13 @@ export const useChatRooms = (
             searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
           };
 
-          // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          if (
-            result.lastMessageSenderId === currentUserId &&
-            result.lastMessageAt
-          ) {
-            result.last_read_at = result.lastMessageAt;
-          }
+          // // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
+          // if (
+          //   result.lastMessageSenderId === currentUserId &&
+          //   result.lastMessageAt
+          // ) {
+          //   result.last_read_at = result.lastMessageAt;
+          // }
 
           return result;
         });
