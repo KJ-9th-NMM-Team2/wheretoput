@@ -10,11 +10,12 @@ export function Wall({
   depth = 0.1,
   position,
   rotation = [0, 0, 0],
+  id,
 }) {
   const { invalidate } = useThree();
   const meshRef = useRef(null);
   const { camera } = useThree();
-  const { enableWallTransparency, wallColor } = useStore();
+  const { enableWallTransparency, wallColor, snappedWallInfo } = useStore();
 
   useEffect(() => {
     invalidate();
@@ -47,7 +48,7 @@ export function Wall({
       const newOpacity =
         ((maxOpacity - minOpacity) /
           (maxDistanceThreshold - minDistanceThreshold)) *
-        (distance - minDistanceThreshold) +
+          (distance - minDistanceThreshold) +
         minOpacity;
       meshRef.current.material.opacity = newOpacity;
     }
@@ -62,6 +63,16 @@ export function Wall({
         roughness={0.8}
         metalness={0.1}
       />
+      {snappedWallInfo?.wall.id === id && (
+        <mesh>
+          <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
+          <meshBasicMaterial
+            color={0xffff00} // 경계선 색
+            transparent
+            opacity={0.4} // 반투명
+          />
+        </mesh>
+      )}
     </mesh>
   );
 }
