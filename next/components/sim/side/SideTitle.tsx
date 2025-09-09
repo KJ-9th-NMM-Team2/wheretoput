@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import EditPopup from "./EditPopup";
-import ExitConfirmModal from "./ExitConfirmModal";
 import { useStore } from "@/components/sim/useStore.js";
 import {
   fetchRoomInfo,
@@ -12,8 +11,8 @@ import {
   type RoomInfo,
 } from "@/lib/roomService";
 import { useRouter } from "next/navigation";
-import { saveRoom } from "@/lib/api/saveRoom";
 import { useSession } from "next-auth/react";
+import ExitConfirmModal from "./ExitConfirmModal";
 
 // React 컴포넌트는 반드시 props 객체 하나만 받아야 하기 때문에 interface로 정의
 interface SideTitleProps {
@@ -37,18 +36,25 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
 
   // Zustand store에서 현재 방 ID 가져오기
   const {
-    saveSimulatorState,
     currentRoomId,
-    loadedModels,
-    setShouldCapture,
     checkUserRoom, 
   } = useStore();
 
   // 뒤로 가기 버튼
   const router = useRouter()
-  const [saveMessage, setSaveMessage] = useState("");
+  const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
 
   const { data: session } = useSession();
+
+  // 방 입장 시 유저 방인지 아닌지 확인하는 코드
+  useEffect(() => {
+    const fetchIsUserRoom = async () => {
+      const check = await checkUserRoom(currentRoomId, session?.user?.id);
+
+      setIsOwnUserRoom(check);
+    }
+    fetchIsUserRoom();
+  }, []);
 
   // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
   useEffect(() => {
@@ -94,45 +100,25 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     setShowPopup(false);
   };
 
-  // // 방 나가기를 위한 저장 처리
-  // const handleSaveRoom = async () => {
-  //   await saveRoom({
-  //     currentRoomId,
-  //     setSaveMessage,
-  //     saveSimulatorState,
-  //     setShouldCapture,
-  //     loadedModels,
-  //   });
-  // };
-
-  // // 방 나가기 경고창
-  // const handleOutofRoomClick = () => {
-  //   setShowExitModal(true);
-  // };
-
+  // 방 나가기 경고창
+  const handleOutofRoomClick = () => {
+    setShowExitModal(true);
+  };
   // // 실제 방 나가기 처리
-  // const handleConfirmExit = async () => {
-  //   setShowExitModal(false);
+  const handleConfirmExit = async () => {
+    setShowExitModal(false);
     
-  //   const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
+    // URL에서 from 파라미터 확인하거나 sessionStorage 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const fromStorage = sessionStorage.getItem('previousPage');
     
-  //   // 자신의 방일때는 저장후 나가기
-  //   if (isOwnUserRoom) {
-  //     await handleSaveRoom();
-  //     console.log("방 저장 완료!");
-  //   }
-    
-  //   // URL에서 from 파라미터 확인하거나 sessionStorage 확인
-  //   const urlParams = new URLSearchParams(window.location.search);
-  //   const fromParam = urlParams.get('from');
-  //   const fromStorage = sessionStorage.getItem('previousPage');
-    
-  //   if (fromParam === 'create' || fromStorage === 'create') {
-  //     router.push('/');
-  //   } else {
-  //     router.back();
-  //   }
-  // };
+    if (fromParam === 'create' || fromStorage === 'create') {
+      router.push('/');
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <>
@@ -150,25 +136,6 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
               {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
             </button>
           )}
-          {/* {!collapsed && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSettingsClick}
-                className="ml-2 px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm h-8 flex items-center"
-              >
-                ⚙️
-              </button>
-              <button
-                type="button"
-                onClick={handleOutofRoomClick}
-                className="px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-semibold hover:bg-gray-200 transition-colors border border-gray-300 shadow-sm h-8 flex items-center"
-              >
-                나가기
-              </button>
-            </div>
-          )} */}
-          
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={`text-gray-500 hover:text-gray-700 transition-all duration-300 
@@ -187,18 +154,20 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
           initialTitle={roomInfo.title}
           initialDescription={roomInfo.description}
           initialIsPublic={roomInfo.is_public}
+          isOwnUserRoom={isOwnUserRoom}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={() => setShowPopup(false)}
+          handleOutofRoomClick={handleOutofRoomClick}
         />
       )}
 
       {/* 나가기 확인 모달 */}
-      {/* <ExitConfirmModal
+      <ExitConfirmModal
         isOpen={showExitModal}
         onConfirm={handleConfirmExit}
         onCancel={() => setShowExitModal(false)}
-      /> */}
+      />
     </>
   );
 };
