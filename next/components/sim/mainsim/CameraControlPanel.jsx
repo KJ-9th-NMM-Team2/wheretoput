@@ -25,8 +25,8 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
     overflowY: 'auto'
   };
 
-  const positionStyle = isPopup ? 
-    { position: 'static' } : 
+  const positionStyle = isPopup ?
+    { position: 'static' } :
     { position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '10px', zIndex: 100 };
 
   return (
@@ -34,7 +34,7 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px'}}><span className="text-lg">📷</span> 카메라 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}><span className="text-lg">📷</span> 카메라 세팅</h3>
 
       <div
         style={{
@@ -87,7 +87,8 @@ function ControlSlider({
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: '3px'
+      gap: '3px',
+      marginBottom: '7px'
     }}>
       <span style={{
         minWidth: '50px',
@@ -119,7 +120,7 @@ function ControlSlider({
 
 function WallTransparencyToggle({ enabled, onToggle }) {
   return (
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-2">
       <span className="text-s text-white">벽 투명화 on/off</span>
       <button
         onClick={() => onToggle(!enabled)}
@@ -138,11 +139,18 @@ function WallTransparencyToggle({ enabled, onToggle }) {
 function CameraResetButton({ controlsRef }) {
 
   return (
-    <button
-      onClick={() => controlsRef.current.reset()}
-      className="w-full px-4 py-2.5 bg-red-500 hover:bg-blue-600 text-white border-none rounded text-sm cursor-pointer transition-colors duration-200"
-    >
-      카메라 위치 리셋
-    </button>
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+    }}>
+      <button
+        onClick={() => controlsRef.current.reset()}
+        className="fit-content bg-red-500 border-none rounded cursor-pointer hover:bg-blue-600 duration-200"
+      >
+        <span className="block px-10 py-1.5 text-white text-sm hover:translate-y-0.5 duration-200">
+          카메라 위치 리셋
+        </span>
+      </button>
+    </div>
   );
 }
