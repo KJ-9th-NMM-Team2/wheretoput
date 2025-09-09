@@ -56,7 +56,6 @@ function CollaborationPageContent({
   const [isOwner, setIsOwner] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  const [isVisible, setIsVisible] = useState(false);
 
   // 채팅 관련 상태와 훅
   const [isChatFocused, setIsChatFocused] = useState(false);
@@ -83,10 +82,6 @@ function CollaborationPageContent({
     handleChatRoomUpdate
   );
   
-  // 채팅 목록에서 유저를 선택할 시
-  useEffect(() => {
-    setIsVisible(true);
-  }, [selectedChatId]);
 
   // 협업 모드 초기 설정
   useEffect(() => {
@@ -233,8 +228,6 @@ function CollaborationPageContent({
     <>
       <SimulatorCore
         roomId={roomId}
-        setIsVisible={setIsVisible}
-        setSelectedChatId={setSelectedChatId}
         showSidebar={true}
         showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
         showEditControls={true}
@@ -265,7 +258,7 @@ function CollaborationPageContent({
       {/* 게임 스타일 채팅 UI - 로그인한 사용자가 채팅방을 선택한 경우에만 표시 */}
       {session?.user?.id && selectedChatId && (
         <GameStyleChatPopup
-          isVisible={isVisible}
+          isVisible={true}
           messages={selectedMessages}
           text={text}
           setText={setText}

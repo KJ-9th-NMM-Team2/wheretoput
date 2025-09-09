@@ -108,9 +108,6 @@ function CameraUpdater() {
 // SimulatorCore Props 타입 정의
 interface SimulatorCoreProps {
   roomId: string;
-  // 채팅 팝업 visible
-  setIsVisible: (isVisible: boolean) => void;
-  setSelectedChatId: (selectedChatId: string) => void;
   // 모드별 설정
   showSidebar?: boolean;
   showModeControls?: boolean;
@@ -137,8 +134,6 @@ interface SimulatorCoreProps {
  */
 export function SimulatorCore({
   roomId,
-  setIsVisible,
-  setSelectedChatId,
   showSidebar = true,
   showModeControls = true,
   showEditControls = true,
@@ -258,11 +253,6 @@ export function SimulatorCore({
     };
   }, [addModelWithId, removeModel]);
 
-  const handleBackgroundClick = () => {
-    setIsVisible(false);
-    setSelectedChatId("");
-  }
-
   return (
     <div
       className={`flex h-screen overflow-hidden ${
@@ -333,7 +323,6 @@ export function SimulatorCore({
             marginTop: isMobile ? "60px" : "0", // 모바일 헤더 높이만큼 여백
           }}
           frameloop="demand"
-          onClick={handleBackgroundClick}
         >
           <Environment preset={environmentPreset} background={false} />
 
