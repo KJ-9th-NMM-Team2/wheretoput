@@ -226,7 +226,78 @@ export function useObjectControls(
         }
       });
 
-      // 모든 벽의 모든 면 중에서 전체적으로 가장 가까운 면 선택
+      // 코너 스냅 기능: 두 벽에 동시에 스냅 가능한지 확인
+      const CORNER_SNAP_DISTANCE = 0.6; // 코너 스냅을 위한 더 큰 거리 (더 강한 자석 효과)
+
+      // 가까운 후보들만 필터링 (코너 스냅용)
+      const nearCandidates = allCandidates.filter(
+        (candidate) => candidate.distance < CORNER_SNAP_DISTANCE
+      );
+
+      // 두 개 이상의 가까운 벽이 있을 때 코너 스냅 시도
+      if (nearCandidates.length >= 2) {
+        // 각 벽 조합을 확인하여 직각인지 체크
+        for (let i = 0; i < nearCandidates.length; i++) {
+          for (let j = i + 1; j < nearCandidates.length; j++) {
+            const wall1 = nearCandidates[i].wall;
+            const wall2 = nearCandidates[j].wall;
+
+            // 두 벽의 회전각 차이가 90도(π/2) 근처인지 확인 (평행 벽 제외)
+            const angleDiff = Math.abs(wall1.rotation[1] - wall2.rotation[1]);
+            const normalizedDiff = angleDiff % (2 * Math.PI); // 2π로 정규화
+            const isRightAngle =
+              Math.abs(normalizedDiff - Math.PI / 2) < 0.1 ||
+              Math.abs(normalizedDiff - (3 * Math.PI) / 2) < 0.1;
+            // 평행 벽(0도, 180도) 제외
+
+            if (isRightAngle) {
+              // 코너 위치 계산: 두 벽의 스냅 위치를 조합
+              const candidate1 = nearCandidates[i];
+              const candidate2 = nearCandidates[j];
+
+              // X, Z 좌표를 각각 더 제약이 강한 쪽으로 설정
+              let cornerX, cornerZ;
+
+              // 각 벽에서 어느 축이 더 제약적인지 판단
+              if (candidate1.face === "left" || candidate1.face === "right") {
+                // wall1이 X축 제약
+                cornerX = candidate1.snapPosition.x;
+                cornerZ = candidate2.snapPosition.z;
+              } else {
+                // wall1이 Z축 제약
+                cornerX = candidate2.snapPosition.x;
+                cornerZ = candidate1.snapPosition.z;
+              }
+
+              const cornerPosition = {
+                x: cornerX,
+                y: position.y,
+                z: cornerZ,
+              };
+
+              // 코너 위치에서의 거리 계산
+              const cornerDistance = Math.sqrt(
+                Math.pow(cornerPosition.x - position.x, 2) +
+                  Math.pow(cornerPosition.z - position.z, 2)
+              );
+
+              // 코너 스냅 거리를 더 크게 해서 자석 효과 강화
+              if (cornerDistance < CORNER_SNAP_DISTANCE) {
+                return {
+                  wall: wall1, // 주 벽
+                  wall2: wall2, // 보조 벽
+                  snapPosition: cornerPosition,
+                  distance: 0, // 코너 스냅은 최우선으로 처리 (거리를 0으로 설정)
+                  face: "corner",
+                  isCornerSnap: true,
+                };
+              }
+            }
+          }
+        }
+      }
+
+      // 코너 스냅이 없다면 기존 로직으로 가장 가까운 면 선택
       if (allCandidates.length > 0) {
         const closestCandidate = allCandidates.reduce((closest, current) =>
           current.distance < closest.distance ? current : closest
@@ -249,9 +320,8 @@ export function useObjectControls(
     (e) => {
       e.stopPropagation();
 
-      // 🔒 락 체크 - 맨 처음에!
+      // 🔒 락 체크 - 맨 처음에! 
       if (isModelLocked(modelId)) {
-        console.log("🚫 모델이 락되어 있어서 상호작용 차단:", modelId);
         return; // 모든 상호작용 차단
       }
 
@@ -354,9 +424,20 @@ export function useObjectControls(
           const currentRotation = currentModel?.rotation
             ? { y: currentModel.rotation[1] }
             : meshRef?.current?.rotation;
-          console.log("현재 회전각도: ", currentRotation);
           const wallSnap = findNearestWallSnap(newPosition, currentRotation);
-          const finalPosition = wallSnap ? wallSnap.snapPosition : newPosition;
+
+          // 코너 스냅일 때는 코너 위치로 이동 후 고정, 일반 스냅일 때는 제약된 이동 허용
+          let finalPosition;
+          if (wallSnap?.isCornerSnap) {
+            // 코너 스냅: 두 벽에 딱 맞는 코너 위치로 이동하고 고정
+            finalPosition = wallSnap.snapPosition;
+          } else if (wallSnap) {
+            // 일반 벽 스냅: 한 축만 제약
+            finalPosition = wallSnap.snapPosition;
+          } else {
+            // 스냅 없음: 자유 이동
+            finalPosition = newPosition;
+          }
 
           // 벽에 스냅되었는지 상태 업데이트
           const wasSnapped = isSnappedToWall;
@@ -368,8 +449,12 @@ export function useObjectControls(
 
           // 스냅 상태가 변경되었을 때 시각적/햅틱 피드백
           if (!wasSnapped && isNowSnapped) {
-            // 벽에 스냅됨 - 커서 변경 또는 다른 피드백
-            gl.domElement.style.cursor = "grabbing";
+            // 벽에 스냅됨 - 코너 스냅인지 확인
+            if (wallSnap.isCornerSnap) {
+              gl.domElement.style.cursor = "crosshair"; // 코너 스냅 시 특별한 커서
+            } else {
+              gl.domElement.style.cursor = "grabbing";
+            }
           } else if (wasSnapped && !isNowSnapped) {
             // 벽에서 해제됨
             gl.domElement.style.cursor = "grabbing";

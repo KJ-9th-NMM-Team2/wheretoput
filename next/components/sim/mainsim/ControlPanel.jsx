@@ -4,7 +4,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { getColab } from "@/lib/api/toggleColab";
 
-
 const handleSave = async () => {
   if (!currentRoomId) {
     setSaveMessage("방 ID가 설정되지 않았습니다.");
@@ -151,7 +150,7 @@ export function ControlPanel({ isPopup = false }) {
     `}
     >
       {/* 벽 스케일 설정 */}
-      <div className="mb-2.5">
+      {/* <div className="mb-2.5">
         <label className="text-white">벽 크기 조정:</label>
         <input
           type="range"
@@ -172,42 +171,33 @@ export function ControlPanel({ isPopup = false }) {
         <div className="text-orange-500 text-center">
           {wallScaleFactor.toFixed(1)}x
         </div>
-      </div>
+      </div> */}
 
       {/* 저장 버튼 */}
       <div className="mb-2.5">
         <button
           onClick={handleSave}
-          disabled={
-            !isOwnUserRoom ||
-            !currentRoomId ||
-            (isCollabModeActive && !collaborationMode)
-          }
+          disabled={!isOwnUserRoom || !currentRoomId}
           className={`
-            w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
+            w-full px-4 py-2.5 text-white border-none rounded text-sm mt-10 mb-1.5
             ${
               currentRoomId
                 ? isSaving
                   ? "bg-gray-500 cursor-not-allowed"
-                  : isCollabModeActive && !collaborationMode
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : isOwnUserRoom
+                  : // : isCollabModeActive && !collaborationMode
+                  // ? "bg-gray-500 cursor-not-allowed"
+                  isOwnUserRoom
                   ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
                   : "bg-gray-500 cursor-not-allowed"
                 : "bg-gray-600 cursor-not-allowed"
             }
           `}
-          title={
-            isCollabModeActive && !collaborationMode
-              ? "협업 모드에서 저장해주세요."
-              : ""
-          }
         >
           {isSaving
             ? "저장 중..."
-            : isCollabModeActive && !collaborationMode
-            ? "협업 모드에서 저장해주세요."
-            : isOwnUserRoom
+            : // : isCollabModeActive && !collaborationMode
+            // ? "협업 모드에서 저장해주세요."
+            isOwnUserRoom
             ? `방 상태 저장 (${loadedModels.length}개)`
             : `복제 후 저장해주세요.`}
         </button>
