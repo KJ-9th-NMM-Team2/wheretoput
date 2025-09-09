@@ -105,7 +105,7 @@ export default function ChatListView({
     try {
       setLoading(true);
       
-      const response = await api.post('http://localhost:3001/rooms/group', {
+      const response = await api.post(`${process.env.NEXT_PUBLIC_BASE_URL}/rooms/group`, {
         participantIds: selectedUserIds,
       });
 
