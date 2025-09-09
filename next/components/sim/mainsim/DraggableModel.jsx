@@ -1,10 +1,16 @@
 import React, { useRef, useEffect, useMemo } from "react";
-import { useGLTF, useTexture, Line } from "@react-three/drei";
+import {
+  useGLTF,
+  useTexture,
+  Line,
+  MeshRefractionMaterial,
+} from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
+import { useCallback } from "react";
 
 export function DraggableModel({
   modelId,
@@ -41,15 +47,47 @@ export function DraggableModel({
     updateModelPosition,
     updateModelRotation,
     updateModelScale,
+    setSnappedWallInfo,
   } = useStore();
+
+  // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
+  const validUrl =
+    url && typeof url === "string" ? url : "/legacy_mesh (1).glb";
+  const { scene, animations } = useGLTF(validUrl);
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
+
+  const originalSizeRef = useRef([1, 1, 1]);
+  // 선택 표시 박스 크기 결정
+  const getSelectionBoxSize = useCallback(() => {
+    if (!meshRef.current) {
+      return [1, 1, 1]; // 기본값
+    }
+
+    try {
+      const [ox, oy, oz] = originalSizeRef.current;
+      const sx = meshRef.current.scale.x;
+      const sy = meshRef.current.scale.y;
+      const sz = meshRef.current.scale.z;
+
+      return [
+        Math.max(ox * sx, 0.001),
+        Math.max(oy * sy, 0.001),
+        Math.max(oz * sz, 0.001),
+      ];
+    } catch (error) {
+      console.warn("Failed to calculate selection box size:", error);
+      return [1, 1, 1];
+    }
+  }, [scene]);
 
   // 객체 조작 훅 사용
   const {
     isDragging,
     isScaling,
+    isSnappedToWall,
+    snappedWallInfo,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
@@ -62,13 +100,10 @@ export function DraggableModel({
     updateModelScale,
     selectModel,
     hoveringModel,
-    controlsRef
+    controlsRef,
+    getSelectionBoxSize,
+    meshRef
   );
-
-  // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
-  const validUrl =
-    url && typeof url === "string" ? url : "/legacy_mesh (1).glb";
-  const { scene, animations } = useGLTF(validUrl);
   const texture = texturePath ? useTexture(texturePath) : null;
 
   // 모델 설정 (그림자, 클릭 이벤트, 텍스처)
@@ -80,6 +115,7 @@ export function DraggableModel({
       const box = new THREE.Box3().setFromObject(scene);
       const modelSize = new THREE.Vector3();
       box.getSize(modelSize);
+      originalSizeRef.current = [modelSize.x, modelSize.y, modelSize.z];
 
       // 목표 크기로 스케일 조정
       const targetScale = safeScale.map(
@@ -144,6 +180,11 @@ export function DraggableModel({
     }
   }, [isDragging, isScaling, handlePointerMove, handlePointerUp]);
 
+  // 스냅된 벽 정보를 전역 상태로 업데이트
+  useEffect(() => {
+    setSnappedWallInfo(snappedWallInfo);
+  }, [snappedWallInfo, setSnappedWallInfo]);
+
   // 히스토리 시스템에서 오는 이벤트 리스너
   useEffect(() => {
     const handleHistoryMove = (event) => {
@@ -178,33 +219,6 @@ export function DraggableModel({
     };
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
-  // 선택 표시 박스 크기 결정
-  const getSelectionBoxSize = () => {
-    if (!scene || !meshRef.current) {
-      return [1, 1, 1]; // 기본값
-    }
-
-    try {
-      const box = new THREE.Box3().setFromObject(scene);
-      if (box.isEmpty()) {
-        return [1, 1, 1]; // 빈 박스인 경우 기본값
-      }
-
-      const boxSize = new THREE.Vector3();
-      box.getSize(boxSize);
-
-      // 크기가 너무 작거나 0인 경우 기본값 사용
-      const x = Math.max(boxSize.x || 1, 0.1);
-      const y = Math.max(boxSize.y || 1, 0.1);
-      const z = Math.max(boxSize.z || 1, 0.1);
-
-      return [x, y, z];
-    } catch (error) {
-      console.warn("Failed to calculate selection box size:", error);
-      return [1, 1, 1];
-    }
-  };
-
   return (
     <>
       {viewOnly ? (
@@ -215,9 +229,9 @@ export function DraggableModel({
           scale={safeScale}
         >
           <primitive object={scene.clone()} />
-          <ModelTooltip 
-            modelId={modelId} 
-            position={position} 
+          <ModelTooltip
+            modelId={modelId}
+            position={position}
             boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
           />
         </group>
@@ -243,13 +257,15 @@ export function DraggableModel({
           {(isSelected || isHovering) && (
             <SelectionBox
               isSelected={isSelected}
+              isSnappedToWall={isSnappedToWall}
               getSelectionBoxSize={getSelectionBoxSize}
+              originalSizeRef={originalSizeRef.current}
             />
           )}
-          
-          <ModelTooltip 
-            modelId={modelId} 
-            position={position} 
+
+          <ModelTooltip
+            modelId={modelId}
+            position={position}
             boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
           />
         </group>
@@ -258,34 +274,49 @@ export function DraggableModel({
   );
 }
 
-function SelectionBox({ isSelected, getSelectionBoxSize, lineWidth = 3 }) {
+function SelectionBox({
+  isSelected,
+  isSnappedToWall,
+  getSelectionBoxSize,
+  lineWidth = 3,
+  originalSizeRef,
+}) {
   const points = useMemo(() => {
-    const [w, h, d] = getSelectionBoxSize();
+    const [w, h, d] = originalSizeRef;
 
     const vertices = [
       [-w / 2, -h / 2, -d / 2],
-      [ w / 2, -h / 2, -d / 2],
-      [ w / 2,  h / 2, -d / 2],
-      [-w / 2,  h / 2, -d / 2],
-      [-w / 2, -h / 2,  d / 2],
-      [ w / 2, -h / 2,  d / 2],
-      [ w / 2,  h / 2,  d / 2],
-      [-w / 2,  h / 2,  d / 2],
+      [w / 2, -h / 2, -d / 2],
+      [w / 2, h / 2, -d / 2],
+      [-w / 2, h / 2, -d / 2],
+      [-w / 2, -h / 2, d / 2],
+      [w / 2, -h / 2, d / 2],
+      [w / 2, h / 2, d / 2],
+      [-w / 2, h / 2, d / 2],
     ];
 
     const edges = [
-      [0, 1], [2, 3], [0, 4], [5, 6], [7, 4],
-      [5, 1], [2, 6], [7, 3]
+      [0, 1],
+      [2, 3],
+      [0, 4],
+      [5, 6],
+      [7, 4],
+      [5, 1],
+      [2, 6],
+      [7, 3],
     ];
 
-    return edges.flatMap(([start, end]) => [vertices[start], vertices[end]]).flat();
-  }, [getSelectionBoxSize]);
+    return edges
+      .flatMap(([start, end]) => [vertices[start], vertices[end]])
+      .flat();
+  }, [getSelectionBoxSize, originalSizeRef]);
 
-  return (
-    <Line
-      points={points}
-      color={isSelected ? "#0000ff" : "#00eeff"}
-      lineWidth={lineWidth}
-    />
-  );
+  // 색상 결정: 스냅 중이면 주황색, 선택됨이면 파란색, 호버면 청록색
+  const getColor = () => {
+    if (isSnappedToWall) return "#ff8c00"; // 주황색 (스냅 상태)
+    if (isSelected) return "#0000ff"; // 파란색 (선택됨)
+    return "#00eeff"; // 청록색 (호버)
+  };
+
+  return <Line points={points} color={getColor()} lineWidth={lineWidth} />;
 }
