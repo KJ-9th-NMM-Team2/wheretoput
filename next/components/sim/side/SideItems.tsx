@@ -68,22 +68,9 @@ const SideItems: React.FC<SideItemsProps> = ({
   // 페이지나 카테고리 변경 시 데이터 가져오기
   useEffect(() => {
     const handleCategoryChange = async () => {
-      if (selectedCategory === "-1") {
-        const pagination = calculatePagination(currentPage, 5, totalPages);
-        setTotalItems(pagination.totalItems);
-        setTotalPages(pagination.totalPages);
-        const furnitureId = loadedModels.map((item: any) => item.furniture_id);
-        const result = await fetchSelectedFurnitures(furnitureId, roomId, sortOption);
-
-        if (result) {
-          setSelectedItems(result.furnitures);
-          setTotalPrice(result.totalPrice);
-        }
-      } else {
-        fetchItems(currentPage, selectedCategory, sortOption);
-        setSelectedItems([]);
-        setTotalPrice(0);
-      }
+      fetchItems(currentPage, selectedCategory, sortOption);
+      setSelectedItems([]);
+      setTotalPrice(0);
     };
     handleCategoryChange();
   }, [currentPage, selectedCategory, sortOption, fetchItems]);
