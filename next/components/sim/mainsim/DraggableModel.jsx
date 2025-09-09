@@ -74,7 +74,7 @@ export function DraggableModel({
       // 회전 고려한 실제 바운딩 박스 크기 계산
       const rotationY = meshRef.current.rotation.y;
       
-      // 90도 단위 회전이므로 sin, cos 값이 0, 1, -1 중 하나
+      // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
       const cos = Math.cos(rotationY);
       const sin = Math.sin(rotationY);
       
