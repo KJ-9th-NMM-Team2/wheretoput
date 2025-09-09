@@ -227,20 +227,27 @@ export function useObjectControls(
       });
 
       // 코너 스냅 기능: 두 벽에 동시에 스냅 가능한지 확인
-      const CORNER_SNAP_DISTANCE = 0.6; // 코너 스냅을 위한 더 큰 거리 (더 강한 자석 효과)
+      const CORNER_SNAP_DISTANCE = 0.5; // 코너 스냅을 위한 더 큰 거리 (더 강한 자석 효과)
 
-      // 가까운 후보들만 필터링 (코너 스냅용)
+      // 가까운 후보들만 필터링 (코너 스냅용) - 이미 스냅된 상태에서도 다른 벽을 감지할 수 있도록 거리 조건을 완화
       const nearCandidates = allCandidates.filter(
         (candidate) => candidate.distance < CORNER_SNAP_DISTANCE
       );
 
-      // 두 개 이상의 가까운 벽이 있을 때 코너 스냅 시도
-      if (nearCandidates.length >= 2) {
+      // 현재 스냅된 벽이 있다면 우선적으로 고려 (이미 스냅된 상태에서 코너 스냅 감지 향상)
+      const currentlySnapped = allCandidates.filter(candidate => candidate.distance < 0.05);
+      
+      // 두 개 이상의 가까운 벽이 있을 때 코너 스냅 시도 (현재 스냅된 벽 포함)
+      const candidatesForCorner = currentlySnapped.length > 0 ? 
+        [...currentlySnapped, ...nearCandidates.filter(c => !currentlySnapped.includes(c))] : 
+        nearCandidates;
+        
+      if (candidatesForCorner.length >= 2) {
         // 각 벽 조합을 확인하여 직각인지 체크
-        for (let i = 0; i < nearCandidates.length; i++) {
-          for (let j = i + 1; j < nearCandidates.length; j++) {
-            const wall1 = nearCandidates[i].wall;
-            const wall2 = nearCandidates[j].wall;
+        for (let i = 0; i < candidatesForCorner.length; i++) {
+          for (let j = i + 1; j < candidatesForCorner.length; j++) {
+            const wall1 = candidatesForCorner[i].wall;
+            const wall2 = candidatesForCorner[j].wall;
 
             // 두 벽의 회전각 차이가 90도(π/2) 근처인지 확인 (평행 벽 제외)
             const angleDiff = Math.abs(wall1.rotation[1] - wall2.rotation[1]);
@@ -251,22 +258,92 @@ export function useObjectControls(
             // 평행 벽(0도, 180도) 제외
 
             if (isRightAngle) {
-              // 코너 위치 계산: 두 벽의 스냅 위치를 조합
-              const candidate1 = nearCandidates[i];
-              const candidate2 = nearCandidates[j];
+              // 코너 위치 계산: 두 벽 모두에 정확히 WALL_OFFSET + 가구크기/2 거리로 배치
+              const candidate1 = candidatesForCorner[i];
+              const candidate2 = candidatesForCorner[j];
+              const wall1 = candidate1.wall;
+              const wall2 = candidate2.wall;
 
-              // X, Z 좌표를 각각 더 제약이 강한 쪽으로 설정
+              // 가구의 회전된 크기
+              const furnitureRotationY = rotation?.y || meshRef.current?.rotation?.y || 0;
+              const furnitureCos = Math.cos(furnitureRotationY);
+              const furnitureSin = Math.sin(furnitureRotationY);
+              
+              const rotatedFurnitureWidth = Math.abs(furnitureHalfWidth * furnitureCos) + Math.abs(furnitureHalfDepth * furnitureSin);
+              const rotatedFurnitureDepth = Math.abs(furnitureHalfWidth * furnitureSin) + Math.abs(furnitureHalfDepth * furnitureCos);
+
+              // 각 벽에서 가구 중심까지의 정확한 거리 계산 (벽면 + WALL_OFFSET + 가구 반폭)
               let cornerX, cornerZ;
 
-              // 각 벽에서 어느 축이 더 제약적인지 판단
-              if (candidate1.face === "left" || candidate1.face === "right") {
-                // wall1이 X축 제약
+              // wall1과 wall2 중 어느 것이 X축/Z축 제약인지 판단
+              const wall1IsXConstraint = candidate1.face === "left" || candidate1.face === "right";
+              const wall2IsXConstraint = candidate2.face === "left" || candidate2.face === "right";
+
+              if (wall1IsXConstraint && !wall2IsXConstraint) {
+                // wall1이 X축 제약, wall2가 Z축 제약
+                const wall1Pos = new THREE.Vector3(...wall1.position);
+                const wall1Rotation = wall1.rotation[1];
+                const wall1HalfWidth = wall1.dimensions.width / 2;
+                const wall1HalfDepth = wall1.dimensions.depth / 2;
+                
+                const wall2Pos = new THREE.Vector3(...wall2.position);
+                const wall2Rotation = wall2.rotation[1];
+                const wall2HalfDepth = wall2.dimensions.depth / 2;
+
+                // X좌표: wall1 면에서 WALL_OFFSET + 가구 반폭만큼 떨어진 위치
+                const wall1Cos = Math.cos(wall1Rotation);
+                const wall1Sin = Math.sin(wall1Rotation);
+                const distanceFromWall1 = WALL_OFFSET + rotatedFurnitureWidth;
+                
+                if (candidate1.face === "right") {
+                  cornerX = wall1Pos.x + (wall1HalfWidth + distanceFromWall1) * wall1Cos;
+                } else { // left
+                  cornerX = wall1Pos.x - (wall1HalfWidth + distanceFromWall1) * wall1Cos;
+                }
+
+                // Z좌표: wall2 면에서 WALL_OFFSET + 가구 반깊이만큼 떨어진 위치
+                const wall2Cos = Math.cos(wall2Rotation);
+                const wall2Sin = Math.sin(wall2Rotation);
+                const distanceFromWall2 = WALL_OFFSET + rotatedFurnitureDepth;
+                
+                if (candidate2.face === "front") {
+                  cornerZ = wall2Pos.z + (wall2HalfDepth + distanceFromWall2) * wall2Sin;
+                } else { // back
+                  cornerZ = wall2Pos.z - (wall2HalfDepth + distanceFromWall2) * wall2Sin;
+                }
+              } else if (!wall1IsXConstraint && wall2IsXConstraint) {
+                // wall1이 Z축 제약, wall2가 X축 제약
+                const wall1Pos = new THREE.Vector3(...wall1.position);
+                const wall1Rotation = wall1.rotation[1];
+                const wall1HalfDepth = wall1.dimensions.depth / 2;
+                
+                const wall2Pos = new THREE.Vector3(...wall2.position);
+                const wall2Rotation = wall2.rotation[1];
+                const wall2HalfWidth = wall2.dimensions.width / 2;
+
+                // Z좌표: wall1 면에서 WALL_OFFSET + 가구 반깊이만큼 떨어진 위치
+                const wall1Sin = Math.sin(wall1Rotation);
+                const distanceFromWall1 = WALL_OFFSET + rotatedFurnitureDepth;
+                
+                if (candidate1.face === "front") {
+                  cornerZ = wall1Pos.z + (wall1HalfDepth + distanceFromWall1) * wall1Sin;
+                } else { // back
+                  cornerZ = wall1Pos.z - (wall1HalfDepth + distanceFromWall1) * wall1Sin;
+                }
+
+                // X좌표: wall2 면에서 WALL_OFFSET + 가구 반폭만큼 떨어진 위치
+                const wall2Cos = Math.cos(wall2Rotation);
+                const distanceFromWall2 = WALL_OFFSET + rotatedFurnitureWidth;
+                
+                if (candidate2.face === "right") {
+                  cornerX = wall2Pos.x + (wall2HalfWidth + distanceFromWall2) * wall2Cos;
+                } else { // left
+                  cornerX = wall2Pos.x - (wall2HalfWidth + distanceFromWall2) * wall2Cos;
+                }
+              } else {
+                // 둘 다 같은 축 제약이면 기존 방식 사용
                 cornerX = candidate1.snapPosition.x;
                 cornerZ = candidate2.snapPosition.z;
-              } else {
-                // wall1이 Z축 제약
-                cornerX = candidate2.snapPosition.x;
-                cornerZ = candidate1.snapPosition.z;
               }
 
               const cornerPosition = {
@@ -282,7 +359,11 @@ export function useObjectControls(
               );
 
               // 코너 스냅 거리를 더 크게 해서 자석 효과 강화
-              if (cornerDistance < CORNER_SNAP_DISTANCE) {
+              // 이미 한 벽에 스냅된 상태에서도 코너 스냅이 가능하도록 거리 조건을 완화
+              const isAlreadySnapped = candidate1.distance < 0.01 || candidate2.distance < 0.01;
+              const effectiveCornerDistance = isAlreadySnapped ? CORNER_SNAP_DISTANCE * 1.5 : CORNER_SNAP_DISTANCE;
+              
+              if (cornerDistance < effectiveCornerDistance) {
                 return {
                   wall: wall1, // 주 벽
                   wall2: wall2, // 보조 벽
@@ -320,7 +401,7 @@ export function useObjectControls(
     (e) => {
       e.stopPropagation();
 
-      // 🔒 락 체크 - 맨 처음에! 
+      // 🔒 락 체크 - 맨 처음에!
       if (isModelLocked(modelId)) {
         return; // 모든 상호작용 차단
       }
