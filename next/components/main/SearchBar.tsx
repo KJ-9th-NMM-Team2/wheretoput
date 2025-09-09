@@ -43,7 +43,7 @@ export default function SearchBar() {
           className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1c140d] dark:text-gray-100 focus:outline-0 focus:ring-0 border border-[#e8dace] dark:border-gray-600 bg-[#fcfaf8] dark:bg-gray-700 focus:border-[#e8dace] dark:focus:border-gray-500 h-full placeholder:text-[#9c6f49] dark:placeholder:text-gray-400 px-[15px] rounded-r-none border-r-0 pr-2 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal"
         />
         <div className="flex items-center justify-center rounded-r-xl border-l-0 border border-[#e8dace] dark:border-gray-600 bg-[#fcfaf8] dark:bg-gray-700 pr-[7px]">
-          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#f48225] dark:bg-orange-600 text-[#1c140d] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors"
+          <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             onClick={handleClickSearch}
           >
             <span className="truncate">검색</span>

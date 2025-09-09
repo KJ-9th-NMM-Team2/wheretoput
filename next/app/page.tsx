@@ -38,7 +38,7 @@ export default async function Page() {
                     href="/create"
                     passHref
                   >
-                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#f48225] dark:bg-orange-600 text-[#1c140d] dark:text-white text-base font-bold leading-normal tracking-[0.015em] grow hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors">
+                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] grow hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                       <span className="truncate">새 집 만들기</span>
                     </button>
                   </Link>
