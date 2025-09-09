@@ -46,6 +46,14 @@ export default async function Page() {
             </div>
           </div>
         </div>
+        <div className="px-4 py-6">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
+              🌟 주목받는 집
+            </h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
+          </div>
+        </div>
         <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
           <div className="flex items-stretch px-4 py-2 gap-8 w-full">
             <HomeCardList rooms={data} />
