@@ -5,9 +5,11 @@ interface EditPopupProps {
   initialTitle: string;
   initialDescription: string;
   initialIsPublic: boolean;
+  isOwnUserRoom: boolean;
   onSave: (title: string, description: string, isPublic: boolean) => void;
   onDelete: () => void;
   onClose: () => void;
+  handleOutofRoomClick: () => void;
 }
 
 // initialTitle - 초기 집 이름 값
@@ -20,9 +22,11 @@ const EditPopup: React.FC<EditPopupProps> = ({
   initialTitle,
   initialDescription,
   initialIsPublic,
+  isOwnUserRoom,
   onSave,
   onDelete,
   onClose,
+  handleOutofRoomClick,
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
@@ -32,8 +36,9 @@ const EditPopup: React.FC<EditPopupProps> = ({
     onSave(title, description, isPublic);
   };
 
-  return (
-    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[9999]">
+  
+  return isOwnUserRoom ? (
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-40">
       <div
         className="bg-white rounded-lg p-6 min-w-80 max-w-md w-full mx-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
@@ -120,10 +125,65 @@ const EditPopup: React.FC<EditPopupProps> = ({
           >
             저장
           </button>
+          <button
+            onClick={handleOutofRoomClick}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            나가기
+          </button>
         </div>
       </div>
     </div>
-  );
+  ) : (
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-40">
+      <div
+        className="bg-white rounded-lg p-6 min-w-80 max-w-md w-full mx-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="space-y-4">
+          {/* 방 이름 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              방 이름
+            </label>
+            <input
+              type="text"
+              value={title}
+              disabled={true}
+              className="w-full px-3 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+              text-gray-500
+              "
+              placeholder="방 이름을 입력하세요"
+            />
+          </div>
+
+          {/* 방 설명 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              방 설명
+            </label>
+            <textarea
+              value={description}
+              disabled={true}
+              className="w-full px-3 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-500"
+              rows={3}
+              placeholder="방에 대한 설명을 입력하세요"
+            />
+          </div>
+        </div>
+
+        {/* 버튼들 */}
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+          <button
+            onClick={handleOutofRoomClick}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            나가기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 };
 
 export default EditPopup;
