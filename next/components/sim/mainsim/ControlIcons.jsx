@@ -7,11 +7,10 @@ import { CaptureControlPanel } from "@/components/sim/mainsim/CaptureControlPane
 import { useStore } from "@/components/sim/useStore.js";
 
 // react-icons 추가 부분
-import { FaCameraRetro, FaPalette, FaCamera } from "react-icons/fa";
+import { FaCameraRetro, FaPalette, FaShareAlt } from "react-icons/fa";
 import { MdSunny } from "react-icons/md";
-import { FaSave } from "react-icons/fa";
 import { TbScreenshot } from "react-icons/tb";
-import { FaShare } from "react-icons/fa";
+import { hover } from "framer-motion";
 // =====================================
 
 export function ControlIcons({ controlsRef }) {
@@ -44,25 +43,6 @@ export function ControlIcons({ controlsRef }) {
   const iconStyle = {
     position: "fixed",
     top: "10px",
-    background: "rgba(0, 0, 0, 0.7)",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    width: "60px", // "저장" 텍스트에 맞게 조정
-    height: "35px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "14px",
-    zIndex: 101,
-    transition: "background 0.2s ease",
-    padding: "0 8px", // 좌우 여백 추가
-  };
-
-  const bottomIconStyle = {
-    position: "fixed",
-    bottom: "20px",
     background: "rgba(0, 0, 0, 0.7)",
     color: "white",
     border: "none",
@@ -123,23 +103,28 @@ export function ControlIcons({ controlsRef }) {
     zIndex: 210,
   };
 
+  function setAllPopupFalse() {
+    setShowControlPopup(false);
+    setShowLightPopup(false);
+    setShowCameraPopup(false);
+    setShowColorPopup(false);
+    setShowCapturePopup(false);
+    setShowSharePopup(false);
+  }
+
   return (
     <>
       {/* 방 상태 저장 , 모든가구 제거 패널 */}
       <button
         style={{
           ...iconStyle,
+          width: "60px",
           right: "20px",
-          height: "40px",
           fontSize: "16px",
         }}
         onClick={() => {
+          setAllPopupFalse();
           setShowControlPopup(true);
-          setShowLightPopup(false);
-          setShowCameraPopup(false);
-          setShowColorPopup(false);
-          setShowCapturePopup(false);
-          setShowSharePopup(false);
         }}
         onMouseEnter={(e) =>
           (e.target.style.background = hoverStyle.background)
@@ -153,51 +138,39 @@ export function ControlIcons({ controlsRef }) {
       {/* Light Control Icon - 저장 버튼 왼쪽 */}
       <button
         style={{
-          ...bottomIconStyle,
-          top: "10px",
+          ...iconStyle,
           right: "90px",
-          bottom: "auto",
         }}
         onClick={() => {
-          setShowControlPopup(false);
+          setAllPopupFalse();
           setShowLightPopup(true);
-          setShowCameraPopup(false);
-          setShowColorPopup(false);
-          setShowCapturePopup(false);
-          setShowSharePopup(false);
         }}
         onMouseEnter={(e) =>
-          (e.target.style.background = hoverStyle.background)
+          (e.currentTarget.style.background = hoverStyle.background)
         }
         onMouseLeave={(e) =>
-          (e.target.style.background = bottomIconStyle.background)
+          (e.currentTarget.style.background = iconStyle.background)
         }
         title="조명 설정"
       >
-        <MdSunny></MdSunny>
+        <MdSunny />
       </button>
 
       {/* Camera Control Icon - 조명 버튼 왼쪽 */}
       <button
         style={{
-          ...bottomIconStyle,
-          top: "10px",
+          ...iconStyle,
           right: "140px",
-          bottom: "auto",
         }}
         onClick={() => {
-          setShowControlPopup(false);
-          setShowLightPopup(false);
+          setAllPopupFalse();
           setShowCameraPopup(true);
-          setShowColorPopup(false);
-          setShowCapturePopup(false);
-          setShowSharePopup(false);
         }}
         onMouseEnter={(e) =>
-          (e.target.style.background = hoverStyle.background)
+          (e.currentTarget.style.background = hoverStyle.background)
         }
         onMouseLeave={(e) =>
-          (e.target.style.background = bottomIconStyle.background)
+          (e.currentTarget.style.background = iconStyle.background)
         }
         title="카메라 설정"
       >
@@ -207,24 +180,18 @@ export function ControlIcons({ controlsRef }) {
       {/* Color Control Icon - 카메라 버튼 왼쪽 */}
       <button
         style={{
-          ...bottomIconStyle,
-          top: "10px",
+          ...iconStyle,
           right: "190px",
-          bottom: "auto",
         }}
         onClick={() => {
-          setShowControlPopup(false);
-          setShowLightPopup(false);
-          setShowCameraPopup(false);
+          setAllPopupFalse();
           setShowColorPopup(true);
-          setShowCapturePopup(false);
-          setShowSharePopup(false);
         }}
         onMouseEnter={(e) =>
-          (e.target.style.background = hoverStyle.background)
+          (e.currentTarget.style.background = hoverStyle.background)
         }
         onMouseLeave={(e) =>
-          (e.target.style.background = bottomIconStyle.background)
+          (e.currentTarget.style.background = iconStyle.background)
         }
         title="색상 설정"
       >
@@ -234,24 +201,18 @@ export function ControlIcons({ controlsRef }) {
       {/* Capture Control Icon - 색상 버튼 왼쪽 */}
       <button
         style={{
-          ...bottomIconStyle,
-          top: "10px",
+          ...iconStyle,
           right: "240px",
-          bottom: "auto",
         }}
         onClick={() => {
-          setShowControlPopup(false);
-          setShowLightPopup(false);
-          setShowCameraPopup(false);
-          setShowColorPopup(false);
+          setAllPopupFalse();
           setShowCapturePopup(true);
-          setShowSharePopup(false);
         }}
         onMouseEnter={(e) =>
-          (e.target.style.background = hoverStyle.background)
+          (e.currentTarget.style.background = hoverStyle.background)
         }
         onMouseLeave={(e) =>
-          (e.target.style.background = bottomIconStyle.background)
+          (e.currentTarget.style.background = iconStyle.background)
         }
         title="화면 캡쳐"
       >
@@ -261,28 +222,22 @@ export function ControlIcons({ controlsRef }) {
       {/* Share Control Icon - 캡쳐 버튼 왼쪽 */}
       <button
         style={{
-          ...bottomIconStyle,
-          top: "10px",
+          ...iconStyle,
           right: "290px",
-          bottom: "auto",
         }}
         onClick={() => {
-          setShowControlPopup(false);
-          setShowLightPopup(false);
-          setShowCameraPopup(false);
-          setShowColorPopup(false);
-          setShowCapturePopup(false);
+          setAllPopupFalse();
           setShowSharePopup(true);
         }}
         onMouseEnter={(e) =>
-          (e.target.style.background = hoverStyle.background)
+          (e.currentTarget.style.background = hoverStyle.background)
         }
         onMouseLeave={(e) =>
-          (e.target.style.background = bottomIconStyle.background)
+          (e.currentTarget.style.background = iconStyle.background)
         }
         title="공유하기"
       >
-        <FaShare />
+        <FaShareAlt />
       </button>
 
       {/* Control Panel 팝업 결정 */}
@@ -414,14 +369,14 @@ export function ControlIcons({ controlsRef }) {
       {showSharePopup && (
         <div
           className="fixed inset-0 bg-black/30 z-[200] flex items-center justify-center"
-          onClick={() => setShowSharePopup(false)}
+          onClick={(e) => e.stopPropagation()}
         >
           <div
             className="relative bg-black/90 rounded-lg p-8 w-[400px] max-w-[90vw] max-h-[90vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-3 right-3 bg-white/20 border-none text-white rounded-full w-6 h-6 cursor-pointer flex items-center justify-center text-sm z-[210] hover:bg-white/30"
+              style={closeButtonStyle}
               onClick={() => setShowSharePopup(false)}
               title="닫기"
             >
