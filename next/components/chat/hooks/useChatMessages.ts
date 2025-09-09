@@ -136,7 +136,7 @@ export const useChatMessages = (
         currentSocket.emit("leave", { roomId: selectedChatId });
       }
     };
-  }, [open, selectedChatId, token, onChatRoomUpdate]);
+  }, [open, selectedChatId, token]);
 
   // 실시간 수신 + ACK + 읽음 이벤트
   useEffect(() => {

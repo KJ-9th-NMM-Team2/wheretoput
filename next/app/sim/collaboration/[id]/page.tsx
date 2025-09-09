@@ -61,7 +61,7 @@ function CollaborationPageContent({
   const [isChatFocused, setIsChatFocused] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   
-  const { token } = useChatConnection(true); // 항상 연결
+  const { token } = useChatConnection(!!selectedChatId); // 채팅방 선택 시에만 연결
   
   // 채팅방 업데이트 콜백을 useCallback으로 메모이제이션
   const handleChatRoomUpdate = useCallback(() => {
@@ -75,7 +75,7 @@ function CollaborationPageContent({
     onSendMessage,
     onEditorKeyDown
   } = useChatMessages(
-    true, // 항상 활성화
+    !!selectedChatId, // 채팅방 선택 시에만 활성화
     selectedChatId, // 선택된 채팅방 ID
     token,
     session?.user?.id || null,
