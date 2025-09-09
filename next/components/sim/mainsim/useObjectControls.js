@@ -29,7 +29,7 @@ export function useObjectControls(
   // 히스토리 기능
   const { startDrag, endDragMove, endDragScale } = useHistoryDrag();
 
-  // 벽 자석 기능 - 바운딩 박스 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
+  // 벽 자석 기능 - OBB 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
   const findNearestWallSnap = useCallback(
     (position, rotation) => {
       if (
@@ -41,10 +41,10 @@ export function useObjectControls(
       )
         return null;
 
-      const SNAP_DISTANCE = 0.7; // 70cm 이내에서 자석 효과 발동
+      const SNAP_DISTANCE = 0.3; // 30cm 이내에서 자석 효과 발동
       const WALL_OFFSET = 0.05; // 벽에서 5cm 떨어진 위치에 스냅
 
-      // SelectionBox에서 정확한 크기 정보 가져오기
+      // SelectionBox에서 회전을 고려한 정확한 크기 정보 가져오기
       let furnitureWidth, furnitureHeight, furnitureDepth;
       try {
         [furnitureWidth, furnitureHeight, furnitureDepth] =
@@ -57,148 +57,131 @@ export function useObjectControls(
       const furnitureHalfWidth = furnitureWidth / 2;
       const furnitureHalfDepth = furnitureDepth / 2;
 
+      // 가구의 현재 회전각 가져오기
+      const furnitureRotationY = meshRef.current?.rotation?.y || 0;
+
       // 모든 벽의 모든 면에 대한 후보들을 수집
       const allCandidates = [];
 
-      // 가구가 회전되어 있다면 바운딩 박스도 회전된 상태로 계산해야 함
-      // 단순화를 위해 axis-aligned 바운딩 박스 사용 (회전 무시)
-      // 정확한 계산을 위해서는 oriented bounding box 필요
+      // 이제 회전을 고려한 OBB 기반 계산 수행
 
-      // 각 벽에 대해 거리 계산
+      // 각 벽에 대해 회전을 고려한 거리 계산
       wallsData.forEach((wall) => {
         const wallPos = new THREE.Vector3(...wall.position);
         const wallRotation = wall.rotation[1]; // Y축 회전각
         const wallWidth = wall.dimensions.width;
         const wallDepth = wall.dimensions.depth;
+        const wallHalfWidth = wallWidth / 2;
+        const wallHalfDepth = wallDepth / 2;
 
-        // 벽의 로컬 좌표계에서 계산
+        // 벽의 로컬 좌표계 변환 행렬
+        const wallCos = Math.cos(wallRotation);
+        const wallSin = Math.sin(wallRotation);
+
+        // 가구를 벽의 로컬 좌표계로 변환
         const relativePos = new THREE.Vector3(
           position.x - wallPos.x,
           0,
           position.z - wallPos.z
         );
 
-        // 벽의 회전을 고려하여 로컬 좌표로 변환
-        const cos = Math.cos(-wallRotation);
-        const sin = Math.sin(-wallRotation);
-        const localX = relativePos.x * cos - relativePos.z * sin;
-        const localZ = relativePos.x * sin + relativePos.z * cos;
+        // 벽의 로컬 좌표계로 변환
+        const localX = relativePos.x * wallCos + relativePos.z * wallSin;
+        const localZ = -relativePos.x * wallSin + relativePos.z * wallCos;
 
-        // 벽의 면들에 대한 거리 계산
-        const halfWidth = wallWidth / 2;
-        const halfDepth = wallDepth / 2;
+        // 가구의 회전을 벽의 로컬 좌표계에서 계산
+        const relativeRotation = furnitureRotationY - wallRotation;
+        const furnitureCos = Math.cos(relativeRotation);
+        const furnitureSin = Math.sin(relativeRotation);
 
-        // 이 벽의 모든 면에 대한 후보들을 수집
+        // 회전된 가구의 실제 바운딩 박스 크기 (벽의 로컬 좌표계에서)
+        const rotatedFurnitureWidth = Math.abs(furnitureHalfWidth * furnitureCos) + Math.abs(furnitureHalfDepth * furnitureSin);
+        const rotatedFurnitureDepth = Math.abs(furnitureHalfWidth * furnitureSin) + Math.abs(furnitureHalfDepth * furnitureCos);
 
-        // SelectionBox 정확한 크기 기준 표면 간 실제 거리 계산 (Z축 방향)
-        if (Math.abs(localX) <= halfWidth + furnitureHalfWidth) {
-          // 가구 표면 위치 계산 (SelectionBox 크기 기준)
-          const furnitureFrontEdge = localZ + furnitureHalfDepth; // 가구 앞면
-          const furnitureBackEdge = localZ - furnitureHalfDepth; // 가구 뒷면
+        // Z축 방향 (벽의 앞뒤) 스냅 계산
+        if (Math.abs(localX) <= wallHalfWidth + rotatedFurnitureWidth) {
+          // 벽 앞면 스냅
+          const furnitureBackEdge = localZ - rotatedFurnitureDepth;
+          const wallFrontEdge = wallHalfDepth;
+          const frontDistance = Math.abs(furnitureBackEdge - wallFrontEdge);
 
-          // 벽 표면 위치 계산
-          const wallFrontEdge = halfDepth; // 벽 앞면
-          const wallBackEdge = -halfDepth; // 벽 뒷면
-
-          // 앞면 (positive Z) - 가구 뒷면과 벽 앞면 간의 거리
-          const frontSurfaceDistance = Math.abs(
-            furnitureBackEdge - wallFrontEdge
-          );
-
-          // 가구가 벽 앞쪽에 있고, 표면 간 거리가 스냅 범위 내일 때
-          if (
-            furnitureBackEdge > wallFrontEdge &&
-            frontSurfaceDistance < SNAP_DISTANCE
-          ) {
-            const snapLocalZ = wallFrontEdge + WALL_OFFSET + furnitureHalfDepth;
+          if (furnitureBackEdge > wallFrontEdge && frontDistance < SNAP_DISTANCE) {
+            const snapLocalZ = wallFrontEdge + WALL_OFFSET + rotatedFurnitureDepth;
+            const snapWorldPos = {
+              x: wallPos.x + (localX * wallCos - snapLocalZ * wallSin),
+              y: position.y,
+              z: wallPos.z + (localX * wallSin + snapLocalZ * wallCos),
+            };
 
             allCandidates.push({
-              distance: frontSurfaceDistance,
-              snapPosition: {
-                x: wallPos.x + (localX * cos + snapLocalZ * sin),
-                y: position.y,
-                z: wallPos.z + (-localX * sin + snapLocalZ * cos),
-              },
+              distance: frontDistance,
+              snapPosition: snapWorldPos,
               wall: wall,
               face: "front",
             });
           }
 
-          // 뒷면 (negative Z) - 가구 앞면과 벽 뒷면 간의 거리
-          const backSurfaceDistance = Math.abs(
-            furnitureFrontEdge - wallBackEdge
-          );
+          // 벽 뒷면 스냅
+          const furnitureFrontEdge = localZ + rotatedFurnitureDepth;
+          const wallBackEdge = -wallHalfDepth;
+          const backDistance = Math.abs(furnitureFrontEdge - wallBackEdge);
 
-          // 가구가 벽 뒤쪽에 있고, 표면 간 거리가 스냅 범위 내일 때
-          if (
-            furnitureFrontEdge < wallBackEdge &&
-            backSurfaceDistance < SNAP_DISTANCE
-          ) {
-            const snapLocalZ = wallBackEdge - WALL_OFFSET - furnitureHalfDepth;
+          if (furnitureFrontEdge < wallBackEdge && backDistance < SNAP_DISTANCE) {
+            const snapLocalZ = wallBackEdge - WALL_OFFSET - rotatedFurnitureDepth;
+            const snapWorldPos = {
+              x: wallPos.x + (localX * wallCos - snapLocalZ * wallSin),
+              y: position.y,
+              z: wallPos.z + (localX * wallSin + snapLocalZ * wallCos),
+            };
+
             allCandidates.push({
-              distance: backSurfaceDistance,
-              snapPosition: {
-                x: wallPos.x + (localX * cos + snapLocalZ * sin),
-                y: position.y,
-                z: wallPos.z + (-localX * sin + snapLocalZ * cos),
-              },
+              distance: backDistance,
+              snapPosition: snapWorldPos,
               wall: wall,
               face: "back",
             });
           }
         }
 
-        // SelectionBox 정확한 크기 기준 표면 간 실제 거리 계산 (X축 방향)
-        if (Math.abs(localZ) <= halfDepth + furnitureHalfDepth) {
-          // 가구 표면 위치 계산 (SelectionBox 크기 기준)
-          const furnitureLeftEdge = localX - furnitureHalfWidth; // 가구 좌면
-          const furnitureRightEdge = localX + furnitureHalfWidth; // 가구 우면
+        // X축 방향 (벽의 좌우) 스냅 계산
+        if (Math.abs(localZ) <= wallHalfDepth + rotatedFurnitureDepth) {
+          // 벽 오른쪽 스냅
+          const furnitureLeftEdge = localX - rotatedFurnitureWidth;
+          const wallRightEdge = wallHalfWidth;
+          const rightDistance = Math.abs(furnitureLeftEdge - wallRightEdge);
 
-          // 벽 표면 위치 계산
-          const wallLeftEdge = -halfWidth; // 벽 좌면
-          const wallRightEdge = halfWidth; // 벽 우면
+          if (furnitureLeftEdge > wallRightEdge && rightDistance < SNAP_DISTANCE) {
+            const snapLocalX = wallRightEdge + WALL_OFFSET + rotatedFurnitureWidth;
+            const snapWorldPos = {
+              x: wallPos.x + (snapLocalX * wallCos - localZ * wallSin),
+              y: position.y,
+              z: wallPos.z + (snapLocalX * wallSin + localZ * wallCos),
+            };
 
-          // 우면 (positive X) - 가구 좌면과 벽 우면 간의 거리
-          const rightSurfaceDistance = Math.abs(
-            furnitureLeftEdge - wallRightEdge
-          );
-
-          // 가구가 벽 오른쪽에 있고, 표면 간 거리가 스냅 범위 내일 때
-          if (
-            furnitureLeftEdge > wallRightEdge &&
-            rightSurfaceDistance < SNAP_DISTANCE
-          ) {
-            const snapLocalX = wallRightEdge + WALL_OFFSET + furnitureHalfWidth;
             allCandidates.push({
-              distance: rightSurfaceDistance,
-              snapPosition: {
-                x: wallPos.x + (snapLocalX * cos + localZ * sin),
-                y: position.y,
-                z: wallPos.z + (-snapLocalX * sin + localZ * cos),
-              },
+              distance: rightDistance,
+              snapPosition: snapWorldPos,
               wall: wall,
               face: "right",
             });
           }
 
-          // 좌면 (negative X) - 가구 우면과 벽 좌면 간의 거리
-          const leftSurfaceDistance = Math.abs(
-            furnitureRightEdge - wallLeftEdge
-          );
+          // 벽 왼쪽 스냅
+          const furnitureRightEdge = localX + rotatedFurnitureWidth;
+          const wallLeftEdge = -wallHalfWidth;
+          const leftDistance = Math.abs(furnitureRightEdge - wallLeftEdge);
 
-          // 가구가 벽 왼쪽에 있고, 표면 간 거리가 스냅 범위 내일 때
-          if (
-            furnitureRightEdge < wallLeftEdge &&
-            leftSurfaceDistance < SNAP_DISTANCE
-          ) {
-            const snapLocalX = wallLeftEdge - WALL_OFFSET - furnitureHalfWidth;
+          if (furnitureRightEdge < wallLeftEdge && leftDistance < SNAP_DISTANCE) {
+            const snapLocalX = wallLeftEdge - WALL_OFFSET - rotatedFurnitureWidth;
+            const snapWorldPos = {
+              x: wallPos.x + (snapLocalX * wallCos - localZ * wallSin),
+              y: position.y,
+              z: wallPos.z + (snapLocalX * wallSin + localZ * wallCos),
+            };
+
             allCandidates.push({
-              distance: leftSurfaceDistance,
-              snapPosition: {
-                x: wallPos.x + (snapLocalX * cos + localZ * sin),
-                y: position.y,
-                z: wallPos.z + (-snapLocalX * sin + localZ * cos),
-              },
+              distance: leftDistance,
+              snapPosition: snapWorldPos,
               wall: wall,
               face: "left",
             });
