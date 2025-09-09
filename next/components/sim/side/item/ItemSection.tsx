@@ -120,6 +120,12 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                                 {Number(item.count).toLocaleString()}
                                             </span>
                                             )}
+                                            {/* 모델이 있는 것들만 표시 시현 때 딜레이 방지 */}
+                                            {item.model_url && (
+                                                <span className="text-xs font-semibold text-gray-700">
+                                                    ．
+                                                </span>
+                                            )}
                                         </div>
                                     )}
 
