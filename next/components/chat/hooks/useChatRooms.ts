@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { api } from "@/lib/client/api";
 import { ChatListItem } from "../types/chat-types";
 import { recomputeChats } from "../utils/chat-utils";
-import { getSocket } from "@/lib/client/socket";
+import { getSocket, getSocketStatus } from "@/lib/client/socket";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -110,24 +110,23 @@ export const useChatRooms = (
     })();
   }, [open, token, currentUserId]);
 
-  // 개선된 폴링 시스템 - 실시간 이벤트와 충돌 방지
+  // 개선된 폴링 시스템 - 소켓 상태 기반 동적 폴링
   useEffect(() => {
     if (!token || !enablePolling) return;
 
     let isPolling = false; // 폴링 중복 실행 방지
     let lastUpdateTime = 0; // 마지막 업데이트 시간
+    let currentInterval: NodeJS.Timeout | null = null;
 
     const loadRooms = async () => {
       // 폴링 중복 실행 방지
       if (isPolling) {
-        console.log("[POLLING] 이미 실행 중이므로 건너뜀");
         return;
       }
 
       isPolling = true;
       
       try {
-        console.log("[POLLING] 채팅방 목록 업데이트 시작");
         const response = await fetch(`${NEXT_API_URL}/api/backend/rooms`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -199,7 +198,6 @@ export const useChatRooms = (
         // 실시간 이벤트로 인한 최근 업데이트가 있다면 폴링 데이터보다 우선
         const timeSinceLastUpdate = currentTime - lastUpdateTime;
         if (timeSinceLastUpdate < 1000 && open) {
-          console.log("[POLLING] 최근 실시간 업데이트가 있어 폴링 데이터 무시");
           isPolling = false;
           return;
         }
@@ -209,13 +207,7 @@ export const useChatRooms = (
         setChats(recomputeChats(mapped, query, select, currentUserId));
         lastUpdateTime = currentTime;
 
-        console.log(
-          "[POLLING] 채팅방 목록 업데이트 완료 -",
-          mapped.length,
-          "개 방"
-        );
       } catch (e) {
-        console.error("[POLLING] FAIL", e);
       } finally {
         isPolling = false;
       }
@@ -224,13 +216,32 @@ export const useChatRooms = (
     // 즉시 한 번 실행
     loadRooms();
 
-    // 동적 폴링 간격 - 팝업 열림: 5초마다, 닫힘: 30초마다 (실시간 이벤트와 충돌 방지)
-    const pollInterval = open ? 5000 : 30000;
-    const interval = setInterval(loadRooms, pollInterval);
+    // 폴링 간격 설정 및 업데이트 함수
+    const setupPolling = () => {
+      if (currentInterval) {
+        clearInterval(currentInterval);
+      }
+      
+      const socketStatus = getSocketStatus();
+      const isSocketConnected = socketStatus.connected;
+      
+      // 소켓 연결됨: 30초/60초, 소켓 끊어짐: 5초/10초
+      const pollInterval = isSocketConnected 
+        ? (open ? 30000 : 60000)  // 소켓 정상: 긴 간격
+        : (open ? 5000 : 10000);   // 소켓 끊어짐: 짧은 간격
+        
+      currentInterval = setInterval(loadRooms, pollInterval);
+    };
+    
+    // 초기 폴링 설정
+    setupPolling();
+    
+    // 소켓 상태 변화 감지를 위한 주기적 체크 (10초마다)
+    const statusCheckInterval = setInterval(setupPolling, 10000);
 
     return () => {
-      console.log("[POLLING] 폴링 중단");
-      clearInterval(interval);
+      if (currentInterval) clearInterval(currentInterval);
+      if (statusCheckInterval) clearInterval(statusCheckInterval);
       isPolling = false;
     };
   }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);
