@@ -112,7 +112,7 @@ export function HistoryControls(
               strokeLinejoin="round"
             />
           </svg>
-          취소
+          Undo
         </button>
         
         <button
@@ -143,7 +143,7 @@ export function HistoryControls(
               strokeLinejoin="round"
             />
           </svg>
-          다시실행
+          Redo
         </button>
       </div>
       <SelectedFurnitures onCategorySelect={onCategorySelect}/>

@@ -2,6 +2,10 @@ import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
+import { useDeleteKey } from "./useDeleteKey";
+import { RotationControl } from "./RotationControl";
+import { CollapsibleSidebar } from "./CollapsibleSidebar";
+
 
 export function SelectedModelEditModal() {
   const {
@@ -22,6 +26,9 @@ export function SelectedModelEditModal() {
   
   // 선택된 모델 찾기
   const selectedModel = loadedModels.find(model => model.id === selectedModelId);
+  
+  // Delete 키 단축키 처리
+  useDeleteKey(selectedModel, addAction, removeModel, deselectModel);
   
   // 모델이 선택될 때 초기값 저장
   useEffect(() => {
@@ -126,22 +133,12 @@ export function SelectedModelEditModal() {
   }
 
   return (
-    <div className="fixed top-1/2 right-4 w-80 max-h-[80vh] -translate-y-1/2 z-[200]">
-      <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl rounded-xl overflow-hidden">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-          <span className="text-base font-bold"> 가구 편집</span>
-          <button
-            onClick={deselectModel}
-            className="text-gray-500 hover:text-gray-700 transition-colors text-lg"
-            title="닫기"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* 스크롤 가능한 콘텐츠 영역 */}
-        <div className="flex-1 overflow-y-auto p-4">
+    <CollapsibleSidebar
+      title="가구 편집"
+      onClose={deselectModel}
+      defaultCollapsed={false}
+    >
+      <div className="p-4">
 
         {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
@@ -217,38 +214,53 @@ export function SelectedModelEditModal() {
                회전 각도
             </div>
             {["X", "Y", "Z"].map((axis, index) => (
-              <div key={axis} className="mb-3">
-                <ControlSlider
-                  label={`${axis}축 회전`}
-                  value={(selectedModel.rotation[index] * 180) / Math.PI}
-                  unit="°"
-                  min={-180}
-                  max={180}
-                  step={5}
-                  onChange={(value) => {
-                    const newRotation = [...selectedModel.rotation];
-                    newRotation[index] = (value * Math.PI) / 180;
-                    updateModelRotation(selectedModel.id, newRotation);
-                  }}
-                  onChangeEnd={(initialValue, finalValue) => {
-                    // 초기 회전 배열 생성
-                    const initialRotation = [...selectedModel.rotation];
-                    initialRotation[index] = (initialValue * Math.PI) / 180;
-                    
-                    // 최종 회전 배열 생성
-                    const finalRotation = [...selectedModel.rotation];
-                    finalRotation[index] = (finalValue * Math.PI) / 180;
-                    
-                    addHistoryImmediate(
-                      ActionType.FURNITURE_ROTATE,
-                      initialRotation,
-                      finalRotation,
-                      `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 회전했습니다`
-                    );
-                  }}
-                  defaultValue={0}
-                />
-              </div>
+              <RotationControl
+                key={axis}
+                axis={axis}
+                value={(selectedModel.rotation[index] * 180) / Math.PI}
+                onChange={(value) => {
+                  const newRotation = [...selectedModel.rotation];
+                  newRotation[index] = (value * Math.PI) / 180;
+                  updateModelRotation(selectedModel.id, newRotation);
+                }}
+                onQuickRotate={(axisIndex, degrees) => {
+                  const currentValue = (selectedModel.rotation[axisIndex] * 180) / Math.PI;
+                  let newValue = currentValue + degrees;
+                  
+                  //===== -180~180 각도 제한 =====
+                  newValue = Math.max(-180, Math.min(180, newValue));
+                  
+                  const initialRotation = [...selectedModel.rotation];
+                  const newRotation = [...selectedModel.rotation];
+                  newRotation[axisIndex] = (newValue * Math.PI) / 180;
+                  
+                  updateModelRotation(selectedModel.id, newRotation);
+                  
+                  addHistoryImmediate(
+                    ActionType.FURNITURE_ROTATE,
+                    initialRotation,
+                    newRotation,
+                    `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 ${degrees > 0 ? '+' : ''}${degrees}° 회전했습니다`
+                  );
+                }}
+                onChangeEnd={(initialValue, finalValue) => {
+                  // 초기 회전 배열 생성
+                  const initialRotation = [...selectedModel.rotation];
+                  initialRotation[index] = (initialValue * Math.PI) / 180;
+                  
+                  // 최종 회전 배열 생성
+                  const finalRotation = [...selectedModel.rotation];
+                  finalRotation[index] = (finalValue * Math.PI) / 180;
+                  
+                  addHistoryImmediate(
+                    ActionType.FURNITURE_ROTATE,
+                    initialRotation,
+                    finalRotation,
+                    `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 회전했습니다`
+                  );
+                }}
+                modelName={selectedModel.name || selectedModel.furnitureName || 'Unknown'}
+              />
             ))}
           </div>
 
@@ -289,9 +301,8 @@ export function SelectedModelEditModal() {
             가구 삭제
           </button>
         </div>
-        </div>
       </div>
-    </div>
+    </CollapsibleSidebar>
   );
 }
 

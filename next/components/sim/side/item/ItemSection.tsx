@@ -117,7 +117,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                             {/* 가구 카운트 */}
                                             {selectedCategory === "-1" && (
                                                 <span className="text-xs font-semibold text-gray-700 mr-8">
-                                                {Number(item.count).toLocaleString()}
+                                                {Number(item.count).toLocaleString()}  개
                                             </span>
                                             )}
                                         </div>
