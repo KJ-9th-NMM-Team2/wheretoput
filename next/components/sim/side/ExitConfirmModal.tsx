@@ -15,9 +15,6 @@ const ExitConfirmModal = ({ isOpen, onConfirm, onCancel }: ExitConfirmModalProps
         <h3 className="text-lg font-semibold text-gray-900 mb-3">
           정말 나가시겠습니까?
         </h3>
-        <p className="text-gray-600 mb-6 text-sm">
-          시뮬레이터에서 나가면 현재 작업이 저장됩니다.
-        </p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
