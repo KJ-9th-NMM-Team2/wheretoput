@@ -426,7 +426,7 @@ export const useStore = create(
 
       deselectModel: (shouldBroadcast = true) => {
         const currentSelectedId = get().selectedModelId;
-        set({ selectedModelId: null });
+        set({ selectedModelId: null, snappedWallInfo: null });
         if (shouldBroadcast) {
           get().broadcastWithThrottle(
             "broadcastModelDeselect",
