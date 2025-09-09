@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { fetchFollowingFeed } from "@/lib/api/users";
 
+// 팔로잉 피드 섹션
 export function FollowingFeed() {
   const { data: session, status } = useSession();
   const [followingRooms, setFollowingRooms] = useState<any[]>([]);
@@ -44,7 +45,7 @@ export function FollowingFeed() {
       <div className="px-4 py-6">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
-            👥 팔로잉 피드
+             팔로잉 피드
           </h2>
           <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
         </div>
@@ -61,7 +62,7 @@ export function FollowingFeed() {
       <div className="px-4 py-6">
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
-            👥 팔로잉 피드
+             팔로잉 피드
           </h2>
           <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
         </div>
@@ -75,11 +76,12 @@ export function FollowingFeed() {
     );
   }
 
+  // 로그인후 , 기본 팔로잉 피드 
   return (
     <div className="px-4 py-6">
       <div className="flex items-center gap-3 mb-4">
         <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
-          👥 팔로잉 피드
+           팔로잉 피드
         </h2>
         <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
         <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -93,9 +95,10 @@ export function FollowingFeed() {
         </div>
       )}
       
-      <div className="flex overflow-x-auto gap-4 pb-2">
+      {/* 사용자들 방 HomeCard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {followingRooms.map((room: any) => (
-          <div key={room.room_id} className="flex-shrink-0 w-64">
+          <div key={room.room_id}>
             <HomeCard room={room} />
           </div>
         ))}
