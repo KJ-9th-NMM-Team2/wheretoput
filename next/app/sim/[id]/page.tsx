@@ -57,6 +57,7 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
       customHeader={<ModeControlPanel roomId={roomId} />}
       loadingMessage="방 데이터 로딩 중..."
       loadingIcon="🏠"
+      accessType={1}
     />
   );
 }

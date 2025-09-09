@@ -48,6 +48,7 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
   return (
     <SimulatorCore
       roomId={roomId}
+      accessType={3}
       showSidebar={false}
       showModeControls={false}
       showEditControls={false}

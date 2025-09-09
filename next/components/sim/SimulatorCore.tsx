@@ -125,6 +125,8 @@ interface SimulatorCoreProps {
   keyboardControlsDisabled?: boolean;
   // 모바일 모드 여부
   isMobile?: boolean;
+  // 1. normal, 2. collaboration, 3. mobile
+  accessType: number;
 }
 
 /**
@@ -144,6 +146,7 @@ export function SimulatorCore({
   loadingIcon = "🏠",
   keyboardControlsDisabled = false,
   isMobile = false,
+  accessType = 1
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const { data: session } = useSession();
@@ -260,7 +263,7 @@ export function SimulatorCore({
       }`}
     >
       {/* 조건부 사이드바 표시 */}
-      {showSidebar && !viewOnly && <SimSideView roomId={roomId} />}
+      {showSidebar && !viewOnly && <SimSideView roomId={roomId} accessType={accessType} />}
 
       <div className="flex-1 relative">
         {/* 모바일 헤더 */}
