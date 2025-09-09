@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
 import { useDeleteKey } from "./useDeleteKey";
+import { RotationControl } from "./RotationControl";
+
 
 export function SelectedModelEditModal() {
   const {
@@ -221,38 +223,53 @@ export function SelectedModelEditModal() {
                회전 각도
             </div>
             {["X", "Y", "Z"].map((axis, index) => (
-              <div key={axis} className="mb-3">
-                <ControlSlider
-                  label={`${axis}축 회전`}
-                  value={(selectedModel.rotation[index] * 180) / Math.PI}
-                  unit="°"
-                  min={-180}
-                  max={180}
-                  step={5}
-                  onChange={(value) => {
-                    const newRotation = [...selectedModel.rotation];
-                    newRotation[index] = (value * Math.PI) / 180;
-                    updateModelRotation(selectedModel.id, newRotation);
-                  }}
-                  onChangeEnd={(initialValue, finalValue) => {
-                    // 초기 회전 배열 생성
-                    const initialRotation = [...selectedModel.rotation];
-                    initialRotation[index] = (initialValue * Math.PI) / 180;
-                    
-                    // 최종 회전 배열 생성
-                    const finalRotation = [...selectedModel.rotation];
-                    finalRotation[index] = (finalValue * Math.PI) / 180;
-                    
-                    addHistoryImmediate(
-                      ActionType.FURNITURE_ROTATE,
-                      initialRotation,
-                      finalRotation,
-                      `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 회전했습니다`
-                    );
-                  }}
-                  defaultValue={0}
-                />
-              </div>
+              <RotationControl
+                key={axis}
+                axis={axis}
+                value={(selectedModel.rotation[index] * 180) / Math.PI}
+                onChange={(value) => {
+                  const newRotation = [...selectedModel.rotation];
+                  newRotation[index] = (value * Math.PI) / 180;
+                  updateModelRotation(selectedModel.id, newRotation);
+                }}
+                onQuickRotate={(axisIndex, degrees) => {
+                  const currentValue = (selectedModel.rotation[axisIndex] * 180) / Math.PI;
+                  let newValue = currentValue + degrees;
+                  
+                  //===== -180~180 각도 제한 =====
+                  newValue = Math.max(-180, Math.min(180, newValue));
+                  
+                  const initialRotation = [...selectedModel.rotation];
+                  const newRotation = [...selectedModel.rotation];
+                  newRotation[axisIndex] = (newValue * Math.PI) / 180;
+                  
+                  updateModelRotation(selectedModel.id, newRotation);
+                  
+                  addHistoryImmediate(
+                    ActionType.FURNITURE_ROTATE,
+                    initialRotation,
+                    newRotation,
+                    `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 ${degrees > 0 ? '+' : ''}${degrees}° 회전했습니다`
+                  );
+                }}
+                onChangeEnd={(initialValue, finalValue) => {
+                  // 초기 회전 배열 생성
+                  const initialRotation = [...selectedModel.rotation];
+                  initialRotation[index] = (initialValue * Math.PI) / 180;
+                  
+                  // 최종 회전 배열 생성
+                  const finalRotation = [...selectedModel.rotation];
+                  finalRotation[index] = (finalValue * Math.PI) / 180;
+                  
+                  addHistoryImmediate(
+                    ActionType.FURNITURE_ROTATE,
+                    initialRotation,
+                    finalRotation,
+                    `가구 "${selectedModel.name || selectedModel.furnitureName || 'Unknown'}"의 ${axis}축을 회전했습니다`
+                  );
+                }}
+                modelName={selectedModel.name || selectedModel.furnitureName || 'Unknown'}
+              />
             ))}
           </div>
 
