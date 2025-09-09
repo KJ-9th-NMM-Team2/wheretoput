@@ -41,9 +41,9 @@ export const useChatRooms = (
         const data = await response.json();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-          console.log("메시지 데이터:", r.creator_id, currentUserId);
+          // console.log("메시지 데이터:", r.creator_id, currentUserId);
           r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
-          console.log("마지막 메시지: ", r.last_message);
+          // console.log("마지막 메시지: ", r.last_message);
 
           // 마지막 메시지가 이미지인지 확인
           let lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
@@ -170,7 +170,7 @@ export const useChatRooms = (
             searchIndex: (lastMsg ?? "").toLocaleLowerCase("ko-KR"),
           };
 
-          // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
+          // // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
           if (
             result.lastMessageSenderId === currentUserId &&
             result.lastMessageAt

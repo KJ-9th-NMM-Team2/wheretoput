@@ -21,13 +21,13 @@ export class ChatController {
   async list(
     @Param('roomId') roomId: string,
     @Query('limit') limit = '50',
-    @Request() req: any,
+    @Query('currentUserId') currentUserId: string,
     @Query('before') before?: string,
   ) {
     const n = Number(limit) || 50;
     const messages = await this.chatService.getRecentMessages({
       roomId,
-      userId: req.user.userId,
+      userId: currentUserId,
       limit: n,
       beforeId: before,
     });

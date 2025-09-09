@@ -3,6 +3,7 @@
 
 import { Message } from "../../types/chat-types";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ImageModal from "./ImageModal";
 
 interface MessageBubbleProps {
@@ -22,6 +23,13 @@ export default function MessageBubble({
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageLoading, setImageLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
+
+  const handleProfileClick = () => {
+    if (!isMine && message.senderId) {
+      router.push(`/users/${message.senderId}`);
+    }
+  };
 
   // 이미지 메시지인 경우 S3 presigned URL 가져오기
   useEffect(() => {
@@ -55,9 +63,10 @@ export default function MessageBubble({
     >
       {!isMine && (
         <div
-          className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 ${
+          className={`h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity ${
             showAvatar ? "opacity-100" : "opacity-0"
           }`}
+          onClick={handleProfileClick}
         >
           {message.senderImage ? (
             <img
@@ -80,7 +89,10 @@ export default function MessageBubble({
         } flex flex-col`}
       >
         {!isMine && showAvatar && message.senderName ? (
-          <span className="text-[11px] text-gray-400 pl-1 mb-0.5">
+          <span 
+            className="text-[11px] text-gray-400 pl-1 mb-0.5 cursor-pointer hover:text-gray-600 transition-colors"
+            onClick={handleProfileClick}
+          >
             {message.senderName}
           </span>
         ) : null}

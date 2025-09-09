@@ -1,5 +1,5 @@
 import { ImageOff, Loader2 } from 'lucide-react';
-import type { ItemSectionProps } from '@/lib/types';
+import type { ItemSectionProps } from '@/lib/itemTypes';
 import ShoppingLink from '@/components/sim/side/ShoppingLink';
 import { useSession } from 'next-auth/react';
 import { useStore } from '../../useStore';
@@ -110,9 +110,23 @@ const ItemSection: React.FC<ItemSectionProps> = ({
 
                                     {/* 가격 정보 */}
                                     {item.price && (
-                                        <p className="text-xs font-semibold text-gray-700 mb-1">
-                                            ₩{Number(item.price).toLocaleString()}
-                                        </p>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-semibold text-gray-700">
+                                                ₩{Number(item.price).toLocaleString()}
+                                            </span>
+                                            {/* 가구 카운트 */}
+                                            {selectedCategory === "-1" && (
+                                                <span className="text-xs font-semibold text-gray-700 mr-8">
+                                                {Number(item.count).toLocaleString()}  개
+                                            </span>
+                                            )}
+                                            {/* 모델이 있는 것들만 표시 시현 때 딜레이 방지 */}
+                                            {item.model_url && (
+                                                <span className="text-xs font-semibold text-gray-700">
+                                                    ．
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
 
                                     {/* 배치한 가구 목록에서만 쇼핑 링크 표시 */}

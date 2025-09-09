@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { WallDetector } from "@/app/wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CreateRoomModal from "@/components/CreateRoomModal"
 
 import {
   Square,
@@ -46,6 +47,8 @@ const FloorPlanEditor = () => {
   const fileInputRef = useRef(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createdRoomId, setCreatedRoomId] = useState(null);
 
   // 축척 설정 관련 상태 (이미지 업로드 후 벽 선택 방식으로 변경)
   const [showScalePopup, setShowScalePopup] = useState(false);
@@ -1028,7 +1031,20 @@ const FloorPlanEditor = () => {
     );
   };
 
-  // 시뮬레이터로 이동 핸들러
+  // 모달 닫기 핸들러
+  const handleCloseModal = () => {
+    setShowCreateModal(false);
+    setCreatedRoomId(null);
+  };
+
+  // 시뮬레이터로 이동 핸들러 (모달에서 확인 버튼 클릭시)
+  const handleConfirmGoToSimulator = () => {
+    if (createdRoomId) {
+      router.push(`/sim/${createdRoomId}`);
+    }
+  };
+
+  // 시뮬레이터로 이동 핸들러 (집 생성하기 onClick시 )
   const handleGoToSimulator = async () => {
     if (walls.length === 0) {
       alert("먼저 도면을 그려주세요.");
@@ -1089,17 +1105,14 @@ const FloorPlanEditor = () => {
         throw new Error("올바르지 않은 방 ID입니다.");
       }
 
-      //console.log("Using room ID for navigation:", roomId);
-
       // 이전 페이지가 create임을 저장
       sessionStorage.setItem('previousPage', 'create');
 
-      // 생성된 정식 room_id로 시뮬레이터 페이지 이동
-      router.push(`/sim/${roomId}`);
+      // 모달 표시를 위해 상태 설정
+      setCreatedRoomId(roomId);
+      setShowCreateModal(true);
 
-      alert(
-        `${walls.length}개의 벽으로 구성된 방이 생성되었습니다! 시뮬레이터에서 꾸며보세요.`
-      );
+      
     } catch (error) {
       console.error("Room creation failed:", error);
       alert("방 생성에 실패했습니다. 다시 시도해주세요.");
@@ -1245,6 +1258,7 @@ const FloorPlanEditor = () => {
             className="hidden"
           />
 
+          {/* 방 생성하기 부분 */}
           <div className="ml-auto flex gap-2">
             <button
               onClick={handleGoToSimulator}
@@ -1329,7 +1343,7 @@ const FloorPlanEditor = () => {
                     축척 설정 도구
                   </h4>
                   {!scaleWall ? (
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    <p className="text-sm text-gray-100 dark:text-gray-100 mb-3">
                       기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
                     </p>
                   ) : (
@@ -1513,29 +1527,29 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "eraser" && (
-                <div className="bg-white p-4 rounded-lg border border-orange-200">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight ">
                     지우기 모드
                   </h4>
-                  <p className="text-sm text-orange-600">
+                  <p className="text-sm text-gray-300">
                     클릭하여 벽을 삭제할 수 있습니다.
                   </p>
                 </div>
               )}
 
               {tool === "partial_eraser" && (
-                <div className="bg-white p-4 rounded-lg border border-orange-200">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     부분 지우기 모드
                   </h4>
                   {!partialEraserSelectedWall ? (
-                    <p className="text-sm text-orange-600">
+                    <p className="text-sm text-gray-300">
                       1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로
                       표시됩니다)
                     </p>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-100 mb-2">
                         2단계: 지울 영역을 드래그하여 선택하세요.
                       </p>
                       <button
@@ -1630,6 +1644,14 @@ const FloorPlanEditor = () => {
           </div>
         </div>
       </div>
+
+      {/* 방 생성 완료 모달 */}
+      <CreateRoomModal 
+        isOpen={showCreateModal}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmGoToSimulator}
+        roomCount={walls.length}
+      />
     </div>
   );
 };

@@ -48,6 +48,11 @@ export const useStore = create(
     }
 
     return {
+      // 선택된 카테고리
+      selectedCategory: 99,
+      setSelectedCategory: (categoryId) =>
+        set({ selectedCategory: categoryId }),
+
       // 보기/편집 모드
       viewOnly: false,
       setViewOnly: (value) => set({ viewOnly: value }),
@@ -103,6 +108,10 @@ export const useStore = create(
         broadcastModelMove: null,
         broadcastModelRotate: null,
         broadcastModelScale: null,
+        broadcastWallColorChange: null,
+        broadcastFloorColorChange: null,
+        broadcastBackgroundColorChange: null,
+        broadcastEnvironmentPresetChange: null,
       },
 
       // 쓰로틀링 관리 객체
@@ -167,18 +176,16 @@ export const useStore = create(
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
-          
           // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
-          
-          
+
           if (!response.ok) throw new Error("Network response was not ok");
 
           // 2. 응답 Json 파싱
           const result = await response.json();
-          
+
           if (result) {
             set({ isOwnUserRoom: true });
           } else {
@@ -411,10 +418,8 @@ export const useStore = create(
 
       // 선택, 마우스 호버링 관련
       selectModel: (modelId, shouldBroadcast = true) => {
-    
         set({ selectedModelId: modelId });
         if (shouldBroadcast) {
-         
           get().broadcastWithThrottle("broadcastModelSelect", modelId, null, 0);
         }
       },
@@ -454,7 +459,14 @@ export const useStore = create(
       directionalLightElevation: 30,
       directionalLightIntensity: 1.0,
 
-      setEnvironmentPreset: (preset) => set({ environmentPreset: preset }),
+      setEnvironmentPreset: (preset, shouldBroadcast = true) => {
+        set({ environmentPreset: preset });
+        if (shouldBroadcast) {
+          get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(
+            preset
+          );
+        }
+      },
       setDirectionalLightAzimuth: (azimuth) =>
         set({
           directionalLightAzimuth: azimuth,
@@ -492,9 +504,24 @@ export const useStore = create(
       floorColor: "#D2B48C",
       backgroundColor: "#87CEEB",
 
-      setWallColor: (color) => set({ wallColor: color }),
-      setFloorColor: (color) => set({ floorColor: color }),
-      setBackgroundColor: (color) => set({ backgroundColor: color }),
+      setWallColor: (color, shouldBroadcast = true) => {
+        set({ wallColor: color });
+        if (shouldBroadcast) {
+          get().collaborationCallbacks.broadcastWallColorChange?.(color);
+        }
+      },
+      setFloorColor: (color, shouldBroadcast = true) => {
+        set({ floorColor: color });
+        if (shouldBroadcast) {
+          get().collaborationCallbacks.broadcastFloorColorChange?.(color);
+        }
+      },
+      setBackgroundColor: (color, shouldBroadcast = true) => {
+        set({ backgroundColor: color });
+        if (shouldBroadcast) {
+          get().collaborationCallbacks.broadcastBackgroundColorChange?.(color);
+        }
+      },
 
       //[09.01] wallscalefactor 로 벽 조정 가능합니다.
       currentRoomId: null,
@@ -506,7 +533,7 @@ export const useStore = create(
       shouldCaptureDownload: false,
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
-      
+
       // 업적 상태
       achievements: [],
       setAchievements: (achievements) => set({ achievements }),
@@ -620,7 +647,7 @@ export const useStore = create(
             }
           }
 
-          // 가구 데이터 복제 (새 room_id 또는 기존 room_id 사용)
+          // 가구 데이터 및 방 복제 (새 room_id 또는 기존 room_id 사용)
           const furnResponse = await fetch("/api/sim/save", {
             method: "POST",
             headers: {
@@ -629,6 +656,10 @@ export const useStore = create(
             body: JSON.stringify({
               room_id: clonedId,
               objects: objects,
+              wallColor: currentState.wallColor,
+              floorColor: currentState.floorColor,
+              backgroundColor: currentState.backgroundColor,
+              environmentPreset: currentState.environmentPreset,
             }),
           });
 
@@ -636,7 +667,6 @@ export const useStore = create(
             throw new Error(`복제 실패: ${furnResponse.statusText}`);
           }
 
-          
           return { room_id: clonedId };
         } catch (error) {
           console.error("복제 중 오류:", error);
@@ -817,6 +847,10 @@ export const useStore = create(
             body: JSON.stringify({
               room_id: currentState.currentRoomId,
               objects: objects,
+              wallColor: currentState.wallColor,
+              floorColor: currentState.floorColor,
+              backgroundColor: currentState.backgroundColor,
+              environmentPreset: currentState.environmentPreset,
             }),
           });
 
@@ -927,6 +961,10 @@ export const useStore = create(
               description: result.room_info?.description || "",
               is_public: result.room_info?.is_public || false,
             },
+            wallColor: result.wall_color || "#FFFFFF",
+            floorColor: result.floor_color || "#D2B48C",
+            backgroundColor: result.background_color || "#87CEEB",
+            environmentPreset: result.environment_preset || "apartment",
           });
 
           return result;

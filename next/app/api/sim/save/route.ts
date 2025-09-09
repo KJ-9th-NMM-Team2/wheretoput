@@ -88,8 +88,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json();
-    const { room_id, objects } = body;
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.error("JSON parsing error:", error);
+      return Response.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    const {
+      room_id,
+      objects,
+      wallColor,
+      floorColor,
+      backgroundColor,
+      environmentPreset,
+    } = body;
 
     // 필수 파라미터 확인
     if (!room_id || !objects || !Array.isArray(objects)) {
@@ -155,11 +172,22 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 3. rooms 테이블의 updated_at 갱신
-      await tx.rooms.update({
-        where: { room_id: room_id },
-        data: { updated_at: new Date() },
-      });
+      // 3. rooms 테이블의 updated_at 및 색상 갱신 (room이 존재하는 경우만)
+      try {
+        await tx.rooms.update({
+          where: { room_id: room_id },
+          data: {
+            updated_at: new Date(),
+            wall_color: wallColor,
+            floor_color: floorColor,
+            background_color: backgroundColor,
+            environment_preset: environmentPreset,
+          },
+        });
+      } catch (roomUpdateError) {
+        console.warn(`Room ${room_id} not found in rooms table, skipping room update`);
+        // room이 없어도 가구 저장은 계속 진행
+      }
     });
 
     const validObjectsCount = objects.filter(

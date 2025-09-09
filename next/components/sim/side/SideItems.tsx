@@ -68,23 +68,9 @@ const SideItems: React.FC<SideItemsProps> = ({
   // 페이지나 카테고리 변경 시 데이터 가져오기
   useEffect(() => {
     const handleCategoryChange = async () => {
-      if (selectedCategory === "-1") {
-        const pagination = calculatePagination(currentPage, 5, totalPages);
-        setTotalItems(pagination.totalItems);
-        setTotalPages(pagination.totalPages);
-        const furnitureId = loadedModels.map((item: any) => item.furniture_id);
-        const result = await fetchSelectedFurnitures(furnitureId, sortOption);
-
-        if (result) {
-          setSelectedItems(result.furnitures);
-          setTotalPrice(result.totalPrice["_sum"]["price"]);
-          // console.log(result.totalPrice['_sum']);
-        }
-      } else {
-        fetchItems(currentPage, selectedCategory, sortOption);
-        setSelectedItems([]);
-        setTotalPrice(0);
-      }
+      fetchItems(currentPage, selectedCategory, sortOption);
+      setSelectedItems([]);
+      setTotalPrice(0);
     };
     handleCategoryChange();
   }, [currentPage, selectedCategory, sortOption, fetchItems]);
@@ -99,11 +85,11 @@ const SideItems: React.FC<SideItemsProps> = ({
     const refreshSelectedItems = async () => {
       if (selectedCategory === "-1") {
         const furnitureId = loadedModels.map((item: any) => item.furniture_id);
-        const result = await fetchSelectedFurnitures(furnitureId, sortOption);
+        const result = await fetchSelectedFurnitures(furnitureId, roomId, sortOption);
 
         if (result) {
           setSelectedItems(result.furnitures);
-          setTotalPrice(result.totalPrice["_sum"]["price"] || 0);
+          setTotalPrice(result.totalPrice);
         }
       }
     };
@@ -121,7 +107,7 @@ const SideItems: React.FC<SideItemsProps> = ({
 
   // 아이템 클릭 핸들러
   const handleItemClick = useCallback(
-    async (item: Furniture, delta: number = 1) => {
+    async (item: Furniture) => {
       const toastId = toast.loading(`${item.name} 생성 중...`);
 
       try {

@@ -4,9 +4,10 @@ import { io, Socket } from "socket.io-client";
 const sockets = new Map<string, Socket>();
 const connectionStates = new Map<string, { connecting: boolean; lastConnectTime: number }>();
 
-export function connectSocket(jwt: string, namespace: string = '/') {
+export function connectSocket(jwt: string, namespace: string = "/") {
   const serverUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
   const fullUrl = serverUrl + namespace;
+
   
   // 중복 연결 시도 방지
   const state = connectionStates.get(namespace);
@@ -19,7 +20,7 @@ export function connectSocket(jwt: string, namespace: string = '/') {
   if (sockets.has(namespace)) {
     const existingSocket = sockets.get(namespace)!;
     if (existingSocket.connected) {
-      console.log('🔄 REUSING EXISTING SOCKET:', fullUrl);
+      console.log("🔄 REUSING EXISTING SOCKET:", fullUrl);
       return existingSocket;
     } else {
       // 연결이 끊어진 소켓은 제거하고 새로 생성
@@ -88,14 +89,14 @@ function createNewSocket(jwt: string, namespace: string, fullUrl: string): Socke
       connectionStates.delete(namespace);
     }
   });
-  
+
   sockets.set(namespace, socket);
-  console.log('🔌 NEW SOCKET CONNECTING TO:', fullUrl);
-  
+  console.log("🔌 NEW SOCKET CONNECTING TO:", fullUrl);
+
   return socket;
 }
 
-export function getSocket(namespace: string = '/') {
+export function getSocket(namespace: string = "/") {
   return sockets.get(namespace) || null;
 }
 
@@ -106,8 +107,12 @@ export function disconnectSocket(namespace: string) {
     socket.removeAllListeners(); // 모든 이벤트 리스너 제거
     socket.disconnect();
     sockets.delete(namespace);
+
     connectionStates.delete(namespace);
     console.log('✅ SOCKET DISCONNECTED AND CLEANED:', namespace);
+
+    console.log("🔌 SOCKET DISCONNECTED:", namespace);
+
   }
 }
 
@@ -116,7 +121,11 @@ export function disconnectAllSockets() {
   sockets.forEach((socket, namespace) => {
     socket.removeAllListeners(); // 모든 이벤트 리스너 제거
     socket.disconnect();
+
     console.log('✅ SOCKET DISCONNECTED:', namespace);
+
+    console.log("🔌 SOCKET DISCONNECTED:", namespace);
+
   });
   sockets.clear();
   connectionStates.clear();

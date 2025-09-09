@@ -70,7 +70,7 @@ export const useChatMessages = (
         const { data } = await api.get(
           `${SOCKET_API_URL}/rooms/${selectedChatId}/messages`,
           {
-            params: { limit: 50 },
+            params: { limit: 50, currentUserId },
             headers: { Authorization: `Bearer ${token}` },
           }
         );
@@ -92,7 +92,7 @@ export const useChatMessages = (
               content: m.content,
               message_type: m.message_type ?? (isImageMessage ? "image" : "text"),
               createdAt: m.createdAt ?? m.created_at,
-              status: "read",
+              status: m.status, // ******* 이거 수정 *******
             };
           }
         );

@@ -27,6 +27,15 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path='../.env.local')
 
+KAKAO_ID = os.getenv('YOUR_KAKAO_ID_OR_PHONE')
+KAKAO_PW = os.getenv('YOUR_PASSWORD')
+
+# 환경 변수가 제대로 로드되었는지 확인
+if not KAKAO_ID or not KAKAO_PW:
+    print("오류: .env.local 파일에서 카카오 아이디 또는 비밀번호를 찾을 수 없습니다.")
+    print("파일 경로와 내용을 다시 확인해주세요.")
+    exit()
+
 # --- 1. 웹 드라이버 설정 및 사이트 접속 ---
 print("Archisketch 사이트로 이동합니다.")
 chrome_options = webdriver.ChromeOptions()
@@ -104,7 +113,7 @@ furnitures_category = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
 print("가구 데이터 수집을 시작합니다.")
 ######################################################
-# 원하는 카테고리 번호를 여기서 지정하시면 됩니다.
+# 원하는 가구 카테고리 번호를 여기서 지정하시면 됩니다.
 # 0 = chairs , 1 = Lighting
 # 2 = Storage , 3 = Tables
 # 4 = Decor , 5 = Bathroom
@@ -112,7 +121,7 @@ print("가구 데이터 수집을 시작합니다.")
 # 8 = Sofas, 9 = Construction
 # 10 = Bedroom , 11 = Outdoor
 # 12 = Home Decor
-tables_category_index = 10
+tables_category_index = 5
 ######################################################
 
 # 특정 카테고리만 순회
@@ -122,6 +131,21 @@ for z in [tables_category_index]:
         # z번째 카테고리 클릭
         driver.find_element(By.XPATH, f'//*[@id="root"]/section/div[1]/div[1]/div/section/aside/div/section/div[{z+1}]').click()
         time.sleep(1) # 카테고리 내 가구 로딩 대기
+
+
+        # 필요시 스크롤 다운
+        # from selenium.webdriver.support.ui import WebDriverWait
+        # from selenium.webdriver.support import expected_conditions as EC
+        # 스크롤 대상 요소 대기 & 획득
+        # scroll_container = WebDriverWait(driver, 10).until(
+        #     EC.presence_of_element_located((
+        #         By.XPATH,
+        #         # aside 패널 ↓ 내부의 리스트 컨테이너 ↓ 그 안의 overflow:auto div
+        #         "//aside[contains(@class,'AsidePanel__Panel')]"
+        #         "//section[contains(@class,'LibraryItemList2__Container')]"
+        #         "//div[contains(@style,'overflow') and contains(@style,'auto')]"
+        #     ))
+        # )
 
         # 이 예제에서는 각 카테고리별로 일부만 가져오도록 범위를 작게 설정 (필요시 range 수정)
         for i in range(1, 11): # 행 (10행까지)

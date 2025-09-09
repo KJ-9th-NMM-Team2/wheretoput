@@ -18,7 +18,7 @@ import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { ArchievementToast } from "./achievement/components/ArchievementToast";
-
+import { MobileHeader } from "./mobile/MobileHeader";
 
 type position = [number, number, number];
 
@@ -31,7 +31,11 @@ function Floor({ wallsData }: { wallsData: any[] }) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color={floorColor} roughness={0.9} metalness={0.0} />
+        <meshStandardMaterial
+          color={floorColor}
+          roughness={0.9}
+          metalness={0.0}
+        />
       </mesh>
     );
   }
@@ -119,6 +123,8 @@ interface SimulatorCoreProps {
   loadingIcon?: string;
   // 키보드 컨트롤 비활성화 옵션
   keyboardControlsDisabled?: boolean;
+  // 모바일 모드 여부
+  isMobile?: boolean;
 }
 
 /**
@@ -137,6 +143,7 @@ export function SimulatorCore({
   loadingMessage = "방 데이터 로딩 중...",
   loadingIcon = "🏠",
   keyboardControlsDisabled = false,
+  isMobile = false,
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const { data: session } = useSession();
@@ -157,28 +164,29 @@ export function SimulatorCore({
     removeModel,
     collaborationMode,
     checkUserRoom,
+    currentRoomInfo,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
     const initializeSimulator = async () => {
       try {
-
         setCurrentRoomId(roomId);
 
         // 임시 방이 아닌 경우에만 데이터 로드 시도
         if (!roomId.startsWith("temp_")) {
           try {
             if (collaborationMode) {
-              console.log(`협업 모드이므로 벽 데이터만 로드하고 가구는 Redis에서 받습니다.`);
+              console.log(
+                `협업 모드이므로 벽 데이터만 로드하고 가구는 Redis에서 받습니다.`
+              );
               await loadSimulatorState(roomId, { wallsOnly: true });
             } else {
               await loadSimulatorState(roomId);
             }
-            
-            
+
             // 방 소유권 확인 (자동저장을 위해 필요)
-            
+
             if (session?.user?.id) {
               await checkUserRoom(roomId, session.user.id);
             } else {
@@ -200,13 +208,19 @@ export function SimulatorCore({
     if (roomId) {
       initializeSimulator();
     }
-  }, [roomId, setCurrentRoomId, loadSimulatorState, collaborationMode, session?.user?.id, checkUserRoom]);
+  }, [
+    roomId,
+    setCurrentRoomId,
+    loadSimulatorState,
+    collaborationMode,
+    session?.user?.id,
+    checkUserRoom,
+  ]);
 
   // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
   useEffect(() => {
     const handleHistoryAddFurniture = (event) => {
       const { furnitureData } = event.detail;
-      
 
       const modelToAdd = {
         ...furnitureData,
@@ -240,11 +254,22 @@ export function SimulatorCore({
   }, [addModelWithId, removeModel]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div
+      className={`flex h-screen overflow-hidden ${
+        isMobile ? "bg-gray-50" : ""
+      }`}
+    >
       {/* 조건부 사이드바 표시 */}
       {showSidebar && !viewOnly && <SimSideView roomId={roomId} />}
 
       <div className="flex-1 relative">
+        {/* 모바일 헤더 */}
+        {isMobile && (
+          <MobileHeader 
+            roomInfo={currentRoomInfo}
+            controlsRef={controlsRef}
+          />
+        )}
         {/* 로딩 상태 표시 */}
         {isLoading && (
           <div
@@ -271,7 +296,7 @@ export function SimulatorCore({
 
         {/* 커스텀 헤더 또는 기본 모드 컨트롤 */}
         {customHeader}
-        
+
         {/* 조건 달성 토스트 팝업 - 모드 컨트롤 아래 중앙 */}
         <ArchievementToast />
 
@@ -280,13 +305,15 @@ export function SimulatorCore({
 
         {/* [09.06] 자동저장  - 편집 모드일 때만 활성화 */}
         {!viewOnly && <AutoSave enabled={!viewOnly} />}
-        
+
         {/* [09.06] 자동저장 상태 표시 */}
         {/* 팝업 알림은 ControIcons 아래에 위치 */}
         {!viewOnly && <AutoSaveIndicator position="top-right" />}
 
         {/* 편집 컨트롤 아이콘 */}
-        {showEditControls && !viewOnly && <ControlIcons controlsRef={ controlsRef }/>}
+        {showEditControls && !viewOnly && (
+          <ControlIcons controlsRef={controlsRef} />
+        )}
 
         <SelectedModelEditModal />
 
@@ -296,6 +323,7 @@ export function SimulatorCore({
           style={{
             width: "100%",
             height: "100vh",
+            marginTop: isMobile ? "60px" : "0", // 모바일 헤더 높이만큼 여백
           }}
           frameloop="demand"
         >
@@ -388,16 +416,28 @@ export function SimulatorCore({
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
 
-          <KeyboardControls controlsRef={controlsRef} disabled={keyboardControlsDisabled} />
+          <KeyboardControls
+            controlsRef={controlsRef}
+            disabled={keyboardControlsDisabled}
+          />
           <OrbitControls
             ref={controlsRef}
             enableZoom={true}
             enableRotate={true}
-            enableDamping={false}
-            rotateSpeed={0.3}
-            panSpeed={0.5}
-            minDistance={8}
+            enablePan={true}
+            enableDamping={isMobile ? true : false}
+            dampingFactor={isMobile ? 0.05 : undefined}
+            rotateSpeed={isMobile ? 0.8 : 0.3}
+            panSpeed={isMobile ? 1.0 : 0.5}
+            zoomSpeed={isMobile ? 0.8 : undefined}
+            minDistance={isMobile ? 1 : 8}
             maxDistance={50}
+            maxPolarAngle={isMobile ? Math.PI * 0.95 : undefined}
+            minPolarAngle={isMobile ? Math.PI * 0.05 : undefined}
+            touches={isMobile ? {
+              ONE: 0, // 한 손가락으로 회전
+              TWO: 2, // 두 손가락으로 확대축소, 이동
+            } : undefined}
           />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}

@@ -34,6 +34,10 @@ export function useCollaboration(roomId) {
     setCollaborationCallbacks,
     connectedUsers,
     saveSimulatorState,
+    setWallColor,
+    setFloorColor,
+    setBackgroundColor,
+    setEnvironmentPreset,
   } = useStore();
 
   const router = useRouter();
@@ -267,6 +271,30 @@ export function useCollaboration(roomId) {
       }
     });
 
+    socket.current.on("wall-color-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setWallColor(data.color, false);
+      }
+    });
+
+    socket.current.on("floor-color-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setFloorColor(data.color, false);
+      }
+    });
+
+    socket.current.on("background-color-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setBackgroundColor(data.color, false);
+      }
+    });
+
+    socket.current.on("environment-preset-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setEnvironmentPreset(data.preset, false);
+      }
+    });
+
     // 후순위
     socket.current.on("cursor-moved", (data) => {
       if (data.userId !== currentUser.id) {
@@ -347,6 +375,10 @@ export function useCollaboration(roomId) {
         broadcastModelScale,
         broadcastModelSelect,
         broadcastModelDeselect,
+        broadcastWallColorChange,
+        broadcastFloorColorChange,
+        broadcastBackgroundColorChange,
+        broadcastEnvironmentPresetChange,
       });
     } else {
       setCollaborationCallbacks({
@@ -358,6 +390,10 @@ export function useCollaboration(roomId) {
         broadcastModelScale: null,
         broadcastModelSelect: null,
         broadcastModelDeselect: null,
+        broadcastWallColorChange: null,
+        broadcastFloorColorChange: null,
+        broadcastBackgroundColorChange: null,
+        broadcastEnvironmentPresetChange: null,
       });
     }
   }, [collaborationMode]);
@@ -441,6 +477,34 @@ export function useCollaboration(roomId) {
     });
   };
 
+  const broadcastWallColorChange = (color) => {
+    emitEvent("wall-color-changed", {
+      userId: currentUser.id,
+      color,
+    });
+  };
+
+  const broadcastFloorColorChange = (color) => {
+    emitEvent("floor-color-changed", {
+      userId: currentUser.id,
+      color,
+    });
+  };
+
+  const broadcastBackgroundColorChange = (color) => {
+    emitEvent("background-color-changed", {
+      userId: currentUser.id,
+      color,
+    });
+  };
+
+  const broadcastEnvironmentPresetChange = (preset) => {
+    emitEvent("environment-preset-changed", {
+      userId: currentUser.id,
+      preset,
+    });
+  };
+
   return {
     // 연결 상태
     isConnected: socket.current?.connected || false,
@@ -456,6 +520,10 @@ export function useCollaboration(roomId) {
     broadcastModelDeselect,
     broadcastCursorMove,
     broadcastCollaborationEnd,
+    broadcastWallColorChange,
+    broadcastFloorColorChange,
+    broadcastBackgroundColorChange,
+    broadcastEnvironmentPresetChange,
 
     // 연결 관리
     disconnect,
