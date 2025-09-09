@@ -45,19 +45,21 @@ export default function HouseCard({
           <p className="text-gray-900 dark:text-gray-100 text-base font-medium leading-normal">
             {house.title}
           </p>
-          <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal">
+          <p className="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal">
             {`By: ${house.user.name}`}{" "}
             {house.is_public ? (
               ""
             ) : (
-              <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+              <span className="ml-2 px-2 py-1 rounded-lg bg-gradient-to-r from-red-50 to-pink-50 dark:bg-gray-700 text-red-600 dark:text-red-300 text-xs font-medium border border-red-200 dark:border-red-400">
                 비공개
               </span>
             )}
           </p>
 
-          <p className="text-amber-700 dark:text-orange-300 text-sm font-normal leading-normal flex items-center gap-2">
-            <FaEye /> {house.view_count} <FcLike /> {house.num_likes} <FaCommentDots /> {house.num_comments}
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-normal leading-normal flex items-center gap-2">
+             <FcLike /> {house.num_likes} 
+             <FaCommentDots className="text-gray-500" /> {house.num_comments}
+             <FaEye className="text-blue-500" /> {house.view_count}
           </p>
         </div>
       </Link>

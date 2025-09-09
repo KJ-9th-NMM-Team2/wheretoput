@@ -1,28 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #0f172a;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Tailwind theme configuration */
 
 /* Tailwind dark mode configuration */
 html.dark {
-  --background: #111827;
-  --foreground: #ededed;
+  --background: #0f0f23;
+  --foreground: #f1f5f9;
 }
 
 /* Initialize theme from localStorage */
 @media (prefers-color-scheme: dark) {
   html:not(.light) {
-    --background: #111827;
-    --foreground: #ededed;
+    --background: #0f0f23;
+    --foreground: #f1f5f9;
   }
 }
 

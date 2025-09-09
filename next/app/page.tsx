@@ -23,7 +23,7 @@ export default async function Page() {
               }}
             >
               <div className="flex flex-col gap-2 text-center backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
-                <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] drop-shadow-lg">
+                <h1 className="bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent text-4xl font-bold leading-[1.1] tracking-[-0.02em] @[480px]:text-5xl @[480px]:font-bold @[480px]:leading-[1.1] @[480px]:tracking-[-0.02em] drop-shadow-lg hover:scale-105 transition-transform duration-500">
                   실내 인테리어 디자이너
                 </h1>
                 <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal drop-shadow-md">

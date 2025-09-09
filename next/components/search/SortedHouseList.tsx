@@ -63,11 +63,11 @@ export default function SortedHouseList({
         <div className="flex gap-3 p-3 flex-wrap pr-4">
           {/* // 정렬버튼 */}
           <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-4 transition-colors duration-200
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
             ${
               sortType === "view"
-                ? "bg-amber-300 dark:bg-orange-800"
-                : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
             }`}
             onClick={() => {
               setSortType("view");
@@ -77,11 +77,11 @@ export default function SortedHouseList({
             <span className="text-sm">조회수 순</span>
           </button>
           <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-4 transition-colors duration-200
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
             ${
               sortType === "new"
-                ? "bg-amber-300 dark:bg-orange-800"
-                : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
             }`}
             onClick={() => {
               setSortType("new");
@@ -91,11 +91,11 @@ export default function SortedHouseList({
             <span className="text-sm">최신 순</span>
           </button>
           <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-4 transition-colors duration-200
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
             ${
               sortType === "like"
-                ? "bg-amber-300 dark:bg-orange-800"
-                : "bg-amber-50 dark:bg-orange-600 hover:bg-amber-100 dark:hover:bg-orange-700"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
             }`}
             onClick={() => {
               setSortType("like");

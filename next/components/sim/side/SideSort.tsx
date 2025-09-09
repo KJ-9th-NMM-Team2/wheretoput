@@ -36,7 +36,7 @@ const SideSort: React.FC<SideSortProps> = ({ collapsed, onSortChange, currentSor
         <div className="relative">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent flex items-center justify-between"
+            className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center justify-between transition-all duration-200"
           >
             <span>{currentOption.label}</span>
             <svg
@@ -50,14 +50,14 @@ const SideSort: React.FC<SideSortProps> = ({ collapsed, onSortChange, currentSor
           </button>
 
           {isOpen && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
               {sortOptions.map((option) => (
                 <button
                   key={option.value}
                   onClick={() => handleSortChange(option.value)}
-                  className={`w-full px-3 py-2 text-sm text-left hover:bg-orange-50 focus:outline-none focus:bg-orange-50 ${
+                  className={`w-full px-3 py-2 text-sm text-left hover:bg-blue-50 focus:outline-none focus:bg-blue-50 transition-colors duration-200 ${
                     currentSort === option.value 
-                      ? 'bg-orange-100 text-orange-700 font-medium' 
+                      ? 'bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 font-medium' 
                       : 'text-gray-700'
                   }`}
                 >

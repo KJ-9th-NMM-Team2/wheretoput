@@ -168,17 +168,17 @@ export function CommentCard({
         {isEditing ? (
           <div className="w-full mt-2">
             <textarea
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 dark:bg-gray-800 dark:text-gray-100"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 transition-all duration-200"
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               disabled={isLoading}
             />
             <div className="flex gap-2 mt-2">
               <button
-                className={`px-3 py-1 text-xs font-bold text-white rounded flex items-center gap-1 ${
+                className={`px-3 py-1 text-xs font-bold text-white rounded-xl flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
                   isLoading
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-orange-400 hover:bg-orange-500"
+                    : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
                 }`}
                 onClick={handleEdit}
                 disabled={isLoading}
@@ -189,7 +189,7 @@ export function CommentCard({
                 {isLoading ? "수정중..." : "수정"}
               </button>
               <button
-                className="px-3 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded"
+                className="px-3 py-1 text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                 onClick={() => {
                   setIsEditing(false);
                   setEditContent(comment.content);
@@ -268,7 +268,7 @@ export default function CommentsList({
     <div className="grid grid-cols-1 gap-3 p-4">
       <form className="mb-4 flex flex-row gap-2" onSubmit={handleSubmit}>
         <textarea
-          className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 dark:bg-gray-800 dark:text-gray-100"
+          className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 transition-all duration-200"
           placeholder="댓글을 입력하세요"
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
@@ -276,10 +276,10 @@ export default function CommentsList({
         />
         <button
           type="submit"
-          className={`rounded px-4 py-2 text-sm font-bold text-white flex items-center gap-2 min-w-[80px] justify-center ${
+          className={`rounded-2xl px-4 py-2 text-sm font-bold text-white flex items-center gap-2 min-w-[80px] justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
             isLoading
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-orange-400 hover:bg-orange-500"
+              : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
           }`}
           disabled={isLoading}
         >
