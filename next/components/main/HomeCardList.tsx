@@ -80,7 +80,7 @@ export function HomeCard({ room }: { room: any }) {
                 <span>{room.num_comments || 0}</span>
               </div>
               <div className="flex items-center gap-1">
-                <FaEye className="w-3 h-3" />
+                <FaEye className="w-3 h-3 text-blue-500" />
                 <span>{room.view_count || 0}</span>
               </div>
             </div>

@@ -49,25 +49,25 @@ export default function UserTabs({
           <button
             onClick={() => setIsAchievement(false)}
             className={`
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
               ${!isAchievement 
-                ? 'bg-amber-100 text-amber-800 dark:bg-orange-600 dark:text-white' 
-                : 'text-gray-700 hover:text-amber-800 hover:bg-amber-50 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700'
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
               }
             `}
           >
-            {user.display_name || user.name}의 방들
+            {user.display_name || user.name} 님의 방
           </button>
 
           <button
             onClick={() => setIsAchievement(true)}
             className={`
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
               ${isAchievement 
-                ? 'bg-amber-100 text-amber-800 dark:bg-orange-600 dark:text-white' 
-                : 'text-gray-700 hover:text-amber-800 hover:bg-amber-50 dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700'
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
               }
             `}
           >
