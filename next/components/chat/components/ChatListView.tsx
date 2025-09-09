@@ -91,8 +91,8 @@ export default function ChatListView({
 
   // 유저 선택 토글
   const toggleUserSelection = (userId: string) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
+    setSelectedUserIds(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -104,8 +104,8 @@ export default function ChatListView({
 
     try {
       setLoading(true);
-      
-      const response = await api.post(`${process.env.NEXT_PUBLIC_BASE_URL}/rooms/group`, {
+
+      const response = await api.post(`${process.env.NEXT_PUBLIC_API_URL}/rooms/group`, {
         participantIds: selectedUserIds,
       });
 
@@ -167,7 +167,7 @@ export default function ChatListView({
     setDeleting(roomId);
     try {
       await api.delete(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/rooms/${roomId}/delete-completely`
+        `${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}/delete-completely`
       );
 
       // 채팅방 목록에서 제거
@@ -199,9 +199,8 @@ export default function ChatListView({
         <b>채팅</b>
         <button
           onClick={handleUserListClick}
-          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${
-            showUserList ? "bg-orange-600" : "bg-orange-500 hover:bg-orange-600"
-          }`}
+          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${showUserList ? "bg-orange-600" : "bg-orange-500 hover:bg-orange-600"
+            }`}
           aria-label="유저 목록"
         >
           👥
@@ -230,11 +229,10 @@ export default function ChatListView({
               setSelect("전체");
               setChats(recomputeChats(baseChats, query, "전체", currentUserId));
             }}
-            className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-              select === "전체"
-                ? "bg-gray-200 text-blue-500"
-                : "bg-transparent hover:bg-gray-200"
-            }`}
+            className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
+              ? "bg-gray-200 text-blue-500"
+              : "bg-transparent hover:bg-gray-200"
+              }`}
           >
             전체
           </button>
@@ -246,11 +244,10 @@ export default function ChatListView({
                 recomputeChats(baseChats, query, "읽지 않음", currentUserId)
               );
             }}
-            className={`px-3 py-2 rounded-xl transition cursor-pointer ${
-              select === "읽지 않음"
-                ? "bg-gray-200 text-blue-500"
-                : "bg-transparent hover:bg-gray-200"
-            }`}
+            className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
+              ? "bg-gray-200 text-blue-500"
+              : "bg-transparent hover:bg-gray-200"
+              }`}
           >
             읽지 않음
           </button>
@@ -258,11 +255,10 @@ export default function ChatListView({
 
         {showUserList && (
           <button
-            className={`px-3 py-1 text-sm rounded-lg transition ${
-              selectedUserIds.length > 0 && !loading
-                ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
-            }`}
+            className={`px-3 py-1 text-sm rounded-lg transition ${selectedUserIds.length > 0 && !loading
+              ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             disabled={selectedUserIds.length === 0 || loading}
             onClick={createGroupChatRoom}
           >
@@ -291,18 +287,16 @@ export default function ChatListView({
                   <div
                     key={user.id}
                     onClick={() => toggleUserSelection(user.id)}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                      isSelected 
-                        ? "bg-orange-50 border-2 border-orange-200" 
-                        : "hover:bg-gray-100 border-2 border-transparent"
-                    }`}
+                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${isSelected
+                      ? "bg-orange-50 border-2 border-orange-200"
+                      : "hover:bg-gray-100 border-2 border-transparent"
+                      }`}
                   >
                     {/* 체크박스 */}
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                      isSelected 
-                        ? "bg-orange-500 border-orange-500" 
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}>
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected
+                      ? "bg-orange-500 border-orange-500"
+                      : "border-gray-300 hover:border-gray-400"
+                      }`}>
                       {isSelected && (
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -327,9 +321,8 @@ export default function ChatListView({
 
                     {/* 사용자 이름 */}
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium truncate ${
-                        isSelected ? "text-orange-700" : "text-gray-900"
-                      }`}>
+                      <div className={`font-medium truncate ${isSelected ? "text-orange-700" : "text-gray-900"
+                        }`}>
                         {user.name}
                       </div>
                     </div>
@@ -392,9 +385,8 @@ export default function ChatListView({
                     onContextMenu={(e) =>
                       handleContextMenu(e, chat.chat_room_id)
                     }
-                    className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${
-                      isDeleting ? "opacity-50 pointer-events-none" : ""
-                    }`}
+                    className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
+                      }`}
                   >
                     <div className="flex-1">
                       <div className="font-semibold">{chat.name}</div>
@@ -427,9 +419,8 @@ export default function ChatListView({
                   key={chat.chat_room_id}
                   onClick={() => onChatSelect(chat.chat_room_id)}
                   onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
-                  className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${
-                    isDeleting ? "opacity-50 pointer-events-none" : ""
-                  }`}
+                  className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
+                    }`}
                 >
                   <div className="flex-1">
                     <div className="font-semibold">{chat.name}</div>
