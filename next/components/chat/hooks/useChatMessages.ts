@@ -145,9 +145,6 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
-      console.log('🔍 [DEBUG] 실시간 메시지 받은 데이터:', m);
-      console.log('🔍 [DEBUG] senderName:', m.senderName);
-      console.log('🔍 [DEBUG] senderImage:', m.senderImage);
       
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
       const isImageMessage = m.content && m.content.startsWith('chat/') &&
