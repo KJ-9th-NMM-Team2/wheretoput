@@ -5,12 +5,16 @@ interface ShoppingLinkProps {
   furnitureName: string;
   className?: string;
   children?: React.ReactNode;
+  iconSize?: number;
+  textSize?: string;
 }
 
 const ShoppingLink: React.FC<ShoppingLinkProps> = ({ 
   furnitureName, 
   className = "",
-  children 
+  children,
+  iconSize = 12,
+  textSize = "text-xs"
 }) => {
   const handleShoppingClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // 부모 클릭 이벤트 방지
@@ -36,8 +40,8 @@ const ShoppingLink: React.FC<ShoppingLinkProps> = ({
     >
       {children || (
         <>
-          <ExternalLink size={12} />
-          구매하기
+          <ExternalLink size={iconSize} />
+          <span className={textSize}>구매하기</span>
         </>
       )}
     </button>

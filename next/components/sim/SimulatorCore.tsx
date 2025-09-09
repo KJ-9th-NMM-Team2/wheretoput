@@ -253,7 +253,6 @@ export function SimulatorCore({
     };
   }, [addModelWithId, removeModel]);
 
-  console.log(currentRoomInfo);
   return (
     <div
       className={`flex h-screen overflow-hidden ${
@@ -266,10 +265,7 @@ export function SimulatorCore({
       <div className="flex-1 relative">
         {/* 모바일 헤더 */}
         {isMobile && (
-          <MobileHeader 
-            roomInfo={currentRoomInfo}
-            controlsRef={controlsRef}
-          />
+          <MobileHeader roomInfo={currentRoomInfo} controlsRef={controlsRef} />
         )}
         {/* 로딩 상태 표시 */}
         {isLoading && (
@@ -357,6 +353,7 @@ export function SimulatorCore({
                 depth={Math.max(wall.dimensions.depth, 0.2)}
                 position={wall.position}
                 rotation={wall.rotation}
+                id={wall.id}
               />
             ))
           ) : (
@@ -435,10 +432,14 @@ export function SimulatorCore({
             maxDistance={50}
             maxPolarAngle={isMobile ? Math.PI * 0.95 : undefined}
             minPolarAngle={isMobile ? Math.PI * 0.05 : undefined}
-            touches={isMobile ? {
-              ONE: 0, // 한 손가락으로 회전
-              TWO: 2, // 두 손가락으로 확대축소, 이동
-            } : undefined}
+            touches={
+              isMobile
+                ? {
+                    ONE: 0, // 한 손가락으로 회전
+                    TWO: 2, // 두 손가락으로 확대축소, 이동
+                  }
+                : undefined
+            }
           />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}

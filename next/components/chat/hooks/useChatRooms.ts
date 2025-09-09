@@ -1,12 +1,12 @@
 // 채팅방 목록 관리 훅
 // 채팅방 로드, 필터링, 정렬, 1:1 채팅 시작을 담당
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { api } from "@/lib/client/api";
 import { ChatListItem } from "../types/chat-types";
 import { recomputeChats } from "../utils/chat-utils";
-import { getSocket } from "@/lib/client/socket";
+import { getSocket, getSocketStatus } from "@/lib/client/socket";
 
 const NEXT_API_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -17,11 +17,13 @@ export const useChatRooms = (
   currentUserId: string | null,
   query: string,
   select: "전체" | "읽지 않음",
-  enablePolling: boolean = true
+  enablePolling: boolean = true,
+  onNewMessage?: (roomId: string, message: any) => void // 새 메시지 콜백 추가
 ) => {
   const { data: session } = useSession();
   const [baseChats, setBaseChats] = useState<ChatListItem[]>([]);
   const [chats, setChats] = useState<ChatListItem[]>([]);
+  const prevChatsRef = useRef<ChatListItem[]>([]);
 
   // 방 목록 로드
   useEffect(() => {
@@ -39,9 +41,9 @@ export const useChatRooms = (
         const data = await response.json();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-          console.log("메시지 데이터:", r.creator_id, currentUserId);
+          // console.log("메시지 데이터:", r.creator_id, currentUserId);
           r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
-          console.log("마지막 메시지: ", r.last_message);
+          // console.log("마지막 메시지: ", r.last_message);
 
           // 마지막 메시지가 이미지인지 확인
           let lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
@@ -75,23 +77,19 @@ export const useChatRooms = (
           };
 
           // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          // console.log("마지막 메시지가 누가 보냈을까?");
-          // console.log("result.lastMessageSenderId", result.lastMessageSenderId);
-          // console.log("currentUserId", currentUserId);
-          // console.log("result.lastMessageAt", result.lastMessageAt);
-          // if (
-          //   result.lastMessageSenderId === currentUserId &&
-          //   result.lastMessageAt
-          // ) {
-          //   result.last_read_at = result.lastMessageAt;
-          // }
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
+            result.last_read_at = result.lastMessageAt;
+          }
 
-          // console.log(
-          //   "lastMessageAt:",
-          //   result.lastMessageAt,
-          //   "last_read_at:",
-          //   result.last_read_at
-          // );
+          console.log(
+            "lastMessageAt:",
+            result.lastMessageAt,
+            "last_read_at:",
+            result.last_read_at
+          );
 
           return result;
         });
@@ -112,17 +110,30 @@ export const useChatRooms = (
     })();
   }, [open, token, currentUserId]);
 
-  // 실시간 폴링 (5초마다) - 안정적인 채팅방 목록 업데이트
+  // 개선된 폴링 시스템 - 소켓 상태 기반 동적 폴링
   useEffect(() => {
-    if (!open || !token || !enablePolling) return;
+    if (!token || !enablePolling) return;
+
+    let isPolling = false; // 폴링 중복 실행 방지
+    let lastUpdateTime = 0; // 마지막 업데이트 시간
+    let currentInterval: NodeJS.Timeout | null = null;
 
     const loadRooms = async () => {
+      // 폴링 중복 실행 방지
+      if (isPolling) {
+        return;
+      }
+
+      isPolling = true;
+      
       try {
-        console.log("[POLLING] 채팅방 목록 업데이트 시작");
         const response = await fetch(`${NEXT_API_URL}/api/backend/rooms`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await response.json();
+
+        const prevChats = prevChatsRef.current;
+        const currentTime = Date.now();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
           r.last_message = r.chat_messages[0] ?? null;
@@ -159,39 +170,81 @@ export const useChatRooms = (
           };
 
           // // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          // if (
-          //   result.lastMessageSenderId === currentUserId &&
-          //   result.lastMessageAt
-          // ) {
-          //   result.last_read_at = result.lastMessageAt;
-          // }
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
+            result.last_read_at = result.lastMessageAt;
+          }
 
           return result;
         });
 
+        // 새 메시지 감지 및 알림 (백그라운드일 때만)
+        if (!open && onNewMessage && prevChats.length > 0) {
+          mapped.forEach(currentRoom => {
+            const prevRoom = prevChats.find(p => p.chat_room_id === currentRoom.chat_room_id);
+            if (prevRoom && 
+                currentRoom.lastMessageAt && 
+                prevRoom.lastMessageAt &&
+                new Date(currentRoom.lastMessageAt) > new Date(prevRoom.lastMessageAt) &&
+                currentRoom.lastMessageSenderId !== currentUserId) {
+              // 새 메시지가 있고, 내가 보낸 메시지가 아닌 경우 알림
+              onNewMessage(currentRoom.chat_room_id, currentRoom);
+            }
+          });
+        }
+
+        // 실시간 이벤트로 인한 최근 업데이트가 있다면 폴링 데이터보다 우선
+        const timeSinceLastUpdate = currentTime - lastUpdateTime;
+        if (timeSinceLastUpdate < 1000 && open) {
+          isPolling = false;
+          return;
+        }
+
         setBaseChats(mapped);
+        prevChatsRef.current = mapped;
         setChats(recomputeChats(mapped, query, select, currentUserId));
-        console.log(
-          "[POLLING] 채팅방 목록 업데이트 완료 -",
-          mapped.length,
-          "개 방"
-        );
+        lastUpdateTime = currentTime;
+
       } catch (e) {
-        console.error("[POLLING] FAIL", e);
+      } finally {
+        isPolling = false;
       }
     };
 
     // 즉시 한 번 실행
     loadRooms();
 
-    // 1초마다 폴링 - 실시간 업데이트
-    const interval = setInterval(loadRooms, 3000);
+    // 폴링 간격 설정 및 업데이트 함수
+    const setupPolling = () => {
+      if (currentInterval) {
+        clearInterval(currentInterval);
+      }
+      
+      const socketStatus = getSocketStatus();
+      const isSocketConnected = socketStatus.connected;
+      
+      // 소켓 연결됨: 30초/60초, 소켓 끊어짐: 5초/10초
+      const pollInterval = isSocketConnected 
+        ? (open ? 30000 : 60000)  // 소켓 정상: 긴 간격
+        : (open ? 5000 : 10000);   // 소켓 끊어짐: 짧은 간격
+        
+      currentInterval = setInterval(loadRooms, pollInterval);
+    };
+    
+    // 초기 폴링 설정
+    setupPolling();
+    
+    // 소켓 상태 변화 감지를 위한 주기적 체크 (10초마다)
+    const statusCheckInterval = setInterval(setupPolling, 10000);
 
     return () => {
-      console.log("[POLLING] 폴링 중단");
-      clearInterval(interval);
+      if (currentInterval) clearInterval(currentInterval);
+      if (statusCheckInterval) clearInterval(statusCheckInterval);
+      isPolling = false;
     };
-  }, [open, token, currentUserId, query, select, enablePolling]);
+  }, [open, token, currentUserId, query, select, enablePolling, onNewMessage]);
 
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
