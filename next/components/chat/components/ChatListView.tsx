@@ -167,7 +167,7 @@ export default function ChatListView({
     setDeleting(roomId);
     try {
       await api.delete(
-        `http://localhost:3001/rooms/${roomId}/delete-completely`
+        `${process.env.NEXT_PUBLIC_BASE_URL}/rooms/${roomId}/delete-completely`
       );
 
       // 채팅방 목록에서 제거
