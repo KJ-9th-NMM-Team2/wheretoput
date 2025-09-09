@@ -19,7 +19,7 @@ export default async function Page() {
                   rgba(0, 0, 0, 0.1) 0%,
                   rgba(0, 0, 0, 0.4) 100%
                   ),
-                  url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZD8IlpfGpIstm5yyjufXyxQpetRDdJusSOLgmwVU7T2pq7TjHZdDBth66O9KXVRNM9V-VVjb5cGYs2Yk9b_4FWLwPiVhT942EtAIL19Zg2-rAuayaTZIEBj2jsrZCHvE_Xs6FNSHqBkDhioveQBnupOUGrsD-hLk6Eae5v4nZcIJ75He4QDInx9lSmHl9-aU2J6QN2FMyyv-FpRH1cgPOaW2xeOE3aJRA5Fhrdt4D3FNWDEBxmPKyPxlzyKJbSFT_Cmqd-WsCw90')`,
+                  url('/main_background.avif')`,
               }}
             >
               <div className="flex flex-col gap-2 text-center backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
