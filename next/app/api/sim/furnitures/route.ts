@@ -70,7 +70,6 @@ import { calculatePagination } from "@/lib/paginagtion";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    console.log("Search params:", searchParams.toString());
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "5");
     const categoryParam = searchParams.get("category");
@@ -101,10 +100,8 @@ export async function GET(request: Request) {
     let totalCount: number = 0;
 
     try {
-      if (categoryParam && !isNaN(category)) {
+      if (categoryParam && Number(category) < 99) {
         // 카테고리가 지정된 경우
-        console.log("카테고리 필터링:", category);
-
         [furnitures, totalCount] = await Promise.all([
           prisma.furnitures.findMany({
             where: {
@@ -122,8 +119,6 @@ export async function GET(request: Request) {
         ]);
       } else {
         // 카테고리 지정 안된 경우 - 전체 가구
-        console.log("전체 가구 조회");
-
         [furnitures, totalCount] = await Promise.all([
           prisma.furnitures.findMany({
             take: limit,
