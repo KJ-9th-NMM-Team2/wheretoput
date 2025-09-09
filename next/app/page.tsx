@@ -22,12 +22,12 @@ export default async function Page() {
                   url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZD8IlpfGpIstm5yyjufXyxQpetRDdJusSOLgmwVU7T2pq7TjHZdDBth66O9KXVRNM9V-VVjb5cGYs2Yk9b_4FWLwPiVhT942EtAIL19Zg2-rAuayaTZIEBj2jsrZCHvE_Xs6FNSHqBkDhioveQBnupOUGrsD-hLk6Eae5v4nZcIJ75He4QDInx9lSmHl9-aU2J6QN2FMyyv-FpRH1cgPOaW2xeOE3aJRA5Fhrdt4D3FNWDEBxmPKyPxlzyKJbSFT_Cmqd-WsCw90')`,
               }}
             >
-              <div className="flex flex-col gap-2 text-center">
-                <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+              <div className="flex flex-col gap-2 text-center backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
+                <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] drop-shadow-lg">
                   실내 인테리어 디자이너
                 </h1>
-                <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
-                  여러분만의 아름다운 집 안에 가구들을 배치해보세요
+                <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal drop-shadow-md">
+                  여러분만의 아름다운 집 안에 가구들을 배치해보세요 !
                 </h2>
               </div>
               <SearchBar />
