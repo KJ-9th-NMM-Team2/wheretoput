@@ -81,6 +81,7 @@ function CollaborationPageContent({
     session?.user?.id || null,
     handleChatRoomUpdate
   );
+  
 
   // 협업 모드 초기 설정
   useEffect(() => {

@@ -501,13 +501,11 @@ export const useStore = create(
 
       // 벽 자석 기능 토글
       enableWallMagnet: true,
-      setEnableWallMagnet: (enable) =>
-        set({ enableWallMagnet: enable }),
+      setEnableWallMagnet: (enable) => set({ enableWallMagnet: enable }),
 
       // 벽 자석 시각적 효과용 상태
       snappedWallInfo: null,
-      setSnappedWallInfo: (wallInfo) =>
-        set({ snappedWallInfo: wallInfo }),
+      setSnappedWallInfo: (wallInfo) => set({ snappedWallInfo: wallInfo }),
 
       // 색상 관련 상태
       wallColor: "#FFFFFF",
@@ -690,13 +688,13 @@ export const useStore = create(
       saveSimulatorState: async () => {
         const state = get();
 
-        const collabResult = await getColab(state.currentRoomId);
-        if (collabResult.success && collabResult.data.collab_on) {
-          if (!state.collaborationMode) {
-            console.log("협업 모드 중에선 협업 모드에서만 저장 가능");
-            return;
-          }
-        }
+        // const collabResult = await getColab(state.currentRoomId);
+        // if (collabResult.success && collabResult.data.collab_on) {
+        //   if (!state.collaborationMode) {
+        //     console.log("협업 모드 중에선 협업 모드에서만 저장 가능");
+        //     return;
+        //   }
+        // }
 
         if (!state.currentRoomId) {
           throw new Error("방 ID가 설정되지 않았습니다");

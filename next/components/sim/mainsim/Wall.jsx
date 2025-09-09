@@ -63,13 +63,13 @@ export function Wall({
         roughness={0.8}
         metalness={0.1}
       />
-      {snappedWallInfo?.wall.id === id && (
+      {(snappedWallInfo?.wall.id === id || snappedWallInfo?.wall2?.id === id) && (
         <mesh>
           <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
           <meshBasicMaterial
-            color={0xffff00} // 경계선 색
+            color={snappedWallInfo?.isCornerSnap ? 0xff6600 : 0xffff00} // 코너 스냅시 주황색, 일반 스냅시 노란색
             transparent
-            opacity={0.4} // 반투명
+            opacity={snappedWallInfo?.isCornerSnap ? 0.6 : 0.4} // 코너 스냅시 더 진하게
           />
         </mesh>
       )}

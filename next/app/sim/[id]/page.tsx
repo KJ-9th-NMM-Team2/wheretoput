@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
  */
 function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
   const [roomId, setRoomId] = useState<string | null>(null);
-  const { setCollaborationMode } = useStore();
+  const { setCollaborationMode, setCurrentRoomId } = useStore();
   const router = useRouter();
 
   // 일반 시뮬레이터 모드 초기화
@@ -35,6 +35,7 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
         }
 
         setRoomId(currentRoomId);
+        setCurrentRoomId(currentRoomId);
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);
       }

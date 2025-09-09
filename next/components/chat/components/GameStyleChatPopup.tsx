@@ -1,5 +1,6 @@
 // 게임 스타일 채팅 UI - sim/collaboration 페이지 전용
 // 페이지 하단에 입력창, 그 위에 투명한 채팅 기록 표시
+"use client"
 
 import { forwardRef, useRef, useEffect } from "react";
 import { Message } from "../types/chat-types";
@@ -90,7 +91,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
         <div className="flex-1 flex flex-col justify-end overflow-hidden">
           <div className="ml-auto bg-gray-400/30 w-100 max-w-[calc(100vw-20px)] rounded-lg">
             <div
-              className="h-70 overflow-y-auto p-4 pb-2 flex flex-col pointer-events-auto"
+              className="h-70 overflow-y-auto p-4 pb-2 flex flex-col pointer-events-auto select-none"
               style={{ scrollBehavior: 'smooth' }}
               onWheel={(e) => e.stopPropagation()}
             >
