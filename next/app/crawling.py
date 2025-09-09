@@ -123,6 +123,21 @@ for z in [tables_category_index]:
         driver.find_element(By.XPATH, f'//*[@id="root"]/section/div[1]/div[1]/div/section/aside/div/section/div[{z+1}]').click()
         time.sleep(1) # 카테고리 내 가구 로딩 대기
 
+
+        # 필요시 스크롤 다운
+        # from selenium.webdriver.support.ui import WebDriverWait
+        # from selenium.webdriver.support import expected_conditions as EC
+        # 스크롤 대상 요소 대기 & 획득
+        # scroll_container = WebDriverWait(driver, 10).until(
+        #     EC.presence_of_element_located((
+        #         By.XPATH,
+        #         # aside 패널 ↓ 내부의 리스트 컨테이너 ↓ 그 안의 overflow:auto div
+        #         "//aside[contains(@class,'AsidePanel__Panel')]"
+        #         "//section[contains(@class,'LibraryItemList2__Container')]"
+        #         "//div[contains(@style,'overflow') and contains(@style,'auto')]"
+        #     ))
+        # )
+
         # 이 예제에서는 각 카테고리별로 일부만 가져오도록 범위를 작게 설정 (필요시 range 수정)
         for i in range(1, 11): # 행 (10행까지)
             for j in range(1, 3): # 열 (2열까지)
