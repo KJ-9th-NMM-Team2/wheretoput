@@ -96,6 +96,7 @@ function ControlSlider({
   displayValue,
 }) {
   return (
+
     <div
       style={{
         display: "flex",
@@ -137,7 +138,7 @@ function ControlSlider({
 
 function WallTransparencyToggle({ enabled, onToggle }) {
   return (
-    <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-2">
       <span className="text-s text-white">벽 투명화 on/off</span>
       <button
         onClick={() => onToggle(!enabled)}
@@ -177,11 +178,18 @@ function WallMagnetToggle({ enabled, onToggle }) {
 
 function CameraResetButton({ controlsRef }) {
   return (
-    <button
-      onClick={() => controlsRef.current.reset()}
-      className="w-full px-4 py-2.5 bg-red-500 hover:bg-blue-600 text-white border-none rounded text-sm cursor-pointer transition-colors duration-200"
-    >
-      카메라 위치 리셋
-    </button>
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+    }}>
+      <button
+        onClick={() => controlsRef.current.reset()}
+        className="fit-content bg-red-500 border-none rounded cursor-pointer hover:bg-blue-600 duration-200"
+      >
+        <span className="block px-10 py-1.5 text-white text-sm hover:translate-y-0.5 duration-200">
+          카메라 위치 리셋
+        </span>
+      </button>
+    </div>
   );
 }
