@@ -136,9 +136,15 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 </span>
               )}
             </div>
-            <p className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal pb-3 pt-1 px-4">
-              {room.description}
-            </p>
+            
+            <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+                
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {room.description}
+              </p>
+            </div>
             <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               가구 프리뷰
             </h2>
