@@ -11,7 +11,95 @@ export class RoomService {
     this.socketServer = server;
   }
 
-  // 방 생성
+  // 그룹 채팅방 생성
+  async createGroupRoom(params: { 
+    currentUserId: string; 
+    participantIds: string[];
+    roomName?: string;
+  }) {
+    try {
+      if (!this.prisma) {
+        throw new Error('Prisma service not injected');
+      }
+
+      // 참가자 정보 조회
+      let participantNames: string[] = [];
+      try {
+        const participants = await this.prisma.user.findMany({
+          where: { id: { in: params.participantIds } },
+          select: { id: true, name: true },
+        });
+
+        participantNames = participants.map((user) => user.name || '이름 없음');
+      } catch (error) {
+        console.error('참가자 정보 조회 실패:', error);
+      }
+
+      // 방 이름 생성 (사용자가 지정하지 않은 경우)
+      const roomName = params.roomName || 
+        (participantNames.length > 0 
+          ? participantNames.join(', ')
+          : `그룹 채팅 (${params.participantIds.length + 1}명)`);
+
+      // 트랜잭션으로 채팅방 및 참가자 생성
+      const result = await this.prisma.$transaction(async (prisma) => {
+        // 채팅방 생성
+        const room = await prisma.chat_rooms.create({
+          data: {
+            name: roomName,
+            creator_id: params.currentUserId,
+            other_user_ids: params.participantIds,
+            is_private: true, // 그룹 채팅은 기본적으로 비공개
+          },
+        });
+
+        // 생성자를 관리자로 참가
+        await prisma.chat_participants.create({
+          data: {
+            chat_room_id: room.chat_room_id,
+            user_id: params.currentUserId,
+            is_admin: true,
+          },
+        });
+
+        // 선택된 참가자들을 멤버로 참가
+        for (const participantId of params.participantIds) {
+          await prisma.chat_participants.create({
+            data: {
+              chat_room_id: room.chat_room_id,
+              user_id: participantId,
+              is_admin: false,
+            },
+          });
+        }
+
+        return room;
+      });
+
+      // 새 방이 생성되면 관련 사용자들에게 소켓 이벤트 전송
+      if (this.socketServer) {
+        const roomData = {
+          chat_room_id: result.chat_room_id,
+          name: result.name,
+          is_private: true,
+          created_at: result.created_at,
+        };
+        
+        // 모든 참가자에게 방 생성 알림
+        const allParticipants = [params.currentUserId, ...params.participantIds];
+        this.socketServer.emit('room:created', {
+          room: roomData,
+          participants: allParticipants
+        });
+      }
+
+      return result;
+    } catch (error: any) {
+      throw new Error(`Failed to create group room: ${error.message}`);
+    }
+  }
+
+  // 1:1 채팅방 생성
   async createRoom(params: { currentUserId: string; otherUserId: string }) {
     try {
       if (!this.prisma) {
@@ -39,7 +127,6 @@ export class RoomService {
       });
 
       if (existingRoom) {
-        console.log('기존 채팅방 발견:', existingRoom.chat_room_id);
         return existingRoom;
       }
 
@@ -61,12 +148,8 @@ export class RoomService {
         // 기본값 사용 (이미 설정됨)
       }
 
-      console.log('새 채팅방 생성:', roomName);
-
-      console.log('트랜잭션 시작 전');
       // 트랜잭션으로 채팅방 및 참가자 생성
       const result = await this.prisma.$transaction(async (prisma) => {
-        console.log('chat_rooms 생성 시도');
         const room = await prisma.chat_rooms.create({
           data: {
             name: roomName,
@@ -74,7 +157,6 @@ export class RoomService {
             other_user_ids: [params.otherUserId],
           },
         });
-        console.log('chat_rooms 생성 완료:', room.chat_room_id);
 
         await prisma.chat_participants.create({
           data: {
@@ -94,7 +176,6 @@ export class RoomService {
 
         return room;
       });
-      console.log('트랜잭션 완료');
 
       // 새 방이 생성되면 관련 사용자들에게 소켓 이벤트 전송
       if (this.socketServer) {
@@ -110,8 +191,6 @@ export class RoomService {
           room: roomData,
           participants: [params.currentUserId, params.otherUserId]
         });
-        
-        console.log('📢 ROOM CREATED EVENT SENT:', roomData);
       }
 
       return result;

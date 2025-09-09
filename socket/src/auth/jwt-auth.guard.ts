@@ -37,11 +37,11 @@ export class JwtAuthGuard implements CanActivate {
       }
 
       // verify의 반환 타입을 제네릭으로 고정
-      const payload = this.jwtService.verify<{ sub: string; username: string }>(
+      const payload = this.jwtService.verify<{ userId: string; username?: string; sub?: string }>(
         token,
       );
 
-      client.data.userId = payload.sub;
+      client.data.userId = payload.userId || payload.sub;
       client.data.username = payload.username;
       return true;
     }
@@ -52,8 +52,8 @@ export class JwtAuthGuard implements CanActivate {
       const raw = req.headers.authorization || '';
       const token = raw.startsWith('Bearer ') ? raw.slice(7) : '';
       if (!token) throw new UnauthorizedException('No token provided');
-      const payload = this.jwtService.verify(token);
-      req.user = { userId: payload.sub, username: payload.username };
+      const payload = this.jwtService.verify<{ userId: string; username?: string; sub?: string }>(token);
+      req.user = { userId: payload.userId || payload.sub, username: payload.username };
       return true;
     }
 
