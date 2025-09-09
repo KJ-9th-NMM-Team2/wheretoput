@@ -4,13 +4,13 @@ import { LightControlPanel } from "@/components/sim/mainsim/LightControlPanel";
 import { CameraControlPanel } from "@/components/sim/mainsim/CameraControlPanel";
 import { ColorControlPanel } from "@/components/sim/mainsim/ColorControlPanel";
 import { CaptureControlPanel } from "@/components/sim/mainsim/CaptureControlPanel";
+import { HelpPopup } from "@/components/sim/mainsim/HelpPopup";
 import { useStore } from "@/components/sim/useStore.js";
 
 // react-icons 추가 부분
 import { FaCameraRetro, FaPalette, FaShareAlt } from "react-icons/fa";
-import { MdSunny } from "react-icons/md";
+import { MdSunny, MdHelp } from "react-icons/md";
 import { TbScreenshot } from "react-icons/tb";
-import { hover } from "framer-motion";
 // =====================================
 
 export function ControlIcons({ controlsRef }) {
@@ -20,6 +20,7 @@ export function ControlIcons({ controlsRef }) {
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [showCapturePopup, setShowCapturePopup] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
 
   // 공유 링크 (사용자가 설정)
   const { currentRoomId } = useStore();
@@ -110,6 +111,7 @@ export function ControlIcons({ controlsRef }) {
     setShowColorPopup(false);
     setShowCapturePopup(false);
     setShowSharePopup(false);
+    setShowHelpPopup(false);
   }
 
   return (
@@ -238,6 +240,32 @@ export function ControlIcons({ controlsRef }) {
         title="공유하기"
       >
         <FaShareAlt />
+      </button>
+
+      <button
+        style={{
+          position: "fixed",
+          top: "10px",
+          right: "330px",
+          background: "rgba(0, 0, 0, 0)",
+          color: "black",
+          border: "none",
+          width: "40px",
+          height: "40px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "24px",
+          zIndex: 101,
+        }}
+        onClick={() => {
+          setAllPopupFalse();
+          setShowHelpPopup(true);
+        }}
+        title="도움말"
+      >
+        <MdHelp />
       </button>
 
       {/* Control Panel 팝업 결정 */}
@@ -409,6 +437,28 @@ export function ControlIcons({ controlsRef }) {
                 {shareLink}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showHelpPopup && (
+        <div
+          className="fixed inset-0 bg-black/30 z-[200] flex items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            className="relative bg-black/90 rounded-lg p-8 w-[400px] max-w-[90vw] max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={closeButtonStyle}
+              onClick={() => setShowHelpPopup(false)}
+              title="닫기"
+            >
+              ×
+            </button>
+
+            <HelpPopup />
           </div>
         </div>
       )}
