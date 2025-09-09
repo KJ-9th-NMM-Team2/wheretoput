@@ -2,6 +2,7 @@ import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
+import { useDeleteKey } from "./useDeleteKey";
 
 export function SelectedModelEditModal() {
   const {
@@ -22,6 +23,9 @@ export function SelectedModelEditModal() {
   
   // 선택된 모델 찾기
   const selectedModel = loadedModels.find(model => model.id === selectedModelId);
+  
+  // Delete 키 단축키 처리
+  useDeleteKey(selectedModel, addAction, removeModel, deselectModel);
   
   // 모델이 선택될 때 초기값 저장
   useEffect(() => {

@@ -253,7 +253,6 @@ export function SimulatorCore({
     };
   }, [addModelWithId, removeModel]);
 
-  console.log(currentRoomInfo);
   return (
     <div
       className={`flex h-screen overflow-hidden ${
