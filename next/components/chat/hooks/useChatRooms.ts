@@ -120,14 +120,12 @@ export const useChatRooms = (
     const loadRooms = async () => {
       // 폴링 중복 실행 방지
       if (isPolling) {
-        console.log("[POLLING] 이미 실행 중이므로 건너뜀");
         return;
       }
 
       isPolling = true;
       
       try {
-        console.log("[POLLING] 채팅방 목록 업데이트 시작");
         const response = await fetch(`${NEXT_API_URL}/api/backend/rooms`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -199,7 +197,6 @@ export const useChatRooms = (
         // 실시간 이벤트로 인한 최근 업데이트가 있다면 폴링 데이터보다 우선
         const timeSinceLastUpdate = currentTime - lastUpdateTime;
         if (timeSinceLastUpdate < 1000 && open) {
-          console.log("[POLLING] 최근 실시간 업데이트가 있어 폴링 데이터 무시");
           isPolling = false;
           return;
         }
@@ -209,13 +206,7 @@ export const useChatRooms = (
         setChats(recomputeChats(mapped, query, select, currentUserId));
         lastUpdateTime = currentTime;
 
-        console.log(
-          "[POLLING] 채팅방 목록 업데이트 완료 -",
-          mapped.length,
-          "개 방"
-        );
       } catch (e) {
-        console.error("[POLLING] FAIL", e);
       } finally {
         isPolling = false;
       }
@@ -229,7 +220,6 @@ export const useChatRooms = (
     const interval = setInterval(loadRooms, pollInterval);
 
     return () => {
-      console.log("[POLLING] 폴링 중단");
       clearInterval(interval);
       isPolling = false;
     };
