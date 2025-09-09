@@ -60,6 +60,25 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       }
     };
 
+    const getShouldShowTime = (message: Message, array: Message[], index: number) => {
+      // 현재 메시지의 시간
+      const currentTime = new Date(message.createdAt).toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      });
+
+      // 다음 메시지의 시간 (있다면)
+      const nextMessage = array[index + 1];
+      const nextTime = nextMessage ? new Date(nextMessage.createdAt).toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      }) : null;
+
+      return !nextMessage || currentTime !== nextTime;
+    }
+
     if (!isVisible) return null;
 
     return (
@@ -67,46 +86,57 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
         ref={ref}
         className="fixed inset-0 z-[999] pointer-events-none flex flex-col justify-end"
       >
-        {/* 채팅 메시지 영역 - 투명 배경 */}
+        {/* 채팅 메시지 영역 - 고정 높이와 스크롤 */}
         <div className="flex-1 flex flex-col justify-end overflow-hidden">
-          <div className="ml-auto w-100 max-w-[calc(100vw-20px)] p-4 pb-2">
-            <div className="flex flex-col space-y-2 transition-all duration-200 ease-out">
-              {messages.slice(-8).map(
-                (
-                  message // 최근 8개 메시지만 표시
-                ) => (
-                  <div
-                    key={message.id}
-                    className={`flex animate-fade-in ${
-                      message.senderId === currentUserId
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                    style={{
-                      opacity: 1,
-                      transform: "translateY(0)",
-                      transition:
-                        "opacity 0.3s ease-out, transform 0.3s ease-out",
-                    }}
-                  >
+          <div className="ml-auto bg-gray-400/30 w-100 max-w-[calc(100vw-20px)] rounded-lg">
+            <div
+              className="h-70 overflow-y-auto p-4 pb-2 flex flex-col pointer-events-auto"
+              style={{ scrollBehavior: 'smooth' }}
+              onWheel={(e) => e.stopPropagation()}
+            >
+              <div className="flex-1"></div> {/* 스페이서 - 메시지를 하단으로 밀어줌 */}
+              <div className="flex flex-col space-y-2 transition-all duration-200 ease-out">
+                {messages.map((message, index, array) => {
+                  const shouldShowTime = getShouldShowTime(message, array, index);
+                  return (
                     <div
-                      className={`max-w-xs px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm border transition-all duration-200 ${
-                        message.senderId === currentUserId
-                          ? "bg-blue-500/80 text-white border-blue-400/50"
-                          : "bg-white/90 text-black border-gray-300/50"
-                      }`}
+                      key={message.id}
+                      style={{
+                        transform: "translateY(0)",
+                      }}
                     >
-                      {message.senderId !== currentUserId && (
-                        <div className="text-xs font-medium mb-1 opacity-70">
-                          {message.senderName}
+                      <div className={`flex flex-col ${message.senderId === currentUserId
+                        ? "items-end"
+                        : "items-start"
+                        }`}>
+                        <div
+                          className={`max-w-xs px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm border transition-all duration-200 ${message.senderId === currentUserId
+                            ? "bg-orange-500/80 text-white border-blue-400/50"
+                            : "bg-white/90 text-black border-gray-300/50"
+                            }`}
+                        >
+                          {message.senderId !== currentUserId && (
+                            <div className="text-xs font-medium mb-1 opacity-70">
+                              {message.senderName}
+                            </div>
+                          )}
+                          <div className="text-xs break-words">{message.content}</div>
                         </div>
-                      )}
-                      <div className="text-sm">{message.content}</div>
+                        <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
+                          <span>
+                            {shouldShowTime && new Date(message.createdAt).toLocaleTimeString("ko-KR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: false,
+                            })}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )
-              )}
-              <div ref={messagesEndRef} />
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
             </div>
           </div>
         </div>

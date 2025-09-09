@@ -314,6 +314,12 @@ export const useChatMessages = (
         status: "sending",
       };
 
+      if (tempMsg.content === chatLastMessage.at(-1)) {
+        return;
+      }
+
+      setChatLastMessage(tempMsg.content);
+
       setMessagesByRoom((prev) => ({
         ...prev,
         [roomId]: [...(prev[roomId] ?? []), tempMsg],
@@ -345,7 +351,6 @@ export const useChatMessages = (
   const send = useCallback(() => {
 
     const trimmed = text.trim();
-    
     if (trimmed === chatLastMessage.at(-1)) {
       return;
     }
@@ -353,7 +358,7 @@ export const useChatMessages = (
     setChatLastMessage(trimmed)
 
     if (!trimmed || !selectedChatId) return;
-      onSendMessage(selectedChatId, trimmed);
+        onSendMessage(selectedChatId, trimmed);
 
     setText("");
   }, [text, selectedChatId, onSendMessage]);
