@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import ShoppingLink from "../sim/side/ShoppingLink";
 // 가구 프리뷰 각 가구
 export function FurnitureCard({ furniture }: { furniture: any }) {
   const [showModal, setShowModal] = useState(false);
@@ -61,6 +62,11 @@ export function FurnitureModal({
         <p className="text-[#181411] dark:text-gray-100 mb-4">
           {furniture.description || "설명이 없습니다."}
         </p>
+
+        {/*오픈마켓 링크: 아이콘,폰트사이즈 크게 */}
+        <div className="flex justify-center">
+          <ShoppingLink furnitureName={furniture.name} iconSize={20} textSize="text-base" />
+        </div>
       </div>
     </div>
   );

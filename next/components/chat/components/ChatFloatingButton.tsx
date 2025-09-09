@@ -7,14 +7,15 @@ import styles from "../ChatButton.module.scss";
 
 interface ChatFloatingButtonProps {
   onClick: () => void;
+  hasUnreadMessages?: boolean;
 }
 
 const ChatFloatingButton = forwardRef<HTMLButtonElement, ChatFloatingButtonProps>(
-  ({ onClick }, ref) => {
+  ({ onClick, hasUnreadMessages = false }, ref) => {
     return (
       <motion.button
         ref={ref}
-        className={styles.button}
+        className={`${styles.button} relative`}
         whileTap={{ scale: 0.96 }}
         whileHover={{ scale: 1.03 }}
         transition={{ type: "spring", stiffness: 420, damping: 22 }}
@@ -22,6 +23,14 @@ const ChatFloatingButton = forwardRef<HTMLButtonElement, ChatFloatingButtonProps
         aria-label="채팅 열기"
       >
         💬
+        {hasUnreadMessages && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            className="absolute -top-2 -right-2 bg-orange-500 rounded-full w-3 h-3 shadow-lg"
+          />
+        )}
       </motion.button>
     );
   }

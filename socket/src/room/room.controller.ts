@@ -14,7 +14,7 @@ import { RoomService } from './room.service';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
-  // 채팅 방 생성
+  // 1:1 채팅방 생성
   @Post('direct')
   async createRoom(
     @Body() body: { currentUserId: string; otherUserId: string; },
@@ -28,6 +28,27 @@ export class RoomController {
     return this.roomService.createRoom({
       currentUserId: body.currentUserId,
       otherUserId: body.otherUserId,
+    });
+  }
+
+  // 그룹 채팅방 생성
+  @Post('group')
+  async createGroupRoom(
+    @Body() body: { 
+      participantIds: string[];
+      roomName?: string;
+    },
+    @Request() req: any,
+  ) {
+    // JWT 인증 확인
+    if (!req.user?.userId) {
+      throw new Error('Authentication required');
+    }
+    
+    return this.roomService.createGroupRoom({
+      currentUserId: req.user.userId,
+      participantIds: body.participantIds,
+      roomName: body.roomName,
     });
   }
 

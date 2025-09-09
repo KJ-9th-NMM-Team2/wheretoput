@@ -63,6 +63,11 @@ function CollaborationPageContent({
   
   const { token } = useChatConnection(!!selectedChatId); // 채팅방 선택 시에만 연결
   
+  // 채팅방 업데이트 콜백을 useCallback으로 메모이제이션
+  const handleChatRoomUpdate = useCallback(() => {
+    // 협업 모드에서는 채팅방 목록을 관리하지 않으므로 빈 함수
+  }, []);
+  
   const {
     selectedMessages,
     text,
@@ -74,7 +79,7 @@ function CollaborationPageContent({
     selectedChatId, // 선택된 채팅방 ID
     token,
     session?.user?.id || null,
-    useCallback(() => {}, []) // updateChatRoom은 빈 함수로
+    handleChatRoomUpdate
   );
 
   // 협업 모드 초기 설정

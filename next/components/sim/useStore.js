@@ -426,7 +426,7 @@ export const useStore = create(
 
       deselectModel: (shouldBroadcast = true) => {
         const currentSelectedId = get().selectedModelId;
-        set({ selectedModelId: null });
+        set({ selectedModelId: null, snappedWallInfo: null });
         if (shouldBroadcast) {
           get().broadcastWithThrottle(
             "broadcastModelDeselect",
@@ -498,6 +498,16 @@ export const useStore = create(
       // setCameraMode: (mode) => set({ cameraMode: mode }),
       setEnableWallTransparency: (enable) =>
         set({ enableWallTransparency: enable }),
+
+      // 벽 자석 기능 토글
+      enableWallMagnet: true,
+      setEnableWallMagnet: (enable) =>
+        set({ enableWallMagnet: enable }),
+
+      // 벽 자석 시각적 효과용 상태
+      snappedWallInfo: null,
+      setSnappedWallInfo: (wallInfo) =>
+        set({ snappedWallInfo: wallInfo }),
 
       // 색상 관련 상태
       wallColor: "#FFFFFF",

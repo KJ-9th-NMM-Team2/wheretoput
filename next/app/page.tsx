@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HomeCardList } from "@/components/main/HomeCardList";
+import { FollowingFeed } from "@/components/main/FollowingFeed";
 import { fetchRooms } from "@/lib/api/rooms";
 import SearchBar from "@/components/main/SearchBar";
 
@@ -18,15 +19,15 @@ export default async function Page() {
                   rgba(0, 0, 0, 0.1) 0%,
                   rgba(0, 0, 0, 0.4) 100%
                   ),
-                  url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZD8IlpfGpIstm5yyjufXyxQpetRDdJusSOLgmwVU7T2pq7TjHZdDBth66O9KXVRNM9V-VVjb5cGYs2Yk9b_4FWLwPiVhT942EtAIL19Zg2-rAuayaTZIEBj2jsrZCHvE_Xs6FNSHqBkDhioveQBnupOUGrsD-hLk6Eae5v4nZcIJ75He4QDInx9lSmHl9-aU2J6QN2FMyyv-FpRH1cgPOaW2xeOE3aJRA5Fhrdt4D3FNWDEBxmPKyPxlzyKJbSFT_Cmqd-WsCw90')`,
+                  url('/main_background.avif')`,
               }}
             >
-              <div className="flex flex-col gap-2 text-center">
-                <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+              <div className="flex flex-col gap-2 text-center backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
+                <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] drop-shadow-lg">
                   실내 인테리어 디자이너
                 </h1>
-                <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
-                  여러분만의 아름다운 집 안에 가구들을 배치해보세요
+                <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal drop-shadow-md">
+                  여러분만의 아름다운 집 안에 가구들을 배치해보세요 !
                 </h2>
               </div>
               <SearchBar />
@@ -37,7 +38,7 @@ export default async function Page() {
                     href="/create"
                     passHref
                   >
-                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#f48225] dark:bg-orange-600 text-[#1c140d] dark:text-white text-base font-bold leading-normal tracking-[0.015em] grow hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors">
+                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] grow hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                       <span className="truncate">새 집 만들기</span>
                     </button>
                   </Link>
@@ -46,11 +47,22 @@ export default async function Page() {
             </div>
           </div>
         </div>
+        <div className="px-4 py-6">
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
+               주목받는 집
+            </h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
+          </div>
+        </div>
         <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
           <div className="flex items-stretch px-4 py-2 gap-8 w-full">
             <HomeCardList rooms={data} />
           </div>
         </div>
+        
+        {/* 팔로잉 피드 섹션 */}
+        <FollowingFeed />
       </div>
     </div>
   );

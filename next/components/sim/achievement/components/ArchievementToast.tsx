@@ -42,7 +42,7 @@ export function ArchievementToast() {
         {/* 업적 토스트 */}
         {achievementToast && (
             <div className="fixed top-25 left-1/2 transform -translate-x-1/2 z-[200] max-w-sm">
-                <div className="bg-blue-500/80 backdrop-blur-sm text-white p-4 rounded-xl shadow-2xl border border-white/20">
+                <div className="bg-orange-500/80 backdrop-blur-sm text-white p-4 rounded-xl shadow-2xl border border-white/20">
                     <div className="flex items-center gap-3 text-white">
                         <div className="text-2xl drop-shadow-lg">{achievementToast.icon || '🏆'}</div>
                         <div>
