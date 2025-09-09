@@ -39,9 +39,9 @@ export const useChatRooms = (
         const data = await response.json();
 
         const mapped: ChatListItem[] = (data ?? []).map((r: any) => {
-          console.log("메시지 데이터:", r.creator_id, currentUserId);
+          // console.log("메시지 데이터:", r.creator_id, currentUserId);
           r.last_message = r.chat_messages[0] ?? null; // 낙관적 접근
-          console.log("마지막 메시지: ", r.last_message);
+          // console.log("마지막 메시지: ", r.last_message);
 
           // 마지막 메시지가 이미지인지 확인
           let lastMsg = r.last_message?.content ?? r.lastMessage ?? "";
@@ -75,23 +75,19 @@ export const useChatRooms = (
           };
 
           // 마지막 메시지가 내가 보낸 메시지라면 강제로 읽음 처리
-          // console.log("마지막 메시지가 누가 보냈을까?");
-          // console.log("result.lastMessageSenderId", result.lastMessageSenderId);
-          // console.log("currentUserId", currentUserId);
-          // console.log("result.lastMessageAt", result.lastMessageAt);
-          // if (
-          //   result.lastMessageSenderId === currentUserId &&
-          //   result.lastMessageAt
-          // ) {
-          //   result.last_read_at = result.lastMessageAt;
-          // }
+          if (
+            result.lastMessageSenderId === currentUserId &&
+            result.lastMessageAt
+          ) {
+            result.last_read_at = result.lastMessageAt;
+          }
 
-          // console.log(
-          //   "lastMessageAt:",
-          //   result.lastMessageAt,
-          //   "last_read_at:",
-          //   result.last_read_at
-          // );
+          console.log(
+            "lastMessageAt:",
+            result.lastMessageAt,
+            "last_read_at:",
+            result.last_read_at
+          );
 
           return result;
         });

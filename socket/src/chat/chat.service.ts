@@ -13,7 +13,7 @@ export type ChatMessageDTO = {
   senderName: string;
   content: string;
   createdAt: string;
-  status: 'sent';
+  status: 'sent' | 'read';
 };
 
 @Injectable()
@@ -191,17 +191,31 @@ export class ChatService {
         },
       });
 
+      const lastReadAt = await this.prisma.chat_participants.findFirst({
+        where: {
+          chat_room_id: roomId,
+          user_id: { not: params.userId }
+        },
+        select: { last_read_at: true }
+      })
+
+      const lastRead = lastReadAt?.last_read_at;
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return rows.reverse().map((r) => ({
-        id: r.message_id,
-        roomId: r.chat_room_id,
-        senderId: r.user_id,
-        senderName: r.User?.name || '',
-        senderImage: r.User?.image || null,
-        content: r.content,
-        createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
-        status: 'sent',
-      }));
+      return rows.reverse().map((r) => {
+        const currentRead = r.created_at ?? new Date();
+        return {
+          id: r.message_id,
+          roomId: r.chat_room_id,
+          senderId: r.user_id,
+          senderName: r.User?.name || '',
+          senderImage: r.User?.image || null,
+          content: r.content,
+          createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
+          status: lastRead && currentRead <= lastRead
+            ? 'read'
+            : 'sent',
+      }});
     } catch (error) {
       if (error instanceof ForbiddenException) {
         throw error;

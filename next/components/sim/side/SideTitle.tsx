@@ -94,45 +94,45 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     setShowPopup(false);
   };
 
-  // 방 나가기를 위한 저장 처리
-  const handleSaveRoom = async () => {
-    await saveRoom({
-      currentRoomId,
-      setSaveMessage,
-      saveSimulatorState,
-      setShouldCapture,
-      loadedModels,
-    });
-  };
+  // // 방 나가기를 위한 저장 처리
+  // const handleSaveRoom = async () => {
+  //   await saveRoom({
+  //     currentRoomId,
+  //     setSaveMessage,
+  //     saveSimulatorState,
+  //     setShouldCapture,
+  //     loadedModels,
+  //   });
+  // };
 
-  // 방 나가기 경고창
-  const handleOutofRoomClick = () => {
-    setShowExitModal(true);
-  };
+  // // 방 나가기 경고창
+  // const handleOutofRoomClick = () => {
+  //   setShowExitModal(true);
+  // };
 
-  // 실제 방 나가기 처리
-  const handleConfirmExit = async () => {
-    setShowExitModal(false);
+  // // 실제 방 나가기 처리
+  // const handleConfirmExit = async () => {
+  //   setShowExitModal(false);
     
-    const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
+  //   const isOwnUserRoom = await checkUserRoom(currentRoomId, session?.user?.id);
     
-    // 자신의 방일때는 저장후 나가기
-    if (isOwnUserRoom) {
-      await handleSaveRoom();
-      console.log("방 저장 완료!");
-    }
+  //   // 자신의 방일때는 저장후 나가기
+  //   if (isOwnUserRoom) {
+  //     await handleSaveRoom();
+  //     console.log("방 저장 완료!");
+  //   }
     
-    // URL에서 from 파라미터 확인하거나 sessionStorage 확인
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromParam = urlParams.get('from');
-    const fromStorage = sessionStorage.getItem('previousPage');
+  //   // URL에서 from 파라미터 확인하거나 sessionStorage 확인
+  //   const urlParams = new URLSearchParams(window.location.search);
+  //   const fromParam = urlParams.get('from');
+  //   const fromStorage = sessionStorage.getItem('previousPage');
     
-    if (fromParam === 'create' || fromStorage === 'create') {
-      router.push('/');
-    } else {
-      router.back();
-    }
-  };
+  //   if (fromParam === 'create' || fromStorage === 'create') {
+  //     router.push('/');
+  //   } else {
+  //     router.back();
+  //   }
+  // };
 
   return (
     <>
@@ -142,15 +142,15 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
         {/* 크기 고정 */}
         <div className="flex items-center justify-between p-4 ">
           {!collapsed && (
-            <span
-              className="text-base font-bold truncate max-w-xs"
-              title={roomInfo.title}
-              style={{ display: "inline-block", verticalAlign: "middle" }}
-            >
+            <button
+                type="button"
+                onClick={handleSettingsClick}
+                className="ml-2 px-2 py-1 rounded-md text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors shadow flex items-center"
+              >
               {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
-            </span>
+            </button>
           )}
-          {!collapsed && (
+          {/* {!collapsed && (
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -167,7 +167,7 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
                 나가기
               </button>
             </div>
-          )}
+          )} */}
           
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -194,11 +194,11 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
       )}
 
       {/* 나가기 확인 모달 */}
-      <ExitConfirmModal
+      {/* <ExitConfirmModal
         isOpen={showExitModal}
         onConfirm={handleConfirmExit}
         onCancel={() => setShowExitModal(false)}
-      />
+      /> */}
     </>
   );
 };
