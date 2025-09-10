@@ -2,6 +2,7 @@ import { addSSEConnection, removeSSEConnection } from "@/lib/api/achievement/uti
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
+    console.log("🔫 GET 요청 받음");
     const userId = req.nextUrl.searchParams.get('userId');
 
     if (!userId) {
@@ -13,6 +14,15 @@ export async function GET(req: NextRequest) {
         start(controller) {
             // SSE 연결 저장 (controller를 저장)
             addSSEConnection(userId, controller);
+
+            const connectMessage = `data: ${JSON.stringify({
+                type: 'connected',
+                message: 'SSE 연결 성공',
+                timeStamp: new Date().toISOString()
+            })}\n\n`;
+
+            controller.enqueue(new TextEncoder().encode(connectMessage));
+            console.log("🔫 초기 연결 메시지 전송됨");
 
             // 연결 종료 시 정리
             req.signal.addEventListener('abort', () => {

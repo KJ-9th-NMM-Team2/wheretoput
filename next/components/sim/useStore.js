@@ -543,7 +543,6 @@ export const useStore = create(
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
       // 업적 상태
-      achievements: [],
       setAchievements: (achievements) => set({ achievements }),
 
       // 저장/로드 액션
