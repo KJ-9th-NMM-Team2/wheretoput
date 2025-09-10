@@ -51,9 +51,9 @@ export default function AutoSave({
       return;
     }
 
-    // 가구의 모든 속성(position, rotation, scale 등)을 포함한 상태 비교
-    const currentStateString = JSON.stringify(
-      currentLoadedModels.map((model: ModelData) => ({
+    // 가구와 벽 데이터를 포함한 상태 비교
+    const currentStateString = JSON.stringify({
+      models: currentLoadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
@@ -61,8 +61,9 @@ export default function AutoSave({
         url: model.url,
         texturePath: model.texturePath,
         length: model.length
-      }))
-    );
+      })),
+      walls: currentState.wallsData
+    });
     
     // 상태가 변경되지 않았으면 저장하지 않음
     if (currentStateString === lastSaveStateRef.current) {
@@ -92,10 +93,10 @@ export default function AutoSave({
       intervalRef.current = null;
     }
 
-    // 초기 상태 저장 (가구의 모든 속성 포함)
-    const currentLoadedModels = useStore.getState().loadedModels;
-    lastSaveStateRef.current = JSON.stringify(
-      currentLoadedModels.map((model: ModelData) => ({
+    // 초기 상태 저장 (가구와 벽 데이터 포함)
+    const currentState = useStore.getState();
+    lastSaveStateRef.current = JSON.stringify({
+      models: currentState.loadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
@@ -103,8 +104,9 @@ export default function AutoSave({
         url: model.url,
         texturePath: model.texturePath,
         length: model.length
-      }))
-    );
+      })),
+      walls: currentState.wallsData
+    });
 
     // 자동저장 인터벌 설정
     intervalRef.current = setInterval(performAutoSave, interval);
