@@ -240,17 +240,18 @@ export function useObjectControls(
       );
 
       // 두 개 이상의 가까운 벽이 있을 때 코너 스냅 시도 (현재 스냅된 벽 포함)
-      const candidatesForCorner = [
-        ...currentlySnapped,
-        ...nearCandidates,
-      ].filter(
-        (candidate, index, self) =>
-          // 중복 제거: 같은 벽의 같은 면은 하나만 유지
-          index ===
-          self.findIndex(
-            (c) => c.wall === candidate.wall && c.face === candidate.face
-          )
-      );
+      // O(n) deduplication using a Set for wall-face pairs
+      const seenWallFace = new Set();
+      const candidatesForCorner = [];
+      for (const candidate of [...currentlySnapped, ...nearCandidates]) {
+        // Use wall.id if available, otherwise fallback to wall reference
+        const wallId = candidate.wall && candidate.wall.id !== undefined ? candidate.wall.id : candidate.wall;
+        const key = `${wallId}:${candidate.face}`;
+        if (!seenWallFace.has(key)) {
+          seenWallFace.add(key);
+          candidatesForCorner.push(candidate);
+        }
+      }
 
       if (candidatesForCorner.length >= 2) {
         // 각 벽 조합을 확인하여 직각인지 체크
