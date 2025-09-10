@@ -213,7 +213,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         timestamp: mockMsg.createdAt
       };
 
-      const response = await fetch('http://localhost:3000/api/chat/sse/notify', {
+      const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // SSE를 통한 읽음 상태 업데이트 알림 (Next.js 서버로)
       try {
-        const response = await fetch('http://localhost:3000/api/chat/sse/notify', {
+        const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
