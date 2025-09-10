@@ -3,6 +3,47 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useStore } from "@/components/sim/useStore.js";
 
+// 펄스 링 컴포넌트
+function PulseRing({ position }) {
+  const ringRef = useRef();
+  const centerRef = useRef();
+  
+  useFrame((state) => {
+    if (ringRef.current && centerRef.current) {
+      const time = state.clock.elapsedTime;
+      // 펄스 애니메이션
+      const scale = 1 + Math.sin(time * 4) * 0.3;
+      const opacity = 0.8 - Math.sin(time * 4) * 0.3;
+      
+      ringRef.current.scale.setScalar(scale);
+      ringRef.current.material.opacity = opacity;
+      
+      // 중심점 회전
+      centerRef.current.rotation.y = time * 2;
+    }
+  });
+  
+  return (
+    <group position={position}>
+      {/* 중심 점 */}
+      <mesh ref={centerRef}>
+        <sphereGeometry args={[0.05]} />
+        <meshBasicMaterial color="#00ff88" />
+      </mesh>
+      
+      {/* 펄스 링 */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.1, 0.2, 16]} />
+        <meshBasicMaterial 
+          color="#00ff88" 
+          transparent 
+          opacity={0.6}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 export function WallPreview() {
   const { wallToolMode, wallDrawingStart } = useStore();
   const { camera, gl, invalidate } = useThree();
@@ -77,16 +118,13 @@ export function WallPreview() {
 
   return (
     <>
-      {/* 시작점 표시 (Y=0으로 고정) */}
-      <mesh position={[wallDrawingStart[0], 0, wallDrawingStart[2]]}>
-        <sphereGeometry args={[0.2]} />
-        <meshBasicMaterial color={0x00ff00} />
-      </mesh>
+      {/* 시작점 표시 - 펄스 링 스타일 */}
+      <PulseRing position={[wallDrawingStart[0], 0.05, wallDrawingStart[2]]} />
       
       {/* 임시 벽 선 표시 */}
       <line ref={lineRef}>
         <primitive object={geometry} />
-        <lineBasicMaterial color={0x00ff00} linewidth={5} />
+        <lineBasicMaterial color={0x00ff00} linewidth={15} />
       </line>
     </>
   );
