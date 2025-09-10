@@ -21,6 +21,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
     const { data: session } = useSession();
     const { setAchievements } = useStore();
 
+    // event 발생 for SSE
     const handleSaveFurniture = async (furniture: any) => {
         try {
             const response = await fetch('/api/sim/furnitures/click', {

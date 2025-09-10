@@ -82,13 +82,14 @@ export default function ChatButton({
     onStartDirect,
     updateChatRoom,
     deleteChatRoom,
+    sseConnection,
   } = useChatRooms(
     open,
     token,
     currentUserId,
     query,
     select,
-    true, // enablePolling
+    false, // SSE 사용으로 폴링 비활성화
     handleNewMessage // 새 메시지 콜백
   );
 

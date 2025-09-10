@@ -18,9 +18,11 @@ import ExitConfirmModal from "./ExitConfirmModal";
 interface SideTitleProps {
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  accessType: number, // 1: normal, 2: collaboration
 }
 
-const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
+
+const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
   // 팝업창 뜨기 여부
   const [showPopup, setShowPopup] = useState(false);
   // 나가기 확인 모달 상태
@@ -110,12 +112,16 @@ const SideTitle = ({ collapsed, setCollapsed }: SideTitleProps) => {
     
     // URL에서 from 파라미터 확인하거나 sessionStorage 확인
     const urlParams = new URLSearchParams(window.location.search);
-    const fromParam = urlParams.get('from');
+    const fromParam = urlParams.get('from') || "";
     const fromStorage = sessionStorage.getItem('previousPage');
-    
+
     if (fromParam === 'create' || fromStorage === 'create') {
       router.push('/');
     } else {
+      if (accessType === 2) {
+        window.history.go(-2);
+        return;
+      }
       router.back();
     }
   };

@@ -228,6 +228,7 @@ function CollaborationPageContent({
     <>
       <SimulatorCore
         roomId={roomId}
+        accessType={2}
         showSidebar={true}
         showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
         showEditControls={true}

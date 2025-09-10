@@ -4,8 +4,9 @@ import {
   useTexture,
   Line,
   MeshRefractionMaterial,
+  Html,
 } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
@@ -73,11 +74,11 @@ export function DraggableModel({
 
       // 회전 고려한 실제 바운딩 박스 크기 계산
       const rotationY = meshRef.current.rotation.y;
-      
+
       // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
       const cos = Math.cos(rotationY);
       const sin = Math.sin(rotationY);
-      
+
       // 회전된 바운딩 박스 크기 (절댓값으로 계산)
       const rotatedWidth = Math.abs(ox * cos) + Math.abs(oz * sin);
       const rotatedDepth = Math.abs(ox * sin) + Math.abs(oz * cos);
@@ -292,35 +293,37 @@ function SelectionBox({
   lineWidth = 3,
   originalSizeRef,
 }) {
-  const points = useMemo(() => {
+  const edges = useMemo(() => {
     const [w, h, d] = originalSizeRef;
 
     const vertices = [
-      [-w / 2, -h / 2, -d / 2],
-      [w / 2, -h / 2, -d / 2],
-      [w / 2, h / 2, -d / 2],
-      [-w / 2, h / 2, -d / 2],
-      [-w / 2, -h / 2, d / 2],
-      [w / 2, -h / 2, d / 2],
-      [w / 2, h / 2, d / 2],
-      [-w / 2, h / 2, d / 2],
+      [-w / 2, -h / 2, -d / 2], // 0
+      [w / 2, -h / 2, -d / 2],  // 1
+      [w / 2, h / 2, -d / 2],   // 2
+      [-w / 2, h / 2, -d / 2],  // 3
+      [-w / 2, -h / 2, d / 2],  // 4
+      [w / 2, -h / 2, d / 2],   // 5
+      [w / 2, h / 2, d / 2],    // 6
+      [-w / 2, h / 2, d / 2],   // 7
     ];
 
-    const edges = [
-      [0, 1],
-      [2, 3],
-      [0, 4],
-      [5, 6],
-      [7, 4],
-      [5, 1],
-      [2, 6],
-      [7, 3],
+    // 대각선 없이 박스 모서리만
+    const edgeIndices = [
+      // 앞면
+      [0, 1], [1, 2], [2, 3], [3, 0],
+      // 뒷면  
+      [4, 5], [5, 6], [6, 7], [7, 4],
+      // 연결선
+      [0, 4], [1, 5], [2, 6], [3, 7]
     ];
 
-    return edges
-      .flatMap(([start, end]) => [vertices[start], vertices[end]])
-      .flat();
-  }, [getSelectionBoxSize, originalSizeRef]);
+    const positions = [];
+    edgeIndices.forEach(([start, end]) => {
+      positions.push(...vertices[start], ...vertices[end]);
+    });
+
+    return new Float32Array(positions);
+  }, [originalSizeRef]);
 
   // 색상 결정: 스냅 중이면 주황색, 선택됨이면 파란색, 호버면 청록색
   const getColor = () => {
@@ -329,5 +332,18 @@ function SelectionBox({
     return "#00eeff"; // 청록색 (호버)
   };
 
-  return <Line points={points} color={getColor()} lineWidth={lineWidth} />;
+  return (
+    <lineSegments castShadow={false} receiveShadow={false}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={edges.length / 3}
+          array={edges}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <lineBasicMaterial color={getColor()} />
+    </lineSegments>
+  );
 }
+

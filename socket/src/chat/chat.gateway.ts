@@ -38,7 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly roomService: RoomService,
-  ) {}
+  ) { }
 
   afterInit() {
     // RoomService에 소켓 서버 인스턴스 전달
@@ -47,13 +47,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 연결/해제 로그
   handleConnection(socket: Socket) {
-    this.logger.log(`🟢 CONNECTED: ${socket.id}`);
-    this.logger.log(`🔗 Socket connected on namespace: ${socket.nsp.name}`);
     socket.emit('welcome', { id: socket.id, time: new Date().toISOString() });
   }
 
   handleDisconnect(socket: Socket) {
-    this.logger.log(`🔴 DISCONNECTED: ${socket.id}`);
+    // 연결 해제 시 정리 로직 필요시 여기에 추가
   }
 
   // 방 입장: 권한 체크 + 참가자 등록 + 소켓 join
@@ -62,10 +60,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: JoinPayload,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(
-      `🚪 JOIN EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
-    );
-    this.logger.log(`🔍 JOIN EVENT BODY:`, JSON.stringify(body));
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
       this.jwtService,
@@ -77,28 +71,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // await this.chatService.joinRoom(body.roomId, userId); // 임시 비활성화
     void socket.join(body.roomId);
 
-    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트 (필요할 때만)
-    const participant = await this.prisma.chat_participants.findFirst({
+    // 방 입장 시 해당 사용자의 last_read_at을 현재 시간으로 업데이트
+    // 단, 마지막 메시지가 있는 경우에만 읽음 처리
+    const lastMessage = await this.prisma.chat_messages.findFirst({
       where: {
         chat_room_id: body.roomId,
-        user_id: userId,
+        is_deleted: false,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      select: {
+        created_at: true,
+        user_id: true,
       },
     });
-    const now = new Date();
-    // last_read_at이 없거나, 현재 시간과 다를 때만 업데이트
-    if (
-      !participant?.last_read_at ||
-      participant.last_read_at.getTime() !== now.getTime()
-    ) {
+
+    // 마지막 메시지가 있고, 다른 사용자가 보낸 메시지인 경우에만 읽음 처리
+    if (lastMessage && lastMessage.user_id !== userId) {
       await this.prisma.chat_participants.updateMany({
         where: {
           chat_room_id: body.roomId,
           user_id: userId,
         },
         data: {
-          last_read_at: now,
+          last_read_at: new Date(),
         },
       });
+
     }
 
     socket.emit('joined', { roomId: body.roomId });
@@ -116,9 +116,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: LeavePayload,
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(
-      `🚪 LEAVE EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
-    );
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
       this.jwtService,
@@ -144,10 +141,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: SendPayload & { tempId?: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`📤 SEND EVENT RECEIVED: ${socket.id}`);
-    this.logger.log(`🔍 SEND EVENT BODY:`, JSON.stringify(body));
-
-    console.log(socket.handshake.auth?.token);
 
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
@@ -156,16 +149,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     // if (!userId) throw new BadRequestException('Unauthenticated socket'); // 임시 비활성화
-    this.logger.log(`📤 MESSAGE SEND: ${body.content} from ${userId}`);
     if (!body?.roomId) throw new BadRequestException('roomId is required');
     if (!body?.content || !body.content.trim()) {
       throw new BadRequestException('content is required');
     }
 
-    console.log(userId);
-
     // 메시지를 저장하고 사용자 정보도 함께 조회
-    console.log('userId:', userId);
     const result = await this.prisma.chat_messages.create({
       data: {
         chat_room_id: body.roomId,
@@ -199,9 +188,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // 발신자에게 ACK 전송
     if (body.tempId) {
-      this.logger.log(
-        `🔄 SENDING ACK: tempId=${body.tempId}, realId=${mockMsg.id}`,
-      );
       socket.emit('message:ack', {
         tempId: body.tempId,
         realId: mockMsg.id,
@@ -210,8 +196,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     // 방에 브로드캐스트
-    this.logger.log(`📢 BROADCASTING MESSAGE to room: ${body.roomId}`);
     this.server.to(body.roomId).emit('message', mockMsg);
+
+    // SSE를 통한 채팅방 목록 업데이트 알림 (Next.js 서버로)
+    try {
+      const ssePayload = {
+        type: 'room_update',
+        roomId: body.roomId,
+        message: body.content,
+        lastMessageAt: mockMsg.createdAt,
+        lastMessageSenderId: userId,
+        messageType: 'text',
+        userId: userId,
+        senderName: mockMsg.senderName,
+        senderImage: mockMsg.senderImage,
+        timestamp: mockMsg.createdAt
+      };
+
+      const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ssePayload),
+      });
+
+      if (!response.ok) {
+        console.error(`SSE 알림 전송 실패: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`SSE 알림 전송 오류:`, error);
+    }
   }
 
   // 읽음 처리
@@ -220,9 +235,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(
-      `👁️ READ EVENT RECEIVED: ${socket.id} → room ${body?.roomId}`,
-    );
 
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
@@ -251,11 +263,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         readAt: new Date().toISOString(),
       });
 
-      this.logger.log(
-        `✅ READ STATUS UPDATED: user ${userId} in room ${body.roomId}`,
-      );
+      // SSE를 통한 읽음 상태 업데이트 알림 (Next.js 서버로)
+      try {
+        const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'read_update',
+            roomId: body.roomId,
+            userId: userId,
+            timestamp: new Date().toISOString()
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(`읽음 상태 SSE 알림 전송 실패: ${response.status}`);
+        }
+      } catch (error) {
+        console.error(`읽음 상태 SSE 알림 전송 오류:`, error);
+      }
+
     } catch (error) {
-      this.logger.error(`❌ READ STATUS UPDATE FAILED:`, error);
+      console.error(`READ STATUS UPDATE FAILED:`, error);
     }
   }
 
