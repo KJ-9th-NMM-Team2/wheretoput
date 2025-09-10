@@ -6,32 +6,41 @@ import { ActionType } from "@/components/sim/history";
  * @param {Object} stackableModel - 대상이 되는 가구 모델
  * @param {Function} updateModelPosition - 위치 업데이트 함수
  * @param {Function} addAction - 히스토리 액션 추가 함수
+ * @param {Array} loadedModels - 현재 로드된 모델 배열 (최신 상태)
  */
 export const handleStackModel = ({
   selectedModel,
   stackableModel,
   updateModelPosition,
   addAction,
+  loadedModels,
 }) => {
   if (!selectedModel || !stackableModel) return;
 
   const initialPosition = [...selectedModel.position];
 
+  // loadedModels에서 stackableModel의 최신 위치 정보 가져오기
+  const currentStackableModel = loadedModels 
+    ? loadedModels.find(model => model.id === stackableModel.id) 
+    : stackableModel;
+  
+  const currentBaseModel = currentStackableModel || stackableModel;
+
   // 타겟 모델의 높이 계산 (스케일 고려)
   const targetHeight =
-    (stackableModel.length[1] / 1000) *
-    (Array.isArray(stackableModel.scale)
-      ? stackableModel.scale[1]
-      : stackableModel.scale);
+    (currentBaseModel.length[1] / 1000) *
+    (Array.isArray(currentBaseModel.scale)
+      ? currentBaseModel.scale[1]
+      : currentBaseModel.scale);
 
   // 새로운 Y 위치 계산 (타겟 모델 위에 배치)
-  const newY = stackableModel.position[1] + targetHeight;
+  const newY = currentBaseModel.position[1] + targetHeight;
 
   // 위치 업데이트
   const newPosition = [
-    stackableModel.position[0],
+    currentBaseModel.position[0],
     newY, // Y 좌표는 타겟 위로
-    stackableModel.position[2],
+    currentBaseModel.position[2],
   ];
 
   updateModelPosition(selectedModel.id, newPosition);
@@ -53,7 +62,7 @@ export const handleStackModel = ({
     description: `가구 "${
       selectedModel.name || selectedModel.furnitureName || "Unknown"
     }"를 "${
-      stackableModel.name || stackableModel.furnitureName || "Unknown"
+      currentBaseModel.name || currentBaseModel.furnitureName || "Unknown"
     }" 위에 쌓았습니다`,
   });
 

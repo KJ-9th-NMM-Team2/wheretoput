@@ -209,6 +209,7 @@ export function SelectedModelEditModal() {
         stackableModel: stackingBaseModel, // 기준이 되는 모델
         updateModelPosition,
         addAction,
+        loadedModels, // 최신 상태의 모델 배열 전달
       });
 
       // 쌓기 완료 후 모드 종료
