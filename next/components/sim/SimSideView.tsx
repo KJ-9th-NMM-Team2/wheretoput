@@ -42,7 +42,14 @@ const SideViewContent: React.FC<{roomId: string, accessType: number}> = ({ roomI
       >
         <SideTitle collapsed={collapsed} setCollapsed={setCollapsed} accessType={accessType}/>
 
-        <SideSearch collapsed={collapsed} onSearchResults={handleSearchResults} resetQuery={searchQuery} selectedCategory={selectedCategory} />
+        <SideSearch 
+          collapsed={collapsed}
+          resetQuery={searchQuery}
+          searchQuery={searchQuery || ""}
+          selectedCategory={selectedCategory}
+          onSearchResults={handleSearchResults}
+          setSearchQuery={setSearchQuery}
+        />
         
         <SideCategories 
           collapsed={collapsed}

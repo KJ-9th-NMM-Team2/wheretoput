@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
 
-const SideSearch = ({
-  collapsed, 
-  onSearchResults,
-  resetQuery,
-  selectedCategory
-}: {
+interface SideSearchProps {
   collapsed: boolean;
-  onSearchResults?: (results: any[], loading: boolean) => void;
   resetQuery?: string;
+  searchQuery: string;
   selectedCategory: string | null;
-}) => {
+  onSearchResults?: (results: any[], loading: boolean) => void;
+  setSearchQuery: (query: string) => void;
+}
+
+const SideSearch = ({
+  collapsed,
+  resetQuery,
+  searchQuery,
+  selectedCategory,
+  onSearchResults,
+  setSearchQuery
+}: SideSearchProps) => {
     const [query, setQuery] = useState("");
-    const [searchQuery, setSearchQuery] = useState("");
+    // const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
