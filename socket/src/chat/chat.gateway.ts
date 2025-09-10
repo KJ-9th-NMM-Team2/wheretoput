@@ -160,7 +160,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         content: body.content,
       },
       include: {
-        user: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -177,8 +177,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       id: `mock-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       roomId: body.roomId,
       senderId: userId,
-      senderName: result.user?.name || '이름 없음',
-      senderImage: result.user?.image || '',
+      senderName: result.User?.name || '이름 없음',
+      senderImage: result.User?.image || '',
       content: body.content,
       createdAt: new Date().toISOString(),
       status: 'sent',

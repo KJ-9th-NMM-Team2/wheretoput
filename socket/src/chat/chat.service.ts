@@ -181,7 +181,7 @@ export class ChatService {
           user_id: true,
           content: true,
           created_at: true,
-          user: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -208,8 +208,8 @@ export class ChatService {
           id: r.message_id,
           roomId: r.chat_room_id,
           senderId: r.user_id,
-          senderName: r.user?.name || '',
-          senderImage: r.user?.image || null,
+          senderName: r.User?.name || '',
+          senderImage: r.User?.image || null,
           content: r.content,
           createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
           status: lastRead && currentRead <= lastRead ? 'read' : 'sent',
