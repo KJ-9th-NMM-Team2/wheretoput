@@ -25,6 +25,7 @@ interface ChatListViewProps {
   onChatSelect: (chatId: string) => void;
   onStartDirect: (userId: string, userName?: string) => void;
   currentUserId: string | null;
+  onChatFocus?: (isFocused: boolean) => void;
 }
 
 export default function ChatListView({
@@ -40,6 +41,7 @@ export default function ChatListView({
   onChatSelect,
   onStartDirect,
   currentUserId,
+  onChatFocus,
 }: ChatListViewProps) {
   const [showUserList, setShowUserList] = useState(false);
   const [allUsers, setAllUsers] = useState<UserLite[]>([]);
@@ -210,6 +212,8 @@ export default function ChatListView({
       {/* 검색 */}
       <SearchBar
         value={query}
+        onFocus={() => onChatFocus?.(true)}
+        onBlur={() => onChatFocus?.(false)}
         onChange={(q) => {
           setQuery(q);
           setChats(recomputeChats(baseChats, q, select, currentUserId));

@@ -6,9 +6,11 @@ interface SearchBarProps {
   onChange: (value: string) => void;
   onClear: () => void;
   placeholder?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export default function SearchBar({ value, onChange, onClear, placeholder = "검색" }: SearchBarProps) {
+export default function SearchBar({ value, onChange, onClear, placeholder = "검색", onFocus, onBlur }: SearchBarProps) {
   return (
     <form
       onSubmit={(e) => e.preventDefault()}
@@ -31,6 +33,8 @@ export default function SearchBar({ value, onChange, onClear, placeholder = "검
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
         className="bg-transparent outline-none w-full text-[15px] placeholder:text-[#9aa4b2]"
       />

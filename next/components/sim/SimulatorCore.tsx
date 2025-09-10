@@ -168,6 +168,7 @@ export function SimulatorCore({
     collaborationMode,
     checkUserRoom,
     currentRoomInfo,
+    isChatFocused,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -419,7 +420,7 @@ export function SimulatorCore({
 
           <KeyboardControls
             controlsRef={controlsRef}
-            disabled={keyboardControlsDisabled}
+            disabled={keyboardControlsDisabled || isChatFocused}
           />
           <OrbitControls
             ref={controlsRef}

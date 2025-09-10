@@ -2,7 +2,8 @@
 // 페이지 하단에 입력창, 그 위에 투명한 채팅 기록 표시
 "use client"
 
-import { forwardRef, useRef, useEffect } from "react";
+import { forwardRef, useRef, useEffect, useState } from "react";
+import { MdImage, MdClose } from "react-icons/md";
 import { Message } from "../types/chat-types";
 
 interface GameStyleChatPopupProps {
@@ -10,7 +11,7 @@ interface GameStyleChatPopupProps {
   messages: Message[];
   text: string;
   setText: (text: string) => void;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, messageType?: "text" | "image") => void;
   currentUserId: string | null;
   onChatFocus?: (isFocused: boolean) => void;
 }
@@ -29,6 +30,12 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
     ref
   ) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const sendButtonRef = useRef<HTMLButtonElement>(null);
+    const [selectedImage, setSelectedImage] = useState<{
+      file: File;
+      preview: string;
+    } | null>(null);
 
     // 새 메시지가 추가될 때마다 스크롤을 맨 아래로 (부드럽게)
     useEffect(() => {
@@ -46,35 +53,104 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
     }, [messages.length]); // messages 배열 전체가 아닌 length만 의존
 
     // 메시지 전송 함수
-    const handleSendMessage = () => {
-      if (text.trim()) {
-        onSendMessage(text.trim());
-        setText("");
+    const sendWithImage = async () => {
+      try {
+        // 1. 이미지가 있으면 별도 메시지로 전송
+        if (selectedImage) {
+          console.log('이미지 전송 시작:', selectedImage.file);
+
+          // FormData 생성
+          const formData = new FormData();
+          formData.append('image', selectedImage.file);
+
+          // TODO: 실제 이미지 업로드 API 호출
+          const response = await fetch('/api/chat/upload-image', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (response.ok) {
+            const { imageUrl } = await response.json();
+
+            // 이미지 메시지 전송 
+            console.log('이미지 업로드 완료, S3 Key:', imageUrl);
+            onSendMessage(imageUrl, "image");
+
+            // 2. 이미지 전송후 메시지 보내기
+            if (text.trim()) {
+              onSendMessage(text.trim(), "text");
+              setText('');
+            }
+
+          } else {
+            console.error('이미지 업로드 실패');
+          }
+
+          // 전송 후 정리
+          removeSelectedImage();
+        } else {
+          // 3. 이미지가 없으면 텍스트만 전송
+          if (text.trim()) {
+            onSendMessage(text.trim(), "text");
+            setText('');
+          }
+        }
+      } catch (error) {
+        console.error('메시지 전송 오류:', error);
       }
     };
 
     // 키보드 이벤트 핸들러
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSendMessage();
+        sendWithImage();
+      }
+    };
+    const handleImageClick = () => {
+      fileInputRef.current?.click();
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        // URL.createObjectURL로 미리보기 생성
+        const imageUrl = URL.createObjectURL(file);
+        setSelectedImage({
+          file,
+          preview: imageUrl
+        });
+
+        // input 값 초기화 (같은 파일을 다시 선택할 수 있도록)
+        e.target.value = '';
+
+        // 이미지 선택 후 전송 버튼으로 포커스 이동
+        setTimeout(() => {
+          sendButtonRef.current?.focus();
+        }, 100);
       }
     };
 
+    const removeSelectedImage = () => {
+      if (selectedImage) {
+        URL.revokeObjectURL(selectedImage.preview);
+        setSelectedImage(null);
+      }
+    };
     const getShouldShowTime = (message: Message, array: Message[], index: number) => {
       // 현재 메시지의 시간
       const currentTime = new Date(message.createdAt).toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       });
 
       // 다음 메시지의 시간 (있다면)
       const nextMessage = array[index + 1];
       const nextTime = nextMessage ? new Date(nextMessage.createdAt).toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
       }) : null;
 
       return !nextMessage || currentTime !== nextTime;
@@ -121,7 +197,24 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
                               {message.senderName}
                             </div>
                           )}
-                          <div className="text-xs break-words">{message.content}</div>
+                          <div className="text-xs break-words">
+                            {(message.message_type === "image" || message.content.startsWith("chat/")) ? (
+                              <img
+                                src={`/api/chat/image/${encodeURIComponent(message.content)}`}
+                                alt="이미지"
+                                className="max-w-full max-h-48 rounded-lg cursor-pointer"
+                                onError={(e) => {
+                                  // 이미지 로드 실패 시 S3 키 텍스트로 표시
+                                  const errorDiv = document.createElement('div');
+                                  errorDiv.textContent = `이미지 로드 실패: ${message.content}`;
+                                  errorDiv.className = 'text-red-400 text-xs';
+                                  e.currentTarget.parentNode?.replaceChild(errorDiv, e.currentTarget);
+                                }}
+                              />
+                            ) : (
+                              message.content
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1 mt-1 text-[10px] text-gray-600">
                           <span>
@@ -144,26 +237,62 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
 
         {/* 입력창 영역 - 페이지 하단 고정, 더 컴팩트하게 */}
         <div className="pointer-events-auto p-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
+          
+          {/* 이미지 미리보기 */}
+          {selectedImage && (
+            <div className="mb-2 p-2 border border-gray-200 rounded-lg bg-gray-50/90 backdrop-blur-sm max-w-md mx-auto">
+              <div className="flex items-center gap-2">
+                <img
+                  src={selectedImage.preview}
+                  alt="미리보기"
+                  className="w-12 h-12 object-cover rounded border"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate text-gray-700">{selectedImage.file.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {(selectedImage.file.size / 1024 / 1024).toFixed(1)}MB
+                  </p>
+                </div>
+                <button
+                  onClick={removeSelectedImage}
+                  className="p-1 rounded-full hover:bg-gray-200 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <MdClose size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-center space-x-2 max-w-md mx-auto">
             <input
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
+              onKeyDown={handleKeyDown}
               onFocus={() => onChatFocus?.(true)}
               onBlur={() => onChatFocus?.(false)}
               placeholder="메시지 입력..."
               className="flex-1 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm placeholder-gray-500 text-black h-9"
             />
+            {/* 이미지 버튼 */}
             <button
-              onClick={handleSendMessage}
-              disabled={!text.trim()}
-              className="px-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-w-[48px] flex items-center justify-center h-9"
+              onClick={handleImageClick}
+              className="px-2 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 cursor-pointer transition-transform hover:scale-110"
+            >
+              <MdImage size={20} />
+            </button>
+            <button
+              ref={sendButtonRef}
+              onClick={sendWithImage}
+              disabled={!text.trim() && !selectedImage}
+              className="px-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-w-[48px] flex items-center justify-center h-9"
             >
               <svg
                 className="w-4 h-4"
