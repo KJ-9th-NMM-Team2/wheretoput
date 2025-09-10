@@ -1,10 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { on } from "events";
 import { useStore } from "@/components/sim/useStore";
 import { useHistoryDrag } from "@/components/sim/history/useHistoryDrag";
-import { useRef } from "react";
 
 export function useObjectControls(
   modelId,
@@ -18,19 +17,8 @@ export function useObjectControls(
   meshRef
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
-  const {
-    loadedModels,
-    isModelLocked,
-    wallsData,
-    enableWallMagnet,
-    setIsStackable,
-    setStackableModel,
-    hoveringModelId,
-    modelBoundingBoxFunctions,
-    isStackingMode,
-    setStackingBaseModel,
-    stackingBaseModel,
-  } = useStore();
+  const { loadedModels, isModelLocked, wallsData, enableWallMagnet } =
+    useStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
   const [dragOffset, setDragOffset] = useState(new THREE.Vector3());
@@ -399,12 +387,6 @@ export function useObjectControls(
         return; // 모든 상호작용 차단
       }
 
-      // 쌓기 모드일 때는 정상적으로 선택만 하고 드래그는 방지
-      if (isStackingMode) {
-        onSelect(modelId);
-        return; // 쌓기 모드에서는 드래그하지 않음
-      }
-
       onSelect(modelId);
 
       if (controlsRef.current) {
@@ -474,7 +456,6 @@ export function useObjectControls(
       loadedModels,
       startDrag,
       isModelLocked,
-      isStackingMode,
     ]
   );
 
@@ -527,7 +508,6 @@ export function useObjectControls(
 
           // 스냅된 벽 정보 업데이트
           setSnappedWallInfo(wallSnap);
-
 
           // 스냅 상태가 변경되었을 때 시각적/햅틱 피드백
           if (!wasSnapped && isNowSnapped) {
@@ -605,8 +585,6 @@ export function useObjectControls(
     setIsScaling(false);
     setIsSnappedToWall(false); // 드래그 완료 시 스냅 상태 해제
     setSnappedWallInfo(null); // 스냅된 벽 정보도 초기화
-
-    // 드래그 완료 시 쌓기 상태는 유지 (버튼을 누를 수 있도록)
     gl.domElement.style.cursor = "auto";
 
     if (controlsRef.current) {
@@ -641,36 +619,6 @@ export function useObjectControls(
 
   // 현재 스냅된 벽 정보 저장
   const [snappedWallInfo, setSnappedWallInfo] = useState(null);
-
-  // 쌓기 상태 디바운싱을 위한 ref
-  const stackableDebounceRef = useRef(null);
-
-  // 드래그 중 호버 상태 기반 쌓기 감지
-  useEffect(() => {
-    if (isDragging && hoveringModelId && hoveringModelId !== modelId) {
-      // 드래그 중이고 다른 모델을 hover하고 있으면 쌓기 가능
-      const hoveredModel = loadedModels.find(
-        (model) => model.id === hoveringModelId
-      );
-      if (hoveredModel) {
-        setIsStackable(true);
-        setStackableModel(hoveredModel);
-      }
-    } else if (isDragging) {
-      // 드래그 중이지만 아무것도 hover하지 않으면 쌓기 불가
-      setIsStackable(false);
-      setStackableModel(null);
-    }
-  }, [
-    isDragging,
-    hoveringModelId,
-    modelId,
-    loadedModels,
-    setIsStackable,
-    setStackableModel,
-  ]);
-
-
 
   return {
     isDragging,

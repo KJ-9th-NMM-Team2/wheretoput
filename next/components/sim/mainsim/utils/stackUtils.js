@@ -6,16 +6,12 @@ import { ActionType } from "@/components/sim/history";
  * @param {Object} stackableModel - 대상이 되는 가구 모델
  * @param {Function} updateModelPosition - 위치 업데이트 함수
  * @param {Function} addAction - 히스토리 액션 추가 함수
- * @param {Function} setIsStackable - 쌓기 가능 상태 설정 함수
- * @param {Function} setStackableModel - 쌓기 대상 모델 설정 함수
  */
 export const handleStackModel = ({
   selectedModel,
   stackableModel,
   updateModelPosition,
   addAction,
-  setIsStackable,
-  setStackableModel,
 }) => {
   if (!selectedModel || !stackableModel) return;
 
@@ -61,7 +57,4 @@ export const handleStackModel = ({
     }" 위에 쌓았습니다`,
   });
 
-  // 쌓기 완료 후 상태 초기화
-  setIsStackable(false);
-  setStackableModel(null);
 };

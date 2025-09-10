@@ -508,12 +508,6 @@ export const useStore = create(
       snappedWallInfo: null,
       setSnappedWallInfo: (wallInfo) => set({ snappedWallInfo: wallInfo }),
 
-      // 쌓기 모드
-      isStackable: false,
-      setIsStackable: (value) => set({ isStackable: value }),
-      stackableModel: null,
-      setStackableModel: (model) => set({ stackableModel: model }),
-      
       // 쌓기 모드 상태 (버튼 클릭 시 활성화)
       isStackingMode: false,
       setIsStackingMode: (value) => set({ isStackingMode: value }),
