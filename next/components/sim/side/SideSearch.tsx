@@ -5,7 +5,13 @@ interface SideSearchProps {
   resetQuery?: string;
   searchQuery: string;
   selectedCategory: string | null;
-  onSearchResults?: (results: any[], loading: boolean) => void;
+  page: number;
+  itemsPerPage: number;
+  loading: boolean;
+  setPage: (page: number) => void;
+  setTotalItems: (totalItems: number) => void;
+  setLoading: (loading: boolean) => void;
+  setSearchResults: (results: any[]) => void;
   setSearchQuery: (query: string) => void;
 }
 
@@ -14,36 +20,43 @@ const SideSearch = ({
   resetQuery,
   searchQuery,
   selectedCategory,
-  onSearchResults,
+  page,
+  itemsPerPage,
+  loading,
+  setPage,
+  setTotalItems,
+  setLoading,
+  setSearchResults,
+  // onSearchResults,
   setSearchQuery
 }: SideSearchProps) => {
     const [query, setQuery] = useState("");
     // const [searchQuery, setSearchQuery] = useState("");
-    const [loading, setLoading] = useState(false);
+    // const [loading, setLoading] = useState(false);
 
     useEffect(() => {
       if (!searchQuery.trim()) {
         // setResults([]);
-        onSearchResults?.([], false);
+        // onSearchResults?.([], false);
         return;
       }
       
       const searchData = async () => {
         setLoading(true);
-        onSearchResults?.([], true);
         
         try {
-          const response = await fetch(`/api/sim/search?query=${searchQuery}&category=${selectedCategory}`);
+          const response = await fetch(`/api/sim/search?query=${searchQuery}&category=${selectedCategory}&page=1&limit=${itemsPerPage}`);
           if (response.ok) {
             const data = await response.json();
-            onSearchResults?.(data, false);
+            console.log("data check", data);
+            setSearchResults(data['items']);
+            setPage(data['pagination']['currentPage']);
+            setTotalItems(data['pagination']['totalItems']);
           } else {
             console.error('Search API error:', response.status, response.statusText);
-            onSearchResults?.([], false);
           }
         } catch (error) {
           console.error("Fetch error:", error);
-          onSearchResults?.([], false);
         } finally {
           setLoading(false);
         }
