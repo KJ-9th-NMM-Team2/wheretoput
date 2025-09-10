@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
             sendSSEToUser(userId, {
                 type: 'achievements_unlocked', // 복수형으로 변경
                 achievements: newlyUnlocked
-            });
+            },  1 // 초기 연결 시도 횟수는 1로 시작
+            );
                 
             return Response.json(achievementResult);
         }
