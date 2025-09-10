@@ -16,8 +16,8 @@ export function ArchievementToast() {
     };
 
     useEffect(() => {
-        // 상대 경로 하면 sim/api/achievement/sse 이렇게 됨
-        const eventSource = new EventSource(`http://localhost:3000/api/achievement/sse?userId=${session?.user?.id}`); 
+        // 상대 경로 사용: 현재 origin에서 /api/achievement/sse 호출
+        const eventSource = new EventSource(`/api/achievement/sse?userId=${session?.user?.id}`); 
         
         eventSource.onopen = () => {
             console.log('SSE 연결됨');
