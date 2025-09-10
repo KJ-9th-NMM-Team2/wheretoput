@@ -277,7 +277,7 @@ export function useObjectControls(
                 const face = candidate.face;
 
                 // 벽의 회전각을 고려하여 실제 월드 축에서 어떤 제약인지 판단
-                const normalizedRotation = wallRotation % (2 * Math.PI);
+                const normalizedRotation = ((wallRotation % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
 
                 // 벽이 X축 방향 (0도 또는 180도)인 경우
                 const isWallXAligned =
