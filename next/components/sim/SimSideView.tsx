@@ -9,7 +9,7 @@ import SideItems from '@/components/sim/side/SideItems';
 import { HistoryControls, useHistoryKeyboard } from '@/components/sim/history';
 import type { furnitures as Furniture } from '@prisma/client';
 
-const SideViewContent: React.FC<{roomId: string, accessType: number}> = ({ roomId, accessType }) => {
+const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ roomId, accessType }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>();
@@ -30,10 +30,6 @@ const SideViewContent: React.FC<{roomId: string, accessType: number}> = ({ roomI
     setSelectedCategory(category);
     setSearchQuery("");
   }
-
-  // const handleSearchResults = (results: Furniture[]) => {
-  //   setSearchResults(results);
-  // };
 
   const handleSortChange = (sortValue: string) => {
     setSortOption(sortValue);
@@ -107,7 +103,7 @@ const SimSideView: React.FC<{ roomId: string | null, accessType: number }> = ({ 
   if (!roomId) {
     return null; // roomId가 없으면 아무것도 렌더링하지 않음
   }
-  
+
   return <SideViewContent roomId={roomId} accessType={accessType} />;
 };
 
