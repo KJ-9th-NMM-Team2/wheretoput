@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { useStore } from "@/components/sim/useStore.js";
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
+import { WallDebugMarkers } from "@/components/sim/mainsim/WallDebugMarkers.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
@@ -431,8 +432,8 @@ export function SimulatorCore({
                 } else {
                   // 끝점으로 벽 생성
                   addWall(wallDrawingStart, floorPoint);
-                  // 연속 벽 그리기를 위해 현재 점을 다음 시작점으로 설정
-                  setWallDrawingStart(floorPoint);
+                  // 벽 생성 완료 후 시작점 초기화 (연속 그리기 비활성화)
+                  // setWallDrawingStart(floorPoint); // 이 줄을 제거하여 연속 그리기 방지
                 }
               } else {
                 // 기본 동작 (모델 선택 해제)
@@ -474,6 +475,9 @@ export function SimulatorCore({
 
           {/* 벽 그리기 프리뷰 */}
           <WallPreview />
+          
+          {/* 벽 디버깅 마커 (개발용) */}
+          <WallDebugMarkers />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}

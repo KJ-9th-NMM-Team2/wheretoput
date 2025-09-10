@@ -562,6 +562,32 @@ export const useStore = create(
       
       // 벽 추가 액션
       addWall: (startPoint, endPoint) => set((state) => {
+        // 벽의 방향 벡터 계산
+        const dx = endPoint[0] - startPoint[0];
+        const dz = endPoint[2] - startPoint[2];
+        
+        // 벽의 길이 계산
+        const wallLength = Math.sqrt(dx * dx + dz * dz);
+        
+        // 너무 짧은 벽은 생성하지 않음
+        if (wallLength < 0.1) {
+          console.warn('벽이 너무 짧습니다.');
+          return state;
+        }
+        
+        // Y축 회전각 계산 - 좌우대칭 문제 해결
+        // Three.js 좌표계에서 Z축이 반대 방향이므로 -dz 사용
+        const rotationY = Math.atan2(-dz, dx);
+        
+        console.log('벽 생성 정보:', {
+          startPoint,
+          endPoint,
+          dx, dz,
+          wallLength,
+          rotationY: rotationY * 180 / Math.PI, // 디버깅용 각도 변환
+          '회전각(도)': rotationY * 180 / Math.PI,
+        });
+        
         const newWall = {
           id: crypto.randomUUID(),
           position: [
@@ -571,14 +597,11 @@ export const useStore = create(
           ],
           rotation: [
             0, 
-            Math.atan2(endPoint[2] - startPoint[2], endPoint[0] - startPoint[0]), 
+            rotationY, // 올바른 Y축 회전각
             0
           ],
           dimensions: {
-            width: Math.sqrt(
-              Math.pow(endPoint[0] - startPoint[0], 2) + 
-              Math.pow(endPoint[2] - startPoint[2], 2)
-            ),
+            width: wallLength, // 계산된 길이 사용
             height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
             depth: state.wallsData[0]?.dimensions?.depth || 0.2  // 기존 벽 두께 사용
           }
