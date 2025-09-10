@@ -21,6 +21,7 @@ import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
+import WallTools from "./side/WallTools";
 
 type position = [number, number, number];
 
@@ -322,6 +323,9 @@ export function SimulatorCore({
         {showEditControls && !viewOnly && (
           <ControlIcons controlsRef={controlsRef} />
         )}
+
+        {/* 벽 도구 드롭다운 */}
+        {!viewOnly && <WallTools isDropdown={true} />}
 
         <SelectedModelEditModal />
 

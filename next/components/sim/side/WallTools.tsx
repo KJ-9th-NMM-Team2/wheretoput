@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../useStore';
 
 interface WallToolsProps {
-  collapsed: boolean;
+  collapsed?: boolean;
+  isDropdown?: boolean;
 }
 
-const WallTools: React.FC<WallToolsProps> = ({ collapsed }) => {
+const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = false }) => {
   const { wallToolMode, setWallToolMode } = useStore();
+  const [isOpen, setIsOpen] = useState(false);
 
   const wallTools = [
-    { id: 'add', name: '벽 추가', icon: '🧱', description: '새로운 벽을 추가합니다' },
-    { id: 'edit', name: '벽 편집', icon: '✏️', description: '기존 벽의 크기와 위치를 조정합니다' },
-    { id: 'delete', name: '벽 삭제', icon: '🗑️', description: '선택한 벽을 삭제합니다' },
+    { id: 'add', name: '벽 추가', icon: '', description: '새로운 벽을 추가합니다' },
+    { id: 'edit', name: '벽 편집', icon: '', description: '기존 벽의 크기와 위치를 조정합니다' },
+    { id: 'delete', name: '벽 삭제', icon: '', description: '선택한 벽을 삭제합니다' },
   ];
 
   const handleToolSelect = (toolId: string) => {
@@ -21,12 +23,99 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed }) => {
     } else {
       setWallToolMode(toolId);
     }
+
+    // 드롭다운에서는 선택 후에도 열려있게 유지
+    // if (isDropdown) {
+    //   setIsOpen(false);
+    // }
   };
+
+  const activeTool = wallTools.find(tool => tool.id === wallToolMode);
 
   if (collapsed) {
     return null;
   }
 
+  // 드롭다운 모드
+  if (isDropdown) {
+    return (
+      <div className="absolute bottom-4 left-4 z-50">
+        {/* 메인 버튼 */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 ${wallToolMode
+            ? 'bg-blue-500 text-white'
+            : 'bg-white text-gray-800 hover:bg-gray-50'
+            } border border-gray-200`}
+        >
+          <span className="text-lg">
+            {activeTool ? activeTool.icon : ''}
+          </span>
+          <span className="font-medium text-sm">
+            {activeTool ? activeTool.name : '벽 도구'}
+          </span>
+          <svg
+            className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* 드롭다운 메뉴 */}
+        {isOpen && (
+          <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+            {wallTools.map((tool) => (
+              <button
+                key={tool.id}
+                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors ${wallToolMode === tool.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                  }`}
+                onClick={() => handleToolSelect(tool.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{tool.icon}</span>
+                  <div className="flex-1">
+                    <div className={`font-medium text-sm ${wallToolMode === tool.id ? 'text-blue-700' : 'text-gray-800'
+                      }`}>
+                      {tool.name}
+                    </div>
+
+                  </div>
+                  {wallToolMode === tool.id && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  )}
+                </div>
+              </button>
+            ))}
+
+            {/* 도구 해제 버튼 */}
+            {wallToolMode && (
+              <button
+                className="w-full p-3 text-left hover:bg-red-50 transition-colors border-t border-gray-100"
+                onClick={() => {
+                  setWallToolMode(null);
+                  setIsOpen(false);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">❌</span>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm text-red-600">도구 해제</div>
+                  </div>
+                </div>
+              </button>
+            )}
+          </div>
+        )}
+
+
+      </div>
+    );
+  }
+
+  // 기존 사이드바 모드
   return (
     <div className="flex-shrink-0 border-b border-gray-300">
       <div className="p-4">
@@ -43,20 +132,18 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed }) => {
           {wallTools.map((tool) => (
             <button
               key={tool.id}
-              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 ${
-                wallToolMode === tool.id
-                  ? 'bg-blue-500 text-white border-blue-500 shadow-md'
-                  : 'bg-white text-gray-800 border-gray-200 hover:bg-orange-50 hover:border-orange-200'
-              }`}
+              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 ${wallToolMode === tool.id
+                ? 'bg-blue-500 text-white border-blue-500 shadow-md'
+                : 'bg-white text-gray-800 border-gray-200 hover:bg-orange-50 hover:border-orange-200'
+                }`}
               onClick={() => handleToolSelect(tool.id)}
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">{tool.icon}</span>
                 <div className="flex-1">
                   <div className="font-medium text-sm">{tool.name}</div>
-                  <div className={`text-xs mt-1 ${
-                    wallToolMode === tool.id ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
+                  <div className={`text-xs mt-1 ${wallToolMode === tool.id ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
                     {tool.description}
                   </div>
                 </div>

@@ -189,15 +189,6 @@ const SideItems: React.FC<SideItemsProps> = ({
     return null;
   }
 
-  // 벽 도구 카테고리가 선택된 경우
-  if (selectedCategory === "-3") {
-    return (
-      <div className="flex-1 flex flex-col overflow-hidden border-t border-gray-200">
-        <WallTools collapsed={collapsed} />
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden border-t border-gray-200">
       <ItemSection
