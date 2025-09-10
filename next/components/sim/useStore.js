@@ -542,6 +542,11 @@ export const useStore = create(
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
+      // 벽 도구 모드 관리
+      wallToolMode: null, // 'add', 'edit', 'delete', null
+      wallDrawingStart: null, // 벽 그리기 시작점
+      selectedWallId: null, // 선택된 벽 ID
+
       // 업적 상태
       setAchievements: (achievements) => set({ achievements }),
 
@@ -549,6 +554,54 @@ export const useStore = create(
       setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
       setWallsData: (walls) => set({ wallsData: walls }),
       setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
+
+      // 벽 도구 모드 관련 액션
+      setWallToolMode: (mode) => set({ wallToolMode: mode, wallDrawingStart: null, selectedWallId: null }),
+      setWallDrawingStart: (point) => set({ wallDrawingStart: point }),
+      setSelectedWallId: (wallId) => set({ selectedWallId: wallId }),
+      
+      // 벽 추가 액션
+      addWall: (startPoint, endPoint) => set((state) => {
+        const newWall = {
+          id: crypto.randomUUID(),
+          position: [
+            (startPoint[0] + endPoint[0]) / 2, // 중점 X
+            (state.wallsData[0]?.position[1] || 2.5), // 기존 벽 높이나 기본값
+            (startPoint[2] + endPoint[2]) / 2  // 중점 Z
+          ],
+          rotation: [
+            0, 
+            Math.atan2(endPoint[2] - startPoint[2], endPoint[0] - startPoint[0]), 
+            0
+          ],
+          dimensions: {
+            width: Math.sqrt(
+              Math.pow(endPoint[0] - startPoint[0], 2) + 
+              Math.pow(endPoint[2] - startPoint[2], 2)
+            ),
+            height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
+            depth: state.wallsData[0]?.dimensions?.depth || 0.2  // 기존 벽 두께 사용
+          }
+        };
+        
+        return {
+          wallsData: [...state.wallsData, newWall],
+          wallDrawingStart: null, // 벽 추가 후 시작점 초기화
+        };
+      }),
+
+      // 벽 삭제 액션
+      removeWall: (wallId) => set((state) => ({
+        wallsData: state.wallsData.filter(wall => wall.id !== wallId),
+        selectedWallId: null,
+      })),
+
+      // 벽 업데이트 액션
+      updateWall: (wallId, updates) => set((state) => ({
+        wallsData: state.wallsData.map(wall => 
+          wall.id === wallId ? { ...wall, ...updates } : wall
+        ),
+      })),
 
       setSaving: (saving) => set({ isSaving: saving }),
       setCloning: (cloning) => set({ isCloning: cloning }),

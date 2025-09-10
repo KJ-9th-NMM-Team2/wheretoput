@@ -20,8 +20,10 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
   // # 8 = Sofas, 9 = Construction
   // # 10 = Bedroom , 11 = Outdoor
   // # 12 = Home Decor
+  // # -3 = 벽 도구 (새로 추가)
   const categories: CategoryProps[] = [
     { id: 99, name: "전체" }, 
+    { id: -3, name: "🧱 벽 도구" }, 
     { id: -2, name: "가구" }, 
     { id: 0, name: "의자" }, 
     { id: 1, name: "조명" }, 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import type { furnitures as Furniture } from "@prisma/client";
 import ItemPaging from "./item/ItemPaging";
 import ItemSection from "./item/ItemSection";
+import WallTools from "./WallTools";
 import { useStore } from "@/components/sim/useStore";
 import { createNewModel } from "@/utils/createNewModel";
 import { handlePageChange } from "@/utils/handlePage";
@@ -186,6 +187,15 @@ const SideItems: React.FC<SideItemsProps> = ({
   // collapsed 상태일 때는 아무것도 렌더링하지 않음
   if (collapsed) {
     return null;
+  }
+
+  // 벽 도구 카테고리가 선택된 경우
+  if (selectedCategory === "-3") {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden border-t border-gray-200">
+        <WallTools collapsed={collapsed} />
+      </div>
+    );
   }
 
   return (

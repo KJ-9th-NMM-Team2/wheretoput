@@ -7,6 +7,7 @@ import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
+import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
@@ -168,6 +169,12 @@ export function SimulatorCore({
     collaborationMode,
     checkUserRoom,
     currentRoomInfo,
+    wallToolMode,
+    wallDrawingStart,
+    setWallDrawingStart,
+    addWall,
+    removeWall,
+    setSelectedWallId,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -411,7 +418,27 @@ export function SimulatorCore({
           <mesh
             position={[0, -0.01, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
-            onPointerDown={deselectModel}
+            onPointerDown={(event) => {
+              // 벽 추가 모드에서의 바닥 클릭 처리
+              if (wallToolMode === 'add') {
+                event.stopPropagation();
+                const point = event.point;
+                const floorPoint = [point.x, 0, point.z];
+                
+                if (!wallDrawingStart) {
+                  // 시작점 설정
+                  setWallDrawingStart(floorPoint);
+                } else {
+                  // 끝점으로 벽 생성
+                  addWall(wallDrawingStart, floorPoint);
+                  // 연속 벽 그리기를 위해 현재 점을 다음 시작점으로 설정
+                  setWallDrawingStart(floorPoint);
+                }
+              } else {
+                // 기본 동작 (모델 선택 해제)
+                deselectModel();
+              }
+            }}
           >
             <planeGeometry args={[200, 200]} />
             <meshBasicMaterial transparent opacity={0} />
@@ -444,6 +471,9 @@ export function SimulatorCore({
                 : undefined
             }
           />
+
+          {/* 벽 그리기 프리뷰 */}
+          <WallPreview />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}

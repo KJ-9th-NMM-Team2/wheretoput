@@ -15,7 +15,7 @@ export function Wall({
   const { invalidate } = useThree();
   const meshRef = useRef(null);
   const { camera } = useThree();
-  const { enableWallTransparency, wallColor, snappedWallInfo } = useStore();
+  const { enableWallTransparency, wallColor, snappedWallInfo, wallToolMode, removeWall, setSelectedWallId, selectedWallId } = useStore();
 
   useEffect(() => {
     invalidate();
@@ -54,15 +54,60 @@ export function Wall({
     }
   });
 
+  const handleWallClick = (event) => {
+    if (wallToolMode === 'delete') {
+      event.stopPropagation();
+      removeWall(id);
+    } else if (wallToolMode === 'edit') {
+      event.stopPropagation();
+      setSelectedWallId(id);
+    }
+  };
+
+  const isSelected = selectedWallId === id;
+  const wallMaterialColor = isSelected && wallToolMode === 'edit' ? '#ff6600' : wallColor;
+
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
+    <mesh 
+      ref={meshRef} 
+      position={position} 
+      rotation={rotation} 
+      receiveShadow
+      onPointerDown={handleWallClick}
+      style={{ cursor: wallToolMode ? 'pointer' : 'default' }}
+    >
       <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial
-        color={wallColor}
+        color={wallMaterialColor}
         transparent
         roughness={0.8}
         metalness={0.1}
       />
+      
+      {/* 벽 편집 모드에서 선택된 벽 하이라이트 */}
+      {isSelected && wallToolMode === 'edit' && (
+        <mesh>
+          <boxGeometry args={[width * 1.1, height * 1.1, depth * 1.1]} />
+          <meshBasicMaterial
+            color={0x00ff00} // 편집 모드에서는 초록색
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      )}
+      
+      {/* 벽 삭제 모드에서 호버 효과 */}
+      {wallToolMode === 'delete' && (
+        <mesh>
+          <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
+          <meshBasicMaterial
+            color={0xff0000} // 삭제 모드에서는 빨간색
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+      )}
+
       {(snappedWallInfo?.wall.id === id || snappedWallInfo?.wall2?.id === id) && (
         <mesh>
           <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
