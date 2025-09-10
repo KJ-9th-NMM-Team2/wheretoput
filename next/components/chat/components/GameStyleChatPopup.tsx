@@ -2,7 +2,7 @@
 // 페이지 하단에 입력창, 그 위에 투명한 채팅 기록 표시
 "use client"
 
-import { forwardRef, useRef, useEffect, useState } from "react";
+import { forwardRef, useRef, useEffect, useState, useCallback } from "react";
 import { MdImage, MdClose } from "react-icons/md";
 import { Message } from "../types/chat-types";
 
@@ -36,6 +36,12 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       file: File;
       preview: string;
     } | null>(null);
+    const [position, setPosition] = useState(() => ({
+      x: typeof window !== 'undefined' ? window.innerWidth - 420 : 0,
+      y: typeof window !== 'undefined' ? window.innerHeight - 560 : 0
+    }));
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
     // 새 메시지가 추가될 때마다 스크롤을 맨 아래로 (부드럽게)
     useEffect(() => {
@@ -156,18 +162,78 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       return !nextMessage || currentTime !== nextTime;
     }
 
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+      // 입력창, 버튼, 스크롤바 클릭은 드래그 방지
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'BUTTON' || target.closest('button') || target.closest('input')) {
+        return;
+      }
+
+      setIsDragging(true);
+      // 현재 위치 기준으로 offset 계산
+      setDragOffset({
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      });
+    }, [position]);
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const newX = e.clientX - dragOffset.x;
+      const newY = e.clientY - dragOffset.y;
+
+      const maxX = window.innerWidth - 400;
+      const maxY = window.innerHeight - 300;
+
+      setPosition({
+        x: Math.max(0, Math.min(maxX, newX)),
+        y: Math.max(0, Math.min(maxY, newY))
+      });
+    }, [isDragging, dragOffset]);
+
+    const handleMouseUp = useCallback(() => {
+      setIsDragging(false);
+    }, []);
+
+    useEffect(() => {
+      if (isDragging) {
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        document.body.style.userSelect = 'none';
+
+        return () => {
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+          document.body.style.userSelect = '';
+        };
+      }
+    }, [isDragging, handleMouseMove, handleMouseUp]);
+
     if (!isVisible) return null;
 
     return (
       <div
         ref={ref}
-        className="fixed inset-0 z-[999] pointer-events-none flex flex-col justify-end"
+        className="fixed z-[999] pointer-events-none flex flex-col justify-end"
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          width: '400px',
+          height: '500px'
+        }}
       >
         {/* 채팅 메시지 영역 - 고정 높이와 스크롤 */}
         <div className="flex-1 flex flex-col justify-end overflow-hidden">
-          <div className="ml-auto bg-gray-400/30 w-100 max-w-[calc(100vw-20px)] rounded-lg">
+          <div 
+            className="bg-gray-400/30 w-full rounded-lg pointer-events-auto"
+            style={{
+              cursor: isDragging ? 'grabbing' : 'move'
+            }}
+            onMouseDown={handleMouseDown}
+          >
             <div
-              className="h-70 overflow-y-auto p-4 pb-2 flex flex-col pointer-events-auto select-none"
+              className="h-70 overflow-y-auto p-4 pb-2 flex flex-col select-none"
               style={{ scrollBehavior: 'smooth' }}
               onWheel={(e) => e.stopPropagation()}
             >
@@ -244,7 +310,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
             style={{ display: 'none' }}
             onChange={handleFileSelect}
           />
-          
+
           {/* 이미지 미리보기 */}
           {selectedImage && (
             <div className="mb-2 p-2 border border-gray-200 rounded-lg bg-gray-50/90 backdrop-blur-sm max-w-md mx-auto">
@@ -269,7 +335,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
               </div>
             </div>
           )}
-          
+
           <div className="flex items-center space-x-2 max-w-md mx-auto">
             <input
               type="text"
