@@ -8,7 +8,8 @@ import {
   calculateWallRotation, 
   calculateWallCenter,
   snapToGrid,
-  isValidWall 
+  isValidWall,
+  snapWallToWalls
 } from './wallUtils';
 
 export const createWallActions = (set, get) => ({
@@ -48,8 +49,15 @@ export const createWallActions = (set, get) => ({
    */
   addWall: (startPoint, endPoint) => set((state) => {
     // 격자 스냅 적용
-    const snappedStart = state.wallGridSnap ? snapToGrid(startPoint) : startPoint;
-    const snappedEnd = state.wallGridSnap ? snapToGrid(endPoint) : endPoint;
+    let snappedStart = state.wallGridSnap ? snapToGrid(startPoint) : startPoint;
+    let snappedEnd = state.wallGridSnap ? snapToGrid(endPoint) : endPoint;
+    
+    // 벽 스냅 적용 (기존 벽의 끝점에 달라붙기)
+    if (state.wallsData.length > 0) {
+      const wallSnap = snapWallToWalls(snappedStart, snappedEnd, state.wallsData, 0.5);
+      snappedStart = wallSnap.snappedStart;
+      snappedEnd = wallSnap.snappedEnd;
+    }
     
     // 최소 벽 길이 체크
     const distance = calculate2DDistance(snappedStart, snappedEnd);

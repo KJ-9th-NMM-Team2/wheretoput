@@ -560,11 +560,98 @@ export const useStore = create(
       setWallDrawingStart: (point) => set({ wallDrawingStart: point }),
       setSelectedWallId: (wallId) => set({ selectedWallId: wallId }),
       
-      // 벽 추가 액션
+      // 벽 추가 액션 (스냅 기능 포함)
       addWall: (startPoint, endPoint) => set((state) => {
-        // 벽의 방향 벡터 계산
-        const dx = endPoint[0] - startPoint[0];
-        const dz = endPoint[2] - startPoint[2];
+        // 벽 스냅 기능 적용
+        let snappedStart = startPoint;
+        let snappedEnd = endPoint;
+        
+        if (state.wallsData.length > 0) {
+          // 기존 벽의 끝점에 스냅
+          const snapDistance = 0.5;
+          
+          // 시작점 스냅
+          let closestStartPoint = null;
+          let minStartDistance = snapDistance;
+          
+          state.wallsData.forEach(wall => {
+            const { position, rotation, dimensions } = wall;
+            const halfWidth = dimensions.width / 2;
+            const cos = Math.cos(rotation[1]);
+            const sin = Math.sin(rotation[1]);
+            
+            const endpoints = [
+              [
+                position[0] - halfWidth * cos,
+                position[1],
+                position[2] - halfWidth * sin
+              ],
+              [
+                position[0] + halfWidth * cos,
+                position[1],
+                position[2] + halfWidth * sin
+              ]
+            ];
+
+            endpoints.forEach(endpoint => {
+              const distance = Math.sqrt(
+                Math.pow(startPoint[0] - endpoint[0], 2) +
+                Math.pow(startPoint[2] - endpoint[2], 2)
+              );
+              if (distance < minStartDistance) {
+                minStartDistance = distance;
+                closestStartPoint = endpoint;
+              }
+            });
+          });
+          
+          if (closestStartPoint) {
+            snappedStart = closestStartPoint;
+          }
+          
+          // 끝점 스냅
+          let closestEndPoint = null;
+          let minEndDistance = snapDistance;
+          
+          state.wallsData.forEach(wall => {
+            const { position, rotation, dimensions } = wall;
+            const halfWidth = dimensions.width / 2;
+            const cos = Math.cos(rotation[1]);
+            const sin = Math.sin(rotation[1]);
+            
+            const endpoints = [
+              [
+                position[0] - halfWidth * cos,
+                position[1],
+                position[2] - halfWidth * sin
+              ],
+              [
+                position[0] + halfWidth * cos,
+                position[1],
+                position[2] + halfWidth * sin
+              ]
+            ];
+
+            endpoints.forEach(endpoint => {
+              const distance = Math.sqrt(
+                Math.pow(endPoint[0] - endpoint[0], 2) +
+                Math.pow(endPoint[2] - endpoint[2], 2)
+              );
+              if (distance < minEndDistance) {
+                minEndDistance = distance;
+                closestEndPoint = endpoint;
+              }
+            });
+          });
+          
+          if (closestEndPoint) {
+            snappedEnd = closestEndPoint;
+          }
+        }
+        
+        // 벽의 방향 벡터 계산 (스냅된 좌표 사용)
+        const dx = snappedEnd[0] - snappedStart[0];
+        const dz = snappedEnd[2] - snappedStart[2];
         
         // 벽의 길이 계산
         const wallLength = Math.sqrt(dx * dx + dz * dz);
@@ -575,25 +662,15 @@ export const useStore = create(
           return state;
         }
         
-        // Y축 회전각 계산 - 좌우대칭 문제 해결
-        // Three.js 좌표계에서 Z축이 반대 방향이므로 -dz 사용
+        // Y축 회전각 계산
         const rotationY = Math.atan2(-dz, dx);
-        
-        console.log('벽 생성 정보:', {
-          startPoint,
-          endPoint,
-          dx, dz,
-          wallLength,
-          rotationY: rotationY * 180 / Math.PI, // 디버깅용 각도 변환
-          '회전각(도)': rotationY * 180 / Math.PI,
-        });
         
         const newWall = {
           id: crypto.randomUUID(),
           position: [
-            (startPoint[0] + endPoint[0]) / 2, // 중점 X
+            (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
             (state.wallsData[0]?.position[1] || 2.5), // 기존 벽 높이나 기본값
-            (startPoint[2] + endPoint[2]) / 2  // 중점 Z
+            (snappedStart[2] + snappedEnd[2]) / 2  // 중점 Z
           ],
           rotation: [
             0, 

@@ -197,3 +197,63 @@ export const convertDBWallsToSimulator = (dbWalls, scaleFactor = 1.0) => {
     ],
   }));
 };
+
+/**
+ * 벽 끝점에서 가장 가까운 기존 벽의 끝점을 찾아 스냅
+ * @param {Array} point - 스냅할 점 [x, y, z]
+ * @param {Array} existingWalls - 기존 벽 배열
+ * @param {number} snapDistance - 스냅 거리 (기본값: 0.5)
+ * @returns {Array|null} 스냅된 점 [x, y, z] 또는 null
+ */
+export const snapToWallEndpoints = (point, existingWalls, snapDistance = 0.5) => {
+  if (!existingWalls || existingWalls.length === 0) return null;
+
+  let closestPoint = null;
+  let minDistance = snapDistance;
+
+  existingWalls.forEach(wall => {
+    const { position, rotation, dimensions } = wall;
+    const halfWidth = dimensions.width / 2;
+    const cos = Math.cos(rotation[1]);
+    const sin = Math.sin(rotation[1]);
+    
+    // 벽의 양 끝점 계산
+    const endpoints = [
+      [
+        position[0] - halfWidth * cos,
+        position[1],
+        position[2] - halfWidth * sin
+      ],
+      [
+        position[0] + halfWidth * cos,
+        position[1],
+        position[2] + halfWidth * sin
+      ]
+    ];
+
+    endpoints.forEach(endpoint => {
+      const distance = calculate2DDistance(point, endpoint);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = endpoint;
+      }
+    });
+  });
+
+  return closestPoint;
+};
+
+/**
+ * 벽이 기존 벽과 연결되는지 확인하고 스냅된 끝점 반환
+ * @param {Array} startPoint - 시작점 [x, y, z]
+ * @param {Array} endPoint - 끝점 [x, y, z]
+ * @param {Array} existingWalls - 기존 벽 배열
+ * @param {number} snapDistance - 스냅 거리
+ * @returns {Object} { snappedStart, snappedEnd }
+ */
+export const snapWallToWalls = (startPoint, endPoint, existingWalls, snapDistance = 0.5) => {
+  const snappedStart = snapToWallEndpoints(startPoint, existingWalls, snapDistance) || startPoint;
+  const snappedEnd = snapToWallEndpoints(endPoint, existingWalls, snapDistance) || endPoint;
+  
+  return { snappedStart, snappedEnd };
+};
