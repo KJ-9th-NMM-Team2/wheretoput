@@ -1013,11 +1013,9 @@ export const useStore = create(
 
           const currentState = get();
 
-          // 벽 스케일 팩터가 1이 아닌 경우, 벽 데이터도 DB에 업데이트
-          if (
-            currentState.wallScaleFactor !== 1.0 &&
-            currentState.wallsData.length > 0
-          ) {
+          //[09.11] 벽추가 기능 -
+          //  벽 데이터가 있으면 DB에도 업데이트
+          if (currentState.wallsData.length > 0) {
             try {
               // 현재 스케일 팩터가 적용된 벽 데이터를 DB 형식으로 변환
               const scaledWalls = currentState.wallsData.map((wall) => ({
