@@ -65,13 +65,15 @@ export function ModelTooltip({ modelId, position, boundingBox }) {
       <div className="relative flex flex-col items-center">
         {/* 말풍선 */}
         <div
-          className="px-2 py-1 text-white text-xs font-medium rounded shadow-lg border border-white/20 whitespace-nowrap"
+          className="text-white font-semibold border border-white/50 whitespace-nowrap no-select"
           style={{
-            background: `linear-gradient(135deg, ${userData.color}ee, ${userData.color}cc)`,
-            transform: "translateY(-30px)",
-            backdropFilter: "blur(4px)",
-            borderRadius: "8px",
-            fontSize: "14px",
+            background: `linear-gradient(135deg, ${userData.color}dd, ${userData.color}99)`,
+            transform: "translateY(-3rem)",
+            backdropFilter: "blur(0.25rem)",
+            borderRadius: "0.5rem",
+            fontSize: "1.8rem",
+            padding: "0.5rem 0.5rem",
+            boxShadow: `0 0.25rem 0.75rem rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.3)`,
           }}
         >
           {userData.name}
@@ -81,11 +83,11 @@ export function ModelTooltip({ modelId, position, boundingBox }) {
         <div
           className="w-0 h-0"
           style={{
-            borderLeft: "4px solid transparent",
-            borderRight: "4px solid transparent",
-            borderTop: `4px solid ${userData.color}ee`,
-            transform: "translateY(-26px)",
-            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))",
+            borderLeft: "1rem solid transparent",
+            borderRight: "1rem solid transparent",
+            borderTop: `1rem solid ${userData.color}dd`,
+            transform: "translateY(-2.25rem)",
+            filter: "drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.2))",
           }}
         />
       </div>
