@@ -31,3 +31,17 @@ export type UserLite = {
   name: string;
   image?: string;
 };
+
+// SSE 메시지 타입 정의 (중앙 집중화)
+export interface ChatSSEMessage {
+  type: 'room_update' | 'new_message' | 'read_update' | 'connected' | 'keep-alive';
+  roomId?: string;
+  userId?: string;
+  message?: string;
+  messageType?: 'text' | 'image';
+  timestamp?: string;
+  lastMessageAt?: string;
+  lastMessageSenderId?: string;
+  senderName?: string;
+  senderImage?: string;
+}
