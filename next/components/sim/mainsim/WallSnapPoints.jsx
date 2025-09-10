@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../useStore';
 import { useThree } from '@react-three/fiber';
+import { useHistory, ActionType } from '../history';
 
 /**
  * 벽의 바닥 끝점에 스냅 포인트를 시각적으로 표시하는 컴포넌트
@@ -8,6 +9,7 @@ import { useThree } from '@react-three/fiber';
 export function WallSnapPoints() {
   const { wallsData, wallToolMode, setWallDrawingStart, wallDrawingStart } = useStore();
   const { raycaster, camera } = useThree();
+  const { addAction } = useHistory();
   const [hoveredPoint, setHoveredPoint] = useState(null);
 
   // 벽 도구 모드가 'add'일 때만 스냅 포인트 표시
@@ -60,8 +62,33 @@ export function WallSnapPoints() {
               setWallDrawingStart(snapPoint);
             } else {
               // 끝점으로 벽 생성 - useStore의 addWall 호출
-              const { addWall } = useStore.getState();
+              const { addWall, wallsData } = useStore.getState();
+              
+              // 벽 추가 전 상태 저장 (히스토리용)
+              const wallCountBefore = wallsData.length;
               addWall(wallDrawingStart, snapPoint);
+              
+              // 벽이 실제로 추가되었는지 확인 후 히스토리 기록
+              setTimeout(() => {
+                const { wallsData: newWallsData } = useStore.getState();
+                console.log('벽 추가 후 상태:', { wallCountBefore, newCount: newWallsData.length });
+                if (newWallsData.length > wallCountBefore) {
+                  const newWall = newWallsData[newWallsData.length - 1];
+                  console.log('벽 히스토리 기록:', newWall);
+                  console.log('addAction 호출 전');
+                  addAction({
+                    type: ActionType.WALL_ADD,
+                    data: {
+                      furnitureId: newWall.id, // wallId
+                      previousData: newWall
+                    },
+                    description: `벽을 추가했습니다`
+                  });
+                  console.log('addAction 호출 후');
+                } else {
+                  console.log('벽이 추가되지 않음');
+                }
+              }, 0);
             }
           }}
         >

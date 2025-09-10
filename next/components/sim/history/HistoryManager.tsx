@@ -81,6 +81,31 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   const [history, dispatch] = useReducer(historyReducer, initialState);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 히스토리 액션 추가 이벤트 리스너
+  React.useEffect(() => {
+    const handleAddHistoryAction = (event: any) => {
+      const { type, data, description } = event.detail;
+      console.log('히스토리 액션 추가 이벤트 수신:', { type, data, description });
+      
+      const newAction: HistoryAction = {
+        type,
+        data,
+        description,
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+      };
+      
+      dispatch({ type: "ADD_ACTION", payload: newAction });
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("addHistoryAction", handleAddHistoryAction);
+      return () => {
+        window.removeEventListener("addHistoryAction", handleAddHistoryAction);
+      };
+    }
+  }, []);
+
   // 히스토리에 새로운 action 추가
   // HistoryAction 객체에서 id,timestamp 생략
   const addAction = useCallback(
@@ -191,6 +216,14 @@ function executeUndoAction(action: HistoryAction) {
         scaleFurnitureInScene(data.furnitureId, data.previousData.scale);
       }
       break;
+
+    case ActionType.WALL_ADD:
+      removeWallFromScene(data.furnitureId); // wallId
+      break;
+
+    case ActionType.WALL_REMOVE:
+      addWallToScene(data);
+      break;
   }
 }
 
@@ -223,6 +256,14 @@ function executeRedoAction(action: HistoryAction) {
       if (data.scale) {
         scaleFurnitureInScene(data.furnitureId, data.scale);
       }
+      break;
+
+    case ActionType.WALL_ADD:
+      addWallToScene(data);
+      break;
+
+    case ActionType.WALL_REMOVE:
+      removeWallFromScene(data.furnitureId); // wallId
       break;
   }
 }
@@ -271,6 +312,24 @@ function scaleFurnitureInScene(furnitureId: string, scale: any) {
         furnitureId,
         scale: typeof scale === "number" ? scale : scale.x,
       },
+    })
+  );
+}
+
+function addWallToScene(data: any) {
+  console.log('히스토리: 벽 추가 이벤트 발생', data.previousData);
+  window.dispatchEvent(
+    new CustomEvent("historyAddWall", {
+      detail: { wallData: data.previousData },
+    })
+  );
+}
+
+function removeWallFromScene(wallId: string) {
+  console.log('히스토리: 벽 삭제 이벤트 발생', wallId);
+  window.dispatchEvent(
+    new CustomEvent("historyRemoveWall", {
+      detail: { wallId },
     })
   );
 }

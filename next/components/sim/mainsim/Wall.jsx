@@ -3,6 +3,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
+import { useHistory, ActionType } from "@/components/sim/history";
 
 export function Wall({
   width,
@@ -15,7 +16,8 @@ export function Wall({
   const { invalidate } = useThree();
   const meshRef = useRef(null);
   const { camera } = useThree();
-  const { enableWallTransparency, wallColor, snappedWallInfo, wallToolMode, removeWall, setSelectedWallId, selectedWallId } = useStore();
+  const { enableWallTransparency, wallColor, snappedWallInfo, wallToolMode, removeWall, setSelectedWallId, selectedWallId, wallsData } = useStore();
+  const { addAction } = useHistory();
 
   useEffect(() => {
     invalidate();
@@ -57,7 +59,24 @@ export function Wall({
   const handleWallClick = (event) => {
     if (wallToolMode === 'delete') {
       event.stopPropagation();
-      removeWall(id);
+      
+      // 삭제할 벽 데이터 저장 (히스토리용)
+      const wallToDelete = wallsData.find(wall => wall.id === id);
+      console.log('벽 삭제 히스토리 기록:', wallToDelete);
+      if (wallToDelete) {
+        console.log('addAction 호출 전 (삭제)');
+        addAction({
+          type: ActionType.WALL_REMOVE,
+          data: {
+            furnitureId: id, // wallId
+            previousData: wallToDelete
+          },
+          description: `벽을 삭제했습니다`
+        });
+        console.log('addAction 호출 후 (삭제)');
+      }
+      
+      removeWall(id, false);
     } else if (wallToolMode === 'edit') {
       event.stopPropagation();
       setSelectedWallId(id);

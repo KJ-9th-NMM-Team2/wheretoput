@@ -45,6 +45,18 @@ export const useStore = create(
         const { furnitureId, scale } = event.detail;
         get().updateModelScale(furnitureId, scale);
       });
+
+      window.addEventListener("historyAddWall", (event) => {
+        const { wallData } = event.detail;
+        console.log('useStore: 벽 추가 이벤트 수신', wallData);
+        get().addWallWithId(wallData, false);
+      });
+
+      window.addEventListener("historyRemoveWall", (event) => {
+        const { wallId } = event.detail;
+        console.log('useStore: 벽 삭제 이벤트 수신', wallId);
+        get().removeWallFromHistory(wallId);
+      });
     }
 
     return {
@@ -560,6 +572,14 @@ export const useStore = create(
       setWallDrawingStart: (point) => set({ wallDrawingStart: point }),
       setSelectedWallId: (wallId) => set({ selectedWallId: wallId }),
       
+      // 히스토리 복원용: 기존 ID를 유지하면서 벽 추가 (히스토리 액션 추가 안함)
+      addWallWithId: (wallData, shouldBroadcast = true) => set((state) => {
+        console.log('히스토리에서 벽 추가:', wallData);
+        return {
+          wallsData: [...state.wallsData, wallData],
+        };
+      }),
+
       // 벽 추가 액션 (스냅 기능 포함)
       addWall: (startPoint, endPoint) => set((state) => {
         // 벽 스냅 기능 적용
@@ -684,6 +704,24 @@ export const useStore = create(
           }
         };
         
+        console.log('벽 추가:', newWall);
+        
+        // 히스토리 액션 추가
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("addHistoryAction", {
+              detail: {
+                type: "WALL_ADD",
+                data: {
+                  furnitureId: newWall.id,
+                  previousData: newWall
+                },
+                description: "벽 추가"
+              }
+            })
+          );
+        }
+        
         return {
           wallsData: [...state.wallsData, newWall],
           wallDrawingStart: null, // 벽 추가 후 시작점 초기화
@@ -691,7 +729,37 @@ export const useStore = create(
       }),
 
       // 벽 삭제 액션
-      removeWall: (wallId) => set((state) => ({
+      removeWall: (wallId, shouldBroadcast = true) => set((state) => {
+        const wallToRemove = state.wallsData.find(wall => wall.id === wallId);
+        
+        if (wallToRemove) {
+          console.log('벽 삭제:', wallToRemove);
+          
+          // 히스토리 액션 추가
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("addHistoryAction", {
+                detail: {
+                  type: "WALL_REMOVE",
+                  data: {
+                    furnitureId: wallId,
+                    previousData: wallToRemove
+                  },
+                  description: "벽 삭제"
+                }
+              })
+            );
+          }
+        }
+        
+        return {
+          wallsData: state.wallsData.filter(wall => wall.id !== wallId),
+          selectedWallId: null,
+        };
+      }),
+
+      // 히스토리 복원용 벽 삭제 (히스토리 액션 추가 안함)
+      removeWallFromHistory: (wallId) => set((state) => ({
         wallsData: state.wallsData.filter(wall => wall.id !== wallId),
         selectedWallId: null,
       })),
