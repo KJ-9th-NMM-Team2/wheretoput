@@ -1,12 +1,10 @@
 "use client"
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { useStore } from "../../useStore";
 
 export function ArchievementToast() {
     const {data: session} = useSession();
     const [achievementToast, setAchievementToast] = useState(null);
-    const { achievements } = useStore();
 
     // 업적 토스트 표시 함수
     const showAchievementToast = (achievement: any) => {
@@ -17,26 +15,40 @@ export function ArchievementToast() {
         }, 2000); // 2초 표시
     };
 
-    // SSE 연결 및 실시간 업적 알림 수신
     useEffect(() => {
-        // session이 로드될 때까지 기다리기
-        const checkSession = () => {
-            
-            if (!session?.user?.id) {
-                setTimeout(checkSession, 1000);
-                return;
-            }
-
-            for (let i=0; i<achievements.length; i++) {
-                setTimeout(() => {
-                    console.log(`🔫 ${i}번째 토스트 표시:`, achievements[i].title);
-                    showAchievementToast(achievements[i]);
-                }, i * 3500); // 0초, 3.5초, 7초
-            }
-        };
+        // 상대 경로 하면 sim/api/achievement/sse 이렇게 됨
+        const eventSource = new EventSource(`http://localhost:3000/api/achievement/sse?userId=${session?.user?.id}`); 
         
-        checkSession();
-    }, [achievements]);
+        eventSource.onopen = () => {
+            console.log('SSE 연결됨');
+        };
+
+        eventSource.onmessage = (e) => {
+            const datas = JSON.parse(e.data);
+            console.log("🔫 업적 토스트 수신:", datas);
+            
+            if (datas.type === 'achievements_unlocked') {
+                const achievements = datas.achievements;
+
+                for (let i=0; i<achievements.length; i++) {
+                    setTimeout(() => {
+                        console.log(`🔫 ${i}번째 토스트 표시:`, achievements[i].title);
+                        showAchievementToast(achievements[i]);
+                    }, i * 3500); // 0초, 3.5초, 7초
+                }
+            }
+        }
+
+        eventSource.onerror = (error) => {
+            console.log('SSE 연결 오류:', error);
+        }
+
+        // cleanup 함수로 연결 정리
+        return () => {
+            console.log('SSE 연결 정리 중...');
+            eventSource.close();
+        };
+    }, [session?.user?.id])
 
     return <>
         {/* 업적 토스트 */}

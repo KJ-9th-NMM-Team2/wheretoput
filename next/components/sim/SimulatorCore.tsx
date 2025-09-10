@@ -17,7 +17,7 @@ import AutoSave from "@/components/sim/AutoSave";
 import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
-import { ArchievementToast } from "./achievement/components/ArchievementToast";
+import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 
 type position = [number, number, number];

@@ -114,9 +114,6 @@ export function ControlPanel({ isPopup = false }) {
 
     try {
       await saveSimulatorState();
-      const res = await fetch(`/api/achievement/${session?.user?.id}`);
-      const datas = await res.json();
-      setAchievements(datas);
 
       // 저장 완료 후 캔버스 캡처 트리거
       setShouldCapture(true);
