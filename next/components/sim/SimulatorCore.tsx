@@ -8,7 +8,6 @@ import * as THREE from "three";
 import { useStore } from "@/components/sim/useStore.js";
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
-import { WallDebugMarkers } from "@/components/sim/mainsim/WallDebugMarkers.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
@@ -475,9 +474,6 @@ export function SimulatorCore({
 
           {/* 벽 그리기 프리뷰 */}
           <WallPreview />
-          
-          {/* 벽 디버깅 마커 (개발용) */}
-          <WallDebugMarkers />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}
