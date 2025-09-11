@@ -90,23 +90,6 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = f
               </button>
             ))}
 
-            {/* 도구 해제 버튼 */}
-            {wallToolMode && (
-              <button
-                className="w-full p-3 text-left hover:bg-red-50 transition-colors border-t border-gray-100"
-                onClick={() => {
-                  setWallToolMode(null);
-                  setIsOpen(false);
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">❌</span>
-                  <div className="flex-1">
-                    <div className="font-medium text-sm text-red-600">도구 해제</div>
-                  </div>
-                </div>
-              </button>
-            )}
           </div>
         )}
 

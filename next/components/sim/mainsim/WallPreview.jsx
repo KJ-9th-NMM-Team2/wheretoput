@@ -101,10 +101,27 @@ export function WallPreview() {
         positions[1] = 0;
         positions[2] = wallDrawingStart[2];
         
-        // 끝점 (Y=0으로 고정)
-        positions[3] = intersectPoint.x;
+        // 마우스 위치와 시작점 간의 차이 계산
+        const deltaX = intersectPoint.x - wallDrawingStart[0];
+        const deltaZ = intersectPoint.z - wallDrawingStart[2];
+        
+        // 더 긴 축을 기준으로 90도 각도로 제한
+        let alignedX, alignedZ;
+        
+        if (Math.abs(deltaX) > Math.abs(deltaZ)) {
+          // X축 방향 벽 (수평)
+          alignedX = intersectPoint.x;
+          alignedZ = wallDrawingStart[2];
+        } else {
+          // Z축 방향 벽 (수직)
+          alignedX = wallDrawingStart[0];
+          alignedZ = intersectPoint.z;
+        }
+        
+        // 끝점 (Y=0으로 고정, 90도 각도로 제한)
+        positions[3] = alignedX;
         positions[4] = 0;
-        positions[5] = intersectPoint.z;
+        positions[5] = alignedZ;
         
         // geometry 업데이트 알림
         lineRef.current.geometry.attributes.position.needsUpdate = true;

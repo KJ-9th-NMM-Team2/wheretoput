@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -18,6 +18,7 @@ export function Wall({
   const { camera } = useThree();
   const { enableWallTransparency, wallColor, snappedWallInfo, wallToolMode, removeWall, setSelectedWallId, selectedWallId, wallsData } = useStore();
   const { addAction } = useHistory();
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     invalidate();
@@ -84,7 +85,14 @@ export function Wall({
   };
 
   const isSelected = selectedWallId === id;
-  const wallMaterialColor = isSelected && wallToolMode === 'edit' ? '#ff6600' : wallColor;
+  
+  // 벽 색상 결정 로직
+  let wallMaterialColor = wallColor;
+  if (isSelected && wallToolMode === 'edit') {
+    wallMaterialColor = '#ff6600'; // 편집 모드에서 선택된 벽
+  } else if (wallToolMode === 'delete' && isHovered) {
+    wallMaterialColor = '#00ff00'; // 삭제 모드에서 호버된 벽 (형광 초록색)
+  }
 
   return (
     <mesh 
@@ -93,6 +101,8 @@ export function Wall({
       rotation={rotation} 
       receiveShadow
       onPointerDown={handleWallClick}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
       style={{ cursor: wallToolMode ? 'pointer' : 'default' }}
     >
       <boxGeometry args={[width, height, depth]} />
