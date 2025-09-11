@@ -308,7 +308,7 @@ export function SelectedModelEditModal() {
               }
               unit="x"
               min={0.1}
-              max={5}
+              max={3}
               step={0.1}
               onChange={(value) => updateModelScale(selectedModel.id, value)}
               onChangeEnd={(initialValue, finalValue) => {
