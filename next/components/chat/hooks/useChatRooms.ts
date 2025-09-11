@@ -146,14 +146,26 @@ export const useChatRooms = (
             lastMsg = "사진";
           }
 
-          const chatRoomName = r.chat_participants
-            .filter((participant: any) => participant.user_id !== currentUserId)
-            .map((participant: any) => participant.user?.name || "이름 없음")
-            .join(", ");
+          // 채팅방 이름 우선순위 적용:
+          // 1순위: 사용자가 설정한 커스텀 이름 (custom_room_name)
+          // 2순위: 나를 제외한 참가자들의 이름
+          // 3순위: 기본 채팅방 이름 (r.name)
+          let roomName = r.custom_room_name;
+          if (!roomName) {
+            const otherParticipants = r.chat_participants
+              .filter((participant: any) => participant.user_id !== currentUserId)
+              .map((participant: any) => participant.user?.name || "이름 없음");
+
+            if (otherParticipants.length > 0) {
+              roomName = otherParticipants.join(", ");
+            } else {
+              roomName = r.name || "채팅방";
+            }
+          }
 
           const result = {
             chat_room_id: r.chat_room_id ?? r.id ?? String(r.room_id ?? ""),
-            name: chatRoomName,
+            name: roomName,
             is_private: Boolean(r.is_private),
             lastMessage: lastMsg,
             lastMessageAt:

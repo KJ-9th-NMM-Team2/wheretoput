@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       return {
         ...room,
         last_read_at: myParticipant?.last_read_at || null,
+        custom_room_name: myParticipant?.custom_room_name || null,
       };
     }) : [];
 

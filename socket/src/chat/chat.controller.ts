@@ -2,8 +2,10 @@ import {
   Controller,
   Get,
   Delete,
+  Put,
   Param,
   Query,
+  Body,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -33,6 +35,21 @@ export class ChatController {
     });
     console.log('확인한 메시지', messages);
     return { roomId, messages };
+  }
+
+  // 채팅방 이름 변경 (사용자별 커스텀 이름)
+  @Put(':roomId/rename')
+  async renameRoom(
+    @Param('roomId') roomId: string,
+    @Body('name') name: string,
+    @Request() req: any,
+  ) {
+    const result = await this.chatService.renameRoom(
+      roomId,
+      req.user.userId,
+      name,
+    );
+    return result;
   }
 
   // 채팅방 완전 삭제 (개발자용)

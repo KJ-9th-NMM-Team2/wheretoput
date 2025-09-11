@@ -223,6 +223,52 @@ export class ChatService {
     }
   }
 
+  // 채팅방 이름 변경 (사용자별 커스텀 이름)
+  async renameRoom(roomId: string, userId: string, name: string) {
+    try {
+      // 이름 유효성 검사
+      if (!name?.trim()) {
+        throw new BadRequestException('Room name cannot be empty');
+      }
+
+      if (name.length > 100) {
+        throw new BadRequestException('Room name too long (max 100 characters)');
+      }
+
+      // 방 접근 권한 확인
+      const hasAccess = await this.roomService.checkRoomAccess(roomId, userId);
+      if (!hasAccess) {
+        throw new ForbiddenException('Access denied to this room');
+      }
+
+      // chat_participants에서 해당 사용자의 custom_room_name 업데이트
+      await this.prisma.chat_participants.updateMany({
+        where: {
+          chat_room_id: roomId,
+          user_id: userId,
+        },
+        data: {
+          custom_room_name: name.trim(),
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Room name updated successfully',
+        roomId,
+        customName: name.trim(),
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+      throw new Error(`Failed to rename room: ${error.message}`);
+    }
+  }
+
   // 채팅방 완전 삭제 (개발자용 - DB에서 히스토리까지 모두 삭제)
   async deleteRoomCompletely(roomId: string, userId: string) {
     try {

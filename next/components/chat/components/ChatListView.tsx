@@ -57,6 +57,10 @@ export default function ChatListView({
     chatId: string;
     chatName: string;
   } | null>(null);
+  const [renameModal, setRenameModal] = useState<{
+    chatId: string;
+    chatName: string;
+  } | null>(null);
 
   // 유저 목록 로드
   const loadAllUsers = async () => {
@@ -160,6 +164,50 @@ export default function ChatListView({
   // 삭제 모달 닫기
   const closeDeleteModal = () => {
     setDeleteModal(null);
+  };
+
+  // 이름 변경 모달 열기
+  const openRenameModal = (chatId: string) => {
+    closeContextMenu();
+    const chat = baseChats.find((c) => c.chat_room_id === chatId);
+    if (chat) {
+      setRenameModal({
+        chatId,
+        chatName: chat.name || "이름 없는 채팅방",
+      });
+    }
+  };
+
+  // 이름 변경 모달 닫기
+  const closeRenameModal = () => {
+    setRenameModal(null);
+  };
+
+  // 채팅방 이름 변경 실행
+  const handleRenameRoom = async (roomId: string, newName: string) => {
+    if (!newName.trim()) return;
+
+    try {
+      await api.put(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}/rename`, {
+        name: newName.trim(),
+      });
+
+      // 로컬 상태 즉시 업데이트 (커스텀 이름이 최우선이므로 name 필드를 직접 업데이트)
+      const updatedChats = baseChats.map((chat) =>
+        chat.chat_room_id === roomId
+          ? { ...chat, name: newName.trim() }
+          : chat
+      );
+      setBaseChats(updatedChats);
+      setChats(recomputeChats(updatedChats, query, select, currentUserId));
+
+      closeRenameModal();
+    } catch (error: any) {
+      console.error("이름 변경 실패:", error);
+      const errorMsg =
+        error.response?.data?.message || "이름 변경에 실패했습니다.";
+      alert(`변경 실패: ${errorMsg}`);
+    }
   };
 
   // 채팅방 완전 삭제 실행
@@ -459,9 +507,15 @@ export default function ChatListView({
           onClick={(e) => e.stopPropagation()}
         >
           <button
+            onClick={() => openRenameModal(contextMenu.chatId)}
+            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+          >
+            이름 변경
+          </button>
+          <button
             onClick={() => openDeleteModal(contextMenu.chatId)}
             disabled={deleting === contextMenu.chatId}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             채팅방 삭제
           </button>
@@ -495,6 +549,61 @@ export default function ChatListView({
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {deleting === deleteModal.chatId ? "삭제 중..." : "삭제"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이름 변경 모달 */}
+      {renameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                채팅방 이름 변경
+              </h3>
+              <p className="text-gray-600 mb-4">
+                "<span className="font-medium">{renameModal.chatName}</span>" 로 채팅방의 이름을 변경하겠습니다.
+              </p>
+              <input
+                type="text"
+                defaultValue={renameModal.chatName}
+                placeholder="새로운 이름을 입력하세요"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const newName = (e.target as HTMLInputElement).value.trim();
+                    if (newName && renameModal) {
+                      handleRenameRoom(renameModal.chatId, newName);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    closeRenameModal();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeRenameModal}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                  const newName = input?.value.trim();
+                  if (newName && renameModal) {
+                    handleRenameRoom(renameModal.chatId, newName);
+                  }
+                }}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition cursor-pointer"
+              >
+                변경
               </button>
             </div>
           </div>
