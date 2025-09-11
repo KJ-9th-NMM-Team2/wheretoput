@@ -19,7 +19,7 @@ export default function SearchBar() {
   return (
     <label className="flex flex-col min-w-40 h-14 w-full max-w-[480px] @[480px]:h-16">
       <div className="flex w-full flex-1 items-stretch rounded-xl h-full">
-        <div
+        {/* <div
           className="text-[#9c6f49] dark:text-orange-300 flex border border-[#e8dace] dark:border-gray-600 bg-[#fcfaf8] dark:bg-gray-700 items-center justify-center pl-[15px] rounded-l-xl border-r-0"
           data-icon="MagnifyingGlass"
           data-size="20px"
@@ -34,8 +34,8 @@ export default function SearchBar() {
           >
             <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
           </svg>
-        </div>
-        <input
+        </div> */}
+        {/* <input
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -48,7 +48,7 @@ export default function SearchBar() {
           >
             <span className="truncate">검색</span>
           </button>
-        </div>
+        </div> */}
       </div>
     </label>
   );
