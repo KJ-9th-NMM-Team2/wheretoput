@@ -285,22 +285,22 @@ export function SelectedModelEditModal() {
           {/* 크기 조정 */}
           <div className="mb-4 font-bold ">
             <ControlSlider
-              label={` ${Math.ceil(
+              label={`W${Math.ceil(
                 selectedModel.length[0] *
                   (Array.isArray(selectedModel.scale)
                     ? selectedModel.scale[0]
                     : selectedModel.scale)
-              )}mm × ${Math.ceil(
-                selectedModel.length[1] *
-                  (Array.isArray(selectedModel.scale)
-                    ? selectedModel.scale[1]
-                    : selectedModel.scale)
-              )}mm × ${Math.ceil(
+              )} × D${Math.ceil(
                 selectedModel.length[2] *
                   (Array.isArray(selectedModel.scale)
                     ? selectedModel.scale[2]
                     : selectedModel.scale)
-              )}mm`}
+              )} × H${Math.ceil(
+                selectedModel.length[1] *
+                  (Array.isArray(selectedModel.scale)
+                    ? selectedModel.scale[1]
+                    : selectedModel.scale)
+              )}`}
               value={
                 Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
