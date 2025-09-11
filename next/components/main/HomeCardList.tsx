@@ -5,11 +5,26 @@ import { FcLike } from "react-icons/fc";
 import { useState } from "react";
 
 // 메인 홈페이지 카드 리스트
-export function HomeCard({ room }: { room: any }) {
+export function HomeCard({ 
+  room, 
+  isDeleteMode = false, 
+  onThumbnailClick 
+}: { 
+  room: any; 
+  isDeleteMode?: boolean; 
+  onThumbnailClick?: () => void; 
+}) {
   const [isHovered, setIsHovered] = useState(false);
   
+  const handleThumbnailClick = (e: React.MouseEvent) => {
+    if (isDeleteMode) {
+      e.preventDefault();
+      onThumbnailClick?.();
+    }
+  };
+
   return (
-    <Link href={`/rooms/${room.room_id}`} className="h-full w-full group">
+    <Link href={isDeleteMode ? "#" : `/rooms/${room.room_id}`} className="h-full w-full group">
       <div 
         className="flex h-full flex-1 flex-col gap-3 rounded-lg max-w-sm w-full transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-xl bg-white dark:bg-gray-800 overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
@@ -21,6 +36,7 @@ export function HomeCard({ room }: { room: any }) {
             style={{
               backgroundImage: `url('${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}'), url('/placeholder.png')`,
             }}
+            onClick={handleThumbnailClick}
           >
             
             
@@ -35,7 +51,7 @@ export function HomeCard({ room }: { room: any }) {
           </div>
         </div>
 
-        <div className="px-4 pb-4 flex flex-col gap-3">
+        <div className="px-4 pb-4 flex flex-col gap-3" onClick={handleThumbnailClick}>
           {/* 방 제목 */}
           <p className="text-[rgb(47,52,56)] dark:text-gray-100 text-base font-bold leading-5 line-clamp-2 mt-[3px] overflow-hidden break-all">
             {room.title}
