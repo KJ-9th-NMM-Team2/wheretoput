@@ -2,35 +2,90 @@
  * 2D 도면과 3D 공간 간의 좌표 및 치수 변환 유틸리티
  */
 
+// 타입 정의
+export interface Point2D {
+  x: number;
+  y: number;
+}
+
+export interface Point3D extends Array<number> {
+  0: number; // x
+  1: number; // y
+  2: number; // z
+}
+
+export interface Wall2D {
+  start: Point2D;
+  end: Point2D;
+}
+
+export interface Wall3D {
+  position: Point3D;
+  rotation: Point3D;
+  dimensions: {
+    width: number;
+    height: number;
+    depth: number;
+  };
+  endpoints?: {
+    start: Point3D;
+    end: Point3D;
+  };
+  original2D?: Wall2D;
+}
+
+export interface WallDimensions {
+  length: number;
+  height: number;
+  thickness: number;
+  area: number;
+  volume: number;
+}
+
+export interface FurnitureDimensions {
+  width: number;
+  height: number;
+  depth: number;
+  volume: number;
+}
+
+export interface SnapInfo {
+  type: 'endpoint' | 'wall';
+  position: Point3D;
+  distance: number;
+  isStart?: boolean;
+  t?: number;
+}
+
 /**
  * 픽셀 좌표를 미터 단위로 변환
- * @param {number} pixels - 픽셀 값
- * @param {number} pixelToMmRatio - 픽셀-mm 비율 (기본값: 1000)
- * @returns {number} 미터 단위 값
+ * @param pixels - 픽셀 값
+ * @param pixelToMmRatio - 픽셀-mm 비율 (기본값: 1000)
+ * @returns 미터 단위 값
  */
-export function pixelsToMeters(pixels, pixelToMmRatio = 1000) {
+export function pixelsToMeters(pixels: number, pixelToMmRatio: number = 1000): number {
   return (pixels * pixelToMmRatio) / 1000;
 }
 
 /**
  * 미터 단위를 픽셀 좌표로 변환
- * @param {number} meters - 미터 값
- * @param {number} pixelToMmRatio - 픽셀-mm 비율 (기본값: 1000)
- * @returns {number} 픽셀 값
+ * @param meters - 미터 값
+ * @param pixelToMmRatio - 픽셀-mm 비율 (기본값: 1000)
+ * @returns 픽셀 값
  */
-export function metersToPixels(meters, pixelToMmRatio = 1000) {
+export function metersToPixels(meters: number, pixelToMmRatio: number = 1000): number {
   return (meters * 1000) / pixelToMmRatio;
 }
 
 /**
  * 벽 데이터를 2D에서 3D로 변환
- * @param {Object} wall2D - 2D 벽 데이터 { start: {x, y}, end: {x, y} }
- * @param {number} pixelToMmRatio - 픽셀-mm 비율
- * @param {number} height - 벽 높이 (미터, 기본값: 2.5)
- * @param {number} depth - 벽 두께 (미터, 기본값: 0.1)
- * @returns {Object} 3D 벽 데이터
+ * @param wall2D - 2D 벽 데이터 { start: {x, y}, end: {x, y} }
+ * @param pixelToMmRatio - 픽셀-mm 비율
+ * @param height - 벽 높이 (미터, 기본값: 2.5)
+ * @param depth - 벽 두께 (미터, 기본값: 0.1)
+ * @returns 3D 벽 데이터
  */
-export function convertWall2Dto3D(wall2D, pixelToMmRatio = 1000, height = 2.5, depth = 0.1) {
+export function convertWall2Dto3D(wall2D: Wall2D, pixelToMmRatio: number = 1000, height: number = 2.5, depth: number = 0.1): Wall3D {
   // 시작점과 끝점을 미터 단위로 변환
   const startX = pixelsToMeters(wall2D.start.x, pixelToMmRatio);
   const startZ = pixelsToMeters(wall2D.start.y, pixelToMmRatio);
@@ -66,11 +121,11 @@ export function convertWall2Dto3D(wall2D, pixelToMmRatio = 1000, height = 2.5, d
 
 /**
  * 3D 벽 데이터를 2D로 변환
- * @param {Object} wall3D - 3D 벽 데이터
- * @param {number} pixelToMmRatio - 픽셀-mm 비율
- * @returns {Object} 2D 벽 데이터
+ * @param wall3D - 3D 벽 데이터
+ * @param pixelToMmRatio - 픽셀-mm 비율
+ * @returns 2D 벽 데이터
  */
-export function convertWall3Dto2D(wall3D, pixelToMmRatio = 1000) {
+export function convertWall3Dto2D(wall3D: Wall3D, pixelToMmRatio: number = 1000): Wall2D {
   const { position, rotation, dimensions } = wall3D;
   const halfLength = dimensions.width / 2;
   const angle = rotation[1]; // Y축 회전각
@@ -95,10 +150,10 @@ export function convertWall3Dto2D(wall3D, pixelToMmRatio = 1000) {
 
 /**
  * 벽의 실제 치수 정보를 계산
- * @param {Object} wallData - 벽 데이터
- * @returns {Object} 치수 정보
+ * @param wallData - 벽 데이터
+ * @returns 치수 정보
  */
-export function calculateWallDimensions(wallData) {
+export function calculateWallDimensions(wallData: Wall3D): WallDimensions {
   const { dimensions, endpoints } = wallData;
   
   // 실제 길이 계산 (끝점 좌표 기준)
@@ -122,11 +177,11 @@ export function calculateWallDimensions(wallData) {
 
 /**
  * 가구의 실제 치수 정보를 계산
- * @param {Array} scale - 스케일 배열 [x, y, z]
- * @param {Array} length - 원본 치수 배열 [x, y, z] (mm 단위)
- * @returns {Object} 치수 정보
+ * @param scale - 스케일 배열 [x, y, z] 또는 단일 값
+ * @param length - 원본 치수 배열 [x, y, z] (mm 단위) 또는 단일 값
+ * @returns 치수 정보
  */
-export function calculateFurnitureDimensions(scale, length) {
+export function calculateFurnitureDimensions(scale: number | number[], length: number | number[]): FurnitureDimensions {
   const actualScale = Array.isArray(scale) ? scale : [scale, scale, scale];
   const actualLength = Array.isArray(length) ? length : [length, length, length];
   
@@ -145,11 +200,11 @@ export function calculateFurnitureDimensions(scale, length) {
 
 /**
  * 치수 값을 적절한 단위로 포맷팅
- * @param {number} meters - 미터 단위 값
- * @param {number} precision - 소수점 자릿수 (기본값: 2)
- * @returns {string} 포맷된 문자열
+ * @param meters - 미터 단위 값
+ * @param precision - 소수점 자릿수 (기본값: 2)
+ * @returns 포맷된 문자열
  */
-export function formatDimension(meters, precision = 2) {
+export function formatDimension(meters: number, precision: number = 2): string {
   if (meters < 0.01) {
     return `${(meters * 1000).toFixed(0)}mm`;
   } else if (meters < 1) {
@@ -161,11 +216,11 @@ export function formatDimension(meters, precision = 2) {
 
 /**
  * 두 점 사이의 거리 계산
- * @param {Array} point1 - 첫 번째 점 [x, y, z]
- * @param {Array} point2 - 두 번째 점 [x, y, z]
- * @returns {number} 거리 (미터)
+ * @param point1 - 첫 번째 점 [x, y, z]
+ * @param point2 - 두 번째 점 [x, y, z]
+ * @returns 거리 (미터)
  */
-export function calculateDistance(point1, point2) {
+export function calculateDistance(point1: Point3D, point2: Point3D): number {
   const dx = point2[0] - point1[0];
   const dy = point2[1] - point1[1];
   const dz = point2[2] - point1[2];
@@ -174,12 +229,12 @@ export function calculateDistance(point1, point2) {
 
 /**
  * 점이 벽 근처에 있는지 확인 (스냅핑을 위함)
- * @param {Array} point - 확인할 점 [x, y, z]
- * @param {Object} wall - 벽 데이터
- * @param {number} tolerance - 허용 오차 (미터, 기본값: 0.5)
- * @returns {Object|null} 스냅 정보 또는 null
+ * @param point - 확인할 점 [x, y, z]
+ * @param wall - 벽 데이터
+ * @param tolerance - 허용 오차 (미터, 기본값: 0.5)
+ * @returns 스냅 정보 또는 null
  */
-export function checkWallSnap(point, wall, tolerance = 0.5) {
+export function checkWallSnap(point: Point3D, wall: Wall3D, tolerance: number = 0.5): SnapInfo | null {
   if (!wall.endpoints) return null;
 
   const [pointX, , pointZ] = point;
