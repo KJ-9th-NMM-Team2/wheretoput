@@ -14,7 +14,7 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 
-export function DraggableModel({
+export const DraggableModel = React.memo(function DraggableModel({
   modelId,
   url,
   position,
@@ -304,7 +304,7 @@ export function DraggableModel({
       )}
     </>
   );
-}
+});
 
 function SelectionBox({
   isSelected,
