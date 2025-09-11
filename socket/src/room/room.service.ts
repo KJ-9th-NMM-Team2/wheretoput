@@ -190,7 +190,7 @@ export class RoomService {
         // 기존 방을 리턴할 때도 올바른 이름으로 업데이트해서 리턴
         return {
           ...existingRoom,
-          name: existingRoom.name || otherParticipant?.user?.name || `사용자 ${params.otherUserId}`,
+          name: existingRoom.name || otherParticipant?.User?.name || `사용자 ${params.otherUserId}`,
         };
       }
 
