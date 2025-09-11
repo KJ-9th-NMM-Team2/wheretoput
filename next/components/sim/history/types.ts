@@ -1,10 +1,12 @@
-// 히스토리에 저장할 액션타입 (가구 추가/삭제/이동/회전/크기조정)
+// 히스토리에 저장할 액션타입 (가구 추가/삭제/이동/회전/크기조정, 벽 추가/삭제)
 export enum ActionType {
   FURNITURE_ADD = 'FURNITURE_ADD',
   FURNITURE_REMOVE = 'FURNITURE_REMOVE',
   FURNITURE_MOVE = 'FURNITURE_MOVE',
   FURNITURE_ROTATE = 'FURNITURE_ROTATE',
   FURNITURE_SCALE = 'FURNITURE_SCALE',
+  WALL_ADD = 'WALL_ADD',
+  WALL_REMOVE = 'WALL_REMOVE',
 }
 
 export interface Position {

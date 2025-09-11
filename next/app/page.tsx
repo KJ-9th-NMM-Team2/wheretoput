@@ -50,7 +50,7 @@ export default async function Page() {
         <div className="px-4 py-6">
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-2xl font-bold text-[#1c140d] dark:text-gray-100">
-               주목받는 집
+              주목받는 집
             </h2>
             <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
           </div>
@@ -60,7 +60,7 @@ export default async function Page() {
             <HomeCardList rooms={data} />
           </div>
         </div>
-        
+
         {/* 팔로잉 피드 섹션 */}
         <FollowingFeed />
       </div>

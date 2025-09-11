@@ -75,12 +75,13 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
      url("/placeholder.png")`,
                   }}
                 >
-                  <div className="flex p-4">
-                    <p className="text-white tracking-light text-[28px] font-bold leading-tight">
-                      {room?.title}
-                    </p>
-                  </div>
+                  
                 </div>
+              </div>
+              <div className="px-4 py-6">
+                <h1 className="text-[#181411] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
+                  {room?.title}
+                </h1>
               </div>
             </div>
             <div>
@@ -99,12 +100,12 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
             <div className="flex justify-stretch">
               <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
                 <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">
-                  <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f5f2f0] dark:bg-gray-700 text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-orange-100 dark:hover:bg-gray-600 transition-colors">
+                  <button className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                     <span className="truncate">3D로 보기</span>
                   </button>
                 </Link>
                 <span className="flex items-center gap-1">
-                  <FaEye size={20} className="mr-1"/>
+                  <FaEye size={20} className="mr-1" />
                   {room.view_count}
                 </span>
                 {!loading && <LikeButton room={room} liked={liked} />}
@@ -128,7 +129,14 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 )}
               </Link>
               <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal">
-                {room.user.name} on {room.updated_at.slice(0, 10)}
+                <span className="font-medium text-lg">{room.user.name}</span>
+                <span className="text-gray-500 dark:text-gray-400 text-sm ml-2">
+                  {new Date(room.updated_at).toLocaleDateString('ko-KR', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
               </span>
               {!room.is_public && (
                 <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
@@ -136,10 +144,10 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 </span>
               )}
             </div>
-            
+
             <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-                
+
               </h3>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 {room.description}
