@@ -6,13 +6,14 @@ interface WallToolsProps {
   isDropdown?: boolean;
 }
 
+// 벽 도구 드롭다운 내용
 const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = false }) => {
   const { wallToolMode, setWallToolMode } = useStore();
   const [isOpen, setIsOpen] = useState(false);
 
   const wallTools = [
     { id: 'add', name: '벽 추가', icon: '', description: '새로운 벽을 추가합니다' },
-    { id: 'edit', name: '벽 편집', icon: '', description: '기존 벽의 크기와 위치를 조정합니다' },
+    // { id: 'edit', name: '벽 편집', icon: '', description: '기존 벽의 크기와 위치를 조정합니다' },
     { id: 'delete', name: '벽 삭제', icon: '', description: '선택한 벽을 삭제합니다' },
   ];
 
