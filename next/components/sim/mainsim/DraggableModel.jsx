@@ -14,7 +14,7 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 
-export const DraggableModel = React.memo(function DraggableModel({
+export function DraggableModel({
   modelId,
   url,
   position,
@@ -24,9 +24,11 @@ export const DraggableModel = React.memo(function DraggableModel({
   controlsRef,
   texturePath = null,
   type = "glb",
+  onModelLoaded,
 }) {
-  // scale 값을 안전하게 처리 - useMemo로 캐싱
-  const safeScale = useMemo(() => {
+  
+  // scale 값을 안전하게 처리
+  const safeScale = (() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
     const lengthArray = Array.isArray(length)
       ? length
@@ -35,7 +37,7 @@ export const DraggableModel = React.memo(function DraggableModel({
     return scaleArray.map((s, i) =>
       Math.max((s || 1) * (lengthArray[i] || 1) * 0.001, 0.001)
     );
-  }, [scale, length]);
+  })();
 
   const meshRef = useRef();
 
@@ -58,6 +60,13 @@ export const DraggableModel = React.memo(function DraggableModel({
   const { scene, animations } = hasValidUrl
     ? useGLTF(url)
     : { scene: null, animations: null };
+
+  useEffect(() => {
+    if (scene) {
+      // 모든 텍스처와 지오메트리가 준비되면
+      onModelLoaded(modelId);
+    }
+  }, []);
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -304,7 +313,7 @@ export const DraggableModel = React.memo(function DraggableModel({
       )}
     </>
   );
-});
+}
 
 function SelectionBox({
   isSelected,
@@ -363,8 +372,8 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments
-      castShadow={false}
+    <lineSegments 
+      castShadow={false} 
       receiveShadow={false}
       position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
     >
