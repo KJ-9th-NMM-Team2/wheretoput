@@ -121,7 +121,7 @@ export default function Header() {
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
               onKeyDown={handleKeyDown}
-              placeholder="검색어를 입력하세요"
+              placeholder="통합 검색"
               className="
                 flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full 
                 focus:outline-none focus:ring-2 border-none h-full px-4 text-sm font-normal leading-normal

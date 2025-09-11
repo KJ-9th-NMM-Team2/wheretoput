@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
 import { View } from "lucide-react";
 import { FaEye } from "react-icons/fa";
+import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
 
 interface RoomPageClientProps {
   room: any;
@@ -18,6 +19,8 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   const { data: session } = useSession();
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   // 조회수 1 증가
   useEffect(() => {
@@ -47,6 +50,44 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
     checkLikeStatus();
   }, [session?.user?.id, room.room_id]);
 
+  useEffect(() => {
+    const checkFollow = async () => {
+      if (session?.user?.id && room.user.id !== session.user.id) {
+        try {
+          const followStatus = await checkFollowStatus(session.user.id, room.user.id);
+          setIsFollowing(followStatus);
+        } catch (error) {
+          console.error("Failed to check follow status:", error);
+        }
+      }
+    };
+
+    checkFollow();
+  }, [session?.user?.id, room.user.id]);
+
+  const handleFollowToggle = async () => {
+    if (!session?.user?.id || followLoading) return;
+
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        const success = await unfollowUser(room.user.id);
+        if (success) {
+          setIsFollowing(false);
+        }
+      } else {
+        const success = await followUser(room.user.id);
+        if (success) {
+          setIsFollowing(true);
+        }
+      }
+    } catch (error) {
+      console.error("Follow toggle failed:", error);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
 
   // 동일 가구 포함 x
   const uniqueFurnituresByRoom = Array.from(
@@ -75,7 +116,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
      url("/placeholder.png")`,
                   }}
                 >
-                  
+
                 </div>
               </div>
               <div className="px-4 py-6">
@@ -101,13 +142,9 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
                 <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">
                   <button className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                    <span className="truncate">3D로 보기</span>
+                    <span className="truncate">3D View</span>
                   </button>
                 </Link>
-                <span className="flex items-center gap-1">
-                  <FaEye size={20} className="mr-1" />
-                  {room.view_count}
-                </span>
                 {!loading && <LikeButton room={room} liked={liked} />}
               </div>
             </div>
@@ -128,16 +165,22 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   </span>
                 )}
               </Link>
-              <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal">
+
+              {/* 사용자 프로필 + 날짜 */}
+              <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal flex-1">
                 <span className="font-medium text-lg">{room.user.name}</span>
-                <span className="text-gray-500 dark:text-gray-400 text-sm ml-2">
-                  {new Date(room.updated_at).toLocaleDateString('ko-KR', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </span>
               </span>
+
+              {/* 팔로우 버튼 */}
+              {session?.user?.id && session.user.id !== room.user.id && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`ml-4 ${isFollowing ? "following-button" : "follow-button"}`}
+                >
+                  {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
+                </button>
+              )}
               {!room.is_public && (
                 <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
@@ -145,10 +188,21 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               )}
             </div>
 
-            <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            {/* 댓글/조회수 통계 */}
+            <div className="px-4 py-2 flex items-center gap-4 text-gray-500 dark:text-gray-400 text-sm ml-auto">
+              <span>조회 {room.view_count} ｜ </span>
+            
+              <span className="-ml-2">
+                {new Date(room.updated_at).toLocaleDateString('ko-KR', {
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
 
-              </h3>
+            </div>
+
+            <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 {room.description}
               </p>

@@ -77,13 +77,13 @@ export function HomeCard({
             </span>
           </div>
 
-          {/* 좋아요/댓글/조회수 통계 */}
+          {/* 댓글,조회수 */}
           <div className="flex items-center justify-between text-gray-500 dark:text-gray-400 text-sm">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <FcLike className="w-4 h-4" />
                 <span className="font-medium">{room.num_likes || 0}</span>
-              </div>
+              </div> 
               <div className="flex items-center gap-1">
                 <FaCommentDots className="w-4 h-4" />
                 <span className="font-medium">{room.num_comments || 0}</span>

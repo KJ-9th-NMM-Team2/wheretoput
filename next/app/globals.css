@@ -27,3 +27,65 @@ body {
   font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Follow Button Styles */
+.follow-button {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  background-color: rgb(59, 130, 246);
+  color: white;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+}
+
+.follow-button:hover {
+  background-color: rgb(37, 99, 235);
+}
+
+.follow-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.following-button {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  background-color: rgb(229, 231, 235);
+  color: rgb(55, 65, 81);
+  font-weight: 700;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  border: none;
+}
+
+.following-button:hover {
+  background-color: rgb(209, 213, 219);
+}
+
+.following-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark mode support */
+html.dark .follow-button {
+  background-color: rgb(59, 130, 246);
+}
+
+html.dark .follow-button:hover {
+  background-color: rgb(29, 78, 216);
+}
+
+html.dark .following-button {
+  background-color: rgb(55, 65, 81);
+  color: rgb(209, 213, 219);
+}
+
+html.dark .following-button:hover {
+  background-color: rgb(75, 85, 99);
+}
+
