@@ -14,7 +14,7 @@ export default function SearchBar({ value, onChange, onClear, placeholder = "검
   return (
     <form
       onSubmit={(e) => e.preventDefault()}
-      className="m-2 flex items-center rounded-full bg-[rgba(255,255,255,1)] px-4 py-2 shadow-sm border border-gray-300 focus-within:border-blue-400"
+      className="m-2 flex items-center rounded-full bg-[rgba(255,255,255,1)] px-4 py-2 shadow-sm border border-gray-300 focus-within:border-orange-400"
     >
       <svg
         width="18"

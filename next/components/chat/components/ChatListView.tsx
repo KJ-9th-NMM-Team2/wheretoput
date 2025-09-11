@@ -282,7 +282,7 @@ export default function ChatListView({
               setChats(recomputeChats(baseChats, query, "전체", currentUserId));
             }}
             className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-              ? "bg-gray-200 text-blue-500"
+              ? "bg-gray-200 text-orange-500"
               : "bg-transparent hover:bg-gray-200"
               }`}
           >
@@ -297,7 +297,7 @@ export default function ChatListView({
               );
             }}
             className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-              ? "bg-gray-200 text-blue-500"
+              ? "bg-gray-200 text-orange-500"
               : "bg-transparent hover:bg-gray-200"
               }`}
           >
