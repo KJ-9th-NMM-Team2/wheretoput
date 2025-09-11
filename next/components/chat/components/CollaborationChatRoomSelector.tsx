@@ -61,7 +61,7 @@ export default function CollaborationChatRoomSelector({
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg shadow-sm hover:bg-white transition-colors text-sm"
+        className="flex items-center space-x-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg shadow-sm hover:bg-white transition-colors text-sm cursor-pointer"
       >
         <svg
           className="w-4 h-4 text-gray-600"
@@ -118,9 +118,9 @@ export default function CollaborationChatRoomSelector({
                   );
                   setIsOpen(false);
                 }}
-                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer ${
                   selectedChatId === chat.chat_room_id
-                    ? "bg-blue-50 text-blue-600"
+                    ? "bg-orange-50 text-orange-600"
                     : "text-gray-700"
                 }`}
               >
