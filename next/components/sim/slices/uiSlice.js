@@ -8,6 +8,10 @@ export const uiSlice = (set, get) => ({
   viewOnly: false,
   setViewOnly: (value) => set({ viewOnly: value }),
 
+  // 규격 정보 표시 여부
+  showSpecifications: false,
+  setShowSpecifications: (value) => set({ showSpecifications: value }),
+
   // 업적 상태
   setAchievements: (achievements) => set({ achievements }),
 });

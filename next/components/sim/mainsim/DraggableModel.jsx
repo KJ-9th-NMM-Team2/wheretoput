@@ -9,6 +9,7 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 import { useDracoGLTF } from "../utils/useDracoLoader";
+import { FurnitureSpecification, FurnitureDimensionLines } from "./FurnitureSpecification.jsx";
 
 export function DraggableModel({
   modelId,
@@ -264,6 +265,17 @@ export function DraggableModel({
             position={position}
             boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
           />
+
+          {/* 가구 규격 정보 표시 */}
+          <FurnitureSpecification
+            position={position}
+            rotation={rotation}
+            scale={safeScale}
+            length={length}
+            modelId={modelId}
+            isVisible={true}
+            name="가구"
+          />
         </group>
       ) : (
         <group
@@ -306,6 +318,26 @@ export function DraggableModel({
             modelId={modelId}
             position={position}
             boundingBox={scene ? new THREE.Box3().setFromObject(scene) : null}
+          />
+
+          {/* 가구 규격 정보 표시 */}
+          <FurnitureSpecification
+            position={position}
+            rotation={rotation}
+            scale={safeScale}
+            length={length}
+            modelId={modelId}
+            isVisible={true}
+            name="가구"
+          />
+
+          {/* 선택된 가구의 치수 선 표시 */}
+          <FurnitureDimensionLines
+            position={position}
+            scale={safeScale}
+            length={length}
+            modelId={modelId}
+            isVisible={true}
           />
         </group>
       )}

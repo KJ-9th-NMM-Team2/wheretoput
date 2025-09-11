@@ -5,6 +5,7 @@ import { CameraControlPanel } from "@/components/sim/mainsim/CameraControlPanel"
 import { ColorControlPanel } from "@/components/sim/mainsim/ColorControlPanel";
 import { CaptureControlPanel } from "@/components/sim/mainsim/CaptureControlPanel";
 import { HelpPopup } from "@/components/sim/mainsim/HelpPopup";
+import { SpecificationToggleIcon } from "@/components/sim/mainsim/SpecificationToggle";
 import { useStore } from "@/components/sim/useStore.js";
 
 // react-icons 추가 부분
@@ -242,11 +243,19 @@ export function ControlIcons({ controlsRef }) {
         <FaShareAlt />
       </button>
 
+      {/* Specification Toggle Icon - 공유 버튼 왼쪽 */}
+      <SpecificationToggleIcon
+        className="fixed top-[10px]"
+        style={{
+          right: "340px",
+        }}
+      />
+
       <button
         style={{
           position: "fixed",
           top: "10px",
-          right: "330px",
+          right: "390px", // 규격 토글 버튼만큼 오른쪽으로 이동
           background: "rgba(0, 0, 0, 0)",
           color: "black",
           border: "none",

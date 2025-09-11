@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
 import { useHistory, ActionType } from "@/components/sim/history";
+import { WallSpecification, WallEndpointMarker } from "./WallSpecification.jsx";
 
 export function Wall({
   width,
@@ -151,6 +152,15 @@ export function Wall({
           />
         </mesh>
       )}
+
+      {/* 벽 규격 정보 표시 */}
+      <WallSpecification
+        position={position}
+        rotation={rotation}
+        dimensions={{ width, height, depth }}
+        wallId={id}
+        isVisible={true}
+      />
     </mesh>
   );
 }
