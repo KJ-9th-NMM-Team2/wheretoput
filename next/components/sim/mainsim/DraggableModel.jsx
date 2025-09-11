@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
+import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 
 export function DraggableModel({
@@ -51,10 +52,12 @@ export function DraggableModel({
     setSnappedWallInfo,
   } = useStore();
 
-  // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
-  const validUrl =
-    url && typeof url === "string" ? url : "/legacy_mesh (1).glb";
-  const { scene, animations } = useGLTF(validUrl);
+  // GLB 모델 로드 (url이 있을 때만 로드)
+  const hasValidUrl =
+    url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
+  const { scene, animations } = hasValidUrl
+    ? useGLTF(url)
+    : { scene: null, animations: null };
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -176,6 +179,14 @@ export function DraggableModel({
     }
   }, [scene, animations, modelId, texture, type, safeScale]);
 
+  // PreviewBox일 때 originalSizeRef 설정
+  useEffect(() => {
+    if (!scene) {
+      // scene이 없을 때는 safeScale을 직접 사용
+      originalSizeRef.current = [1, 1, 1]; // PreviewBox는 size=[1,1,1]이므로
+    }
+  }, [scene, safeScale]);
+
   // 전역 이벤트 리스너
   useEffect(() => {
     if (isDragging || isScaling) {
@@ -254,7 +265,15 @@ export function DraggableModel({
           rotation={rotation}
           scale={safeScale}
         >
-          <primitive object={scene.clone()} />
+          {scene ? (
+            <primitive object={scene.clone()} />
+          ) : (
+            <PreviewBox
+              position={[0, 0, 0]}
+              size={[1, 1, 1]}
+              isLoading={false}
+            />
+          )}
 
           {/* 투명한 클릭/호버 감지 영역 */}
           <mesh
@@ -272,6 +291,7 @@ export function DraggableModel({
               isSnappedToWall={isSnappedToWall}
               getSelectionBoxSize={getSelectionBoxSize}
               originalSizeRef={originalSizeRef.current}
+              isPreviewBox={!scene}
             />
           )}
 
@@ -292,29 +312,39 @@ function SelectionBox({
   getSelectionBoxSize,
   lineWidth = 3,
   originalSizeRef,
+  isPreviewBox = false,
 }) {
   const edges = useMemo(() => {
     const [w, h, d] = originalSizeRef;
 
     const vertices = [
       [-w / 2, -h / 2, -d / 2], // 0
-      [w / 2, -h / 2, -d / 2],  // 1
-      [w / 2, h / 2, -d / 2],   // 2
-      [-w / 2, h / 2, -d / 2],  // 3
-      [-w / 2, -h / 2, d / 2],  // 4
-      [w / 2, -h / 2, d / 2],   // 5
-      [w / 2, h / 2, d / 2],    // 6
-      [-w / 2, h / 2, d / 2],   // 7
+      [w / 2, -h / 2, -d / 2], // 1
+      [w / 2, h / 2, -d / 2], // 2
+      [-w / 2, h / 2, -d / 2], // 3
+      [-w / 2, -h / 2, d / 2], // 4
+      [w / 2, -h / 2, d / 2], // 5
+      [w / 2, h / 2, d / 2], // 6
+      [-w / 2, h / 2, d / 2], // 7
     ];
 
     // 대각선 없이 박스 모서리만
     const edgeIndices = [
       // 앞면
-      [0, 1], [1, 2], [2, 3], [3, 0],
-      // 뒷면  
-      [4, 5], [5, 6], [6, 7], [7, 4],
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 0],
+      // 뒷면
+      [4, 5],
+      [5, 6],
+      [6, 7],
+      [7, 4],
       // 연결선
-      [0, 4], [1, 5], [2, 6], [3, 7]
+      [0, 4],
+      [1, 5],
+      [2, 6],
+      [3, 7],
     ];
 
     const positions = [];
@@ -333,7 +363,11 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments castShadow={false} receiveShadow={false}>
+    <lineSegments 
+      castShadow={false} 
+      receiveShadow={false}
+      position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
+    >
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -346,4 +380,3 @@ function SelectionBox({
     </lineSegments>
   );
 }
-

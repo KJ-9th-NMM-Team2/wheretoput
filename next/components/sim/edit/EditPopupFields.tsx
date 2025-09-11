@@ -25,7 +25,8 @@ export const EditPopupFields = ({
                 <input
                     type="text"
                     value={title}
-                    onChange={isOwnUserRoom ? (e) => setTitle(e.target.value) : undefined}
+                    readOnly={!isOwnUserRoom}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                       text-gray-500
                       "
@@ -39,7 +40,8 @@ export const EditPopupFields = ({
                 </label>
                 <textarea
                     value={description}
-                    onChange={isOwnUserRoom ? (e) => setDescription(e.target.value) : undefined}
+                    readOnly={!isOwnUserRoom}
+                    onChange={(e) => setDescription(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-500"
                     rows={3}
                     placeholder="방에 대한 설명을 입력하세요"

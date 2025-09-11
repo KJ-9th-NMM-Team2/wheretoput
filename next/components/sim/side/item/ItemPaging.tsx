@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ItemPagingProps } from '@/lib/itemTypes';
 

@@ -1,11 +1,15 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 // Trellis API 사용으로 변경
-import { generateTrellisModel } from '../../trellis_api.js'
-import path from 'path'
+import { generateTrellisModel } from '../../trellis_api.js';
+import { ensureCacheDir, downloadFileFromS3ToLocal, useLocalFileCache, CACHE_DIR } from '@/lib/cache-utils';
+import path from 'path';
 
 export async function POST(request) {
   try {
+    // 캐시 디렉토리 생성
+    await ensureCacheDir();
+
     console.log('3D 모델 생성 API 호출됨')
     
     const { furniture_id } = await request.json()
@@ -32,18 +36,41 @@ export async function POST(request) {
     // 이미 model_url이 있는 경우 기존 URL 사용 (S3 또는 로컬)
     if (furniture.model_url) {
       console.log('기존 model_url 발견:', furniture.model_url)
-      
-      // S3 URL인지 확인
-      if (furniture.model_url.startsWith('https://') && furniture.model_url.includes('s3')) {
-        console.log('기존 S3 URL 사용:', furniture.model_url)
-        return NextResponse.json({
-          success: true,
-          furniture_id: furniture_id,
-          model_url: furniture.model_url,
-          message: '기존 S3 3D 모델을 사용합니다.'
-        })
+
+      const fileName = `${furniture_id}.glb`;
+      const localPath = path.join(CACHE_DIR, fileName);
+
+      // 이미 캐시된 파일이 있는지 확인
+      try {
+        console.log('캐시된 파일 확인:', localPath);
+
+        const response = await useLocalFileCache(localPath, fileName, furniture_id);
+        
+        if (response) {
+          return response;
+        }
+        console.log('캐시된 파일 없음, 다운로드 시작');
+      } catch (error) {
+        console.log('캐시 확인 중 오류:', error);
       }
-      
+
+      // S3에서 다운로드 및 캐싱
+      try {   
+        console.log('다운로드 파일 확인:', localPath);
+        return await downloadFileFromS3ToLocal(furniture, localPath, fileName, furniture_id);
+      } catch (downloadError) {
+        // S3 URL인지 확인
+        if (furniture.model_url.startsWith('https://') && furniture.model_url.includes('s3')) {
+          console.log('기존 S3 URL 사용:', furniture.model_url)
+          return NextResponse.json({
+            success: true,
+            furniture_id: furniture_id,
+            model_url: furniture.model_url,
+            message: '기존 S3 3D 모델을 사용합니다.',
+            cached: false,
+          })
+        }
+      }
     }
 
     if (!furniture.image_url) {

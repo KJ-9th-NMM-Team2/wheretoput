@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
+import { useHistory, ActionType } from "@/components/sim/history";
 
 export function Wall({
   width,
@@ -11,11 +12,15 @@ export function Wall({
   position,
   rotation = [0, 0, 0],
   id,
+  isMerged = false,
+  originalWalls = null,
 }) {
   const { invalidate } = useThree();
   const meshRef = useRef(null);
   const { camera } = useThree();
-  const { enableWallTransparency, wallColor, snappedWallInfo } = useStore();
+  const { enableWallTransparency, wallColor, snappedWallInfo, wallToolMode, removeWall, setSelectedWallId, selectedWallId, wallsData } = useStore();
+  const { addAction } = useHistory();
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     invalidate();
@@ -54,15 +59,85 @@ export function Wall({
     }
   });
 
+  const handleWallClick = (event) => {
+    if (wallToolMode === 'delete') {
+      event.stopPropagation();
+      
+      if (isMerged && originalWalls) {
+        // 병합된 벽인 경우 원본 벽들을 모두 삭제 - removeWall에서 히스토리 관리
+        originalWalls.forEach(originalWall => {
+          console.log('병합된 벽의 원본 삭제:', originalWall);
+          removeWall(originalWall.id, true); // shouldBroadcast를 true로 변경하여 히스토리 추가
+        });
+      } else {
+        // 일반 벽 삭제 - removeWall에서 히스토리 관리
+        removeWall(id, true); // shouldBroadcast를 true로 변경하여 히스토리 추가
+      }
+    } else if (wallToolMode === 'edit') {
+      event.stopPropagation();
+      
+      if (isMerged && originalWalls) {
+        // 병합된 벽인 경우 첫 번째 원본 벽을 선택
+        setSelectedWallId(originalWalls[0].id);
+      } else {
+        setSelectedWallId(id);
+      }
+    }
+  };
+
+  const isSelected = selectedWallId === id;
+  
+  // 벽 색상 결정 로직
+  let wallMaterialColor = wallColor;
+  if (isSelected && wallToolMode === 'edit') {
+    wallMaterialColor = '#ff6600'; // 편집 모드에서 선택된 벽
+  } else if (wallToolMode === 'delete' && isHovered) {
+    wallMaterialColor = '#00ff00'; // 삭제 모드에서 호버된 벽 (형광 초록색)
+  }
+
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation} receiveShadow>
+    <mesh 
+      ref={meshRef} 
+      position={position} 
+      rotation={rotation} 
+      receiveShadow
+      onPointerDown={handleWallClick}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
+      style={{ cursor: wallToolMode ? 'pointer' : 'default' }}
+    >
       <boxGeometry args={[width, height, depth]} />
       <meshStandardMaterial
-        color={wallColor}
+        color={wallMaterialColor}
         transparent
         roughness={0.8}
         metalness={0.1}
       />
+      
+      {/* 벽 편집 모드에서 선택된 벽 하이라이트 */}
+      {isSelected && wallToolMode === 'edit' && (
+        <mesh>
+          <boxGeometry args={[width * 1.1, height * 1.1, depth * 1.1]} />
+          <meshBasicMaterial
+            color={0x00ff00} // 편집 모드에서는 초록색
+            transparent
+            opacity={0.3}
+          />
+        </mesh>
+      )}
+      
+      {/* 벽 삭제 모드에서 호버 효과 */}
+      {wallToolMode === 'delete' && (
+        <mesh>
+          <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
+          <meshBasicMaterial
+            color={0xff0000} // 삭제 모드에서는 빨간색
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+      )}
+
       {(snappedWallInfo?.wall.id === id || snappedWallInfo?.wall2?.id === id) && (
         <mesh>
           <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />

@@ -43,6 +43,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
       <div
         className="bg-white rounded-lg p-6 min-w-80 max-w-md w-full mx-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
         <EditPopupHead onClose={onClose}/>

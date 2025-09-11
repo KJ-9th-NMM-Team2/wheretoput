@@ -17,7 +17,7 @@ export function useObjectControls(
   meshRef
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
-  const { loadedModels, isModelLocked, wallsData, enableWallMagnet } =
+  const { loadedModels, isModelLocked, wallsData, enableWallMagnet, wallToolMode } =
     useStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
@@ -235,13 +235,27 @@ export function useObjectControls(
       );
 
       // 현재 스냅된 벽이 있다면 우선적으로 고려 (이미 스냅된 상태에서 코너 스냅 감지 향상)
-      const currentlySnapped = allCandidates.filter(candidate => candidate.distance < 0.05);
-      
+      const currentlySnapped = allCandidates.filter(
+        (candidate) => candidate.distance < 0.05
+      );
+
       // 두 개 이상의 가까운 벽이 있을 때 코너 스냅 시도 (현재 스냅된 벽 포함)
-      const candidatesForCorner = currentlySnapped.length > 0 ? 
-        [...currentlySnapped, ...nearCandidates.filter(c => !currentlySnapped.includes(c))] : 
-        nearCandidates;
-        
+      // O(n) deduplication using a Set for wall-face pairs
+      const seenWallFace = new Set();
+      const candidatesForCorner = [];
+      for (const candidate of [...currentlySnapped, ...nearCandidates]) {
+        // Use wall.id if available, otherwise fallback to wall reference
+        const wallId =
+          candidate.wall && candidate.wall.id !== undefined
+            ? candidate.wall.id
+            : candidate.wall;
+        const key = `${wallId}:${candidate.face}`;
+        if (!seenWallFace.has(key)) {
+          seenWallFace.add(key);
+          candidatesForCorner.push(candidate);
+        }
+      }
+
       if (candidatesForCorner.length >= 2) {
         // 각 벽 조합을 확인하여 직각인지 체크
         for (let i = 0; i < candidatesForCorner.length; i++) {
@@ -255,47 +269,57 @@ export function useObjectControls(
             const isRightAngle =
               Math.abs(normalizedDiff - Math.PI / 2) < 0.1 ||
               Math.abs(normalizedDiff - (3 * Math.PI) / 2) < 0.1;
-            // 평행 벽(0도, 180도) 제외
 
             if (isRightAngle) {
               const candidate1 = candidatesForCorner[i];
               const candidate2 = candidatesForCorner[j];
-              
-              // 코너 위치 계산 함수
+
+              // 벽의 회전을 고려하여 실제 월드 축 제약을 계산
+              const getWorldAxisConstraint = (candidate) => {
+                const wallRotation = candidate.wall.rotation[1];
+                const face = candidate.face;
+
+                // 벽의 회전각을 고려하여 실제 월드 축에서 어떤 제약인지 판단
+                const normalizedRotation =
+                  ((wallRotation % (2 * Math.PI)) + 2 * Math.PI) %
+                  (2 * Math.PI);
+
+                // 벽이 X축 방향 (0도 또는 180도)인 경우
+                const isWallXAligned =
+                  Math.abs(normalizedRotation) < 0.1 ||
+                  Math.abs(normalizedRotation - Math.PI) < 0.1;
+
+                if (isWallXAligned) {
+                  // X축 정렬된 벽: front/back이 Z축 제약, left/right이 X축 제약
+                  return face === "front" || face === "back" ? "Z" : "X";
+                } else {
+                  // Z축 정렬된 벽 (90도 또는 270도): front/back이 X축 제약, left/right이 Z축 제약
+                  return face === "front" || face === "back" ? "X" : "Z";
+                }
+              };
+
+              const candidate1Axis = getWorldAxisConstraint(candidate1);
+              const candidate2Axis = getWorldAxisConstraint(candidate2);
+
+              // 같은 축을 제약하는 경우는 코너 스냅이 아님 (스킵)
+              if (candidate1Axis === candidate2Axis) {
+                continue;
+              }
+
+              // 단순화된 코너 위치 계산: 두 개별 스냅 위치를 조합
               const calculateCornerPosition = () => {
-                const furnitureRotationY = rotation?.y || meshRef.current?.rotation?.y || 0;
-                const furnitureCos = Math.cos(furnitureRotationY);
-                const furnitureSin = Math.sin(furnitureRotationY);
-                
-                const rotatedFurnitureWidth = Math.abs(furnitureHalfWidth * furnitureCos) + Math.abs(furnitureHalfDepth * furnitureSin);
-                const rotatedFurnitureDepth = Math.abs(furnitureHalfWidth * furnitureSin) + Math.abs(furnitureHalfDepth * furnitureCos);
+                let cornerX, cornerZ;
 
-                const wall1IsXConstraint = candidate1.face === "left" || candidate1.face === "right";
-                const wall2IsXConstraint = candidate2.face === "left" || candidate2.face === "right";
-
-                if (wall1IsXConstraint === wall2IsXConstraint) {
-                  return { x: candidate1.snapPosition.x, z: candidate2.snapPosition.z };
+                // X축 제약을 가진 후보에서 X 좌표를 가져옴
+                if (candidate1Axis === "X") {
+                  cornerX = candidate1.snapPosition.x;
+                  cornerZ = candidate2.snapPosition.z;
+                } else {
+                  cornerX = candidate2.snapPosition.x;
+                  cornerZ = candidate1.snapPosition.z;
                 }
 
-                const [xCandidate, zCandidate] = wall1IsXConstraint ? [candidate1, candidate2] : [candidate2, candidate1];
-                
-                const getWallCoordinate = (candidate, isXAxis) => {
-                  const wall = candidate.wall;
-                  const wallPos = new THREE.Vector3(...wall.position);
-                  const wallRotation = wall.rotation[1];
-                  const wallHalf = isXAxis ? wall.dimensions.width / 2 : wall.dimensions.depth / 2;
-                  const distance = WALL_OFFSET + (isXAxis ? rotatedFurnitureWidth : rotatedFurnitureDepth);
-                  const cosValue = isXAxis ? Math.cos(wallRotation) : Math.sin(wallRotation);
-                  const isPositiveFace = isXAxis ? candidate.face === "right" : candidate.face === "front";
-                  const basePos = isXAxis ? wallPos.x : wallPos.z;
-                  
-                  return basePos + (isPositiveFace ? 1 : -1) * (wallHalf + distance) * cosValue;
-                };
-
-                return {
-                  x: getWallCoordinate(xCandidate, true),
-                  z: getWallCoordinate(zCandidate, false)
-                };
+                return { x: cornerX, z: cornerZ };
               };
 
               const { x: cornerX, z: cornerZ } = calculateCornerPosition();
@@ -314,9 +338,12 @@ export function useObjectControls(
 
               // 코너 스냅 거리를 더 크게 해서 자석 효과 강화
               // 이미 한 벽에 스냅된 상태에서도 코너 스냅이 가능하도록 거리 조건을 완화
-              const isAlreadySnapped = candidate1.distance < 0.01 || candidate2.distance < 0.01;
-              const effectiveCornerDistance = isAlreadySnapped ? CORNER_SNAP_DISTANCE * 1.5 : CORNER_SNAP_DISTANCE;
-              
+              const isAlreadySnapped =
+                candidate1.distance < 0.01 || candidate2.distance < 0.01;
+              const effectiveCornerDistance = isAlreadySnapped
+                ? CORNER_SNAP_DISTANCE * 1.5
+                : CORNER_SNAP_DISTANCE;
+
               if (cornerDistance < effectiveCornerDistance) {
                 return {
                   wall: wall1, // 주 벽
@@ -354,6 +381,11 @@ export function useObjectControls(
   const handlePointerDown = useCallback(
     (e) => {
       e.stopPropagation();
+
+      // 벽 추가 모드일 때는 가구 클릭 무시
+      if (wallToolMode === 'add') {
+        return;
+      }
 
       // 🔒 락 체크 - 맨 처음에!
       if (isModelLocked(modelId)) {
@@ -429,6 +461,7 @@ export function useObjectControls(
       loadedModels,
       startDrag,
       isModelLocked,
+      wallToolMode,
     ]
   );
 
@@ -461,10 +494,10 @@ export function useObjectControls(
             : meshRef?.current?.rotation;
           const wallSnap = findNearestWallSnap(newPosition, currentRotation);
 
-          // 코너 스냅일 때는 코너 위치로 이동 후 고정, 일반 스냅일 때는 제약된 이동 허용
+          // 코너 스냅일 때는 완전히 독립적인 위치 계산, 일반 스냅일 때는 제약된 이동 허용
           let finalPosition;
           if (wallSnap?.isCornerSnap) {
-            // 코너 스냅: 두 벽에 딱 맞는 코너 위치로 이동하고 고정
+            // 코너 스냅: 두 벽에 딱 맞는 코너 위치로
             finalPosition = wallSnap.snapPosition;
           } else if (wallSnap) {
             // 일반 벽 스냅: 한 축만 제약
@@ -504,7 +537,7 @@ export function useObjectControls(
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
-        const newScale = Math.max(0.1, Math.min(5, initialScale + deltaY));
+        const newScale = Math.max(0.1, Math.min(3, initialScale + deltaY));
         onScaleChange(modelId, newScale);
       }
     },
