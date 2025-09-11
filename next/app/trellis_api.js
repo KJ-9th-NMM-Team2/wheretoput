@@ -1,10 +1,10 @@
 // .env 에 API 키 추가하세요!
 import 'dotenv/config';
 import fs from 'fs';
-import path from 'path';
 import fetch from 'node-fetch';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
+import { downloadFileToLocal } from '@/lib/cache-utils';
 
 import Replicate from "replicate";
 
@@ -74,14 +74,25 @@ async function main(furnitureId = null, imageUrl = null) {
 
             console.log(`✅ 모델 파일 다운로드 완료`);
             
-            // 직접 S3에 업로드 (로컬 파일 저장 없이)
+            // Redable이라 S3와 로컬에 사용하기 위해 분리
+            const arrayBuffer = await response.arrayBuffer();
+
+            // 직접 S3에 업로드
             const s3Key = `uploads/${furnitureName}.glb`;
-            const s3Url = await uploadToS3(await response.arrayBuffer(), s3Key);
+            const s3Url = await uploadToS3(arrayBuffer, s3Key);
             console.log(`✅ S3 업로드 완료: ${s3Url}`);
+
+            // 로컬에 저장 for 로컬 파일 캐싱
+            const filename = `${furnitureId}.glb`;
+            const cached_model_url = `public/cache/models/${filename}`;
+            await downloadFileToLocal(arrayBuffer, cached_model_url, filename, furnitureId);
+            console.log(`✅ 로컬 파일 캐싱 완료: ${cached_model_url}`);
+
+            const update_db_url = `/cache/models/${filename}`;
             
             // DB에 저장
             if (furnitureId) {
-                await updateFurnitureModelUrl(furnitureId, s3Url);
+                await updateFurnitureModelUrl(furnitureId, s3Url, update_db_url);
                 console.log(`✅ DB 업데이트 완료: furniture_id ${furnitureId}`);
                 return { model_url: s3Url, furniture_id: furnitureId };
             } else {
@@ -117,10 +128,10 @@ async function uploadToS3(fileData, s3Key) {
 }
 
 // 기존 furniture 업데이트 함수
-async function updateFurnitureModelUrl(furnitureId, modelUrl) {
+async function updateFurnitureModelUrl(furnitureId, modelUrl, cached_model_url) {
     await prisma.furnitures.update({
         where: { furniture_id: furnitureId },
-        data: { model_url: modelUrl }
+        data: { model_url: modelUrl, cached_model_url }
     });
 }
 

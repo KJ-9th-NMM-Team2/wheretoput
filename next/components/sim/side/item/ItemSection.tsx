@@ -3,6 +3,7 @@ import type { ItemSectionProps } from '@/lib/itemTypes';
 import ShoppingLink from '@/components/sim/side/ShoppingLink';
 import { useSession } from 'next-auth/react';
 import { useStore } from '../../useStore';
+import { useSaveFurniture } from './hooks/useSaveFurniture';
 
 const ItemSection: React.FC<ItemSectionProps> = ({
     loading,
@@ -21,29 +22,6 @@ const ItemSection: React.FC<ItemSectionProps> = ({
     const { data: session } = useSession();
     const { setAchievements } = useStore();
 
-    // event 발생 for SSE
-    const handleSaveFurniture = async (furniture: any) => {
-        try {
-            const response = await fetch('/api/sim/furnitures/click', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    userId: session?.user?.id,
-                    roomId,
-                    newFurniture: furniture
-                })
-            });
-            
-            if (response.ok) {
-                const achievementResult = await response.json();
-                setAchievements(achievementResult.newlyUnlocked);
-            }
-        } catch (error) {
-            console.error('업적 처리 에러:', error);
-        }
-    }
     return <>
         {/* 아이템 목록 - 스크롤 영역 */}
         <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -64,7 +42,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                         <div
                             key={item.furniture_id}
                             onClick={() => {
-                                handleSaveFurniture(item);
+                                useSaveFurniture(item, roomId, session?.user?.id || "", setAchievements);
                                 !isSelectedCategory 
                                     ? handleItemClick(item) 
                                     : handleSelectModel && handleSelectModel(item);

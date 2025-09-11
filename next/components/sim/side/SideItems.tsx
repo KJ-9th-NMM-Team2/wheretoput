@@ -6,7 +6,6 @@ import { useStore } from "@/components/sim/useStore";
 import { createNewModel } from "@/utils/createNewModel";
 import { handlePageChange } from "@/utils/handlePage";
 import { fetchFurnitures } from "@/lib/api/fetchFurnitures";
-import { calculatePagination } from "@/lib/paginagtion";
 import { fetchSelectedFurnitures } from "@/lib/api/fetchSelectedFurnitures";
 import { useHistory } from "@/components/sim/history";
 import { ActionType } from "@/components/sim/history/types";
@@ -127,6 +126,7 @@ const SideItems: React.FC<SideItemsProps> = ({
   // 아이템 클릭 핸들러
   const handleItemClick = useCallback(
     async (item: Furniture) => {
+      const start = performance.now(); // 가져오기 - 타임 시작
       const toastId = toast.loading(`${item.name} 생성 중...`);
 
       try {
@@ -135,7 +135,14 @@ const SideItems: React.FC<SideItemsProps> = ({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ furniture_id: item.furniture_id }),
         });
-
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        console.log('Response ok:', response.ok);
+        
+        const end = performance.now(); // 가져오기 - 타임 끝
+        const duration = end - start;
+        console.log(`[${item.name}] [생성 시간]: ${duration}ms`);
+        
         const result = await response.json();
 
         if (result.success) {

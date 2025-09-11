@@ -170,6 +170,23 @@ export function SimulatorCore({
     currentRoomInfo,
   } = useStore();
 
+  const [startTime, setStartTime] = useState<number | null>(null);
+
+  // 상태 기반 속도 측정
+  useEffect(() => {
+    if (!loadedModels.legnth && !startTime) {
+      setStartTime(performance.now());
+    }
+  }, []);
+
+  // Suspense fallback이 완전히 사라진 후
+  useEffect(() => {
+    if (startTime && loadedModels.length > 0) {
+      const endTime = performance.now();
+      console.log(`All models loaded in: ${endTime - startTime}ms`);
+    }
+  }, [loadedModels]);
+
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
     const initializeSimulator = async () => {
