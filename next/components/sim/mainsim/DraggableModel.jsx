@@ -26,6 +26,8 @@ export function DraggableModel({
   type = "glb",
   onModelLoaded,
 }) {
+
+  console.log("URL check is cache or S3_url", url);
   
   // scale 값을 안전하게 처리
   const safeScale = (() => {
