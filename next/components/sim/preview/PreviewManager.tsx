@@ -11,28 +11,39 @@ function GLBPreview({
   position,
   scale,
   onLoad,
+  onLoadingComplete,
 }: {
   url: string;
   position: [number, number, number];
   scale: [number, number, number];
   onLoad?: () => void;
+  onLoadingComplete?: () => void;
 }) {
   const { scene } = useGLTF(url);
   const meshRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
     if (scene && meshRef.current) {
-      // 바닥에 맞춤
+      // 모델의 실제 크기 측정
       const box = new THREE.Box3().setFromObject(scene);
-      const min = box.min;
-      const yOffset = -min.y * scale[1];
+      const modelSize = new THREE.Vector3();
+      box.getSize(modelSize);
 
+      // 목표 크기로 스케일 조정
+      const targetScale = scale.map(
+        (target, i) => target / modelSize.getComponent(i)
+      );
+
+      meshRef.current.scale.set(targetScale[0], targetScale[1], targetScale[2]);
+
+      // 바닥 위치 조정
+      const min = box.min;
+      const yOffset = -min.y * targetScale[1];
       meshRef.current.position.set(
         position[0],
         position[1] + yOffset,
         position[2]
       );
-      meshRef.current.scale.set(...scale);
 
       // 투명도 적용
       scene.traverse((child) => {
@@ -54,8 +65,13 @@ function GLBPreview({
           }
         }
       });
+
+      // 로딩 완료 콜백 호출
+      if (onLoadingComplete) {
+        onLoadingComplete();
+      }
     }
-  }, [scene, position, scale]);
+  }, [scene, position, scale, onLoadingComplete]);
 
   return (
     <group ref={meshRef}>
@@ -85,7 +101,7 @@ export function PreviewManager() {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         confirmPreview();
-      } else if (event.key === "Escape") {
+      } else if (event.key === "Delete") {
         event.preventDefault();
         cancelPreview();
       }
@@ -124,7 +140,7 @@ export function PreviewManager() {
     };
 
     const handleContextMenu = (e: MouseEvent) => e.preventDefault();
-    
+
     window.addEventListener("click", handleClick);
     window.addEventListener("contextmenu", handleContextMenu);
 
@@ -138,28 +154,52 @@ export function PreviewManager() {
     return null;
   }
 
-  // 가구 크기 계산
-  const furnitureSize: [number, number, number] = [
-    (currentPreviewFurniture.length_x || 1) * 0.001,
-    (currentPreviewFurniture.length_y || 1) * 0.001,
-    (currentPreviewFurniture.length_z || 1) * 0.001,
-  ];
+  // 가구 크기 계산 (DraggableModel의 safeScale 로직과 동일)
+  const furnitureSize: [number, number, number] = (() => {
+    const scale = [1, 1, 1]; // preview에서는 기본 scale 1
+    const length = [
+      currentPreviewFurniture.length[0],
+      currentPreviewFurniture.length[1],
+      currentPreviewFurniture.length[2],
+    ];
+
+    return scale.map((s, i) =>
+      Math.max((s || 1) * (length[i] || 1) * 0.001, 0.001)
+    ) as [number, number, number];
+  })();
 
   return (
     <>
       {/* URL이 있으면 GLB 모델, 없으면 임시 박스 */}
       {currentPreviewFurniture.url ? (
-        <GLBPreview
-          url={currentPreviewFurniture.url}
-          position={previewPosition}
-          scale={furnitureSize.map((s) => s / 0.001) as [number, number, number]} // 원래 스케일로 복원
-        />
+        <>
+          {/* GLB 로딩 중이면 로딩 박스 표시 */}
+          {!isGLBLoaded && (
+            <group position={previewPosition} scale={furnitureSize}>
+              <PreviewBox
+                position={[0, 0, 0]}
+                size={[1, 1, 1]}
+                isLoading={true}
+                color="#ff9900"
+              />
+            </group>
+          )}
+          <GLBPreview
+            url={currentPreviewFurniture.url}
+            position={previewPosition}
+            scale={furnitureSize}
+            onLoadingComplete={() => setIsGLBLoaded(true)}
+          />
+        </>
       ) : (
-        <PreviewBox
-          position={previewPosition}
-          size={furnitureSize}
-          isLoading={true}
-        />
+        <group position={previewPosition} scale={furnitureSize}>
+          <PreviewBox
+            position={[0, 0, 0]}
+            size={[1, 1, 1]}
+            isLoading={true}
+            color="#ff9900"
+          />
+        </group>
       )}
     </>
   );

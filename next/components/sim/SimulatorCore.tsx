@@ -318,7 +318,7 @@ export function SimulatorCore({
         {previewMode && (
           <div className="fixed top-15 right-5 z-50 pointer-events-none">
             <div className="bg-black bg-opacity-80 text-white px-3 py-2 rounded text-xs whitespace-nowrap">
-              클릭하여 배치 | ESC: 취소
+              클릭하여 배치 | Delete: 취소
             </div>
           </div>
         )}

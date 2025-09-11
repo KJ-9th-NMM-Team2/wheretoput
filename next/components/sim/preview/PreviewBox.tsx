@@ -13,27 +13,27 @@ export function PreviewBox({
   position,
   size,
   isLoading = false,
-  color = "#ff6600"
+  color = "#ff6600",
 }: PreviewBoxProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-
-  // 로딩 중일 때 회전 애니메이션
-  useFrame((state) => {
-    if (meshRef.current && isLoading) {
-      meshRef.current.rotation.y = state.clock.elapsedTime * 2;
-    }
-  });
+  console.log("preview box size: ", size);
 
   return (
     <mesh
       ref={meshRef}
-      position={[position[0], position[1] + Math.max(size[1] / 2, 0.5), position[2]]}
+      position={[
+        position[0],
+        position[1] + Math.max(size[1] / 2, 0.5),
+        position[2],
+      ]}
     >
-      <boxGeometry args={[
-        Math.max(size[0], 1), 
-        Math.max(size[1], 1), 
-        Math.max(size[2], 1)
-      ]} />
+      <boxGeometry
+        args={[
+          Math.max(size[0], 0.001),
+          Math.max(size[1], 0.001),
+          Math.max(size[2], 0.001),
+        ]}
+      />
       <meshStandardMaterial
         color={color}
         transparent={false}

@@ -89,7 +89,6 @@ export const useStore = create(
         }
 
         // 새로운 프리뷰 모드 시작
-        console.log("새 프리뷰 시작:", furnitureData.name);
         set({
           previewMode: true,
           currentPreviewFurniture: furnitureData,
@@ -100,10 +99,6 @@ export const useStore = create(
 
       // 프리뷰 모드 종료 (가구 배치)
       confirmPreview: () => {
-        console.log("confirmPreview 호출됨!", {
-          previewMode: get().previewMode,
-          currentPreviewFurniture: get().currentPreviewFurniture?.name,
-        });
         const state = get();
         if (state.currentPreviewFurniture && state.previewMode) {
           const newModel = {
