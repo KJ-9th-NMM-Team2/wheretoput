@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ChatListView from "./ChatListView";
 import ChatRoomView from "./ChatRoomView";
 import { ChatListItem, UserLite, Message } from "../types/chat-types";
+import { useStore } from "@/components/sim/useStore.js";
 
 interface ChatPopupProps {
   selectedChatId: string | null;
@@ -57,6 +58,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
     currentUserId,
     listRef,
   }, popupRef) => {
+    const { setIsChatFocused } = useStore();
     return (
       <motion.div
         ref={popupRef}
@@ -92,6 +94,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 onChatSelect={onChatSelect}
                 onStartDirect={onStartDirect}
                 currentUserId={currentUserId}
+                onChatFocus={setIsChatFocused}
               />
             </motion.div>
           ) : (
@@ -115,6 +118,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 onEditorKeyDown={onEditorKeyDown}
                 onBack={onBack}
                 currentUserId={currentUserId}
+                onChatFocus={setIsChatFocused}
               />
             </motion.div>
           )}

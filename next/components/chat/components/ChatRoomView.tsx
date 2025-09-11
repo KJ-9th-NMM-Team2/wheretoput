@@ -17,6 +17,7 @@ interface ChatRoomViewProps {
   onEditorKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onBack: () => void;
   currentUserId: string | null;
+  onChatFocus?: (isFocused: boolean) => void;
 }
 
 const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
@@ -30,6 +31,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
     onEditorKeyDown,
     onBack,
     currentUserId,
+    onChatFocus,
   }, listRef) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const sendButtonRef = useRef<HTMLButtonElement>(null);
@@ -216,6 +218,8 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="메시지 입력..."
+              onFocus={() => onChatFocus?.(true)}
+              onBlur={() => onChatFocus?.(false)}
               rows={1}
               className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 max-h-40"
             />
