@@ -4,6 +4,7 @@ import ShoppingLink from '@/components/sim/side/ShoppingLink';
 import { useSession } from 'next-auth/react';
 import { useStore } from '../../useStore';
 import { useSaveFurniture } from './hooks/useSaveFurniture';
+import Image from 'next/image';
 
 const ItemSection: React.FC<ItemSectionProps> = ({
     loading,
@@ -53,11 +54,20 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                                 {/* 이미지 영역 */}
                                 <div className={`${isSelectedCategory ? 'w-24 h-24' : 'w-20 h-20'} bg-gray-100 flex-shrink-0`}>
                                     {item.image_url && !imageErrors.has(item.id) ? (
-                                        <img
+                                        // <img
+                                        //     src={item.image_url}
+                                        //     alt={item.name}
+                                        //     className="w-full h-full object-cover"
+                                        //     onError={() => handleImageError(item.id)}
+                                        // />
+                                        <Image 
+                                            key={item.id}
                                             src={item.image_url}
                                             alt={item.name}
-                                            className="w-full h-full object-cover"
                                             onError={() => handleImageError(item.id)}
+                                            className ="object-cover"
+                                            width={75}
+                                            height={75}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
