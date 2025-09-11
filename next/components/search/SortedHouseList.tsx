@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import HouseCard from "@/components/search/HouseCard";
+import { HomeCard } from "@/components/main/HomeCardList";
 import { fetchRooms } from "@/lib/api/rooms";
 import SearchBar from "@/components/search/SearchBar";
 
@@ -57,7 +57,8 @@ export default function SortedHouseList({
 
   return (
     <>
-      <div className="px-40 py-5">
+      <div className="px-20 flex flex-1 justify-center py-5">
+        <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
         {/* 검색바 */}
         <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} onSearch={handlerSearch} setSortType={setSortType}/>
         <div className="flex gap-3 p-3 flex-wrap pr-4">
@@ -106,9 +107,9 @@ export default function SortedHouseList({
           </button>
         </div>
         {data && data.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
             {data.map((house: any) => (
-              <HouseCard key={house.room_id} house={house} />
+              <HomeCard key={house.room_id} room={house} />
             ))}
           </div>
         ) : (
@@ -116,6 +117,7 @@ export default function SortedHouseList({
             <p className="text-gray-500">입력된 방 혹은 유저를 찾을 수 없습니다</p>
           </div>
         )}
+        </div>
       </div>
     </>
   );

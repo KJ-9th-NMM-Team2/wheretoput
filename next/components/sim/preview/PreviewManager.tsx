@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -165,12 +165,12 @@ export function PreviewManager() {
     };
   }, [previewMode, confirmPreview]);
 
-  if (!previewMode || !currentPreviewFurniture) {
-    return null;
-  }
-
-  // 가구 크기 계산 (DraggableModel의 safeScale 로직과 동일, 최소 크기 보장)
-  const furnitureSize: [number, number, number] = (() => {
+  // 가구 크기 계산 - useMemo로 캐싱 (Hooks는 항상 상단에)
+  const furnitureSize: [number, number, number] = useMemo(() => {
+    if (!currentPreviewFurniture?.length) {
+      return [0.001, 0.001, 0.001];
+    }
+    
     const scale = [1, 1, 1]; // preview에서는 기본 scale 1
     const length = [
       currentPreviewFurniture.length[0],
@@ -183,7 +183,20 @@ export function PreviewManager() {
     return scale.map((s, i) =>
       Math.max((s || 1) * (length[i] || 1) * 0.001, MIN_SIZE)
     ) as [number, number, number];
-  })();
+  }, [currentPreviewFurniture?.length]);
+
+  // 원형 가이드 크기 계산 - useMemo로 캐싱
+  const circleRadius = useMemo(() => 
+    Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3)
+  , [furnitureSize]);
+
+  const ringInnerRadius = useMemo(() => 
+    Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.75, 0.25)
+  , [furnitureSize]);
+
+  if (!previewMode || !currentPreviewFurniture) {
+    return null;
+  }
 
   return (
     <>
@@ -192,12 +205,7 @@ export function PreviewManager() {
         position={[previewPosition[0], 0.001, previewPosition[2]]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <circleGeometry
-          args={[
-            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3),
-            32,
-          ]}
-        />
+        <circleGeometry args={[circleRadius, 32]} />
         <meshBasicMaterial color="#00ff88" side={THREE.DoubleSide} />
       </mesh>
 
@@ -206,13 +214,7 @@ export function PreviewManager() {
         position={[previewPosition[0], 0.002, previewPosition[2]]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <ringGeometry
-          args={[
-            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.75, 0.25),
-            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3),
-            32,
-          ]}
-        />
+        <ringGeometry args={[ringInnerRadius, circleRadius, 32]} />
         <meshBasicMaterial color="#00ff88" side={THREE.DoubleSide} />
       </mesh>
 

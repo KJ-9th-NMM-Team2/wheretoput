@@ -34,6 +34,9 @@ export function useCollaboration(roomId) {
     setCollaborationCallbacks,
     connectedUsers,
     saveSimulatorState,
+    addWall,
+    addWallWithId,
+    removeWall,
     setWallColor,
     setFloorColor,
     setBackgroundColor,
@@ -155,7 +158,6 @@ export function useCollaboration(roomId) {
 
     // Redis 기반 초기 방 상태 수신 (전체 상태 적용)
     socket.current.on("initial-room-state", (data) => {
-
       const store = useStore.getState();
 
       // 기존 로드된 모델들 초기화 (Redis가 단일 진실 소스)
@@ -165,9 +167,7 @@ export function useCollaboration(roomId) {
 
       // Redis의 모든 모델을 새로 추가
       if (data.models && data.models.length > 0) {
-        
         data.models.forEach((redisModel, index) => {
-
           try {
             addModelWithId(redisModel, false);
             console.log(`✅ 모델 ${redisModel.id} 추가 성공`);
@@ -205,15 +205,6 @@ export function useCollaboration(roomId) {
     socket.current.on("model-added", (data) => {
       if (data.userId !== currentUser.id) {
         console.log("➕ model-added 이벤트 수신:", data);
-        console.log("modelData 상세 정보:", {
-          id: data.modelData?.id,
-          name: data.modelData?.name,
-          url: data.modelData?.url,
-          furniture_id: data.modelData?.furniture_id,
-          position: data.modelData?.position,
-          rotation: data.modelData?.rotation,
-          scale: data.modelData?.scale,
-        });
         addModel(data.modelData, false);
       }
     });
@@ -295,17 +286,33 @@ export function useCollaboration(roomId) {
       }
     });
 
-    // 후순위
-    socket.current.on("cursor-moved", (data) => {
+    socket.current.on("wall-added", (data) => {
       if (data.userId !== currentUser.id) {
-        updateConnectedUser(data.userId, {
-          ...data.userData,
-          cursor: data.cursor,
-        });
+        console.log("wall-added 데이터 수신:", data);
+        addWallWithId(data.wallData, false);  // 완성된 벽 객체 사용
+      }
+    });
+
+    socket.current.on("wall-added-with-id", (data) => {
+      if (data.userId !== currentUser.id) {
+        console.log("wall-added-with-id 데이터 수신:", data);
+        addWallWithId(data.wallData, false);
+      }
+    });
+
+    socket.current.on("wall-removed", (data) => {
+      console.log("wall-removed 데이터 수신", data);
+      if (data.userId !== currentUser.id) {
+        removeWall(data.wallId, false, false);
+      }
+    });
+
+    socket.current.on("wall-updated", (data) => {
+      if (data.userId !== currentUser.id) {
+        updateWall(data.wallId, data.updates, false);
       }
     });
   };
-
   // Socket.IO 이벤트 전송
   const emitEvent = (event, data) => {
     if (socket.current && socket.current.connected) {
@@ -375,6 +382,9 @@ export function useCollaboration(roomId) {
         broadcastModelScale,
         broadcastModelSelect,
         broadcastModelDeselect,
+        broadcastWallAdd,
+        broadcastWallAddWithId,
+        broadcastWallRemove,
         broadcastWallColorChange,
         broadcastFloorColorChange,
         broadcastBackgroundColorChange,
@@ -390,6 +400,9 @@ export function useCollaboration(roomId) {
         broadcastModelScale: null,
         broadcastModelSelect: null,
         broadcastModelDeselect: null,
+        broadcastWallAdd: null,
+        broadcastWallAddWithId: null,
+        broadcastWallRemove: null,
         broadcastWallColorChange: null,
         broadcastFloorColorChange: null,
         broadcastBackgroundColorChange: null,
@@ -505,6 +518,28 @@ export function useCollaboration(roomId) {
     });
   };
 
+  const broadcastWallAdd = (wallData) => {
+    console.log("broadcast WallData", wallData);
+    emitEvent("wall-added", {
+      userId: currentUser.id,
+      wallData,
+    });
+  };
+
+  const broadcastWallAddWithId = (wallData) => {
+    emitEvent("wall-added-with-id", {
+      userId: currentUser.id,
+      wallData,
+    });
+  };
+
+  const broadcastWallRemove = (wallId) => {
+    emitEvent("wall-removed", {
+      userId: currentUser.id,
+      wallId,
+    });
+  };
+
   return {
     // 연결 상태
     isConnected: socket.current?.connected || false,
@@ -520,6 +555,9 @@ export function useCollaboration(roomId) {
     broadcastModelDeselect,
     broadcastCursorMove,
     broadcastCollaborationEnd,
+    broadcastWallAdd,
+    broadcastWallAddWithId,
+    broadcastWallRemove,
     broadcastWallColorChange,
     broadcastFloorColorChange,
     broadcastBackgroundColorChange,

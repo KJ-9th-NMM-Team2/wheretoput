@@ -621,7 +621,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; color: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🎨 BACKGROUND COLOR CHANGED: ${data.color} by ${data.userId}`);
+    this.logger.log(
+      `🎨 BACKGROUND COLOR CHANGED: ${data.color} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
@@ -644,7 +646,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; preset: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🌟 ENVIRONMENT PRESET CHANGED: ${data.preset} by ${data.userId}`);
+    this.logger.log(
+      `🌟 ENVIRONMENT PRESET CHANGED: ${data.preset} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
@@ -657,6 +661,98 @@ export class CollabGateway {
     socket.rooms.forEach((room) => {
       if (room !== socket.id) {
         socket.to(room).emit('environment-preset-changed', data);
+      }
+    });
+  }
+
+  // 벽 추가
+  @SubscribeMessage('wall-added')
+  async onWallAdded(
+    @MessageBody() data: { userId: string; wallData: any },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🧱 WALL ADDED: by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('wall-added', data);
+      }
+    });
+  }
+
+  // 벽 추가 (ID 포함)
+  @SubscribeMessage('wall-added-with-id')
+  async onWallAddedWithId(
+    @MessageBody() data: { userId: string; wallData: any },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🧱 WALL ADDED WITH ID: by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('wall-added-with-id', data);
+      }
+    });
+  }
+
+  // 벽 제거
+  @SubscribeMessage('wall-removed')
+  async onWallRemoved(
+    @MessageBody() data: { userId: string; wallId: string },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🗑️ WALL REMOVED: ${data.wallId} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('wall-removed', data);
+      }
+    });
+  }
+
+  // 벽 업데이트
+  @SubscribeMessage('wall-updated')
+  async onWallUpdated(
+    @MessageBody() data: { userId: string; wallId: string; updates: any },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🔧 WALL UPDATED: ${data.wallId} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('wall-updated', data);
       }
     });
   }

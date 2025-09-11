@@ -113,6 +113,8 @@ model chat_participants {
   is_admin         Boolean?   @default(false)
   custom_room_name String?    @db.VarChar(100)
   last_read_id     String?
+  is_left          Boolean?   @default(false)
+  left_at          DateTime?  @db.Timestamp(6)
   chat_rooms       chat_rooms @relation(fields: [chat_room_id], references: [chat_room_id], onDelete: Cascade, onUpdate: NoAction)
   User             User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 

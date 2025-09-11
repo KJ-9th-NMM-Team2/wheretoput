@@ -60,6 +60,9 @@ export function Wall({
   });
 
   const handleWallClick = (event) => {
+    if (event.button != 0)
+      return;
+
     if (wallToolMode === 'delete') {
       event.stopPropagation();
       

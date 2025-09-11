@@ -129,10 +129,10 @@ export async function unfollowUser(userId: string): Promise<boolean> {
 }
 
 // 팔로우 상태 확인
-export async function checkFollowStatus(userId: string): Promise<boolean> {
+export async function checkFollowStatus(currentUserId: string, targetUserId: string): Promise<boolean> {
   try {
-    const following = await fetchFollowing("current-user"); // 현재 사용자가 팔로우하는 목록
-    return following.some(user => user.id === userId);
+    const following = await fetchFollowing(currentUserId); // 현재 사용자가 팔로우하는 목록
+    return following.some(user => user.id === targetUserId);
   } catch (error) {
     console.error("Error checking follow status:", error);
     return false;

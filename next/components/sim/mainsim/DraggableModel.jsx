@@ -1,18 +1,14 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import {
-  useGLTF,
   useTexture,
-  Line,
-  MeshRefractionMaterial,
-  Html,
 } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
+import { useDracoGLTF } from "../utils/useDracoLoader";
 
 export function DraggableModel({
   modelId,
@@ -26,6 +22,8 @@ export function DraggableModel({
   type = "glb",
   onModelLoaded,
 }) {
+
+  // console.log("URL check is cache or S3_url", url);
   
   // scale 값을 안전하게 처리
   const safeScale = (() => {
@@ -58,7 +56,7 @@ export function DraggableModel({
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   const { scene, animations } = hasValidUrl
-    ? useGLTF(url)
+    ? useDracoGLTF(url) // DRACO 커스텀 훅
     : { scene: null, animations: null };
 
   useEffect(() => {
@@ -372,8 +370,8 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments 
-      castShadow={false} 
+    <lineSegments
+      castShadow={false}
       receiveShadow={false}
       position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
     >

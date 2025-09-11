@@ -127,26 +127,7 @@ export function WallSnapPoints() {
               addWall(wallDrawingStart, alignedEndPoint);
               
               // 벽이 실제로 추가되었는지 확인 후 히스토리 기록
-              setTimeout(() => {
-                const { wallsData: newWallsData } = useStore.getState();
-                console.log('벽 추가 후 상태:', { wallCountBefore, newCount: newWallsData.length });
-                if (newWallsData.length > wallCountBefore) {
-                  const newWall = newWallsData[newWallsData.length - 1];
-                  console.log('벽 히스토리 기록:', newWall);
-                  console.log('addAction 호출 전');
-                  addAction({
-                    type: ActionType.WALL_ADD,
-                    data: {
-                      furnitureId: newWall.id, // wallId
-                      previousData: newWall
-                    },
-                    description: `벽을 추가했습니다`
-                  });
-                  console.log('addAction 호출 후');
-                } else {
-                  console.log('벽이 추가되지 않음');
-                }
-              }, 0);
+              // 히스토리는 useStore.addWall에서 자동으로 처리됨
             }
           }}
         />

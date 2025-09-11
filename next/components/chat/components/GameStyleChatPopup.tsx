@@ -345,7 +345,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
               onFocus={() => onChatFocus?.(true)}
               onBlur={() => onChatFocus?.(false)}
               placeholder="메시지 입력..."
-              className="flex-1 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm placeholder-gray-500 text-black h-9"
+              className="flex-1 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 text-sm placeholder-gray-500 text-black h-9"
             />
             {/* 이미지 버튼 */}
             <button

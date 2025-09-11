@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import HouseCard from "@/components/search/HouseCard";
+import { HomeCard } from "@/components/main/HomeCardList";
 import AchievementList from "./AchievementList";
 import { DeleteRoom } from "./DeleteRoom";
 import { FaTrashCan } from "react-icons/fa6";
@@ -108,11 +108,11 @@ export default function UserTabs({
         <AchievementList />
       ) : (
         userRooms.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
             {userRooms.map((house: any) => (
               <div key={house.room_id} className="relative group">
-                <HouseCard
-                  house={house}
+                <HomeCard
+                  room={house}
                   isDeleteMode={isDeleteMode}
                   onThumbnailClick={() => handleRoomSelect(house.room_id)}
                 />

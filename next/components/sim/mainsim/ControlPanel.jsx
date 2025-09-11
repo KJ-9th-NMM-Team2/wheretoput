@@ -195,7 +195,7 @@ export function ControlPanel({ isPopup = false }) {
             : // : isCollabModeActive && !collaborationMode
             // ? "협업 모드에서 저장해주세요."
             isOwnUserRoom
-            ? `방 상태 저장 (${loadedModels.length}개)`
+            ? `저장 `
             : `복제 후 저장해주세요.`}
         </button>
 
@@ -235,7 +235,7 @@ export function ControlPanel({ isPopup = false }) {
             }
           `}
         >
-          {isCloning ? "복제 중..." : `방 복제하기`}
+          {isCloning ? "복제 중..." : `우리집에 적용하기`}
         </button>
       </div>
 

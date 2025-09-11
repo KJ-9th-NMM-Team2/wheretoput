@@ -22,16 +22,12 @@ export async function GET(request: NextRequest) {
 
     const chatRooms = await prisma.chat_rooms.findMany({
       where: {
-        OR: [
-          { creator_id: user.id },
-          {
-            chat_participants: {
-              some: {
-                user_id: user.id,
-              },
-            },
+        chat_participants: {
+          some: {
+            user_id: user.id,
+            is_left: { not: true }, // 나가지 않은 채팅방만
           },
-        ],
+        },
       },
       include: {
         chat_messages: {
@@ -60,6 +56,7 @@ export async function GET(request: NextRequest) {
       return {
         ...room,
         last_read_at: myParticipant?.last_read_at || null,
+        custom_room_name: myParticipant?.custom_room_name || null,
       };
     }) : [];
 
