@@ -919,6 +919,7 @@ export const useStore = create(
         set({ isLoading: true });
 
         try {
+          const start_time = performance.now();
           const response = await fetch(`/api/sim/load/${roomId}`);
 
           if (!response.ok) {
@@ -1009,6 +1010,10 @@ export const useStore = create(
             backgroundColor: result.background_color || "#87CEEB",
             environmentPreset: result.environment_preset || "apartment",
           });
+
+          const end_time = performance.now();
+          const duration = end_time - start_time;
+          console.log(`시뮬레이터 상태 로드 완료: ${duration}ms`);
 
           return result;
         } catch (error) {
