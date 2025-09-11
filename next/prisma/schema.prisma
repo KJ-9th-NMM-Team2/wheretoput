@@ -88,7 +88,6 @@ model furnitures {
   updated_at       DateTime?      @default(now()) @db.Timestamp(6)
   category_id      Int
   cached_model_url String?        @db.VarChar(255)
-  is_cached        Boolean?       @default(false)
   room_objects     room_objects[]
 
   @@schema("furniture")

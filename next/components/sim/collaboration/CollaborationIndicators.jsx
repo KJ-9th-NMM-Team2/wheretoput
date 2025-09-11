@@ -71,7 +71,7 @@ export function ModelTooltip({ modelId, position, boundingBox }) {
             transform: "translateY(-3rem)",
             backdropFilter: "blur(0.25rem)",
             borderRadius: "0.5rem",
-            fontSize: "1.8rem",
+            fontSize: "1.5rem",
             padding: "0.5rem 0.5rem",
             boxShadow: `0 0.25rem 0.75rem rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.3)`,
           }}

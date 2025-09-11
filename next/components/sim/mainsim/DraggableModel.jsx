@@ -370,8 +370,8 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments 
-      castShadow={false} 
+    <lineSegments
+      castShadow={false}
       receiveShadow={false}
       position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
     >

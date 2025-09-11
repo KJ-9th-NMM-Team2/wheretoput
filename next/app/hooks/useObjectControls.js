@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useStore } from "@/components/sim/useStore";
 
 export function useObjectControls(
   modelId,
