@@ -65,15 +65,14 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                     } bg-gray-100 flex-shrink-0`}
                   >
                     {item.image_url && !imageErrors.has(item.id) ? (
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={item.image_url}
-                          alt={item.name}
-                          fill
-                          className="object-cover object-center"
-                          onError={() => handleImageError(item.id)}
-                        />
-                      </div>
+                      <Image
+                        src={item.image_url}
+                        alt={item.name}
+                        width={200}
+                        height={200}
+                        className="object-cover object-center"
+                        onError={() => handleImageError(item.id)}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <ImageOff className="w-8 h-8 text-gray-400" />

@@ -26,7 +26,6 @@ export function DraggableModel({
   type = "glb",
   onModelLoaded,
 }) {
-  
   // scale 값을 안전하게 처리
   const safeScale = (() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
@@ -60,13 +59,6 @@ export function DraggableModel({
   const { scene, animations } = hasValidUrl
     ? useGLTF(url)
     : { scene: null, animations: null };
-
-  useEffect(() => {
-    if (scene) {
-      // 모든 텍스처와 지오메트리가 준비되면
-      onModelLoaded(modelId);
-    }
-  }, []);
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -372,8 +364,8 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments 
-      castShadow={false} 
+    <lineSegments
+      castShadow={false}
       receiveShadow={false}
       position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
     >

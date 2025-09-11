@@ -49,13 +49,12 @@ export const useStore = create(
       window.addEventListener("historyAddWall", (event) => {
         const { wallData } = event.detail;
         // console.log('useStore: 벽 추가 이벤트 수신', wallData);
-        get().addWallWithId(wallData, false);
+        get().addWallWithId(wallData);
       });
 
       window.addEventListener("historyRemoveWall", (event) => {
         const { wallId } = event.detail;
-
-        get().removeWallFromHistory(wallId);
+        get().removeWall(wallId, true, false);
       });
     }
 
@@ -214,6 +213,9 @@ export const useStore = create(
         broadcastModelMove: null,
         broadcastModelRotate: null,
         broadcastModelScale: null,
+        broadcastWallAdd: null,
+        broadcastWallAddWithId: null,
+        broadcastWallRemove: null,
         broadcastWallColorChange: null,
         broadcastFloorColorChange: null,
         broadcastBackgroundColorChange: null,
@@ -250,14 +252,20 @@ export const useStore = create(
           const currentState = get();
           if (currentState.collaborationCallbacks[eventType]) {
             // 이벤트 타입에 따라 다른 파라미터 전달 방식 사용
-            if (eventType.includes("Add")) {
+            if (eventType.includes("ModelAdd")) {
               // 모델 추가의 경우 modelData만 전달
               currentState.collaborationCallbacks[eventType](data);
-            } else if (eventType.includes("Remove")) {
+            } else if (eventType.includes("ModelRemove")) {
               // 모델 제거의 경우 modelId만 전달
               currentState.collaborationCallbacks[eventType](modelId);
+            } else if (eventType.includes("WallAdd")) {
+              // 벽 추가의 경우 wallData만 전달
+              currentState.collaborationCallbacks[eventType](data);
+            } else if (eventType.includes("WallRemove")) {
+              // 벽 제거의 경우 wallId만 전달
+              currentState.collaborationCallbacks[eventType](modelId);
             } else {
-              // 이동, 회전, 스케일의 경우 modelId와 data 전달
+              // 이동, 회전, 스케일, 색상 변경의 경우 modelId와 data 전달
               currentState.collaborationCallbacks[eventType](modelId, data);
             }
           }
@@ -284,7 +292,10 @@ export const useStore = create(
         try {
           // 유효성 검사
           if (!roomId || !userId) {
-            console.warn("checkUserRoom: roomId 또는 userId가 없습니다", { roomId, userId });
+            console.warn("checkUserRoom: roomId 또는 userId가 없습니다", {
+              roomId,
+              userId,
+            });
             set({ isOwnUserRoom: false });
             return false;
           }
@@ -295,7 +306,9 @@ export const useStore = create(
           );
 
           if (!response.ok) {
-            console.error(`checkUserRoom API 오류: ${response.status} ${response.statusText}`);
+            console.error(
+              `checkUserRoom API 오류: ${response.status} ${response.statusText}`
+            );
             throw new Error(`Network response was not ok: ${response.status}`);
           }
 
@@ -713,14 +726,46 @@ export const useStore = create(
       // 히스토리 복원용: 기존 ID를 유지하면서 벽 추가 (히스토리 액션 추가 안함)
       addWallWithId: (wallData, shouldBroadcast = true) =>
         set((state) => {
-          // console.log('히스토리에서 벽 추가:', wallData);
+          console.log('🔧 addWallWithId 호출:', {
+            wallId: wallData.id,
+            currentWallCount: state.wallsData.length,
+            existingWallIds: state.wallsData.map(w => w.id),
+            shouldBroadcast
+          });
+          
+          // 같은 ID의 기존 벽 제거 (중복 방지)
+          const filteredWalls = state.wallsData.filter(
+            (wall) => wall.id !== wallData.id
+          );
+          
+          console.log('🔧 필터링 후:', {
+            removedCount: state.wallsData.length - filteredWalls.length,
+            remainingWalls: filteredWalls.length
+          });
+
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle(
+              "broadcastWallAddWithId",
+              wallData.id,
+              wallData,
+              0
+            );
+          }
+
+          const newWallsData = [...filteredWalls, wallData];
+          console.log('🔧 최종 결과:', {
+            finalWallCount: newWallsData.length,
+            addedWallId: wallData.id
+          });
+
           return {
-            wallsData: [...state.wallsData, wallData],
+            wallsData: newWallsData,
           };
         }),
 
       // 벽 추가 액션 (스냅 기능 포함)
-      addWall: (startPoint, endPoint) =>
+      addWall: (startPoint, endPoint, id = null, shouldBroadcast = true) =>
         set((state) => {
           // 벽 스냅 기능 적용
           let snappedStart = startPoint;
@@ -826,7 +871,7 @@ export const useStore = create(
           const rotationY = Math.atan2(-dz, dx);
 
           const newWall = {
-            id: crypto.randomUUID(),
+            id: id || `wall-${crypto.randomUUID()}`,
             position: [
               (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
               state.wallsData[0]?.position[1] || 2.5, // 기존 벽 높이나 기본값
@@ -846,8 +891,8 @@ export const useStore = create(
 
           // console.log('벽 추가:', newWall);
 
-          // 히스토리 액션 추가
-          if (typeof window !== "undefined") {
+          // shouldBroadcast가 true인 경우에만 히스토리 액션 추가 (사용자 액션)
+          if (shouldBroadcast && typeof window !== "undefined") {
             window.dispatchEvent(
               new CustomEvent("addHistoryAction", {
                 detail: {
@@ -862,6 +907,16 @@ export const useStore = create(
             );
           }
 
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle(
+              "broadcastWallAdd",
+              newWall.id,
+              newWall,
+              0
+            );
+          }
+
           return {
             wallsData: [...state.wallsData, newWall],
             wallDrawingStart: null, // 벽 추가 후 시작점 초기화
@@ -869,17 +924,17 @@ export const useStore = create(
         }),
 
       // 벽 삭제 액션
-      removeWall: (wallId, shouldBroadcast = true) =>
+      removeWall: (wallId, shouldBroadcast = true, shouldAddHistory = true) =>
         set((state) => {
+          console.log("삭제할 벽의 id:", wallId);
+          console.log("현재 벽들의 id:", state.wallsData);
           const wallToRemove = state.wallsData.find(
             (wall) => wall.id === wallId
           );
 
           if (wallToRemove) {
-            console.log("벽 삭제:", wallToRemove);
-
-            // 히스토리 액션 추가
-            if (typeof window !== "undefined") {
+            // 히스토리 액션 추가 (사용자 액션이고 shouldAddHistory가 true인 경우에만)
+            if (shouldAddHistory && typeof window !== "undefined") {
               window.dispatchEvent(
                 new CustomEvent("addHistoryAction", {
                   detail: {
@@ -893,6 +948,16 @@ export const useStore = create(
                 })
               );
             }
+
+            // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+            if (shouldBroadcast) {
+              get().broadcastWithThrottle(
+                "broadcastWallRemove",
+                wallId,
+                null,
+                0
+              );
+            }
           }
 
           return {
@@ -901,20 +966,25 @@ export const useStore = create(
           };
         }),
 
-      // 히스토리 복원용 벽 삭제 (히스토리 액션 추가 안함)
-      removeWallFromHistory: (wallId) =>
-        set((state) => ({
-          wallsData: state.wallsData.filter((wall) => wall.id !== wallId),
-          selectedWallId: null,
-        })),
-
       // 벽 업데이트 액션
-      updateWall: (wallId, updates) =>
-        set((state) => ({
-          wallsData: state.wallsData.map((wall) =>
-            wall.id === wallId ? { ...wall, ...updates } : wall
-          ),
-        })),
+      updateWall: (wallId, updates, shouldBroadcast = true) =>
+        set((state) => {
+          // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
+          if (shouldBroadcast) {
+            get().broadcastWithThrottle(
+              "broadcastWallUpdate",
+              wallId,
+              updates,
+              30
+            );
+          }
+
+          return {
+            wallsData: state.wallsData.map((wall) =>
+              wall.id === wallId ? { ...wall, ...updates } : wall
+            ),
+          };
+        }),
 
       setSaving: (saving) => set({ isSaving: saving }),
       setCloning: (cloning) => set({ isCloning: cloning }),
