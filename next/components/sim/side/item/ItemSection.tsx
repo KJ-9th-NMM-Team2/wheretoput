@@ -1,3 +1,4 @@
+
 import { ImageOff, Loader2 } from "lucide-react";
 import type { ItemSectionProps } from "@/lib/itemTypes";
 import ShoppingLink from "@/components/sim/side/ShoppingLink";
@@ -79,6 +80,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                       </div>
                     )}
                   </div>
+
 
                   {/* 정보 영역 */}
                   <div
