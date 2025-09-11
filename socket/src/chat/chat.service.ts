@@ -21,7 +21,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly roomService: RoomService,
-  ) { }
+  ) {}
 
   // 방 참가자 추가 (권한 체크 포함)
   async joinRoom(roomId: string, userId: string) {
@@ -194,10 +194,10 @@ export class ChatService {
       const lastReadAt = await this.prisma.chat_participants.findFirst({
         where: {
           chat_room_id: roomId,
-          user_id: { not: params.userId }
+          user_id: { not: params.userId },
         },
-        select: { last_read_at: true }
-      })
+        select: { last_read_at: true },
+      });
 
       const lastRead = lastReadAt?.last_read_at;
 
@@ -212,10 +212,9 @@ export class ChatService {
           senderImage: r.User?.image || null,
           content: r.content,
           createdAt: r.created_at?.toISOString() ?? new Date().toISOString(),
-          status: lastRead && currentRead <= lastRead
-            ? 'read'
-            : 'sent',
-      }});
+          status: lastRead && currentRead <= lastRead ? 'read' : 'sent',
+        };
+      });
     } catch (error) {
       if (error instanceof ForbiddenException) {
         throw error;
@@ -230,7 +229,7 @@ export class ChatService {
       // 채팅방 존재 확인
       const room = await this.prisma.chat_rooms.findUnique({
         where: { chat_room_id: roomId },
-        select: { chat_room_id: true }
+        select: { chat_room_id: true },
       });
 
       if (!room) {
@@ -240,10 +239,13 @@ export class ChatService {
       // 개발자용 기능이므로 권한 체크 없이 삭제
       // CASCADE 설정으로 chat_messages와 chat_participants도 함께 삭제됨
       await this.prisma.chat_rooms.delete({
-        where: { chat_room_id: roomId }
+        where: { chat_room_id: roomId },
       });
 
-      return { success: true, message: 'Chat room and all history deleted completely' };
+      return {
+        success: true,
+        message: 'Chat room and all history deleted completely',
+      };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;

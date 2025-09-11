@@ -100,6 +100,10 @@ export const useStore = create(
       // 모든 연결된 사용자 목록 초기화
       clearConnectedUsers: () => set({ connectedUsers: new Map() }),
 
+      // 채팅 포커스 상태 관리
+      isChatFocused: false,
+      setIsChatFocused: (focused) => set({ isChatFocused: focused }),
+
       // 협업 모드용 브로드캐스트 콜백들
       collaborationCallbacks: {
         broadcastModelAdd: null,
@@ -176,12 +180,22 @@ export const useStore = create(
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          // 유효성 검사
+          if (!roomId || !userId) {
+            console.warn("checkUserRoom: roomId 또는 userId가 없습니다", { roomId, userId });
+            set({ isOwnUserRoom: false });
+            return false;
+          }
+
           // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
 
-          if (!response.ok) throw new Error("Network response was not ok");
+          if (!response.ok) {
+            console.error(`checkUserRoom API 오류: ${response.status} ${response.statusText}`);
+            throw new Error(`Network response was not ok: ${response.status}`);
+          }
 
           // 2. 응답 Json 파싱
           const result = await response.json();
