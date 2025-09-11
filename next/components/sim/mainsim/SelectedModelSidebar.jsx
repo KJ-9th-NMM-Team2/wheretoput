@@ -380,10 +380,7 @@ export function SelectedModelEditModal() {
                 onQuickRotate={(axisIndex, degrees) => {
                   const currentValue =
                     (selectedModel.rotation[axisIndex] * 180) / Math.PI;
-                  let newValue = currentValue + degrees;
-
-                  //===== -180~180 각도 제한 =====
-                  newValue = Math.max(-180, Math.min(180, newValue));
+                  let newValue = (currentValue + 360 + degrees) % 360;
 
                   const initialRotation = [...selectedModel.rotation];
                   const newRotation = [...selectedModel.rotation];
@@ -424,9 +421,6 @@ export function SelectedModelEditModal() {
                     }"의 ${axis}축을 회전했습니다`
                   );
                 }}
-                modelName={
-                  selectedModel.name || selectedModel.furnitureName || "Unknown"
-                }
               />
             ))}
           </div>
