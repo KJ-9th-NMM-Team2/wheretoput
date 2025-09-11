@@ -7,8 +7,6 @@ import FurnituresList from "@/components/rooms/FurnituresList";
 import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
-import { View } from "lucide-react";
-import { FaEye } from "react-icons/fa";
 import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
 
 interface RoomPageClientProps {
@@ -139,7 +137,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               )}
             </div>
             <div className="flex justify-stretch">
-              <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-start">
+              <div className="flex flex-1 gap-6 flex-wrap px-4 py-3 justify-start">
                 <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">
                   <button className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                     <span className="truncate">3D View</span>

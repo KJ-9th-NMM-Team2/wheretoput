@@ -48,23 +48,20 @@ export default function LikeButton({
   }, [isLoading, session, room.room_id, youLiked]);
 
   return (
-    <div className="flex items-center justify-center gap-2 px-3 py-2">
+    <div className="flex flex-col items-center justify-center gap-1">
       <div
-        className={`cursor-pointer transition-all duration-200 hover:scale-110 hover:drop-shadow-lg ${
+        className={`w-12 h-12 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-110 ${
           youLiked
-            ? "text-red-500 hover:text-red-600 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-            : "text-[#8a7260] dark:text-orange-300 hover:text-red-400 dark:hover:text-red-400"
+            ? "bg-red-50 border-red-500 text-red-500 hover:bg-red-100 shadow-lg"
+            : "bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-red-400 hover:text-red-400"
         } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
-        data-icon="Heart"
-        data-size="24px"
-        data-weight="regular"
         onClick={handleLikeClick}
         title={youLiked ? "좋아요 취소" : "좋아요"}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="24px"
-          height="24px"
+          width="20px"
+          height="20px"
           fill="currentColor"
           viewBox="0 0 256 256"
         >
@@ -80,8 +77,8 @@ export default function LikeButton({
       <p
         className={`text-[13px] font-bold leading-normal tracking-[0.015em] transition-colors ${
           youLiked
-            ? "text-red-500 drop-shadow-sm"
-            : "text-[#8a7260] dark:text-orange-300"
+            ? "text-red-500"
+            : "text-gray-500 dark:text-gray-400"
         }`}
       >
         {likes}
