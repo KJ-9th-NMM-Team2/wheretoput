@@ -134,7 +134,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
         <header className="px-3 py-2 flex items-center justify-between text-xl">
           <div className="flex min-w-0 items-center gap-2">
             <b className="px-2 truncate">
-              {selectedChat?.name ?? "채팅"}
+              {selectedChat?.name || "새 대화"}
             </b>
           </div>
           <button

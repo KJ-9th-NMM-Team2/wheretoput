@@ -53,7 +53,11 @@ export default function ChatListView({
     x: number;
     y: number;
   } | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{
+  const [leaveModal, setLeaveModal] = useState<{
+    chatId: string;
+    chatName: string;
+  } | null>(null);
+  const [renameModal, setRenameModal] = useState<{
     chatId: string;
     chatName: string;
   } | null>(null);
@@ -114,8 +118,24 @@ export default function ChatListView({
       const createdRoom = response.data;
       console.log('그룹 채팅방 생성 성공:', createdRoom);
 
-      // 생성된 채팅방으로 이동
+      // 생성된 채팅방을 baseChats에 추가
       if (createdRoom?.chat_room_id) {
+        const newChatItem = {
+          chat_room_id: createdRoom.chat_room_id,
+          name: createdRoom.name || "새 채팅방",
+          is_private: createdRoom.is_private || true,
+          lastMessage: "",
+          lastMessageAt: undefined,
+          last_read_at: new Date().toISOString(),
+          searchIndex: "",
+        };
+        
+        // baseChats에 새 채팅방 추가
+        const updatedChats = [newChatItem, ...baseChats];
+        setBaseChats(updatedChats);
+        setChats(recomputeChats(updatedChats, query, select, currentUserId));
+        
+        // 생성된 채팅방으로 이동
         onChatSelect(createdRoom.chat_room_id);
         setShowUserList(false); // 유저 목록 닫기
         setSelectedUserIds([]); // 선택 초기화
@@ -145,31 +165,75 @@ export default function ChatListView({
     setContextMenu(null);
   };
 
-  // 삭제 모달 열기
-  const openDeleteModal = (chatId: string) => {
+  // 나가기 모달 열기
+  const openLeaveModal = (chatId: string) => {
     closeContextMenu();
     const chat = baseChats.find((c) => c.chat_room_id === chatId);
     if (chat) {
-      setDeleteModal({
+      setLeaveModal({
         chatId,
         chatName: chat.name || "이름 없는 채팅방",
       });
     }
   };
 
-  // 삭제 모달 닫기
-  const closeDeleteModal = () => {
-    setDeleteModal(null);
+  // 나가기 모달 닫기
+  const closeLeaveModal = () => {
+    setLeaveModal(null);
   };
 
-  // 채팅방 완전 삭제 실행
-  const handleDeleteRoom = async (roomId: string) => {
-    closeDeleteModal();
+  // 이름 변경 모달 열기
+  const openRenameModal = (chatId: string) => {
+    closeContextMenu();
+    const chat = baseChats.find((c) => c.chat_room_id === chatId);
+    if (chat) {
+      setRenameModal({
+        chatId,
+        chatName: chat.name || "이름 없는 채팅방",
+      });
+    }
+  };
+
+  // 이름 변경 모달 닫기
+  const closeRenameModal = () => {
+    setRenameModal(null);
+  };
+
+  // 채팅방 이름 변경 실행
+  const handleRenameRoom = async (roomId: string, newName: string) => {
+    if (!newName.trim()) return;
+
+    try {
+      await api.put(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}/rename`, {
+        name: newName.trim(),
+      });
+
+      // 로컬 상태 즉시 업데이트 (커스텀 이름이 최우선이므로 name 필드를 직접 업데이트)
+      const updatedChats = baseChats.map((chat) =>
+        chat.chat_room_id === roomId
+          ? { ...chat, name: newName.trim() }
+          : chat
+      );
+      setBaseChats(updatedChats);
+      setChats(recomputeChats(updatedChats, query, select, currentUserId));
+
+      closeRenameModal();
+    } catch (error: any) {
+      console.error("이름 변경 실패:", error);
+      const errorMsg =
+        error.response?.data?.message || "이름 변경에 실패했습니다.";
+      alert(`변경 실패: ${errorMsg}`);
+    }
+  };
+
+  // 채팅방 나가기 실행
+  const handleLeaveRoom = async (roomId: string) => {
+    closeLeaveModal();
 
     setDeleting(roomId);
     try {
       await api.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}/delete-completely`
+        `${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}/leave`
       );
 
       // 채팅방 목록에서 제거
@@ -179,10 +243,10 @@ export default function ChatListView({
       setBaseChats(updatedChats);
       setChats(recomputeChats(updatedChats, query, select, currentUserId));
     } catch (error: any) {
-      console.error("채팅방 삭제 실패:", error);
+      console.error("채팅방 나가기 실패:", error);
       const errorMsg =
-        error.response?.data?.message || "채팅방 삭제에 실패했습니다.";
-      alert(`삭제 실패: ${errorMsg}`);
+        error.response?.data?.message || "채팅방 나가기에 실패했습니다.";
+      alert(`나가기 실패: ${errorMsg}`);
     } finally {
       setDeleting(null);
     }
@@ -234,7 +298,7 @@ export default function ChatListView({
               setChats(recomputeChats(baseChats, query, "전체", currentUserId));
             }}
             className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-              ? "bg-gray-200 text-blue-500"
+              ? "bg-gray-200 text-orange-500"
               : "bg-transparent hover:bg-gray-200"
               }`}
           >
@@ -249,7 +313,7 @@ export default function ChatListView({
               );
             }}
             className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-              ? "bg-gray-200 text-blue-500"
+              ? "bg-gray-200 text-orange-500"
               : "bg-transparent hover:bg-gray-200"
               }`}
           >
@@ -459,42 +523,103 @@ export default function ChatListView({
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            onClick={() => openDeleteModal(contextMenu.chatId)}
-            disabled={deleting === contextMenu.chatId}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => openRenameModal(contextMenu.chatId)}
+            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
           >
-            채팅방 삭제
+            이름 변경
+          </button>
+          <button
+            onClick={() => openLeaveModal(contextMenu.chatId)}
+            disabled={deleting === contextMenu.chatId}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            채팅방 나가기
           </button>
         </div>
       )}
 
-      {/* 삭제 확인 모달 */}
-      {deleteModal && (
+      {/* 나가기 확인 모달 */}
+      {leaveModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                채팅방 삭제
+                채팅방 나가기
               </h3>
               <p className="text-gray-600">
-                "<span className="font-medium">{deleteModal.chatName}</span>"
-                채팅방과 모든 메시지를 완전히 삭제하시겠습니까?
+                "<span className="font-medium">{leaveModal.chatName}</span>"
+                채팅방에서 나가시겠습니까? 나중에 다시 참여할 수 있습니다.
               </p>
             </div>
 
             <div className="flex gap-3 justify-end">
               <button
-                onClick={closeDeleteModal}
+                onClick={closeLeaveModal}
                 className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
               >
                 취소
               </button>
               <button
-                onClick={() => handleDeleteRoom(deleteModal.chatId)}
-                disabled={deleting === deleteModal.chatId}
+                onClick={() => handleLeaveRoom(leaveModal.chatId)}
+                disabled={deleting === leaveModal.chatId}
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {deleting === deleteModal.chatId ? "삭제 중..." : "삭제"}
+                {deleting === leaveModal.chatId ? "나가는 중..." : "나가기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 이름 변경 모달 */}
+      {renameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                채팅방 이름 변경
+              </h3>
+              <p className="text-gray-600 mb-4">
+                "<span className="font-medium">{renameModal.chatName}</span>" 의 채팅방 이름을 변경합니다.
+              </p>
+              <input
+                type="text"
+                defaultValue={renameModal.chatName}
+                placeholder="새로운 이름을 입력하세요"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const newName = (e.target as HTMLInputElement).value.trim();
+                    if (newName && renameModal) {
+                      handleRenameRoom(renameModal.chatId, newName);
+                    }
+                  }
+                  if (e.key === 'Escape') {
+                    closeRenameModal();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeRenameModal}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                  const newName = input?.value.trim();
+                  if (newName && renameModal) {
+                    handleRenameRoom(renameModal.chatId, newName);
+                  }
+                }}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition cursor-pointer"
+              >
+                변경
               </button>
             </div>
           </div>
