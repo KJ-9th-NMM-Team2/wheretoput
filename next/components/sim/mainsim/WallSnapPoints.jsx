@@ -1,11 +1,49 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../useStore';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { useHistory, ActionType } from '../history';
 
 /**
  * 벽의 바닥 끝점에 스냅 포인트를 시각적으로 표시하는 컴포넌트
  */
+// 미니멀한 스냅 포인트 컴포넌트
+function MinimalSnapPoint({ position, pointKey, isHovered, onPointerEnter, onPointerLeave, onPointerDown }) {
+  const meshRef = useRef();
+  
+  useFrame((state) => {
+    if (meshRef.current) {
+      const time = state.clock.elapsedTime;
+      
+      if (isHovered) {
+        // 호버 시 살짝 커지는 효과
+        const hoverScale = 1 + Math.sin(time * 6) * 0.1;
+        meshRef.current.scale.setScalar(hoverScale * 1.1);
+      } else {
+        // 기본 상태
+        meshRef.current.scale.setScalar(1);
+      }
+    }
+  });
+  
+  return (
+    <mesh
+      ref={meshRef}
+      position={[position[0], 0.01, position[2]]} // 바닥에서 살짝 위
+      rotation={[-Math.PI / 2, 0, 0]} // 바닥 평면과 평행
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
+      onPointerDown={onPointerDown}
+    >
+      <circleGeometry args={[0.12, 16]} />
+      <meshBasicMaterial
+        color={isHovered ? "#0088ff" : "#ff6b35"}
+        transparent
+        opacity={isHovered ? 0.8 : 0.5}
+      />
+    </mesh>
+  );
+}
+
 export function WallSnapPoints() {
   const { wallsData, wallToolMode, setWallDrawingStart, wallDrawingStart } = useStore();
   const { raycaster, camera } = useThree();
@@ -47,10 +85,11 @@ export function WallSnapPoints() {
       const scale = isHovered ? 1 : 0.8;
       
       snapPoints.push(
-        <mesh
+        <MinimalSnapPoint
           key={pointKey}
           position={endpoint}
-          scale={[scale, scale, scale]}
+          pointKey={pointKey}
+          isHovered={isHovered}
           onPointerEnter={() => setHoveredPoint(pointKey)}
           onPointerLeave={() => setHoveredPoint(null)}
           onPointerDown={(e) => {
@@ -110,14 +149,7 @@ export function WallSnapPoints() {
               }, 0);
             }
           }}
-        >
-          <sphereGeometry args={[0.15, 12, 12]} />
-          <meshBasicMaterial 
-            color={isHovered ? "#ff4444" : "#ff6b35"}
-            transparent 
-            opacity={0.9}
-          />
-        </mesh>
+        />
       );
     });
   });

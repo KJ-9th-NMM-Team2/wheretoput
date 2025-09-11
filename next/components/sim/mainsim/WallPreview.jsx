@@ -138,10 +138,10 @@ export function WallPreview() {
       {/* 시작점 표시 - 펄스 링 스타일 */}
       <PulseRing position={[wallDrawingStart[0], 0.05, wallDrawingStart[2]]} />
       
-      {/* 임시 벽 선 표시 */}
+      {/* [09.11] 임시 벽 선 표시 */}
       <line ref={lineRef}>
         <primitive object={geometry} />
-        <lineBasicMaterial color={0x00ff00} linewidth={15} />
+        <lineBasicMaterial color={0x1E90FF} linewidth={15} />
       </line>
     </>
   );
