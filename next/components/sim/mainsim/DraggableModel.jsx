@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
+import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 
 export function DraggableModel({
@@ -51,10 +52,9 @@ export function DraggableModel({
     setSnappedWallInfo,
   } = useStore();
 
-  // GLB 모델 로드 (url이 유효하지 않으면 기본값 사용)
-  const validUrl =
-    url && typeof url === "string" ? url : "/legacy_mesh (1).glb";
-  const { scene, animations } = useGLTF(validUrl);
+  // GLB 모델 로드 (url이 있을 때만 로드)
+  const hasValidUrl = url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
+  const { scene, animations } = hasValidUrl ? useGLTF(url) : { scene: null, animations: null };
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -254,7 +254,16 @@ export function DraggableModel({
           rotation={rotation}
           scale={safeScale}
         >
-          <primitive object={scene.clone()} />
+          {scene ? (
+            <primitive object={scene.clone()} />
+          ) : (
+            <PreviewBox
+              position={[0, 0, 0]}
+              size={safeScale}
+              isLoading={false}
+              color="#ff9900"
+            />
+          )}
 
           {/* 투명한 클릭/호버 감지 영역 */}
           <mesh

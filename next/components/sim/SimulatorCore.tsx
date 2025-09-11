@@ -19,6 +19,7 @@ import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
+import { PreviewManager } from "./preview/PreviewManager";
 
 type position = [number, number, number];
 
@@ -146,7 +147,7 @@ export function SimulatorCore({
   loadingIcon = "🏠",
   keyboardControlsDisabled = false,
   isMobile = false,
-  accessType = 1
+  accessType = 1,
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const { data: session } = useSession();
@@ -168,6 +169,7 @@ export function SimulatorCore({
     collaborationMode,
     checkUserRoom,
     currentRoomInfo,
+    previewMode,
   } = useStore();
 
   // URL 파라미터 초기화 및 데이터 로드
@@ -263,7 +265,9 @@ export function SimulatorCore({
       }`}
     >
       {/* 조건부 사이드바 표시 */}
-      {showSidebar && !viewOnly && <SimSideView roomId={roomId} accessType={accessType} />}
+      {showSidebar && !viewOnly && (
+        <SimSideView roomId={roomId} accessType={accessType} />
+      )}
 
       <div className="flex-1 relative">
         {/* 모바일 헤더 */}
@@ -309,6 +313,15 @@ export function SimulatorCore({
         {/* [09.06] 자동저장 상태 표시 */}
         {/* 팝업 알림은 ControIcons 아래에 위치 */}
         {!viewOnly && <AutoSaveIndicator position="top-right" />}
+
+        {/* 프리뷰 모드 UI 힌트 */}
+        {previewMode && (
+          <div className="fixed top-15 right-5 z-50 pointer-events-none">
+            <div className="bg-black bg-opacity-80 text-white px-3 py-2 rounded text-xs whitespace-nowrap">
+              클릭하여 배치 | ESC: 취소
+            </div>
+          </div>
+        )}
 
         {/* 편집 컨트롤 아이콘 */}
         {showEditControls && !viewOnly && (
@@ -406,6 +419,11 @@ export function SimulatorCore({
                 />
               );
             })}
+          </Suspense>
+
+          {/* 프리뷰 모드 */}
+          <Suspense fallback={null}>
+            <PreviewManager />
           </Suspense>
 
           <mesh

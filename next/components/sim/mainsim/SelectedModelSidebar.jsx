@@ -271,6 +271,7 @@ export function SelectedModelEditModal() {
 
   return (
     <CollapsibleSidebar
+      
       title="가구 편집"
       onClose={deselectModel}
       defaultCollapsed={false}
