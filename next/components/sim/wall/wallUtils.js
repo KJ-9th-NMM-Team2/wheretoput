@@ -441,7 +441,7 @@ export const mergeWallGroup = (wallGroup) => {
   const firstWall = wallGroup[0];
   
   return {
-    id: `merged_${wallGroup.map(w => w.id).join('_')}`,
+    id: `merged_${wallGroup.map(w => w.id).join('_')}_${Date.now()}`,
     position: [centerX, firstWall.position[1], centerZ],
     rotation: [0, rotation, 0],
     dimensions: {
