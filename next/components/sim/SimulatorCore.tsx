@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, Suspense, useState, useEffect } from "react";
+import React, { useRef, Suspense, useState, useEffect, useCallback } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -184,7 +184,8 @@ export function SimulatorCore({
     isChatFocused,
   } = useStore();
 
-  const [startTime, setStartTime] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [loadedModelIds, setLoadedModelIds] = useState(new Set());
 
   // 상태 기반 속도 측정
   useEffect(() => {
@@ -193,13 +194,26 @@ export function SimulatorCore({
     }
   }, []);
 
+  const handleModelLoaded = useCallback((modelId: string) => {
+    setLoadedModelIds(prev => {
+      const newSet = new Set(prev);
+      newSet.add(modelId);
+        
+      if (newSet.size === loadedModels.length) {
+        console.log('모든 모델 실제 로드 완료:', performance.now() - startTime);
+      }
+      
+      return newSet;
+    });
+  }, [loadedModels.length, startTime]);
+
   // Suspense fallback이 완전히 사라진 후
-  useEffect(() => {
-    if (startTime && loadedModels.length > 0) {
-      const endTime = performance.now();
-      console.log(`All models loaded in: ${endTime - startTime}ms`);
-    }
-  }, [loadedModels]);
+  // useEffect(() => {
+  //   if (startTime && loadedModels.length > 0) {
+  //     const endTime = performance.now();
+  //     console.log(`모든 모델 로드 완료: ${endTime - startTime}ms`);
+  //   }
+  // }, [loadedModels]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -438,6 +452,7 @@ export function SimulatorCore({
                   isCityKit={model.isCityKit}
                   texturePath={model.texturePath}
                   type={model.isCityKit ? "building" : "glb"}
+                  onModelLoaded={handleModelLoaded}
                 />
               );
             })}
