@@ -1124,130 +1124,158 @@ const FloorPlanEditor = () => {
   return (
     <div className="w-full h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* 툴바 */}
-      <div
-        className="
-        bg-white/95 backdrop-blur-sm border-b border-amber-100 px-6 py-4 shadow-sm
-        dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg
-        sticky top-0 z-50
-      "
-      >
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
-          >
-            🏠
-          </Link>
+      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-300 px-4 lg:px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg sticky top-0 z-50">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          {/* 첫 번째 행: 로고, 제목, 완료 버튼 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/"
+                className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
+              >
+                🏠
+              </Link>
+              <h1 className="text-base lg:text-lg font-black text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">
+                어따놀래
+              </h1>
+            </div>
 
-          <h1 className="text-xl font-bold leading-tight tracking-tight text-amber-900 dark:text-amber-100 mr-6 hover:text-amber-600 transition-colors duration-200">
-            2D 도면 그리기
-          </h1>
+            {/* 완료 버튼 (작은 화면에서 상단에 위치) */}
+            <div className="lg:hidden">
+              <button
+                onClick={handleGoToSimulator}
+                disabled={walls.length === 0 || isCreatingRoom}
+                className="tool-btn tool-btn-active text-base px-6 py-4 font-semibold"
+              >
+                <Check size={20} />
+                {isCreatingRoom ? "생성중..." : "집 생성하기"}
+              </button>
+            </div>
+          </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTool(tool === "wall" ? "none" : "wall")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tool === "wall"
-                  ? "bg-gray-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <Square size={18} />벽 그리기 {tool === "wall" ? "(ON)" : ""}
-            </button>
+          {/* 두 번째 행: 도구 그룹들 */}
+          <div className="flex flex-wrap items-center gap-2 lg:gap-3 justify-center lg:justify-start">
+            {/* 그리기 도구 그룹 */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTool(tool === "wall" ? "none" : "wall")}
+                className={`tool-btn ${
+                  tool === "wall" ? "tool-btn-active" : "tool-btn-inactive"
+                }`}
+              >
+                <Square size={14} />
+                <span className="hidden sm:inline">드로잉</span>
+                <span className="sm:hidden">벽</span>
+              </button>
+              
+              <button
+                onClick={() => setTool(tool === "select" ? "none" : "select")}
+                className={`tool-btn ${
+                  tool === "select" ? "tool-btn-active" : "tool-btn-inactive"
+                }`}
+              >
+                <MousePointer size={14} />
+                <span>선택</span>
+              </button>
+            </div>
 
-            <button
-              onClick={() => setTool(tool === "select" ? "none" : "select")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tool === "select"
-                  ? "bg-gray-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <MousePointer size={18} />
-              선택 {tool === "select" ? "(ON)" : ""}
-            </button>
+            {/* 지우기 도구 그룹 */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
+                className={`tool-btn ${
+                  tool === "eraser" ? "tool-btn-red-active" : "tool-btn-inactive"
+                }`}
+              >
+                <Eraser size={14} />
+                <span>지우기</span>
+              </button>
 
-            <button
-              onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tool === "eraser"
-                  ? "bg-gray-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <Eraser size={18} />
-              지우기 {tool === "eraser" ? "(ON)" : ""}
-            </button>
-
-            <button
-              onClick={() => {
-                const newTool =
-                  tool === "partial_eraser" ? "none" : "partial_eraser";
-                setTool(newTool);
-                setPartialEraserSelectedWall(null);
-                setIsSelectingEraseArea(false);
-                setEraseAreaStart(null);
-                setEraseAreaEnd(null);
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                tool === "partial_eraser"
-                  ? "bg-gray-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <Scissors size={18} />
-              부분 지우기 {tool === "partial_eraser" ? "(ON)" : ""}
-            </button>
-
-            <button
-              onClick={() => {
-                setTool("scale");
-                setScaleWall(null);
-                setScaleRealLength("");
-              }}
-              disabled={!uploadedImage}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                !uploadedImage
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : tool === "scale"
-                  ? "bg-gray-500 text-white shadow-md"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              <Square size={18} />
-              축척 설정
-            </button>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-            >
-              <Upload size={18} />
-              {isProcessing ? "처리중..." : "도면 업로드"}
-            </button>
-
-            <button
-              onClick={clearAllWalls}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-            >
-              <Trash2 size={18} />
-              전체 지우기
-            </button>
-
-            {uploadedImage && (
               <button
                 onClick={() => {
-                  setUploadedImage(null);
-                  setCachedBackgroundImage(null);
-                  alert("배경 이미지가 제거되었습니다.");
+                  const newTool = tool === "partial_eraser" ? "none" : "partial_eraser";
+                  setTool(newTool);
+                  setPartialEraserSelectedWall(null);
+                  setIsSelectingEraseArea(false);
+                  setEraseAreaStart(null);
+                  setEraseAreaEnd(null);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className={`tool-btn ${
+                  tool === "partial_eraser" ? "tool-btn-red-active" : "tool-btn-inactive"
+                }`}
               >
-                <Trash2 size={18} />
-                배경 제거
+                <Scissors size={14} />
+                <span className="hidden sm:inline">부분 지우기</span>
+                <span className="sm:hidden">부분</span>
               </button>
-            )}
+
+              <button
+                onClick={clearAllWalls}
+                className="tool-btn tool-btn-inactive"
+              >
+                <Trash2 size={14} />
+                <span className="hidden sm:inline">전체 지우기</span>
+                <span className="sm:hidden">전체</span>
+              </button>
+            </div>
+
+            {/* 이미지 및 축척 도구 그룹 */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isProcessing}
+                className="tool-btn tool-btn-inactive"
+              >
+                <Upload size={14} />
+                <span>{isProcessing ? "처리중..." : "업로드"}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setTool("scale");
+                  setScaleWall(null);
+                  setScaleRealLength("");
+                }}
+                disabled={!uploadedImage}
+                className={`tool-btn ${
+                  !uploadedImage
+                    ? "tool-btn-inactive"
+                    : tool === "scale"
+                    ? "tool-btn-purple-active"
+                    : "tool-btn-inactive"
+                }`}
+              >
+                <Square size={14} />
+                <span>축척</span>
+              </button>
+
+              {uploadedImage && (
+                <button
+                  onClick={() => {
+                    setUploadedImage(null);
+                    setCachedBackgroundImage(null);
+                    alert("배경 이미지가 제거되었습니다.");
+                  }}
+                  className="tool-btn tool-btn-inactive"
+                >
+                  <Trash2 size={14} />
+                  <span className="hidden sm:inline">배경 제거</span>
+                  <span className="sm:hidden">배경</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 완료 버튼 (큰 화면에서만 오른쪽에 위치) */}
+          <div className="hidden lg:flex items-center">
+            <button
+              onClick={handleGoToSimulator}
+              disabled={walls.length === 0 || isCreatingRoom}
+              className="tool-btn tool-btn-active px-8 py-4 text-lg font-bold"
+            >
+              <Check size={20} />
+              {isCreatingRoom ? "방 생성 중..." : "집 생성하기"}
+            </button>
           </div>
 
           <input
@@ -1257,18 +1285,6 @@ const FloorPlanEditor = () => {
             onChange={handleImageUpload}
             className="hidden"
           />
-
-          {/* 방 생성하기 부분 */}
-          <div className="ml-auto flex gap-2">
-            <button
-              onClick={handleGoToSimulator}
-              disabled={walls.length === 0 || isCreatingRoom}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-            >
-              <Check size={18} />
-              {isCreatingRoom ? "방 생성 중..." : "집 생성하기"}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1305,25 +1321,25 @@ const FloorPlanEditor = () => {
           {/* 토글 버튼 */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-amber-100 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
             style={{ borderRight: "none" }}
           >
             {isSidebarCollapsed ? (
               <ChevronLeft
                 size={16}
-                className="text-amber-900 dark:text-amber-100"
+                className="text-black dark:text-white"
               />
             ) : (
               <ChevronRight
                 size={16}
-                className="text-amber-900 dark:text-amber-100"
+                className="text-black dark:text-white"
               />
             )}
           </button>
 
           {/* 사이드바 컨텐츠 */}
           <div
-            className={`bg-white/95 backdrop-blur-sm border-l border-amber-100 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto flex-shrink-0 shadow-sm transition-all duration-300 ${
+            className={`bg-white/95 backdrop-blur-sm border-l border-gray-300 dark:border-gray-700 dark:bg-gray-800 overflow-y-auto flex-shrink-0 shadow-sm transition-all duration-300 ${
               isSidebarCollapsed ? "w-0 p-0" : "w-80 p-6"
             }`}
           >
@@ -1332,13 +1348,13 @@ const FloorPlanEditor = () => {
                 isSidebarCollapsed ? "opacity-0" : "opacity-100"
               } transition-opacity duration-300`}
             >
-              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-4 tracking-tight">
+              <h3 className="text-lg font-semibold text-black dark:text-white mb-4 tracking-tight">
                 도구 정보
               </h3>
 
               {/* 축척 설정 도구 */}
               {tool === "scale" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     축척 설정 도구
                   </h4>
@@ -1395,9 +1411,9 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "wall" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    벽 그리기 모드
+                    드로잉 모드
                   </h4>
                   <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
                     클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로
@@ -1410,7 +1426,7 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "select" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     선택 모드
                   </h4>
@@ -1527,7 +1543,7 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "eraser" && (
-                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight ">
                     지우기 모드
                   </h4>
@@ -1538,7 +1554,7 @@ const FloorPlanEditor = () => {
               )}
 
               {tool === "partial_eraser" && (
-                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     부분 지우기 모드
                   </h4>
@@ -1568,14 +1584,14 @@ const FloorPlanEditor = () => {
                 </div>
               )}
               {/* 뷰포트 컨트롤 */}
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                 <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                  뷰포트 컨트롤
+                  배율 조절
                 </h4>
 
                 <div className="mb-3">
                   <label className=" text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    줌: {Math.round(viewScale * 100)}%
+                    현재 배율: {Math.round(viewScale * 100)}%
                   </label>
                   <input
                     type="range"
@@ -1587,7 +1603,7 @@ const FloorPlanEditor = () => {
                       const newScale = parseFloat(e.target.value);
                       setViewScale(newScale);
                     }}
-                    className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer"
                   />
                 </div>
 
@@ -1608,7 +1624,7 @@ const FloorPlanEditor = () => {
 
               {/* 배경 이미지 투명도 조정 */}
               {uploadedImage && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
+                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
                     배경 이미지 설정
                   </h4>
@@ -1625,7 +1641,7 @@ const FloorPlanEditor = () => {
                       onChange={(e) =>
                         setBackgroundOpacity(parseFloat(e.target.value))
                       }
-                      className="w-full h-2 bg-orange-200 rounded-lg appearance-none cursor-pointer slider"
+                      className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer slider"
                     />
                   </div>
                   <button
