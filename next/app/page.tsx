@@ -63,9 +63,9 @@ export default async function Page() {
             <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
           </div>
         </div>
-        <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
-          <div className="flex items-stretch px-4 py-2 gap-8 w-full">
-            <HomeCardList rooms={data} />
+        <div className="px-4 pb-8">
+          <div className="grid grid-cols-3 gap-8 justify-items-center">
+            <HomeCardList rooms={data.slice(0, 3)} />
           </div>
         </div>
 
