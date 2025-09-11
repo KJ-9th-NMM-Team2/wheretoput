@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, Suspense, useState, useEffect } from "react";
+import React, { useRef, Suspense, useState, useEffect, useMemo } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
@@ -423,9 +423,9 @@ export function SimulatorCore({
             </>
           )}
 
-          <Suspense fallback={null}>
-            {loadedModels.map((model: any) => {
-              return (
+          {useMemo(() => 
+            loadedModels.map((model: any) => (
+              <Suspense key={model.id} fallback={null}>
                 <DraggableModel
                   key={model.id}
                   modelId={model.id}
@@ -439,9 +439,9 @@ export function SimulatorCore({
                   texturePath={model.texturePath}
                   type={model.isCityKit ? "building" : "glb"}
                 />
-              );
-            })}
-          </Suspense>
+              </Suspense>
+            )), [loadedModels, controlsRef]
+          )}
 
           {/* 프리뷰 모드 */}
           <Suspense fallback={null}>

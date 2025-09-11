@@ -25,8 +25,8 @@ export const DraggableModel = React.memo(function DraggableModel({
   texturePath = null,
   type = "glb",
 }) {
-  // scale 값을 안전하게 처리
-  const safeScale = (() => {
+  // scale 값을 안전하게 처리 - useMemo로 캐싱
+  const safeScale = useMemo(() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
     const lengthArray = Array.isArray(length)
       ? length
@@ -35,7 +35,7 @@ export const DraggableModel = React.memo(function DraggableModel({
     return scaleArray.map((s, i) =>
       Math.max((s || 1) * (lengthArray[i] || 1) * 0.001, 0.001)
     );
-  })();
+  }, [scale, length]);
 
   const meshRef = useRef();
 
@@ -363,8 +363,8 @@ function SelectionBox({
   };
 
   return (
-    <lineSegments 
-      castShadow={false} 
+    <lineSegments
+      castShadow={false}
       receiveShadow={false}
       position={isPreviewBox ? [0, 0.5, 0] : [0, 0, 0]}
     >
