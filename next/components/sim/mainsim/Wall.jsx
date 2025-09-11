@@ -64,37 +64,14 @@ export function Wall({
       event.stopPropagation();
       
       if (isMerged && originalWalls) {
-        // 병합된 벽인 경우 원본 벽들을 모두 삭제
+        // 병합된 벽인 경우 원본 벽들을 모두 삭제 - removeWall에서 히스토리 관리
         originalWalls.forEach(originalWall => {
           console.log('병합된 벽의 원본 삭제:', originalWall);
-          addAction({
-            type: ActionType.WALL_REMOVE,
-            data: {
-              furnitureId: originalWall.id,
-              previousData: originalWall
-            },
-            description: `벽을 삭제했습니다`
-          });
-          removeWall(originalWall.id, false);
+          removeWall(originalWall.id, true); // shouldBroadcast를 true로 변경하여 히스토리 추가
         });
       } else {
-        // 일반 벽 삭제
-        const wallToDelete = wallsData.find(wall => wall.id === id);
-        // console.log('벽 삭제 히스토리 기록:', wallToDelete);
-        if (wallToDelete) {
-          console.log('addAction 호출 전 (삭제)');
-          addAction({
-            type: ActionType.WALL_REMOVE,
-            data: {
-              furnitureId: id, // wallId
-              previousData: wallToDelete
-            },
-            description: `벽을 삭제했습니다`
-          });
-          console.log('addAction 호출 후 (삭제)');
-        }
-        
-        removeWall(id, false);
+        // 일반 벽 삭제 - removeWall에서 히스토리 관리
+        removeWall(id, true); // shouldBroadcast를 true로 변경하여 히스토리 추가
       }
     } else if (wallToolMode === 'edit') {
       event.stopPropagation();
