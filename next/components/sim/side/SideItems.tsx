@@ -55,7 +55,9 @@ const SideItems: React.FC<SideItemsProps> = ({
   const [items, setItems] = useState<Furniture[]>([]);
   const [selectedItems, setSelectedItems] = useState<Furniture[]>([]);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const { addModel, loadedModels, selectModel } = useStore();
+
+  const itemsPerPage = 8;
+  const { addModel, loadedModels, selectModel, startPreviewMode, previewMode, cancelPreview } = useStore();
   const { addAction } = useHistory();
 
   // API에서 데이터 가져오기 함수
@@ -103,7 +105,11 @@ const SideItems: React.FC<SideItemsProps> = ({
     const refreshSelectedItems = async () => {
       if (selectedCategory === "-1") {
         const furnitureId = loadedModels.map((item: any) => item.furniture_id);
-        const result = await fetchSelectedFurnitures(furnitureId, roomId, sortOption);
+        const result = await fetchSelectedFurnitures(
+          furnitureId,
+          roomId,
+          sortOption
+        );
 
         if (result) {
           setSelectedItems(result.furnitures);
@@ -123,70 +129,89 @@ const SideItems: React.FC<SideItemsProps> = ({
     handlePageChange(page, setPage, "next", totalPages);
   }, [page, totalPages]);
 
-  // 아이템 클릭 핸들러
+  // 아이템 클릭 핸들러 - 즉시 프리뷰 모드 시작
   const handleItemClick = useCallback(
-    async (item: Furniture) => {
-      const start = performance.now(); // 가져오기 - 타임 시작
-      const toastId = toast.loading(`${item.name} 생성 중...`);
-
-      try {
-        const response = await fetch("/api/model-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ furniture_id: item.furniture_id }),
-        });
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        console.log('Response ok:', response.ok);
-        
-        const end = performance.now(); // 가져오기 - 타임 끝
-        const duration = end - start;
-        console.log(`[${item.name}] [생성 시간]: ${duration}ms`);
-        
-        const result = await response.json();
-
-        if (result.success) {
-          const newModel = createNewModel(item, result.model_url);
-          const modelId = crypto.randomUUID();
-          const modelWithId = { ...newModel, id: modelId };
-
-          toast.success(`${item.name} 생성 완료`, { id: toastId });
-          addModel(modelWithId);
-
-          // 히스토리에 가구 추가 액션 기록
-          addAction({
-            type: ActionType.FURNITURE_ADD,
-            data: {
-              furnitureId: modelId,
-              previousData: modelWithId,
-            },
-            description: `${item.name} 추가`,
-          });
-        } else {
-          throw new Error(result.error || `${item.name} 생성 실패`);
-        }
-      } catch (error) {
-        console.error(`${item.name} 생성 실패:`, error);
-        toast.error(`${item.name} 생성 실패:`, { id: toastId });
-        // fallback 처리
-        const newModel = createNewModel(item);
-        const modelId = crypto.randomUUID();
-        const modelWithId = { ...newModel, id: modelId };
-
-        addModel(modelWithId);
-
-        // 히스토리에 가구 추가 액션 기록
-        addAction({
-          type: ActionType.FURNITURE_ADD,
-          data: {
-            furnitureId: modelId,
-            previousData: modelWithId,
-          },
-          description: `${item.name} 추가`,
-        });
+    (item: Furniture) => {
+      // 프리뷰 모드 중이면 기존 프리뷰 취소하고 새 모델로 교체
+      if (previewMode) {
+        console.log('프리뷰 모드 중 - 모델 교체');
+        cancelPreview(); // 기존 프리뷰 취소
       }
+
+      // 즉시 프리뷰용 모델 데이터 생성 (기본 모델 URL 사용)
+      const previewModel = createNewModel(item, null); // 일단 null로 시작
+      const modelId = crypto.randomUUID();
+      const modelWithId = {
+        ...previewModel,
+        id: modelId,
+        // 원본 아이템 정보 저장 (히스토리용)
+        _originalItem: item,
+        _addAction: addAction,
+      };
+
+      // AbortController 생성
+      const abortController = new AbortController();
+      
+      // 약간의 딜레이 후 프리뷰 모드 시작 (상태 충돌 방지)
+      setTimeout(() => {
+        startPreviewMode(modelWithId, abortController);
+      }, 10);
+
+      // 백그라운드에서 실제 모델 URL 가져오기
+      const loadingToastId = toast.loading(`${item.name} 모델 로딩 중...`);
+
+      fetch("/api/model-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ furniture_id: item.furniture_id }),
+        signal: abortController.signal, // AbortController 신호 추가
+      })
+        .then((response) => response.json())
+        .then((result) => {
+          if (result.success && result.model_url) {
+            // 실제 모델 URL을 가져왔으면 업데이트
+            const { 
+              setCurrentPreviewFurniture, 
+              currentPreviewFurniture, 
+              loadedModels,
+              updateModelUrl
+            } = useStore.getState();
+            
+            const updatedModel = {
+              ...modelWithId,
+              url: result.model_url,
+            };
+            
+            // 아직 프리뷰 모드이고 같은 모델이라면 프리뷰 모델 업데이트
+            if (currentPreviewFurniture && currentPreviewFurniture.id === modelId) {
+              setCurrentPreviewFurniture(updatedModel);
+            } else {
+              // 이미 배치된 모델이라면 배치된 모델의 URL 업데이트
+              const placedModel = loadedModels.find(m => m.id === modelId);
+              if (placedModel) {
+                updateModelUrl(modelId, result.model_url);
+              }
+              // 그렇지 않으면 이미 취소된 프리뷰의 fetch 결과이므로 무시
+            }
+            
+            toast.success(`${item.name} 모델 로딩 완료`, {
+              id: loadingToastId,
+            });
+          } else {
+            toast.dismiss(loadingToastId);
+          }
+        })
+        .catch((error) => {
+          if (error.name === 'AbortError') {
+            console.log("모델 로딩이 취소되었습니다:", error);
+            toast.dismiss(loadingToastId);
+          } else {
+            console.log("모델 URL 가져오기 실패, 기본 모델 사용:", error);
+            toast.dismiss(loadingToastId);
+          }
+        });
     },
-    [addModel, addAction]
+    [startPreviewMode, addAction, previewMode, cancelPreview]
   );
 
   // 이미지 에러 핸들러
