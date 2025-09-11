@@ -469,6 +469,9 @@ export function SimulatorCore({
             onPointerDown={(event) => {
               // 벽 추가 모드에서의 바닥 클릭 처리
               if (wallToolMode === 'add') {
+                if (event.button != 0)
+                  return;
+
                 event.stopPropagation();
                 const point = event.point;
                 const clickPoint = [point.x, 0, point.z];
