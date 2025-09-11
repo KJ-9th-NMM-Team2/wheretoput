@@ -132,7 +132,7 @@ export class RoomService {
               },
             },
             include: {
-              user: {
+              User: {
                 select: {
                   id: true,
                   name: true,
@@ -145,10 +145,10 @@ export class RoomService {
 
       if (existingRoom) {
         // 두 참가자의 상태 확인
-        const myParticipant = existingRoom.chat_participants.find(
+        const myParticipant = existingRoom.chat_participants?.find(
           p => p.user_id === params.currentUserId
         );
-        const otherParticipant = existingRoom.chat_participants.find(
+        const otherParticipant = existingRoom.chat_participants?.find(
           p => p.user_id === params.otherUserId
         );
         
