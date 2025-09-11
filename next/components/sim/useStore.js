@@ -3,6 +3,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import * as THREE from "three";
 import { getColab } from "@/lib/api/toggleColab";
 
+
 function sphericalToCartesian(radius, azimuth, elevation) {
   const x =
     radius *
@@ -520,6 +521,27 @@ export const useStore = create(
       // 벽 자석 시각적 효과용 상태
       snappedWallInfo: null,
       setSnappedWallInfo: (wallInfo) => set({ snappedWallInfo: wallInfo }),
+
+      // 쌓기 모드 상태 (버튼 클릭 시 활성화)
+      isStackingMode: false,
+      setIsStackingMode: (value) => set({ isStackingMode: value }),
+      stackingBaseModel: null, // 아래에 있을 기준 모델
+      setStackingBaseModel: (model) => set({ stackingBaseModel: model }),
+
+      // 각 모델의 getSelectionBoxSize 함수들을 저장
+      modelBoundingBoxFunctions: new Map(),
+      registerModelBoundingBoxFunction: (modelId, boundingBoxFn) =>
+        set((state) => {
+          const newMap = new Map(state.modelBoundingBoxFunctions);
+          newMap.set(modelId, boundingBoxFn);
+          return { modelBoundingBoxFunctions: newMap };
+        }),
+      unregisterModelBoundingBoxFunction: (modelId) =>
+        set((state) => {
+          const newMap = new Map(state.modelBoundingBoxFunctions);
+          newMap.delete(modelId);
+          return { modelBoundingBoxFunctions: newMap };
+        }),
 
       // 색상 관련 상태
       wallColor: "#FFFFFF",
