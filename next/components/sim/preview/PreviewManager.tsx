@@ -111,22 +111,40 @@ export function PreviewManager() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [previewMode, confirmPreview, cancelPreview]);
 
-  // 마우스 움직임에 따른 위치 업데이트
-  useFrame(() => {
+  // 마우스 움직임에 따른 위치 업데이트 (이벤트 기반)
+  useEffect(() => {
     if (!previewMode || !currentPreviewFurniture) return;
 
-    // 마우스 위치를 3D 월드 좌표로 변환
-    raycaster.setFromCamera(pointer, camera);
+    const handleMouseMove = (event: MouseEvent) => {
+      const canvas = document.querySelector("canvas");
+      if (!canvas) return;
 
-    // y=0 평면과의 교차점 계산
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const intersection = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, intersection);
+      const rect = canvas.getBoundingClientRect();
+      const mouse = {
+        x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      };
 
-    if (intersection) {
-      setPreviewPosition([intersection.x, 0, intersection.z]);
-    }
-  });
+      raycaster.setFromCamera(mouse, camera);
+
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, intersection);
+
+      if (intersection) {
+        setPreviewPosition([intersection.x, 0, intersection.z]);
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [
+    previewMode,
+    currentPreviewFurniture,
+    raycaster,
+    camera,
+    setPreviewPosition,
+  ]);
 
   // 마우스 클릭 이벤트
   useEffect(() => {
@@ -154,7 +172,7 @@ export function PreviewManager() {
     return null;
   }
 
-  // 가구 크기 계산 (DraggableModel의 safeScale 로직과 동일)
+  // 가구 크기 계산 (DraggableModel의 safeScale 로직과 동일, 최소 크기 보장)
   const furnitureSize: [number, number, number] = (() => {
     const scale = [1, 1, 1]; // preview에서는 기본 scale 1
     const length = [
@@ -163,13 +181,51 @@ export function PreviewManager() {
       currentPreviewFurniture.length[2],
     ];
 
+    const MIN_SIZE = 0.001;
+
     return scale.map((s, i) =>
-      Math.max((s || 1) * (length[i] || 1) * 0.001, 0.001)
+      Math.max((s || 1) * (length[i] || 1) * 0.001, MIN_SIZE)
     ) as [number, number, number];
   })();
 
   return (
     <>
+      {/* 바닥 원형 표시 - 위치 가이드 */}
+      <mesh
+        position={[previewPosition[0], 0.001, previewPosition[2]]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry
+          args={[Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3), 32]}
+        />
+        <meshBasicMaterial
+          color="#00ff88"
+          transparent
+          opacity={0.3}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* 바닥 원형 테두리 */}
+      <mesh
+        position={[previewPosition[0], 0.002, previewPosition[2]]}
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <ringGeometry
+          args={[
+            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.75, 0.25),
+            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3),
+            32,
+          ]}
+        />
+        <meshBasicMaterial
+          color="#00ff88"
+          transparent
+          opacity={0.8}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
       {/* URL이 있으면 GLB 모델, 없으면 임시 박스 */}
       {currentPreviewFurniture.url ? (
         <>
