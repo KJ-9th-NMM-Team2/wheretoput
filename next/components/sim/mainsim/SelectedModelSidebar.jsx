@@ -275,7 +275,7 @@ export function SelectedModelEditModal() {
       onClose={deselectModel}
       defaultCollapsed={false}
     >
-      <div className="p-4 select-none">
+      <div className="px-4 mt-6 select-none">
         {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
           <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
