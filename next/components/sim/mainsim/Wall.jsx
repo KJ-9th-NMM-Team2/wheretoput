@@ -12,6 +12,8 @@ export function Wall({
   position,
   rotation = [0, 0, 0],
   id,
+  isMerged = false,
+  originalWalls = null,
 }) {
   const { invalidate } = useThree();
   const meshRef = useRef(null);
@@ -61,26 +63,48 @@ export function Wall({
     if (wallToolMode === 'delete') {
       event.stopPropagation();
       
-      // 삭제할 벽 데이터 저장 (히스토리용)
-      const wallToDelete = wallsData.find(wall => wall.id === id);
-      console.log('벽 삭제 히스토리 기록:', wallToDelete);
-      if (wallToDelete) {
-        console.log('addAction 호출 전 (삭제)');
-        addAction({
-          type: ActionType.WALL_REMOVE,
-          data: {
-            furnitureId: id, // wallId
-            previousData: wallToDelete
-          },
-          description: `벽을 삭제했습니다`
+      if (isMerged && originalWalls) {
+        // 병합된 벽인 경우 원본 벽들을 모두 삭제
+        originalWalls.forEach(originalWall => {
+          console.log('병합된 벽의 원본 삭제:', originalWall);
+          addAction({
+            type: ActionType.WALL_REMOVE,
+            data: {
+              furnitureId: originalWall.id,
+              previousData: originalWall
+            },
+            description: `벽을 삭제했습니다`
+          });
+          removeWall(originalWall.id, false);
         });
-        console.log('addAction 호출 후 (삭제)');
+      } else {
+        // 일반 벽 삭제
+        const wallToDelete = wallsData.find(wall => wall.id === id);
+        // console.log('벽 삭제 히스토리 기록:', wallToDelete);
+        if (wallToDelete) {
+          console.log('addAction 호출 전 (삭제)');
+          addAction({
+            type: ActionType.WALL_REMOVE,
+            data: {
+              furnitureId: id, // wallId
+              previousData: wallToDelete
+            },
+            description: `벽을 삭제했습니다`
+          });
+          console.log('addAction 호출 후 (삭제)');
+        }
+        
+        removeWall(id, false);
       }
-      
-      removeWall(id, false);
     } else if (wallToolMode === 'edit') {
       event.stopPropagation();
-      setSelectedWallId(id);
+      
+      if (isMerged && originalWalls) {
+        // 병합된 벽인 경우 첫 번째 원본 벽을 선택
+        setSelectedWallId(originalWalls[0].id);
+      } else {
+        setSelectedWallId(id);
+      }
     }
   };
 

@@ -7,6 +7,7 @@ import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
+import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
 import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
 import { WallSnapPoints } from "@/components/sim/mainsim/WallSnapPoints.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
@@ -359,19 +360,9 @@ export function SimulatorCore({
           />
           <Floor wallsData={wallsData} />
 
-          {/* 벽 렌더링 */}
+          {/* 벽 렌더링 - 자동 병합 적용 */}
           {wallsData.length > 0 ? (
-            wallsData.map((wall) => (
-              <Wall
-                key={wall.id}
-                width={Math.max(wall.dimensions.width, 0.5)}
-                height={Math.max(wall.dimensions.height, 2.5)}
-                depth={Math.max(wall.dimensions.depth, 0.2)}
-                position={wall.position}
-                rotation={wall.rotation}
-                id={wall.id}
-              />
-            ))
+            <MergedWalls wallsData={wallsData} />
           ) : (
             <>
               <Wall

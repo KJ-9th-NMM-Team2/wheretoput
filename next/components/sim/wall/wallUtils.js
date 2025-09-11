@@ -302,3 +302,153 @@ export const autoSnapToNearestWallEndpoint = (clickPoint, existingWalls, snapDis
 
   return closestPoint || clickPoint;
 };
+
+/**
+ * 벽의 시작점과 끝점을 계산
+ * @param {Object} wall - 벽 객체
+ * @returns {Object} { start: [x, z], end: [x, z] }
+ */
+export const getWallEndpoints = (wall) => {
+  const { position, rotation, dimensions } = wall;
+  const halfWidth = dimensions.width / 2;
+  const cos = Math.cos(rotation[1]);
+  const sin = Math.sin(rotation[1]);
+  
+  return {
+    start: [
+      position[0] - halfWidth * cos,
+      position[2] - halfWidth * sin
+    ],
+    end: [
+      position[0] + halfWidth * cos,
+      position[2] + halfWidth * sin
+    ]
+  };
+};
+
+/**
+ * 두 벽이 일직선상에 있고 연결되어 있는지 확인
+ * @param {Object} wall1 - 첫 번째 벽
+ * @param {Object} wall2 - 두 번째 벽
+ * @param {number} tolerance - 허용 오차 (기본값: 0.1)
+ * @returns {boolean} 연결 여부
+ */
+export const areWallsConnectedInLine = (wall1, wall2, tolerance = 0.1) => {
+  // 같은 각도인지 확인 (평행한지)
+  const angle1 = wall1.rotation[1];
+  const angle2 = wall2.rotation[1];
+  const angleDiff = Math.abs(angle1 - angle2);
+  const isParallel = angleDiff < tolerance || Math.abs(angleDiff - Math.PI) < tolerance;
+  
+  if (!isParallel) return false;
+  
+  const endpoints1 = getWallEndpoints(wall1);
+  const endpoints2 = getWallEndpoints(wall2);
+  
+  // 벽의 끝점들이 연결되어 있는지 확인
+  const connections = [
+    calculate2DDistance([endpoints1.start[0], 0, endpoints1.start[1]], [endpoints2.start[0], 0, endpoints2.start[1]]),
+    calculate2DDistance([endpoints1.start[0], 0, endpoints1.start[1]], [endpoints2.end[0], 0, endpoints2.end[1]]),
+    calculate2DDistance([endpoints1.end[0], 0, endpoints1.end[1]], [endpoints2.start[0], 0, endpoints2.start[1]]),
+    calculate2DDistance([endpoints1.end[0], 0, endpoints1.end[1]], [endpoints2.end[0], 0, endpoints2.end[1]])
+  ];
+  
+  return connections.some(distance => distance < tolerance);
+};
+
+/**
+ * 연결된 벽들을 그룹으로 찾기
+ * @param {Array} walls - 벽 배열
+ * @returns {Array} 연결된 벽 그룹들의 배열
+ */
+export const findConnectedWallGroups = (walls) => {
+  if (!walls || walls.length === 0) return [];
+  
+  const visited = new Set();
+  const groups = [];
+  
+  const findConnectedWalls = (startWall, currentGroup) => {
+    if (visited.has(startWall.id)) return;
+    
+    visited.add(startWall.id);
+    currentGroup.push(startWall);
+    
+    // 다른 벽들과 연결 확인
+    walls.forEach(wall => {
+      if (!visited.has(wall.id) && areWallsConnectedInLine(startWall, wall)) {
+        findConnectedWalls(wall, currentGroup);
+      }
+    });
+  };
+  
+  walls.forEach(wall => {
+    if (!visited.has(wall.id)) {
+      const group = [];
+      findConnectedWalls(wall, group);
+      
+      // 2개 이상의 벽이 연결된 경우만 그룹으로 처리
+      if (group.length > 1) {
+        groups.push(group);
+      }
+    }
+  });
+  
+  return groups;
+};
+
+/**
+ * 연결된 벽 그룹을 하나의 병합된 벽으로 계산
+ * @param {Array} wallGroup - 연결된 벽들의 배열
+ * @returns {Object} 병합된 벽 정보
+ */
+export const mergeWallGroup = (wallGroup) => {
+  if (!wallGroup || wallGroup.length === 0) return null;
+  if (wallGroup.length === 1) return wallGroup[0];
+  
+  // 모든 벽의 끝점들을 수집
+  const allEndpoints = [];
+  wallGroup.forEach(wall => {
+    const endpoints = getWallEndpoints(wall);
+    allEndpoints.push([endpoints.start[0], endpoints.start[1]]);
+    allEndpoints.push([endpoints.end[0], endpoints.end[1]]);
+  });
+  
+  // 가장 멀리 떨어진 두 점 찾기 (병합된 벽의 시작점과 끝점)
+  let maxDistance = 0;
+  let mergedStart = null;
+  let mergedEnd = null;
+  
+  for (let i = 0; i < allEndpoints.length; i++) {
+    for (let j = i + 1; j < allEndpoints.length; j++) {
+      const distance = calculate2DDistance(
+        [allEndpoints[i][0], 0, allEndpoints[i][1]], 
+        [allEndpoints[j][0], 0, allEndpoints[j][1]]
+      );
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        mergedStart = allEndpoints[i];
+        mergedEnd = allEndpoints[j];
+      }
+    }
+  }
+  
+  // 병합된 벽의 중점과 회전 계산
+  const centerX = (mergedStart[0] + mergedEnd[0]) / 2;
+  const centerZ = (mergedStart[1] + mergedEnd[1]) / 2;
+  const rotation = Math.atan2(mergedEnd[1] - mergedStart[1], mergedEnd[0] - mergedStart[0]);
+  
+  // 첫 번째 벽의 속성을 기본으로 사용
+  const firstWall = wallGroup[0];
+  
+  return {
+    id: `merged_${wallGroup.map(w => w.id).join('_')}`,
+    position: [centerX, firstWall.position[1], centerZ],
+    rotation: [0, rotation, 0],
+    dimensions: {
+      width: maxDistance,
+      height: firstWall.dimensions.height,
+      depth: firstWall.dimensions.depth
+    },
+    originalWalls: wallGroup // 원본 벽들 참조
+  };
+};

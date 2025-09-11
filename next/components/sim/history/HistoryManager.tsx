@@ -85,7 +85,6 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     const handleAddHistoryAction = (event: any) => {
       const { type, data, description } = event.detail;
-      console.log('히스토리 액션 추가 이벤트 수신:', { type, data, description });
       
       const newAction: HistoryAction = {
         type,
@@ -317,7 +316,7 @@ function scaleFurnitureInScene(furnitureId: string, scale: any) {
 }
 
 function addWallToScene(data: any) {
-  console.log('히스토리: 벽 추가 이벤트 발생', data.previousData);
+  // console.log('히스토리: 벽 추가 이벤트 발생', data.previousData);
   window.dispatchEvent(
     new CustomEvent("historyAddWall", {
       detail: { wallData: data.previousData },
@@ -326,7 +325,6 @@ function addWallToScene(data: any) {
 }
 
 function removeWallFromScene(wallId: string) {
-  console.log('히스토리: 벽 삭제 이벤트 발생', wallId);
   window.dispatchEvent(
     new CustomEvent("historyRemoveWall", {
       detail: { wallId },

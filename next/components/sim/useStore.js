@@ -48,13 +48,13 @@ export const useStore = create(
 
       window.addEventListener("historyAddWall", (event) => {
         const { wallData } = event.detail;
-        console.log('useStore: 벽 추가 이벤트 수신', wallData);
+        // console.log('useStore: 벽 추가 이벤트 수신', wallData);
         get().addWallWithId(wallData, false);
       });
 
       window.addEventListener("historyRemoveWall", (event) => {
         const { wallId } = event.detail;
-        console.log('useStore: 벽 삭제 이벤트 수신', wallId);
+
         get().removeWallFromHistory(wallId);
       });
     }
@@ -568,208 +568,220 @@ export const useStore = create(
       setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
 
       // 벽 도구 모드 관련 액션
-      setWallToolMode: (mode) => set({ wallToolMode: mode, wallDrawingStart: null, selectedWallId: null }),
+      setWallToolMode: (mode) =>
+        set({
+          wallToolMode: mode,
+          wallDrawingStart: null,
+          selectedWallId: null,
+        }),
       setWallDrawingStart: (point) => set({ wallDrawingStart: point }),
       setSelectedWallId: (wallId) => set({ selectedWallId: wallId }),
-      
+
       // 히스토리 복원용: 기존 ID를 유지하면서 벽 추가 (히스토리 액션 추가 안함)
-      addWallWithId: (wallData, shouldBroadcast = true) => set((state) => {
-        console.log('히스토리에서 벽 추가:', wallData);
-        return {
-          wallsData: [...state.wallsData, wallData],
-        };
-      }),
+      addWallWithId: (wallData, shouldBroadcast = true) =>
+        set((state) => {
+          // console.log('히스토리에서 벽 추가:', wallData);
+          return {
+            wallsData: [...state.wallsData, wallData],
+          };
+        }),
 
       // 벽 추가 액션 (스냅 기능 포함)
-      addWall: (startPoint, endPoint) => set((state) => {
-        // 벽 스냅 기능 적용
-        let snappedStart = startPoint;
-        let snappedEnd = endPoint;
-        
-        if (state.wallsData.length > 0) {
-          // 기존 벽의 끝점에 스냅
-          const snapDistance = 0.5;
-          
-          // 시작점 스냅
-          let closestStartPoint = null;
-          let minStartDistance = snapDistance;
-          
-          state.wallsData.forEach(wall => {
-            const { position, rotation, dimensions } = wall;
-            const halfWidth = dimensions.width / 2;
-            const cos = Math.cos(rotation[1]);
-            const sin = Math.sin(rotation[1]);
-            
-            const endpoints = [
-              [
-                position[0] - halfWidth * cos,
-                position[1],
-                position[2] - halfWidth * sin
-              ],
-              [
-                position[0] + halfWidth * cos,
-                position[1],
-                position[2] + halfWidth * sin
-              ]
-            ];
+      addWall: (startPoint, endPoint) =>
+        set((state) => {
+          // 벽 스냅 기능 적용
+          let snappedStart = startPoint;
+          let snappedEnd = endPoint;
 
-            endpoints.forEach(endpoint => {
-              const distance = Math.sqrt(
-                Math.pow(startPoint[0] - endpoint[0], 2) +
-                Math.pow(startPoint[2] - endpoint[2], 2)
-              );
-              if (distance < minStartDistance) {
-                minStartDistance = distance;
-                closestStartPoint = endpoint;
-              }
+          if (state.wallsData.length > 0) {
+            // 기존 벽의 끝점에 스냅
+            const snapDistance = 0.5;
+
+            // 시작점 스냅
+            let closestStartPoint = null;
+            let minStartDistance = snapDistance;
+
+            state.wallsData.forEach((wall) => {
+              const { position, rotation, dimensions } = wall;
+              const halfWidth = dimensions.width / 2;
+              const cos = Math.cos(rotation[1]);
+              const sin = Math.sin(rotation[1]);
+
+              const endpoints = [
+                [
+                  position[0] - halfWidth * cos,
+                  position[1],
+                  position[2] - halfWidth * sin,
+                ],
+                [
+                  position[0] + halfWidth * cos,
+                  position[1],
+                  position[2] + halfWidth * sin,
+                ],
+              ];
+
+              endpoints.forEach((endpoint) => {
+                const distance = Math.sqrt(
+                  Math.pow(startPoint[0] - endpoint[0], 2) +
+                    Math.pow(startPoint[2] - endpoint[2], 2)
+                );
+                if (distance < minStartDistance) {
+                  minStartDistance = distance;
+                  closestStartPoint = endpoint;
+                }
+              });
             });
-          });
-          
-          if (closestStartPoint) {
-            snappedStart = closestStartPoint;
-          }
-          
-          // 끝점 스냅
-          let closestEndPoint = null;
-          let minEndDistance = snapDistance;
-          
-          state.wallsData.forEach(wall => {
-            const { position, rotation, dimensions } = wall;
-            const halfWidth = dimensions.width / 2;
-            const cos = Math.cos(rotation[1]);
-            const sin = Math.sin(rotation[1]);
-            
-            const endpoints = [
-              [
-                position[0] - halfWidth * cos,
-                position[1],
-                position[2] - halfWidth * sin
-              ],
-              [
-                position[0] + halfWidth * cos,
-                position[1],
-                position[2] + halfWidth * sin
-              ]
-            ];
 
-            endpoints.forEach(endpoint => {
-              const distance = Math.sqrt(
-                Math.pow(endPoint[0] - endpoint[0], 2) +
-                Math.pow(endPoint[2] - endpoint[2], 2)
-              );
-              if (distance < minEndDistance) {
-                minEndDistance = distance;
-                closestEndPoint = endpoint;
-              }
+            if (closestStartPoint) {
+              snappedStart = closestStartPoint;
+            }
+
+            // 끝점 스냅
+            let closestEndPoint = null;
+            let minEndDistance = snapDistance;
+
+            state.wallsData.forEach((wall) => {
+              const { position, rotation, dimensions } = wall;
+              const halfWidth = dimensions.width / 2;
+              const cos = Math.cos(rotation[1]);
+              const sin = Math.sin(rotation[1]);
+
+              const endpoints = [
+                [
+                  position[0] - halfWidth * cos,
+                  position[1],
+                  position[2] - halfWidth * sin,
+                ],
+                [
+                  position[0] + halfWidth * cos,
+                  position[1],
+                  position[2] + halfWidth * sin,
+                ],
+              ];
+
+              endpoints.forEach((endpoint) => {
+                const distance = Math.sqrt(
+                  Math.pow(endPoint[0] - endpoint[0], 2) +
+                    Math.pow(endPoint[2] - endpoint[2], 2)
+                );
+                if (distance < minEndDistance) {
+                  minEndDistance = distance;
+                  closestEndPoint = endpoint;
+                }
+              });
             });
-          });
-          
-          if (closestEndPoint) {
-            snappedEnd = closestEndPoint;
-          }
-        }
-        
-        // 벽의 방향 벡터 계산 (스냅된 좌표 사용)
-        const dx = snappedEnd[0] - snappedStart[0];
-        const dz = snappedEnd[2] - snappedStart[2];
-        
-        // 벽의 길이 계산
-        const wallLength = Math.sqrt(dx * dx + dz * dz);
-        
-        // 너무 짧은 벽은 생성하지 않음
-        if (wallLength < 0.1) {
-          console.warn('벽이 너무 짧습니다.');
-          return state;
-        }
-        
-        // Y축 회전각 계산
-        const rotationY = Math.atan2(-dz, dx);
-        
-        const newWall = {
-          id: crypto.randomUUID(),
-          position: [
-            (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
-            (state.wallsData[0]?.position[1] || 2.5), // 기존 벽 높이나 기본값
-            (snappedStart[2] + snappedEnd[2]) / 2  // 중점 Z
-          ],
-          rotation: [
-            0, 
-            rotationY, // 올바른 Y축 회전각
-            0
-          ],
-          dimensions: {
-            width: wallLength, // 계산된 길이 사용
-            height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
-            depth: state.wallsData[0]?.dimensions?.depth || 0.2  // 기존 벽 두께 사용
-          }
-        };
-        
-        console.log('벽 추가:', newWall);
-        
-        // 히스토리 액션 추가
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(
-            new CustomEvent("addHistoryAction", {
-              detail: {
-                type: "WALL_ADD",
-                data: {
-                  furnitureId: newWall.id,
-                  previousData: newWall
-                },
-                description: "벽 추가"
-              }
-            })
-          );
-        }
-        
-        return {
-          wallsData: [...state.wallsData, newWall],
-          wallDrawingStart: null, // 벽 추가 후 시작점 초기화
-        };
-      }),
 
-      // 벽 삭제 액션
-      removeWall: (wallId, shouldBroadcast = true) => set((state) => {
-        const wallToRemove = state.wallsData.find(wall => wall.id === wallId);
-        
-        if (wallToRemove) {
-          console.log('벽 삭제:', wallToRemove);
-          
+            if (closestEndPoint) {
+              snappedEnd = closestEndPoint;
+            }
+          }
+
+          // 벽의 방향 벡터 계산 (스냅된 좌표 사용)
+          const dx = snappedEnd[0] - snappedStart[0];
+          const dz = snappedEnd[2] - snappedStart[2];
+
+          // 벽의 길이 계산
+          const wallLength = Math.sqrt(dx * dx + dz * dz);
+
+          // 너무 짧은 벽은 생성하지 않음
+          if (wallLength < 0.1) {
+            console.warn("벽이 너무 짧습니다.");
+            return state;
+          }
+
+          // Y축 회전각 계산
+          const rotationY = Math.atan2(-dz, dx);
+
+          const newWall = {
+            id: crypto.randomUUID(),
+            position: [
+              (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
+              state.wallsData[0]?.position[1] || 2.5, // 기존 벽 높이나 기본값
+              (snappedStart[2] + snappedEnd[2]) / 2, // 중점 Z
+            ],
+            rotation: [
+              0,
+              rotationY, // 올바른 Y축 회전각
+              0,
+            ],
+            dimensions: {
+              width: wallLength, // 계산된 길이 사용
+              height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
+              depth: state.wallsData[0]?.dimensions?.depth || 0.2, // 기존 벽 두께 사용
+            },
+          };
+
+          // console.log('벽 추가:', newWall);
+
           // 히스토리 액션 추가
           if (typeof window !== "undefined") {
             window.dispatchEvent(
               new CustomEvent("addHistoryAction", {
                 detail: {
-                  type: "WALL_REMOVE",
+                  type: "WALL_ADD",
                   data: {
-                    furnitureId: wallId,
-                    previousData: wallToRemove
+                    furnitureId: newWall.id,
+                    previousData: newWall,
                   },
-                  description: "벽 삭제"
-                }
+                  description: "벽 추가",
+                },
               })
             );
           }
-        }
-        
-        return {
-          wallsData: state.wallsData.filter(wall => wall.id !== wallId),
-          selectedWallId: null,
-        };
-      }),
+
+          return {
+            wallsData: [...state.wallsData, newWall],
+            wallDrawingStart: null, // 벽 추가 후 시작점 초기화
+          };
+        }),
+
+      // 벽 삭제 액션
+      removeWall: (wallId, shouldBroadcast = true) =>
+        set((state) => {
+          const wallToRemove = state.wallsData.find(
+            (wall) => wall.id === wallId
+          );
+
+          if (wallToRemove) {
+            console.log("벽 삭제:", wallToRemove);
+
+            // 히스토리 액션 추가
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("addHistoryAction", {
+                  detail: {
+                    type: "WALL_REMOVE",
+                    data: {
+                      furnitureId: wallId,
+                      previousData: wallToRemove,
+                    },
+                    description: "벽 삭제",
+                  },
+                })
+              );
+            }
+          }
+
+          return {
+            wallsData: state.wallsData.filter((wall) => wall.id !== wallId),
+            selectedWallId: null,
+          };
+        }),
 
       // 히스토리 복원용 벽 삭제 (히스토리 액션 추가 안함)
-      removeWallFromHistory: (wallId) => set((state) => ({
-        wallsData: state.wallsData.filter(wall => wall.id !== wallId),
-        selectedWallId: null,
-      })),
+      removeWallFromHistory: (wallId) =>
+        set((state) => ({
+          wallsData: state.wallsData.filter((wall) => wall.id !== wallId),
+          selectedWallId: null,
+        })),
 
       // 벽 업데이트 액션
-      updateWall: (wallId, updates) => set((state) => ({
-        wallsData: state.wallsData.map(wall => 
-          wall.id === wallId ? { ...wall, ...updates } : wall
-        ),
-      })),
+      updateWall: (wallId, updates) =>
+        set((state) => ({
+          wallsData: state.wallsData.map((wall) =>
+            wall.id === wallId ? { ...wall, ...updates } : wall
+          ),
+        })),
 
       setSaving: (saving) => set({ isSaving: saving }),
       setCloning: (cloning) => set({ isCloning: cloning }),
