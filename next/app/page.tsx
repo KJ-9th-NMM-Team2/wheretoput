@@ -13,36 +13,44 @@ export default async function Page() {
         <div className="@container">
           <div className="@[480px]:p-4">
             <div
-              className="flex min-h-[360px] flex-col gap-4 bg-cover bg-center bg-no-repeat @[480px]:gap-6 @[480px]:rounded-xl items-center justify-center p-4"
+              className="relative flex min-h-[500px] flex-col gap-8 bg-cover bg-center bg-no-repeat @[480px]:rounded-xl justify-center p-12"
               style={{
                 backgroundImage: `linear-gradient(
-                  rgba(0, 0, 0, 0.1) 0%,
-                  rgba(0, 0, 0, 0.4) 100%
+                  rgba(255, 255, 255, 0.85) 0%,
+                  rgba(255, 255, 255, 0.75) 100%
                   ),
                   url('/main_background.avif')`,
               }}
             >
-              <div className="flex flex-col gap-2 text-center backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-2xl">
-                <h1 className="bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent text-4xl font-bold leading-[1.1] tracking-[-0.02em] @[480px]:text-5xl @[480px]:font-bold @[480px]:leading-[1.1] @[480px]:tracking-[-0.02em] drop-shadow-lg hover:scale-105 transition-transform duration-500">
-                  실내 인테리어 디자이너
+              {/* 메인 타이틀 */}
+              <div className="flex flex-col gap-4 max-w-2xl">
+                <h1 className="text-black text-6xl font-black leading-tight tracking-tight">
+                  상상하던 공간,
                 </h1>
-                <h2 className="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal drop-shadow-md">
-                  여러분만의 아름다운 집 안에 가구들을 배치해보세요 !
+                <h2 className="text-black text-5xl font-black leading-tight tracking-tight">
+                  3D로 손쉽게 현실로.
                 </h2>
-              </div>
-              <SearchBar />
-
-              <div className="flex justify-center">
-                <div className="flex flex-1 gap-3 flex-wrap px-4 py-1 max-w-[480px] justify-center">
-                  <Link
-                    href="/create"
-                    passHref
-                  >
-                    <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] grow hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                      <span className="truncate">새 집 만들기</span>
-                    </button>
-                  </Link>
+                
+                {/* 서브 텍스트 */}
+                <div className="flex flex-col gap-1 mt-4">
+                  <p className="text-black font-semibold text-lg leading-relaxed">
+                    나만의 집을 만들고
+                  </p>
+                  <p className="text-black font-semibold text-lg leading-relaxed">
+                    다른 사람들과 영감을 공유해보세요
+                  </p>
                 </div>
+              </div>
+
+
+              {/* 시작 버튼 */}
+              <div className="mt-8 flex justify-center ">
+                <Link href="/create" passHref>
+                  <button className="text-xl px-8 py-4 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">
+                    Get Started
+                  </button>
+                </Link>
+               
               </div>
             </div>
           </div>
@@ -55,9 +63,9 @@ export default async function Page() {
             <div className="flex-1 h-px bg-gradient-to-r from-amber-200 to-transparent dark:from-orange-400"></div>
           </div>
         </div>
-        <div className="flex overflow-y-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
-          <div className="flex items-stretch px-4 py-2 gap-8 w-full">
-            <HomeCardList rooms={data} />
+        <div className="px-4 pb-8">
+          <div className="grid grid-cols-3 gap-8 justify-items-center">
+            <HomeCardList rooms={data.slice(0, 3)} />
           </div>
         </div>
 

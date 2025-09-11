@@ -47,16 +47,17 @@ export default function Header() {
   return (
     <header
       className="
-        flex items-center justify-between whitespace-nowrap border-b border-solid px-6 py-4 transition-all duration-200
+        flex items-center justify-between whitespace-nowrap border-b border-solid transition-all duration-200
         border-amber-100 bg-white/95 backdrop-blur-sm shadow-sm
         dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg
         sticky top-0 z-50
       "
+      style={{ padding: '14px 32px 14px 12px' }}
     >
       <div className="flex items-center gap-8">
-        <div className="flex items-center gap-4 text-amber-900 dark:text-amber-100">
+        <div className="flex items-center gap-4">
           <Link href="/">
-            <h2 className="text-xl font-bold leading-tight tracking-tight hover:text-amber-600 transition-colors duration-200 cursor-pointer">
+            <h2 className="text-xl font-black leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
               어따놀래
             </h2>
           </Link>
@@ -66,25 +67,25 @@ export default function Header() {
             href="/create"
             rel="noopener noreferrer"
             className="
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
+              text-lg font-bold leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95
-              text-gray-700 hover:text-amber-800 hover:bg-amber-50
-              dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700
+              text-black hover:text-gray-600 hover:bg-gray-100
+              dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
             "
           >
-            집 만들기
+            빌드
           </Link>
 
           <Link
             href="/search"
             className="
-              text-md font-medium leading-normal px-3 py-2 rounded-md transition-all duration-200
+              text-lg font-bold leading-normal px-3 py-2 rounded-md transition-all duration-200
               hover:scale-105 active:scale-95
-              text-gray-700 hover:text-amber-800 hover:bg-amber-50
-              dark:text-gray-200 dark:hover:text-white dark:hover:bg-gray-700
+              text-black hover:text-gray-600 hover:bg-gray-100
+              dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
             "
           >
-            둘러보기
+            집들이
           </Link>
         </nav>
       </div>
@@ -94,7 +95,7 @@ export default function Header() {
           <div
             className="
               flex w-full items-stretch rounded-full h-10 shadow-sm
-              bg-amber-50 border border-amber-200
+              bg-gray-50 border border-gray-200
               dark:bg-gray-800 dark:border-gray-600
               hover:shadow-md transition-shadow duration-200
             "
@@ -102,7 +103,7 @@ export default function Header() {
             <div
               className="
                 flex items-center justify-center pl-4 rounded-l-full
-                text-amber-600 dark:text-gray-400
+                text-gray-500 dark:text-gray-400
               "
             >
               <svg
@@ -120,13 +121,13 @@ export default function Header() {
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={() => setIsComposing(false)}
               onKeyDown={handleKeyDown}
-              placeholder="검색어를 입력하세요"
+              placeholder="통합 검색"
               className="
                 flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full 
                 focus:outline-none focus:ring-2 border-none h-full px-4 text-sm font-normal leading-normal
                 transition-all duration-200
-                bg-amber-50 text-gray-900 placeholder:text-amber-400 focus:ring-amber-300
-                dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-amber-400
+                bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-gray-300
+                dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-gray-500
               "
               value={searchInput}
             />
