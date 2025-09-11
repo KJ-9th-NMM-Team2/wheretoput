@@ -36,11 +36,25 @@ export const handleStackModel = ({
   // 새로운 Y 위치 계산 (타겟 모델 위에 배치)
   const newY = currentBaseModel.position[1] + targetHeight;
 
+  // 베이스 모델과 쌓을 모델의 크기 계산
+  const baseWidth = (currentBaseModel.length[0] / 1000) * (Array.isArray(currentBaseModel.scale) ? currentBaseModel.scale[0] : currentBaseModel.scale);
+  const baseDepth = (currentBaseModel.length[2] / 1000) * (Array.isArray(currentBaseModel.scale) ? currentBaseModel.scale[2] : currentBaseModel.scale);
+  
+  const selectedWidth = (selectedModel.length[0] / 1000) * (Array.isArray(selectedModel.scale) ? selectedModel.scale[0] : selectedModel.scale);
+  const selectedDepth = (selectedModel.length[2] / 1000) * (Array.isArray(selectedModel.scale) ? selectedModel.scale[2] : selectedModel.scale);
+  
+  // 베이스 모델 안에서 쌓을 모델이 들어갈 수 있는 최대 오프셋 계산
+  const maxOffsetX = Math.max(0, (baseWidth - selectedWidth) / 2);
+  const maxOffsetZ = Math.max(0, (baseDepth - selectedDepth) / 2);
+  
+  const offsetX = (Math.random() - 0.5) * 2 * maxOffsetX; // 베이스 경계 안에서만
+  const offsetZ = (Math.random() - 0.5) * 2 * maxOffsetZ; // 베이스 경계 안에서만
+  
   // 위치 업데이트
   const newPosition = [
-    currentBaseModel.position[0],
+    currentBaseModel.position[0] + offsetX,
     newY, // Y 좌표는 타겟 위로
-    currentBaseModel.position[2],
+    currentBaseModel.position[2] + offsetZ,
   ];
 
   updateModelPosition(selectedModel.id, newPosition);

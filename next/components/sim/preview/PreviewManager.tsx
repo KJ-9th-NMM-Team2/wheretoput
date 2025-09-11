@@ -53,14 +53,11 @@ function GLBPreview({
             if (Array.isArray(mesh.material)) {
               mesh.material = mesh.material.map((mat) => {
                 const clonedMat = mat.clone();
-                clonedMat.transparent = true;
-                clonedMat.opacity = 0.7;
+
                 return clonedMat;
               });
             } else {
               mesh.material = mesh.material.clone();
-              mesh.material.transparent = true;
-              mesh.material.opacity = 0.7;
             }
           }
         }
@@ -196,14 +193,12 @@ export function PreviewManager() {
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <circleGeometry
-          args={[Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3), 32]}
+          args={[
+            Math.max(Math.max(furnitureSize[0], furnitureSize[2]) * 0.8, 0.3),
+            32,
+          ]}
         />
-        <meshBasicMaterial
-          color="#00ff88"
-          transparent
-          opacity={0.3}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial color="#00ff88" side={THREE.DoubleSide} />
       </mesh>
 
       {/* 바닥 원형 테두리 */}
@@ -218,12 +213,7 @@ export function PreviewManager() {
             32,
           ]}
         />
-        <meshBasicMaterial
-          color="#00ff88"
-          transparent
-          opacity={0.8}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial color="#00ff88" side={THREE.DoubleSide} />
       </mesh>
 
       {/* URL이 있으면 GLB 모델, 없으면 임시 박스 */}
