@@ -257,3 +257,48 @@ export const snapWallToWalls = (startPoint, endPoint, existingWalls, snapDistanc
   
   return { snappedStart, snappedEnd };
 };
+
+/**
+ * 클릭한 포인트가 스냅 포인트 근처인지 확인하고 자동으로 스냅
+ * @param {Array} clickPoint - 클릭한 점 [x, y, z]
+ * @param {Array} existingWalls - 기존 벽 배열
+ * @param {number} snapDistance - 스냅 거리 (기본값: 1.0)
+ * @returns {Array} 스냅된 점 또는 원래 점 [x, y, z]
+ */
+export const autoSnapToNearestWallEndpoint = (clickPoint, existingWalls, snapDistance = 1.0) => {
+  if (!existingWalls || existingWalls.length === 0) return clickPoint;
+
+  let closestPoint = null;
+  let minDistance = snapDistance;
+
+  existingWalls.forEach(wall => {
+    const { position, rotation, dimensions } = wall;
+    const halfWidth = dimensions.width / 2;
+    const cos = Math.cos(rotation[1]);
+    const sin = Math.sin(rotation[1]);
+    
+    // 벽의 양 끝점 계산
+    const endpoints = [
+      [
+        position[0] - halfWidth * cos,
+        0, // Y좌표는 항상 0으로
+        position[2] - halfWidth * sin
+      ],
+      [
+        position[0] + halfWidth * cos,
+        0, // Y좌표는 항상 0으로
+        position[2] + halfWidth * sin
+      ]
+    ];
+
+    endpoints.forEach(endpoint => {
+      const distance = calculate2DDistance(clickPoint, endpoint);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestPoint = endpoint;
+      }
+    });
+  });
+
+  return closestPoint || clickPoint;
+};

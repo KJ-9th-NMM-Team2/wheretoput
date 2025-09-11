@@ -55,18 +55,37 @@ export function WallSnapPoints() {
           onPointerLeave={() => setHoveredPoint(null)}
           onPointerDown={(e) => {
             e.stopPropagation();
-            const snapPoint = [endpoint[0], 0, endpoint[2]];
+            // 정확한 벽의 끝점 좌표 사용 (Y는 0으로 고정)
+            const exactSnapPoint = [endpoint[0], 0, endpoint[2]];
             
             if (!wallDrawingStart) {
               // 시작점 설정
-              setWallDrawingStart(snapPoint);
+              setWallDrawingStart(exactSnapPoint);
             } else {
+              // 직선 벽을 위한 좌표 정렬
+              let alignedEndPoint = exactSnapPoint;
+              
+              // 시작점과 끝점이 다를 때만 정렬 처리
+              if (wallDrawingStart[0] !== exactSnapPoint[0] || wallDrawingStart[2] !== exactSnapPoint[2]) {
+                const deltaX = Math.abs(exactSnapPoint[0] - wallDrawingStart[0]);
+                const deltaZ = Math.abs(exactSnapPoint[2] - wallDrawingStart[2]);
+                
+                // 더 긴 축을 기준으로 직선 벽 생성
+                if (deltaX > deltaZ) {
+                  // X축 방향 벽 (Z좌표를 시작점과 동일하게)
+                  alignedEndPoint = [exactSnapPoint[0], 0, wallDrawingStart[2]];
+                } else {
+                  // Z축 방향 벽 (X좌표를 시작점과 동일하게)
+                  alignedEndPoint = [wallDrawingStart[0], 0, exactSnapPoint[2]];
+                }
+              }
+              
               // 끝점으로 벽 생성 - useStore의 addWall 호출
               const { addWall, wallsData } = useStore.getState();
               
               // 벽 추가 전 상태 저장 (히스토리용)
               const wallCountBefore = wallsData.length;
-              addWall(wallDrawingStart, snapPoint);
+              addWall(wallDrawingStart, alignedEndPoint);
               
               // 벽이 실제로 추가되었는지 확인 후 히스토리 기록
               setTimeout(() => {

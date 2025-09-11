@@ -13,6 +13,7 @@ import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
+import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import AutoSave from "@/components/sim/AutoSave";
@@ -428,16 +429,37 @@ export function SimulatorCore({
               if (wallToolMode === 'add') {
                 event.stopPropagation();
                 const point = event.point;
-                const floorPoint = [point.x, 0, point.z];
+                const clickPoint = [point.x, 0, point.z];
+                
+                // 스냅 포인트 근처인지 확인하고 자동으로 스냅
+                const snappedPoint = autoSnapToNearestWallEndpoint(clickPoint, wallsData, 1.0);
                 
                 if (!wallDrawingStart) {
                   // 시작점 설정
-                  setWallDrawingStart(floorPoint);
+                  setWallDrawingStart(snappedPoint);
                 } else {
+                  // 직선 벽을 위한 좌표 정렬
+                  let alignedEndPoint = snappedPoint;
+                  
+                  // 시작점과 끝점이 다를 때만 정렬 처리
+                  if (wallDrawingStart[0] !== snappedPoint[0] || wallDrawingStart[2] !== snappedPoint[2]) {
+                    const deltaX = Math.abs(snappedPoint[0] - wallDrawingStart[0]);
+                    const deltaZ = Math.abs(snappedPoint[2] - wallDrawingStart[2]);
+                    
+                    // 더 긴 축을 기준으로 직선 벽 생성
+                    if (deltaX > deltaZ) {
+                      // X축 방향 벽 (Z좌표를 시작점과 동일하게)
+                      alignedEndPoint = [snappedPoint[0], 0, wallDrawingStart[2]];
+                    } else {
+                      // Z축 방향 벽 (X좌표를 시작점과 동일하게)
+                      alignedEndPoint = [wallDrawingStart[0], 0, snappedPoint[2]];
+                    }
+                  }
+                  
                   // 끝점으로 벽 생성
-                  addWall(wallDrawingStart, floorPoint);
+                  addWall(wallDrawingStart, alignedEndPoint);
                   // 벽 생성 완료 후 시작점 초기화 (연속 그리기 비활성화)
-                  // setWallDrawingStart(floorPoint); // 이 줄을 제거하여 연속 그리기 방지
+                  // setWallDrawingStart(alignedEndPoint); // 이 줄을 제거하여 연속 그리기 방지
                 }
               } else {
                 // 기본 동작 (모델 선택 해제)
