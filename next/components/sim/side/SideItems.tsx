@@ -56,8 +56,14 @@ const SideItems: React.FC<SideItemsProps> = ({
   const [selectedItems, setSelectedItems] = useState<Furniture[]>([]);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
-  const itemsPerPage = 8;
-  const { addModel, loadedModels, selectModel, startPreviewMode, previewMode, cancelPreview } = useStore();
+  const {
+    addModel,
+    loadedModels,
+    selectModel,
+    startPreviewMode,
+    previewMode,
+    cancelPreview,
+  } = useStore();
   const { addAction } = useHistory();
 
   // API에서 데이터 가져오기 함수
@@ -134,7 +140,7 @@ const SideItems: React.FC<SideItemsProps> = ({
     (item: Furniture) => {
       // 프리뷰 모드 중이면 기존 프리뷰 취소하고 새 모델로 교체
       if (previewMode) {
-        console.log('프리뷰 모드 중 - 모델 교체');
+        console.log("프리뷰 모드 중 - 모델 교체");
         cancelPreview(); // 기존 프리뷰 취소
       }
 
@@ -151,7 +157,7 @@ const SideItems: React.FC<SideItemsProps> = ({
 
       // AbortController 생성
       const abortController = new AbortController();
-      
+
       // 약간의 딜레이 후 프리뷰 모드 시작 (상태 충돌 방지)
       setTimeout(() => {
         startPreviewMode(modelWithId, abortController);
@@ -170,30 +176,33 @@ const SideItems: React.FC<SideItemsProps> = ({
         .then((result) => {
           if (result.success && result.model_url) {
             // 실제 모델 URL을 가져왔으면 업데이트
-            const { 
-              setCurrentPreviewFurniture, 
-              currentPreviewFurniture, 
+            const {
+              setCurrentPreviewFurniture,
+              currentPreviewFurniture,
               loadedModels,
-              updateModelUrl
+              updateModelUrl,
             } = useStore.getState();
-            
+
             const updatedModel = {
               ...modelWithId,
               url: result.model_url,
             };
-            
+
             // 아직 프리뷰 모드이고 같은 모델이라면 프리뷰 모델 업데이트
-            if (currentPreviewFurniture && currentPreviewFurniture.id === modelId) {
+            if (
+              currentPreviewFurniture &&
+              currentPreviewFurniture.id === modelId
+            ) {
               setCurrentPreviewFurniture(updatedModel);
             } else {
               // 이미 배치된 모델이라면 배치된 모델의 URL 업데이트
-              const placedModel = loadedModels.find(m => m.id === modelId);
+              const placedModel = loadedModels.find((m) => m.id === modelId);
               if (placedModel) {
                 updateModelUrl(modelId, result.model_url);
               }
               // 그렇지 않으면 이미 취소된 프리뷰의 fetch 결과이므로 무시
             }
-            
+
             toast.success(`${item.name} 모델 로딩 완료`, {
               id: loadingToastId,
             });
@@ -202,7 +211,7 @@ const SideItems: React.FC<SideItemsProps> = ({
           }
         })
         .catch((error) => {
-          if (error.name === 'AbortError') {
+          if (error.name === "AbortError") {
             console.log("모델 로딩이 취소되었습니다:", error);
             toast.dismiss(loadingToastId);
           } else {
