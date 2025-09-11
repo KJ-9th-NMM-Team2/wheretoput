@@ -537,7 +537,7 @@ export function useObjectControls(
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
-        const newScale = Math.max(0.1, Math.min(5, initialScale + deltaY));
+        const newScale = Math.max(0.1, Math.min(3, initialScale + deltaY));
         onScaleChange(modelId, newScale);
       }
     },
