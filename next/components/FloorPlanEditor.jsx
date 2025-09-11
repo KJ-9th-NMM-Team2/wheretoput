@@ -556,8 +556,8 @@ const FloorPlanEditor = () => {
         ctx.strokeStyle = "#00ff00";
         ctx.lineWidth = 4 / viewScale;
       } else {
-        ctx.strokeStyle = "#ff6600";
-        ctx.lineWidth = 2 / viewScale;
+        ctx.strokeStyle = "#2d2d2d";
+        ctx.lineWidth = 4 / viewScale;
       }
 
       ctx.beginPath();
@@ -608,8 +608,8 @@ const FloorPlanEditor = () => {
 
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
-      ctx.strokeStyle = "#ff9933";
-      ctx.lineWidth = 3 / viewScale;
+      ctx.strokeStyle = "#2d2d2d";
+      ctx.lineWidth = 5 / viewScale;
       ctx.setLineDash([3 / viewScale, 3 / viewScale]);
 
       ctx.beginPath();
@@ -1292,7 +1292,7 @@ const FloorPlanEditor = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
         <div className="flex-1 p-0 overflow-hidden flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
             <div
               ref={containerRef}
               className="relative"
