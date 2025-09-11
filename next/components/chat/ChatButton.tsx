@@ -210,7 +210,10 @@ export default function ChatButton({
 
     const roomId = await onStartDirect(otherUserId, otherUserName);
     if (roomId) {
-      setselectedChatId(roomId);
+      // baseChats 상태 업데이트 완료를 위해 약간의 지연
+      setTimeout(() => {
+        setselectedChatId(roomId);
+      }, 100);
     }
   };
 

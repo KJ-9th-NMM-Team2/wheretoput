@@ -227,6 +227,10 @@ export const useChatRooms = (
         }
       );
 
+      console.log('🔍 API Response:', data);
+      console.log('🔍 otherUserName:', otherUserName);
+      console.log('🔍 data.name:', data?.name);
+
       const roomId =
         data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
       if (!roomId) return null;

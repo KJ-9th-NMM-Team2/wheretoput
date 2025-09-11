@@ -52,6 +52,19 @@ export class ChatController {
     return result;
   }
 
+  // 채팅방 나가기 (개별 유저)
+  @Delete(':roomId/leave')
+  async leaveRoom(
+    @Param('roomId') roomId: string,
+    @Request() req: any,
+  ) {
+    const result = await this.chatService.leaveRoom(
+      roomId,
+      req.user.userId,
+    );
+    return result;
+  }
+
   // 채팅방 완전 삭제 (개발자용)
   @Delete(':roomId/delete-completely')
   async deleteRoomCompletely(

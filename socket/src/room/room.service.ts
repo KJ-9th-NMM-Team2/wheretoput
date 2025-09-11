@@ -106,7 +106,7 @@ export class RoomService {
         throw new Error('Prisma service not injected');
       }
 
-      // 기존 채팅방 확인 (양방향으로 검색)
+      // 기존 채팅방 확인 (양방향으로 검색) - 나간 방도 포함하여 검색
       const existingRoom = await this.prisma.chat_rooms.findFirst({
         where: {
           OR: [
@@ -124,10 +124,74 @@ export class RoomService {
             },
           ],
         },
+        include: {
+          chat_participants: {
+            where: {
+              user_id: {
+                in: [params.currentUserId, params.otherUserId],
+              },
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (existingRoom) {
-        return existingRoom;
+        // 두 참가자의 상태 확인
+        const myParticipant = existingRoom.chat_participants.find(
+          p => p.user_id === params.currentUserId
+        );
+        const otherParticipant = existingRoom.chat_participants.find(
+          p => p.user_id === params.otherUserId
+        );
+        
+        // 트랜잭션으로 양쪽 모두 다시 참여 처리
+        await this.prisma.$transaction(async (prisma) => {
+          // 내가 나간 상태라면 다시 참여 (left_at은 유지해서 그 이후 메시지만 보이도록)
+          if (myParticipant && myParticipant.is_left) {
+            await prisma.chat_participants.update({
+              where: {
+                chat_room_id_user_id: {
+                  chat_room_id: existingRoom.chat_room_id,
+                  user_id: params.currentUserId,
+                },
+              },
+              data: {
+                is_left: false,
+                // left_at은 유지 - 이 시간 이후 메시지만 보여주기 위해
+              },
+            });
+          }
+          
+          // 상대방이 나간 상태라면 다시 참여
+          if (otherParticipant && otherParticipant.is_left) {
+            await prisma.chat_participants.update({
+              where: {
+                chat_room_id_user_id: {
+                  chat_room_id: existingRoom.chat_room_id,
+                  user_id: params.otherUserId,
+                },
+              },
+              data: {
+                is_left: false,
+                // left_at은 유지 - 이 시간 이후 메시지만 보여주기 위해
+              },
+            });
+          }
+        });
+        
+        // 기존 방을 리턴할 때도 올바른 이름으로 업데이트해서 리턴
+        return {
+          ...existingRoom,
+          name: existingRoom.name || otherParticipant?.user?.name || `사용자 ${params.otherUserId}`,
+        };
       }
 
       // 상대방 사용자 정보 조회
