@@ -105,11 +105,17 @@ export default function SortedHouseList({
             <span className="text-sm">좋아요 순</span>
           </button>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
-          {data.map((house: any) => {
-            return <HouseCard key={house.room_id} house={house} />;
-          })}
-        </div>
+        {data && data.length > 0 ? (
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
+            {data.map((house: any) => (
+              <HouseCard key={house.room_id} house={house} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-60">
+            <p className="text-gray-500">입력된 방 혹은 유저를 찾을 수 없습니다</p>
+          </div>
+        )}
       </div>
     </>
   );
