@@ -34,6 +34,7 @@ model chat_participants {
   last_read_at     DateTime?  @db.Timestamp(6)
   is_admin         Boolean?   @default(false)
   custom_room_name String?    @db.VarChar(100)
+  last_read_id     String?
   chat_rooms       chat_rooms @relation(fields: [chat_room_id], references: [chat_room_id], onDelete: Cascade, onUpdate: NoAction)
   user             User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -70,21 +71,23 @@ model categories {
 }
 
 model furnitures {
-  furniture_id String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name         String         @db.VarChar(200)
-  description  String?
-  length_x     Decimal        @db.Decimal(10, 2)
-  length_y     Decimal        @db.Decimal(10, 2)
-  length_z     Decimal        @db.Decimal(10, 2)
-  image_url    String?
-  model_url    String?
-  price        Decimal?       @db.Decimal(12, 2)
-  brand        String?        @db.VarChar(100)
-  is_active    Boolean?       @default(false)
-  created_at   DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at   DateTime?      @default(now()) @db.Timestamp(6)
-  category_id  Int
-  room_objects room_objects[]
+  furniture_id     String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String         @db.VarChar(200)
+  description      String?
+  length_x         Decimal        @db.Decimal(10, 2)
+  length_y         Decimal        @db.Decimal(10, 2)
+  length_z         Decimal        @db.Decimal(10, 2)
+  image_url        String?
+  model_url        String?
+  price            Decimal?       @db.Decimal(12, 2)
+  brand            String?        @db.VarChar(100)
+  is_active        Boolean?       @default(false)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?      @default(now()) @db.Timestamp(6)
+  category_id      Int
+  cached_model_url String?        @db.VarChar(255)
+  is_cached        Boolean?       @default(false)
+  room_objects     room_objects[]
 
   @@schema("furniture")
 }

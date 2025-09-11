@@ -38,7 +38,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly roomService: RoomService,
-  ) { }
+  ) {}
 
   afterInit() {
     // RoomService에 소켓 서버 인스턴스 전달
@@ -98,7 +98,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           last_read_at: new Date(),
         },
       });
-
     }
 
     socket.emit('joined', { roomId: body.roomId });
@@ -141,7 +140,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: SendPayload & { tempId?: string },
     @ConnectedSocket() socket: Socket,
   ) {
-
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
       this.jwtService,
@@ -210,16 +208,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         userId: userId,
         senderName: mockMsg.senderName,
         senderImage: mockMsg.senderImage,
-        timestamp: mockMsg.createdAt
+        timestamp: mockMsg.createdAt,
       };
 
-      const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(ssePayload),
         },
-        body: JSON.stringify(ssePayload),
-      });
+      );
 
       if (!response.ok) {
         console.error(`SSE 알림 전송 실패: ${response.status}`);
@@ -235,7 +236,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() body: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
-
     // JWT 토큰에서 사용자 정보 추출
     const userId = extractUserIdFromToken(
       this.jwtService,
@@ -265,18 +265,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // SSE를 통한 읽음 상태 업데이트 알림 (Next.js 서버로)
       try {
-        const response = await fetch(`${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          `${process.env.EC2_HOST_NEXT}/api/chat/sse/notify`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'read_update',
+              roomId: body.roomId,
+              userId: userId,
+              timestamp: new Date().toISOString(),
+            }),
           },
-          body: JSON.stringify({
-            type: 'read_update',
-            roomId: body.roomId,
-            userId: userId,
-            timestamp: new Date().toISOString()
-          }),
-        });
+        );
 
         if (!response.ok) {
           console.error(`읽음 상태 SSE 알림 전송 실패: ${response.status}`);
@@ -284,7 +287,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       } catch (error) {
         console.error(`읽음 상태 SSE 알림 전송 오류:`, error);
       }
-
     } catch (error) {
       console.error(`READ STATUS UPDATE FAILED:`, error);
     }

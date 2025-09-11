@@ -22,17 +22,17 @@ interface ModelData {
 // - 저장 중일 때는 중복 저장 방지
 // - 자동저장은 편집모드 일때만 활성화
 // - 자신의 방(isOwnUserRoom)일 때만 자동저장 작동
-  
-export default function AutoSave({ 
+
+export default function AutoSave({
   interval = 10000, // 기본
-  enabled = true 
+  enabled = true
 }: AutoSaveProps) {
   const saveSimulatorState = useStore((state) => state.saveSimulatorState);
   const isSaving = useStore((state) => state.isSaving);
   const currentRoomId = useStore((state) => state.currentRoomId);
   const loadedModels = useStore((state) => state.loadedModels);
   const isOwnUserRoom = useStore((state) => state.isOwnUserRoom);
-  
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveStateRef = useRef<string>('');
 
@@ -45,15 +45,16 @@ export default function AutoSave({
       isOwnUserRoom: currentIsOwnUserRoom,
       currentRoomId: currentRoomIdState
     } = currentState;
-    
+
     // 방이 존재하고, 저장중이 아니고, 자신의 방일때만 활성화
     if (!enabled || !currentRoomIdState || currentIsSaving || !currentIsOwnUserRoom) {
       return;
     }
 
-    // 가구의 모든 속성(position, rotation, scale 등)을 포함한 상태 비교
-    const currentStateString = JSON.stringify(
-      currentLoadedModels.map((model: ModelData) => ({
+    // 가구와 벽 데이터를 포함한 상태를 JSON으로 비교
+    const currentStateString = JSON.stringify({
+
+      models: currentLoadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
@@ -61,9 +62,13 @@ export default function AutoSave({
         url: model.url,
         texturePath: model.texturePath,
         length: model.length
-      }))
-    );
-    
+      })),
+
+      // wallsData 배열에는 현재 존재하는 모든 벽들이 저장
+      walls: currentState.wallsData
+      
+    });
+
     // 상태가 변경되지 않았으면 저장하지 않음
     if (currentStateString === lastSaveStateRef.current) {
       return;
@@ -92,10 +97,10 @@ export default function AutoSave({
       intervalRef.current = null;
     }
 
-    // 초기 상태 저장 (가구의 모든 속성 포함)
-    const currentLoadedModels = useStore.getState().loadedModels;
-    lastSaveStateRef.current = JSON.stringify(
-      currentLoadedModels.map((model: ModelData) => ({
+    // 초기 상태 저장 (가구와 벽 데이터 포함)
+    const currentState = useStore.getState();
+    lastSaveStateRef.current = JSON.stringify({
+      models: currentState.loadedModels.map((model: ModelData) => ({
         id: model.id,
         position: model.position,
         rotation: model.rotation,
@@ -103,8 +108,9 @@ export default function AutoSave({
         url: model.url,
         texturePath: model.texturePath,
         length: model.length
-      }))
-    );
+      })),
+      walls: currentState.wallsData
+    });
 
     // 자동저장 인터벌 설정
     intervalRef.current = setInterval(performAutoSave, interval);

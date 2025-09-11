@@ -7,10 +7,14 @@ import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
+import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
+import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
+import { WallSnapPoints } from "@/components/sim/mainsim/WallSnapPoints.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
+import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
 import AutoSave from "@/components/sim/AutoSave";
@@ -20,6 +24,7 @@ import { useSession } from "next-auth/react";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
+import WallTools from "./side/WallTools";
 
 type position = [number, number, number];
 
@@ -170,7 +175,31 @@ export function SimulatorCore({
     checkUserRoom,
     currentRoomInfo,
     previewMode,
+    wallToolMode,
+    wallDrawingStart,
+    setWallDrawingStart,
+    addWall,
+    removeWall,
+    setSelectedWallId,
+    isChatFocused,
   } = useStore();
+
+  const [startTime, setStartTime] = useState<number | null>(null);
+
+  // 상태 기반 속도 측정
+  useEffect(() => {
+    if (!loadedModels.legnth && !startTime) {
+      setStartTime(performance.now());
+    }
+  }, []);
+
+  // Suspense fallback이 완전히 사라진 후
+  useEffect(() => {
+    if (startTime && loadedModels.length > 0) {
+      const endTime = performance.now();
+      console.log(`All models loaded in: ${endTime - startTime}ms`);
+    }
+  }, [loadedModels]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -328,6 +357,9 @@ export function SimulatorCore({
           <ControlIcons controlsRef={controlsRef} />
         )}
 
+        {/* 벽 도구 드롭다운 */}
+        {!viewOnly && <WallTools isDropdown={true} />}
+
         <SelectedModelEditModal />
 
         <Canvas
@@ -359,19 +391,9 @@ export function SimulatorCore({
           />
           <Floor wallsData={wallsData} />
 
-          {/* 벽 렌더링 */}
+          {/* 벽 렌더링 - 자동 병합 적용 */}
           {wallsData.length > 0 ? (
-            wallsData.map((wall) => (
-              <Wall
-                key={wall.id}
-                width={Math.max(wall.dimensions.width, 0.5)}
-                height={Math.max(wall.dimensions.height, 2.5)}
-                depth={Math.max(wall.dimensions.depth, 0.2)}
-                position={wall.position}
-                rotation={wall.rotation}
-                id={wall.id}
-              />
-            ))
+            <MergedWalls wallsData={wallsData} />
           ) : (
             <>
               <Wall
@@ -429,7 +451,48 @@ export function SimulatorCore({
           <mesh
             position={[0, -0.01, 0]}
             rotation={[-Math.PI / 2, 0, 0]}
-            onPointerDown={deselectModel}
+            onPointerDown={(event) => {
+              // 벽 추가 모드에서의 바닥 클릭 처리
+              if (wallToolMode === 'add') {
+                event.stopPropagation();
+                const point = event.point;
+                const clickPoint = [point.x, 0, point.z];
+                
+                // 스냅 포인트 근처인지 확인하고 자동으로 스냅
+                const snappedPoint = autoSnapToNearestWallEndpoint(clickPoint, wallsData, 1.0);
+                
+                if (!wallDrawingStart) {
+                  // 시작점 설정
+                  setWallDrawingStart(snappedPoint);
+                } else {
+                  // 직선 벽을 위한 좌표 정렬
+                  let alignedEndPoint = snappedPoint;
+                  
+                  // 시작점과 끝점이 다를 때만 정렬 처리
+                  if (wallDrawingStart[0] !== snappedPoint[0] || wallDrawingStart[2] !== snappedPoint[2]) {
+                    const deltaX = Math.abs(snappedPoint[0] - wallDrawingStart[0]);
+                    const deltaZ = Math.abs(snappedPoint[2] - wallDrawingStart[2]);
+                    
+                    // 더 긴 축을 기준으로 직선 벽 생성
+                    if (deltaX > deltaZ) {
+                      // X축 방향 벽 (Z좌표를 시작점과 동일하게)
+                      alignedEndPoint = [snappedPoint[0], 0, wallDrawingStart[2]];
+                    } else {
+                      // Z축 방향 벽 (X좌표를 시작점과 동일하게)
+                      alignedEndPoint = [wallDrawingStart[0], 0, snappedPoint[2]];
+                    }
+                  }
+                  
+                  // 끝점으로 벽 생성
+                  addWall(wallDrawingStart, alignedEndPoint);
+                  // 벽 생성 완료 후 시작점 초기화 (연속 그리기 비활성화)
+                  // setWallDrawingStart(alignedEndPoint); // 이 줄을 제거하여 연속 그리기 방지
+                }
+              } else {
+                // 기본 동작 (모델 선택 해제)
+                deselectModel();
+              }
+            }}
           >
             <planeGeometry args={[200, 200]} />
             <meshBasicMaterial transparent opacity={0} />
@@ -437,7 +500,7 @@ export function SimulatorCore({
 
           <KeyboardControls
             controlsRef={controlsRef}
-            disabled={keyboardControlsDisabled}
+            disabled={keyboardControlsDisabled || isChatFocused}
           />
           <OrbitControls
             ref={controlsRef}
@@ -462,6 +525,12 @@ export function SimulatorCore({
                 : undefined
             }
           />
+
+          {/* 벽 그리기 프리뷰 */}
+          <WallPreview />
+
+          {/* 벽 스냅 포인트 */}
+          <WallSnapPoints />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}

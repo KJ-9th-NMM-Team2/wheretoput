@@ -9,16 +9,21 @@ import SideItems from "@/components/sim/side/SideItems";
 import { HistoryControls, useHistoryKeyboard } from "@/components/sim/history";
 import type { furnitures as Furniture } from "@prisma/client";
 
-const SideViewContent: React.FC<{ roomId: string; accessType: number }> = ({
-  roomId,
-  accessType,
-}) => {
+
+const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ roomId, accessType }) => {
+
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>();
   const [searchResults, setSearchResults] = useState<Furniture[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [sortOption, setSortOption] = useState<string>("updated_desc");
+  const [sortOption, setSortOption] = useState<string>('updated_desc');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const itemsPerPage = 8;
 
   useHistoryKeyboard();
 
@@ -26,10 +31,6 @@ const SideViewContent: React.FC<{ roomId: string; accessType: number }> = ({
     setSearchResults([]);
     setSelectedCategory(category);
     setSearchQuery("");
-  };
-
-  const handleSearchResults = (results: Furniture[]) => {
-    setSearchResults(results);
   };
 
   const handleSortChange = (sortValue: string) => {
@@ -49,14 +50,24 @@ const SideViewContent: React.FC<{ roomId: string; accessType: number }> = ({
           accessType={accessType}
         />
 
-        <SideSearch
-          collapsed={collapsed}
-          onSearchResults={handleSearchResults}
-          resetQuery={searchQuery}
-          selectedCategory={selectedCategory}
-        />
 
-        <SideCategories
+
+        <SideSearch 
+          collapsed={collapsed}
+          resetQuery={searchQuery}
+          searchQuery={searchQuery || ""}
+          selectedCategory={selectedCategory}
+          page={page}
+          itemsPerPage={itemsPerPage}
+          loading={loading}
+          setPage={setPage}
+          setTotalItems={setTotalItems}
+          setLoading={setLoading}
+          setSearchResults={setSearchResults}
+          setSearchQuery={setSearchQuery}
+        />
+        
+        <SideCategories 
           collapsed={collapsed}
           onCategorySelect={handleCategorySelect}
           totalPrice={totalPrice}
@@ -74,13 +85,26 @@ const SideViewContent: React.FC<{ roomId: string; accessType: number }> = ({
           onCategorySelect={handleCategorySelect}
         />
 
-        <SideItems
-          collapsed={collapsed}
-          selectedCategory={selectedCategory}
-          furnitures={searchResults}
-          setTotalPrice={setTotalPrice}
+
+        <SideItems 
+          collapsed={collapsed} 
+          selectedCategory={selectedCategory} 
+          furnitures={searchResults} 
           sortOption={sortOption}
           roomId={roomId}
+          itemsPerPage={itemsPerPage}
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          query={searchQuery || ""}
+          loading={loading}
+          error={error}
+          setPage={setPage}
+          setTotalPages={setTotalPages}
+          setTotalItems={setTotalItems}
+          setTotalPrice={setTotalPrice} 
+          setLoading={setLoading}
+          setError={setError}
         />
       </div>
     </div>

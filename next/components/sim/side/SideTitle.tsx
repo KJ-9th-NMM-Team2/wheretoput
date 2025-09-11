@@ -51,12 +51,14 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
   // 방 입장 시 유저 방인지 아닌지 확인하는 코드
   useEffect(() => {
     const fetchIsUserRoom = async () => {
-      const check = await checkUserRoom(currentRoomId, session?.user?.id);
-
+      // 세션이 로드되고 userId가 있는 경우에만 실행
+      if (!session?.user?.id || !currentRoomId) return;
+      
+      const check = await checkUserRoom(currentRoomId, session.user.id);
       setIsOwnUserRoom(check);
     }
     fetchIsUserRoom();
-  }, []);
+  }, [session, currentRoomId]); // session과 currentRoomId 의존성 추가
 
   // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
   useEffect(() => {

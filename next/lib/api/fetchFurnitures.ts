@@ -6,6 +6,7 @@ interface fetchFurnituresProps {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setItems: (items: Furniture[]) => void;
+  query: string;
   page: number;
   itemsPerPage: number;
   category: string;
@@ -18,6 +19,7 @@ export async function fetchFurnitures({
   setLoading,
   setError,
   setItems,
+  query,
   page,
   itemsPerPage,
   category,
@@ -41,6 +43,10 @@ export async function fetchFurnitures({
         // 정렬 옵션 추가
         if (sort) {
             params.append('sort', sort);
+        }
+
+        if (query) {
+            params.append("query", query);
         }
 
         const response = await fetch(`/api/sim/furnitures?${params}`, {

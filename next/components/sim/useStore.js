@@ -45,6 +45,18 @@ export const useStore = create(
         const { furnitureId, scale } = event.detail;
         get().updateModelScale(furnitureId, scale);
       });
+
+      window.addEventListener("historyAddWall", (event) => {
+        const { wallData } = event.detail;
+        // console.log('useStore: 벽 추가 이벤트 수신', wallData);
+        get().addWallWithId(wallData, false);
+      });
+
+      window.addEventListener("historyRemoveWall", (event) => {
+        const { wallId } = event.detail;
+
+        get().removeWallFromHistory(wallId);
+      });
     }
 
     return {
@@ -190,6 +202,10 @@ export const useStore = create(
       // 모든 연결된 사용자 목록 초기화
       clearConnectedUsers: () => set({ connectedUsers: new Map() }),
 
+      // 채팅 포커스 상태 관리
+      isChatFocused: false,
+      setIsChatFocused: (focused) => set({ isChatFocused: focused }),
+
       // 협업 모드용 브로드캐스트 콜백들
       collaborationCallbacks: {
         broadcastModelAdd: null,
@@ -266,12 +282,22 @@ export const useStore = create(
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          // 유효성 검사
+          if (!roomId || !userId) {
+            console.warn("checkUserRoom: roomId 또는 userId가 없습니다", { roomId, userId });
+            set({ isOwnUserRoom: false });
+            return false;
+          }
+
           // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
 
-          if (!response.ok) throw new Error("Network response was not ok");
+          if (!response.ok) {
+            console.error(`checkUserRoom API 오류: ${response.status} ${response.statusText}`);
+            throw new Error(`Network response was not ok: ${response.status}`);
+          }
 
           // 2. 응답 Json 파싱
           const result = await response.json();
@@ -661,6 +687,11 @@ export const useStore = create(
       wallsData: [],
       wallScaleFactor: 1.0, // 벽 크기 조정 팩터
 
+      // 벽 도구 모드 관리
+      wallToolMode: null, // 'add', 'edit', 'delete', null
+      wallDrawingStart: null, // 벽 그리기 시작점
+      selectedWallId: null, // 선택된 벽 ID
+
       // 업적 상태
       setAchievements: (achievements) => set({ achievements }),
 
@@ -668,6 +699,222 @@ export const useStore = create(
       setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
       setWallsData: (walls) => set({ wallsData: walls }),
       setWallScaleFactor: (factor) => set({ wallScaleFactor: factor }),
+
+      // 벽 도구 모드 관련 액션
+      setWallToolMode: (mode) =>
+        set({
+          wallToolMode: mode,
+          wallDrawingStart: null,
+          selectedWallId: null,
+        }),
+      setWallDrawingStart: (point) => set({ wallDrawingStart: point }),
+      setSelectedWallId: (wallId) => set({ selectedWallId: wallId }),
+
+      // 히스토리 복원용: 기존 ID를 유지하면서 벽 추가 (히스토리 액션 추가 안함)
+      addWallWithId: (wallData, shouldBroadcast = true) =>
+        set((state) => {
+          // console.log('히스토리에서 벽 추가:', wallData);
+          return {
+            wallsData: [...state.wallsData, wallData],
+          };
+        }),
+
+      // 벽 추가 액션 (스냅 기능 포함)
+      addWall: (startPoint, endPoint) =>
+        set((state) => {
+          // 벽 스냅 기능 적용
+          let snappedStart = startPoint;
+          let snappedEnd = endPoint;
+
+          if (state.wallsData.length > 0) {
+            // 기존 벽의 끝점에 스냅
+            const snapDistance = 0.5;
+
+            // 시작점 스냅
+            let closestStartPoint = null;
+            let minStartDistance = snapDistance;
+
+            state.wallsData.forEach((wall) => {
+              const { position, rotation, dimensions } = wall;
+              const halfWidth = dimensions.width / 2;
+              const cos = Math.cos(rotation[1]);
+              const sin = Math.sin(rotation[1]);
+
+              const endpoints = [
+                [
+                  position[0] - halfWidth * cos,
+                  position[1],
+                  position[2] - halfWidth * sin,
+                ],
+                [
+                  position[0] + halfWidth * cos,
+                  position[1],
+                  position[2] + halfWidth * sin,
+                ],
+              ];
+
+              endpoints.forEach((endpoint) => {
+                const distance = Math.sqrt(
+                  Math.pow(startPoint[0] - endpoint[0], 2) +
+                    Math.pow(startPoint[2] - endpoint[2], 2)
+                );
+                if (distance < minStartDistance) {
+                  minStartDistance = distance;
+                  closestStartPoint = endpoint;
+                }
+              });
+            });
+
+            if (closestStartPoint) {
+              snappedStart = closestStartPoint;
+            }
+
+            // 끝점 스냅
+            let closestEndPoint = null;
+            let minEndDistance = snapDistance;
+
+            state.wallsData.forEach((wall) => {
+              const { position, rotation, dimensions } = wall;
+              const halfWidth = dimensions.width / 2;
+              const cos = Math.cos(rotation[1]);
+              const sin = Math.sin(rotation[1]);
+
+              const endpoints = [
+                [
+                  position[0] - halfWidth * cos,
+                  position[1],
+                  position[2] - halfWidth * sin,
+                ],
+                [
+                  position[0] + halfWidth * cos,
+                  position[1],
+                  position[2] + halfWidth * sin,
+                ],
+              ];
+
+              endpoints.forEach((endpoint) => {
+                const distance = Math.sqrt(
+                  Math.pow(endPoint[0] - endpoint[0], 2) +
+                    Math.pow(endPoint[2] - endpoint[2], 2)
+                );
+                if (distance < minEndDistance) {
+                  minEndDistance = distance;
+                  closestEndPoint = endpoint;
+                }
+              });
+            });
+
+            if (closestEndPoint) {
+              snappedEnd = closestEndPoint;
+            }
+          }
+
+          // 벽의 방향 벡터 계산 (스냅된 좌표 사용)
+          const dx = snappedEnd[0] - snappedStart[0];
+          const dz = snappedEnd[2] - snappedStart[2];
+
+          // 벽의 길이 계산
+          const wallLength = Math.sqrt(dx * dx + dz * dz);
+
+          // 너무 짧은 벽은 생성하지 않음
+          if (wallLength < 0.1) {
+            console.warn("벽이 너무 짧습니다.");
+            return state;
+          }
+
+          // Y축 회전각 계산
+          const rotationY = Math.atan2(-dz, dx);
+
+          const newWall = {
+            id: crypto.randomUUID(),
+            position: [
+              (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
+              state.wallsData[0]?.position[1] || 2.5, // 기존 벽 높이나 기본값
+              (snappedStart[2] + snappedEnd[2]) / 2, // 중점 Z
+            ],
+            rotation: [
+              0,
+              rotationY, // 올바른 Y축 회전각
+              0,
+            ],
+            dimensions: {
+              width: wallLength, // 계산된 길이 사용
+              height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
+              depth: state.wallsData[0]?.dimensions?.depth || 0.2, // 기존 벽 두께 사용
+            },
+          };
+
+          // console.log('벽 추가:', newWall);
+
+          // 히스토리 액션 추가
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("addHistoryAction", {
+                detail: {
+                  type: "WALL_ADD",
+                  data: {
+                    furnitureId: newWall.id,
+                    previousData: newWall,
+                  },
+                  description: "벽 추가",
+                },
+              })
+            );
+          }
+
+          return {
+            wallsData: [...state.wallsData, newWall],
+            wallDrawingStart: null, // 벽 추가 후 시작점 초기화
+          };
+        }),
+
+      // 벽 삭제 액션
+      removeWall: (wallId, shouldBroadcast = true) =>
+        set((state) => {
+          const wallToRemove = state.wallsData.find(
+            (wall) => wall.id === wallId
+          );
+
+          if (wallToRemove) {
+            console.log("벽 삭제:", wallToRemove);
+
+            // 히스토리 액션 추가
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("addHistoryAction", {
+                  detail: {
+                    type: "WALL_REMOVE",
+                    data: {
+                      furnitureId: wallId,
+                      previousData: wallToRemove,
+                    },
+                    description: "벽 삭제",
+                  },
+                })
+              );
+            }
+          }
+
+          return {
+            wallsData: state.wallsData.filter((wall) => wall.id !== wallId),
+            selectedWallId: null,
+          };
+        }),
+
+      // 히스토리 복원용 벽 삭제 (히스토리 액션 추가 안함)
+      removeWallFromHistory: (wallId) =>
+        set((state) => ({
+          wallsData: state.wallsData.filter((wall) => wall.id !== wallId),
+          selectedWallId: null,
+        })),
+
+      // 벽 업데이트 액션
+      updateWall: (wallId, updates) =>
+        set((state) => ({
+          wallsData: state.wallsData.map((wall) =>
+            wall.id === wallId ? { ...wall, ...updates } : wall
+          ),
+        })),
 
       setSaving: (saving) => set({ isSaving: saving }),
       setCloning: (cloning) => set({ isCloning: cloning }),
@@ -911,11 +1158,9 @@ export const useStore = create(
 
           const currentState = get();
 
-          // 벽 스케일 팩터가 1이 아닌 경우, 벽 데이터도 DB에 업데이트
-          if (
-            currentState.wallScaleFactor !== 1.0 &&
-            currentState.wallsData.length > 0
-          ) {
+          //[09.11] 벽추가 기능 -
+          //  벽 데이터가 있으면 DB에도 업데이트
+          if (currentState.wallsData.length > 0) {
             try {
               // 현재 스케일 팩터가 적용된 벽 데이터를 DB 형식으로 변환
               const scaledWalls = currentState.wallsData.map((wall) => ({
@@ -1002,6 +1247,7 @@ export const useStore = create(
         set({ isLoading: true });
 
         try {
+          const start_time = performance.now();
           const response = await fetch(`/api/sim/load/${roomId}`);
 
           if (!response.ok) {
@@ -1092,6 +1338,10 @@ export const useStore = create(
             backgroundColor: result.background_color || "#87CEEB",
             environmentPreset: result.environment_preset || "apartment",
           });
+
+          const end_time = performance.now();
+          const duration = end_time - start_time;
+          console.log(`시뮬레이터 상태 로드 완료: ${duration}ms`);
 
           return result;
         } catch (error) {

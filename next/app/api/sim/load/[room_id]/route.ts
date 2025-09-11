@@ -121,6 +121,7 @@ export async function GET(
             length_x: true,
             length_y: true,
             length_z: true,
+            cached_model_url: true,
           },
         },
       },
@@ -228,9 +229,11 @@ export async function GET(
         scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
         // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
         url:
-          hasFurniture && obj.furnitures.model_url
-            ? obj.furnitures.model_url
-            : "/legacy_mesh (1).glb",
+          hasFurniture && obj.furnitures.cached_model_url
+            ? obj.furnitures.cached_model_url
+            : obj.furnitures.model_url 
+              ? obj.furnitures.model_url
+              : "/legacy_mesh (1).glb",
         isCityKit: hasFurniture
           ? obj.furnitures.model_url?.includes("citykit") || false
           : false,

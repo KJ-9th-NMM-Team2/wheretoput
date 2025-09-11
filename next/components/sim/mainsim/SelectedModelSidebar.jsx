@@ -276,7 +276,7 @@ export function SelectedModelEditModal() {
       onClose={deselectModel}
       defaultCollapsed={false}
     >
-      <div className="p-4 select-none">
+      <div className="px-4 mt-6 select-none">
         {/* 가구이름 표시 */}
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
           <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
@@ -309,7 +309,7 @@ export function SelectedModelEditModal() {
               }
               unit="x"
               min={0.1}
-              max={5}
+              max={3}
               step={0.1}
               onChange={(value) => updateModelScale(selectedModel.id, value)}
               onChangeEnd={(initialValue, finalValue) => {
@@ -381,10 +381,7 @@ export function SelectedModelEditModal() {
                 onQuickRotate={(axisIndex, degrees) => {
                   const currentValue =
                     (selectedModel.rotation[axisIndex] * 180) / Math.PI;
-                  let newValue = currentValue + degrees;
-
-                  //===== -180~180 각도 제한 =====
-                  newValue = Math.max(-180, Math.min(180, newValue));
+                  let newValue = (currentValue + 360 + degrees) % 360;
 
                   const initialRotation = [...selectedModel.rotation];
                   const newRotation = [...selectedModel.rotation];
@@ -425,9 +422,6 @@ export function SelectedModelEditModal() {
                     }"의 ${axis}축을 회전했습니다`
                   );
                 }}
-                modelName={
-                  selectedModel.name || selectedModel.furnitureName || "Unknown"
-                }
               />
             ))}
           </div>

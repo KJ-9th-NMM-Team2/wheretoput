@@ -17,7 +17,7 @@ export function useObjectControls(
   meshRef
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
-  const { loadedModels, isModelLocked, wallsData, enableWallMagnet } =
+  const { loadedModels, isModelLocked, wallsData, enableWallMagnet, wallToolMode } =
     useStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
@@ -382,6 +382,11 @@ export function useObjectControls(
     (e) => {
       e.stopPropagation();
 
+      // 벽 추가 모드일 때는 가구 클릭 무시
+      if (wallToolMode === 'add') {
+        return;
+      }
+
       // 🔒 락 체크 - 맨 처음에!
       if (isModelLocked(modelId)) {
         return; // 모든 상호작용 차단
@@ -456,6 +461,7 @@ export function useObjectControls(
       loadedModels,
       startDrag,
       isModelLocked,
+      wallToolMode,
     ]
   );
 
@@ -531,7 +537,7 @@ export function useObjectControls(
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
-        const newScale = Math.max(0.1, Math.min(5, initialScale + deltaY));
+        const newScale = Math.max(0.1, Math.min(3, initialScale + deltaY));
         onScaleChange(modelId, newScale);
       }
     },
