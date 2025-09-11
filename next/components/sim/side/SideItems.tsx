@@ -16,28 +16,46 @@ interface SideItemsProps {
   collapsed: boolean;
   selectedCategory: string | null;
   furnitures: Furniture[];
-  setTotalPrice: (price: number) => void;
   sortOption: string;
   roomId: string;
+  itemsPerPage: number;
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  query: string;
+  loading: boolean;
+  error: string | null;
+  setPage: (page: number) => void;
+  setTotalPages: (totalPage: number) => void;
+  setTotalItems: (itemCount: number) => void;
+  setTotalPrice: (price: number) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
 }
 
 const SideItems: React.FC<SideItemsProps> = ({
   collapsed,
   selectedCategory,
   furnitures,
-  setTotalPrice,
   sortOption,
   roomId,
+  itemsPerPage,
+  page,
+  totalPages,
+  totalItems,
+  query,
+  loading,
+  error,
+  setPage,
+  setTotalPages,
+  setTotalItems,
+  setTotalPrice,
+  setLoading,
+  setError,
 }) => {
   const [items, setItems] = useState<Furniture[]>([]);
   const [selectedItems, setSelectedItems] = useState<Furniture[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const itemsPerPage = 8;
   const { addModel, loadedModels, selectModel } = useStore();
   const { addAction } = useHistory();
 
@@ -51,13 +69,14 @@ const SideItems: React.FC<SideItemsProps> = ({
         setLoading,
         setError,
         setItems,
+        query,
         page,
         itemsPerPage,
         category: category || null || "",
         sort: sort,
       });
     },
-    [itemsPerPage]
+    [itemsPerPage, query]
   );
 
   // 검색 했을 때 query 실행
@@ -68,16 +87,16 @@ const SideItems: React.FC<SideItemsProps> = ({
   // 페이지나 카테고리 변경 시 데이터 가져오기
   useEffect(() => {
     const handleCategoryChange = async () => {
-      fetchItems(currentPage, selectedCategory, sortOption);
+      fetchItems(page, selectedCategory, sortOption);
       setSelectedItems([]);
       setTotalPrice(0);
     };
     handleCategoryChange();
-  }, [currentPage, selectedCategory, sortOption, fetchItems]);
+  }, [page, selectedCategory, sortOption, fetchItems]);
 
   // 카테고리나 정렬 변경 시 첫 페이지로 리셋
   useEffect(() => {
-    setCurrentPage(1);
+    setPage(1);
   }, [selectedCategory, sortOption]);
 
   // loadedModels 변경 시 배치한 가구목록 새로고침
@@ -98,12 +117,12 @@ const SideItems: React.FC<SideItemsProps> = ({
 
   // 페이지 변경 핸들러들
   const handlePrevPage = useCallback(() => {
-    handlePageChange(currentPage, setCurrentPage, "prev");
-  }, [currentPage]);
+    handlePageChange(page, setPage, "prev");
+  }, [page]);
 
   const handleNextPage = useCallback(() => {
-    handlePageChange(currentPage, setCurrentPage, "next", totalPages);
-  }, [currentPage, totalPages]);
+    handlePageChange(page, setPage, "next", totalPages);
+  }, [page, totalPages]);
 
   // 아이템 클릭 핸들러
   const handleItemClick = useCallback(
@@ -207,7 +226,7 @@ const SideItems: React.FC<SideItemsProps> = ({
       <ItemPaging
         loading={loading}
         error={error}
-        currentPage={currentPage}
+        currentPage={page}
         totalPages={totalPages}
         totalItems={totalItems}
         handlePrevPage={handlePrevPage}

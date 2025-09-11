@@ -3,6 +3,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import * as THREE from "three";
 import { getColab } from "@/lib/api/toggleColab";
 
+
 function sphericalToCartesian(radius, azimuth, elevation) {
   const x =
     radius *
@@ -112,6 +113,10 @@ export const useStore = create(
       // 모든 연결된 사용자 목록 초기화
       clearConnectedUsers: () => set({ connectedUsers: new Map() }),
 
+      // 채팅 포커스 상태 관리
+      isChatFocused: false,
+      setIsChatFocused: (focused) => set({ isChatFocused: focused }),
+
       // 협업 모드용 브로드캐스트 콜백들
       collaborationCallbacks: {
         broadcastModelAdd: null,
@@ -188,12 +193,22 @@ export const useStore = create(
       // 액션으로 분리
       checkUserRoom: async (roomId, userId) => {
         try {
+          // 유효성 검사
+          if (!roomId || !userId) {
+            console.warn("checkUserRoom: roomId 또는 userId가 없습니다", { roomId, userId });
+            set({ isOwnUserRoom: false });
+            return false;
+          }
+
           // 1. rooms/user 에 API 요청
           const response = await fetch(
             `/api/rooms/user?roomId=${roomId}&userId=${userId}`
           );
 
-          if (!response.ok) throw new Error("Network response was not ok");
+          if (!response.ok) {
+            console.error(`checkUserRoom API 오류: ${response.status} ${response.statusText}`);
+            throw new Error(`Network response was not ok: ${response.status}`);
+          }
 
           // 2. 응답 Json 파싱
           const result = await response.json();
@@ -518,6 +533,27 @@ export const useStore = create(
       // 벽 자석 시각적 효과용 상태
       snappedWallInfo: null,
       setSnappedWallInfo: (wallInfo) => set({ snappedWallInfo: wallInfo }),
+
+      // 쌓기 모드 상태 (버튼 클릭 시 활성화)
+      isStackingMode: false,
+      setIsStackingMode: (value) => set({ isStackingMode: value }),
+      stackingBaseModel: null, // 아래에 있을 기준 모델
+      setStackingBaseModel: (model) => set({ stackingBaseModel: model }),
+
+      // 각 모델의 getSelectionBoxSize 함수들을 저장
+      modelBoundingBoxFunctions: new Map(),
+      registerModelBoundingBoxFunction: (modelId, boundingBoxFn) =>
+        set((state) => {
+          const newMap = new Map(state.modelBoundingBoxFunctions);
+          newMap.set(modelId, boundingBoxFn);
+          return { modelBoundingBoxFunctions: newMap };
+        }),
+      unregisterModelBoundingBoxFunction: (modelId) =>
+        set((state) => {
+          const newMap = new Map(state.modelBoundingBoxFunctions);
+          newMap.delete(modelId);
+          return { modelBoundingBoxFunctions: newMap };
+        }),
 
       // 색상 관련 상태
       wallColor: "#FFFFFF",
