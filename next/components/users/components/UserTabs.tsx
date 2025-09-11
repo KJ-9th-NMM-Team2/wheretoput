@@ -108,7 +108,7 @@ export default function UserTabs({
         <AchievementList />
       ) : (
         userRooms.length > 0 ? (
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-7 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
             {userRooms.map((house: any) => (
               <div key={house.room_id} className="relative group">
                 <HouseCard
