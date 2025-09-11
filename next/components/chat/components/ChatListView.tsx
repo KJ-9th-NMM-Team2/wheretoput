@@ -564,7 +564,7 @@ export default function ChatListView({
                 채팅방 이름 변경
               </h3>
               <p className="text-gray-600 mb-4">
-                "<span className="font-medium">{renameModal.chatName}</span>" 로 채팅방의 이름을 변경하겠습니다.
+                "<span className="font-medium">{renameModal.chatName}</span>" 의 채팅방 이름을 변경합니다.
               </p>
               <input
                 type="text"
