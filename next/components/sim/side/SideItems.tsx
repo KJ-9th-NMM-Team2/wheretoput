@@ -164,7 +164,24 @@ const SideItems: React.FC<SideItemsProps> = ({
       }, 10);
 
       // 백그라운드에서 실제 모델 URL 가져오기
-      const loadingToastId = toast.loading(`${item.name} 모델 로딩 중...`);
+      let loadingToastId: string;
+      let shouldShowQuickToast = false;
+
+      // 이미 URL이 있는지 미리 체크
+      setTimeout(() => {
+        const { currentPreviewFurniture } = useStore.getState();
+        if (currentPreviewFurniture?.id === modelId && currentPreviewFurniture.url) {
+          shouldShowQuickToast = true;
+          toast.success(`${item.name} 모델 로딩 완료`, {
+            position: 'bottom-center'
+          });
+        } else {
+          // URL이 없으면 로딩 토스트 시작
+          loadingToastId = toast.loading(`${item.name} 모델 로딩 중...`, {
+            position: 'bottom-center'
+          });
+        }
+      }, 50);
 
       fetch("/api/model-upload", {
         method: "POST",
@@ -195,18 +212,25 @@ const SideItems: React.FC<SideItemsProps> = ({
                 url: result.model_url,
               };
               setCurrentPreviewFurniture(updatedModel);
+              
+              // 실제로 URL이 업데이트된 경우 로딩 완료 토스트 표시
+              toast.success(`${item.name} 모델 로딩 완료`, {
+                id: loadingToastId,
+                position: 'bottom-center'
+              });
             } else {
               // 이미 배치된 모델이라면 배치된 모델의 URL 업데이트
               const placedModel = loadedModels.find((m) => m.id === modelId);
               if (placedModel) {
                 updateModelUrl(modelId, result.model_url);
               }
-              // 그렇지 않으면 이미 취소된 프리뷰의 fetch 결과이므로 무시
+              // 이미 URL이 있었던 경우 - 빠른 토스트를 이미 띄웠으면 중복 방지
+              if (!shouldShowQuickToast) {
+                toast.success(`${item.name} 모델 로딩 완료`, {
+            position: 'bottom-center'
+          });
+              }
             }
-
-            toast.success(`${item.name} 모델 로딩 완료`, {
-              id: loadingToastId,
-            });
           } else {
             toast.dismiss(loadingToastId);
           }
