@@ -79,7 +79,6 @@ export default function ChatButton({
     chats,
     setChats,
     setBaseChats,
-    onStartDirect,
     updateChatRoom,
     deleteChatRoom,
     sseConnection,
@@ -199,23 +198,6 @@ export default function ChatButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  // 1:1 채팅 시작 핸들러
-  const handleStartDirect = async (
-    otherUserId: string,
-    otherUserName?: string
-  ) => {
-    // 필터 초기화
-    setQuery("");
-    setSelect("전체");
-
-    const roomId = await onStartDirect(otherUserId, otherUserName);
-    if (roomId) {
-      // baseChats 상태 업데이트 완료를 위해 약간의 지연
-      setTimeout(() => {
-        setselectedChatId(roomId);
-      }, 100);
-    }
-  };
 
   return (
     <>
@@ -258,7 +240,6 @@ export default function ChatButton({
             onSendMessage={onSendMessage}
             onEditorKeyDown={onEditorKeyDown}
             onChatSelect={(chatId) => setselectedChatId(chatId)}
-            onStartDirect={handleStartDirect}
             onBack={() => {
               // 채팅방에서 나갈 때 해당 채팅방의 읽음 상태를 현재 시간으로 업데이트
               if (selectedChatId) {

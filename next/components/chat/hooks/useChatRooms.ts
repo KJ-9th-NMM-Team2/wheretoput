@@ -1,5 +1,5 @@
 // 채팅방 목록 관리 훅
-// 채팅방 로드, 필터링, 정렬, 1:1 채팅 시작을 담당
+// 채팅방 로드, 필터링, 정렬을 담당
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -207,66 +207,6 @@ export const useChatRooms = (
   }, [open, token, currentUserId]);
 
 
-  // 1:1 채팅 시작
-  const onStartDirect = useCallback(
-    async (otherUserId: string, otherUserName?: string) => {
-      if (!token) {
-        console.error("토큰이 없습니다");
-        return null;
-      }
-
-
-      const { data } = await api.post(
-        `${NEXT_API_URL}/api/backend/rooms/direct`,
-        {
-          currentUserId: currentUserId || session?.user?.id,
-          otherUserId,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log('🔍 API Response:', data);
-      console.log('🔍 otherUserName:', otherUserName);
-      console.log('🔍 data.name:', data?.name);
-
-      const roomId =
-        data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
-      if (!roomId) return null;
-
-      setBaseChats((prev) => {
-        const existingIndex = prev.findIndex((c) => c.chat_room_id === roomId);
-        if (existingIndex !== -1) {
-          const next = [...prev];
-          // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
-          next[existingIndex] = {
-            ...next[existingIndex],
-            name: data?.name ?? otherUserName ?? next[existingIndex].name,
-          };
-          setChats(recomputeChats(next, "", "전체", currentUserId));
-          return next;
-        }
-        const next = [
-          {
-            chat_room_id: roomId,
-            name: data?.name ?? otherUserName ?? "새 대화", // 채팅방 이름 우선, 없으면 상대방 이름
-            is_private: true,
-            lastMessage: "",
-            lastMessageAt: undefined, // 빈 채팅방은 마지막 메시지 시간이 없음
-            last_read_at: new Date().toISOString(), // 생성과 동시에 읽음 처리
-            searchIndex: "",
-          },
-          ...prev,
-        ];
-        setChats(recomputeChats(next, "", "전체", currentUserId));
-        return next;
-      });
-
-      return roomId;
-    },
-    [token, currentUserId, session?.user?.id]
-  );
 
   // 채팅방 업데이트 (메시지 수신 시 사용)
   const updateChatRoom = useCallback(
@@ -299,7 +239,6 @@ export const useChatRooms = (
     chats,
     setChats,
     setBaseChats,
-    onStartDirect,
     updateChatRoom,
     deleteChatRoom,
     refreshRooms: () => {}, // 폴링 비활성화로 인해 빈 함수 반환
