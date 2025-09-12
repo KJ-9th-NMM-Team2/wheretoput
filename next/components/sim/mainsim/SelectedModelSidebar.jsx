@@ -313,17 +313,21 @@ export function SelectedModelEditModal() {
                 (Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
                   : selectedModel.scale)
-              )} × D ${Math.ceil(
-                selectedModel.length[2] *
-                (Array.isArray(selectedModel.scale)
-                  ? selectedModel.scale[2]
-                  : selectedModel.scale)
-              )} × H ${Math.ceil(
+
+              )} × H${Math.ceil(
+
                 selectedModel.length[1] *
                 (Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[1]
                   : selectedModel.scale)
-              )} `}
+
+              )} × D${Math.ceil(
+                selectedModel.length[2] *
+                (Array.isArray(selectedModel.scale)
+                  ? selectedModel.scale[2]
+                  : selectedModel.scale)
+              )}`}
+
               value={
                 Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
