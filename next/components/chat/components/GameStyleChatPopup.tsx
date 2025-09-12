@@ -215,7 +215,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
     return (
       <div
         ref={ref}
-        className="fixed z-[999] pointer-events-none flex flex-col justify-end"
+        className="fixed z-[10] pointer-events-none flex flex-col justify-end"
         style={{
           // left: `${position.x}px`,
           // top: `${position.y}px`,
@@ -236,7 +236,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
           >
             <div
               className="h-70 overflow-y-auto p-4 pb-2 flex flex-col select-none"
-              style={{ scrollBehavior: 'smooth' }}
+              style={{ scrollBehavior: 'smooth', zIndex: 999 }}
               onWheel={(e) => e.stopPropagation()}
             >
               <div className="flex-1"></div> {/* 스페이서 - 메시지를 하단으로 밀어줌 */}
