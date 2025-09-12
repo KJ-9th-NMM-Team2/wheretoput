@@ -54,8 +54,13 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Next.js 빌드 결과물 복사
 COPY --from=builder /app/public ./public
 
-# public/cache/models 디렉토리 생성 및 권한 설정
-RUN mkdir -p /app/public/cache/models && chown -R nextjs:nodejs /app/public/cache/models && chmod 755 /app/public/cache/models
+# Next.js 실행에 필요한 캐시/모델 디렉토리 생성 및 권한 설정
+RUN mkdir -p /app/.next/cache \
+    && mkdir -p /app/public/cache/models \
+    && chown -R nextjs:nodejs /app/.next \
+    && chown -R nextjs:nodejs /app/public/cache \
+    && chmod -R 755 /app/.next \
+    && chmod -R 755 /app/public/cache
 
 # temp 디렉토리 생성 및 권한 설정 (nextjs 사용자로 변경 전에)
 RUN mkdir -p /app/temp && chown -R nextjs:nodejs /app/temp && chmod 755 /app/temp

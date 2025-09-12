@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import fs from "fs/promises";
 import type { NextRequest } from "next/server";
+import path from "path";
 
 /**
  * @swagger
@@ -205,7 +207,7 @@ export async function GET(
     }
 
     // 4. 시뮬레이터에서 사용할 형태로 데이터 변환
-    const objects = roomObjects.map((obj) => {
+    const objects = await Promise.all(roomObjects.map(async (obj) => {
       // position JSON에서 값 추출
       const pos = obj.position as any;
       const rot = obj.rotation as any;
@@ -213,6 +215,18 @@ export async function GET(
 
       // furniture_id가 null인 경우 (직접 업로드된 모델) 처리
       const hasFurniture = obj.furnitures && obj.furniture_id;
+      // cached_model_url과 실제 파일 존재 여부 모두 체크
+      let useCachedUrl = false;
+      if (hasFurniture && obj.furnitures.cached_model_url) {
+        const filePath = path.join('public', 'cache', 'models', obj.furnitures.cached_model_url);
+        try {
+          await fs.access(filePath);
+          useCachedUrl = true;
+          console.log(`🆚 Using cached file: ${filePath}`);
+        } catch {
+          console.log(`❌ Cached file not found, fallback to model_url: ${filePath}`);
+        }
+      }
 
       return {
         id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
@@ -229,7 +243,7 @@ export async function GET(
         scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
         // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
         url:
-          hasFurniture && obj.furnitures.cached_model_url
+          hasFurniture && useCachedUrl
             ? obj.furnitures.cached_model_url
             : obj.furnitures.model_url 
               ? obj.furnitures.model_url
@@ -247,7 +261,7 @@ export async function GET(
         furnitureName: hasFurniture ? obj.furnitures.name : "Custom Object",
         categoryId: hasFurniture ? obj.furnitures.category_id : null,
       };
-    });
+    }));
 
     // 5. 벽 정보를 시뮬레이터 형태로 변환 (room_walls 또는 legacy data 사용)
     const wallsToProcess = roomWalls.length > 0 ? roomWalls : legacyWallsData;
