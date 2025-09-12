@@ -238,7 +238,7 @@ export function SelectedModelEditModal() {
         defaultCollapsed={false}
       >
         <div className="p-4 select-none">
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
             <div className="font-bold mb-3 text-sm">
               위에 올릴 가구를 선택하세요
             </div>
@@ -266,7 +266,14 @@ export function SelectedModelEditModal() {
 
   // 선택된 모델이 없으면 모달을 표시하지 않음
   if (!selectedModel) {
-    return null;
+    return (
+      <CollapsibleSidebar
+        title="가구 목록"
+        defaultCollapsed={true}
+      >
+        
+      </CollapsibleSidebar>
+    );
   }
 
   return (
@@ -276,9 +283,9 @@ export function SelectedModelEditModal() {
       onClose={deselectModel}
       defaultCollapsed={false}
     >
-      <div className="px-4 mt-6 select-none">
+      <div className="p-4 select-none">
         {/* 가구이름 표시 */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
             {selectedModel.name}
           </div>
