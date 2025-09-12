@@ -37,6 +37,7 @@ export class RoomController {
     @Body() body: { 
       participantIds: string[];
       roomName?: string;
+      simRoomId?: string; // 협업용 시뮬레이터 room ID
     },
     @Request() req: any,
   ) {
