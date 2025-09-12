@@ -219,12 +219,10 @@ export async function GET(
       let useCachedUrl = false;
 
       const filePath = path.join('public', obj.furnitures.cached_model_url || "");
-      try {
+      if (filePath.includes('/caches')) {
         await fs.access(filePath);
         useCachedUrl = true;
-        console.log(`🆚 Using cached file: ${filePath}`);
-      } catch {
-        console.log(`❌ Cached file not found, fallback to model_url: ${filePath}`);
+        console.log(`✅ Using cached file: ${filePath}`);
       }
 
       return {
@@ -244,9 +242,9 @@ export async function GET(
         url:
           hasFurniture && useCachedUrl
             ? obj.furnitures.cached_model_url
-            : obj.furnitures.model_url
-            ? obj.furnitures.model_url
-            : "/legacy_mesh (1).glb",
+            : obj.furnitures.model_url 
+              ? obj.furnitures.model_url
+              : "/legacy_mesh (1).glb",
         isCityKit: hasFurniture
           ? obj.furnitures.model_url?.includes("citykit") || false
           : false,
