@@ -153,13 +153,16 @@ export const useChatRooms = (
 
           // 채팅방 이름 우선순위 적용:
           // 1순위: 사용자가 설정한 커스텀 이름 (custom_room_name)
-          // 2순위: 기본 채팅방 이름 (r.name)
-          // 3순위: 나를 제외한 참가자들의 이름
+          // 2순위: 시뮬레이터 방의 제목 (rooms 테이블의 title)
+          // 3순위: 기본 채팅방 이름 (r.name)
+          // 4순위: 나를 제외한 참가자들의 이름
 
           let roomName = r.custom_room_name;
-          if (!roomName && r.name) {
+          if (!roomName && r.sim_room_title) {
+            roomName = r.sim_room_title;
+          } else if (!roomName && r.name) {
             roomName = r.name;
-          } else {
+          } else if (!roomName) {
             const otherParticipants = r.chat_participants
               .filter(
                 (participant: any) => participant.user_id !== currentUserId
