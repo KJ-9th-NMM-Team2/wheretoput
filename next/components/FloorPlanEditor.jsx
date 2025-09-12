@@ -1321,7 +1321,7 @@ const FloorPlanEditor = () => {
           {/* 토글 버튼 */}
           <button
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-full z-10 bg-white/95 backdrop-blur-sm border border-gray-300 dark:border-gray-700 dark:bg-gray-800 p-2 rounded-l-lg shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 cursor-pointer"
             style={{ borderRight: "none" }}
           >
             {isSidebarCollapsed ? (
@@ -1612,7 +1612,7 @@ const FloorPlanEditor = () => {
                     setViewScale(1);
                     setViewOffset({ x: 0, y: 0 });
                   }}
-                  className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors cursor-pointer "
                 >
                   초기 위치로
                 </button>

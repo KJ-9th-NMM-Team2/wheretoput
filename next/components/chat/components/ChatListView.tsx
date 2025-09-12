@@ -127,12 +127,12 @@ export default function ChatListView({
           last_read_at: new Date().toISOString(),
           searchIndex: "",
         };
-        
+
         // baseChats에 새 채팅방 추가
         const updatedChats = [newChatItem, ...baseChats];
         setBaseChats(updatedChats);
         setChats(recomputeChats(updatedChats, query, select, currentUserId));
-        
+
         // 생성된 채팅방으로 이동
         onChatSelect(createdRoom.chat_room_id);
         setShowUserList(false); // 유저 목록 닫기
@@ -525,7 +525,7 @@ export default function ChatListView({
           <button
             onClick={() => openLeaveModal(contextMenu.chatId)}
             disabled={deleting === contextMenu.chatId}
-            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full text-left px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             채팅방 나가기
           </button>
@@ -534,7 +534,17 @@ export default function ChatListView({
 
       {/* 나가기 확인 모달 */}
       {leaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && leaveModal) {
+              handleLeaveRoom(leaveModal.chatId);
+            }
+            if (e.key === 'Escape') {
+              closeLeaveModal();
+            }
+          }}
+        >
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -542,7 +552,7 @@ export default function ChatListView({
               </h3>
               <p className="text-gray-600">
                 "<span className="font-medium">{leaveModal.chatName}</span>"
-                채팅방에서 나가시겠습니까? 나중에 다시 참여할 수 있습니다.
+                채팅방에서 나가시겠습니까?
               </p>
             </div>
 
@@ -556,7 +566,8 @@ export default function ChatListView({
               <button
                 onClick={() => handleLeaveRoom(leaveModal.chatId)}
                 disabled={deleting === leaveModal.chatId}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                autoFocus
               >
                 {deleting === leaveModal.chatId ? "나가는 중..." : "나가기"}
               </button>
@@ -580,7 +591,7 @@ export default function ChatListView({
                 type="text"
                 defaultValue={renameModal.chatName}
                 placeholder="새로운 이름을 입력하세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const newName = (e.target as HTMLInputElement).value.trim();

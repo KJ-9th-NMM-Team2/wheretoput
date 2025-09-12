@@ -26,7 +26,7 @@ const ItemPaging: React.FC<ItemPagingProps> = ({
                     className={`p-1 rounded transition-colors ${
                         currentPage === 1
                             ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-gray-600 hover:bg-gray-200'
+                            : 'text-gray-600 hover:bg-gray-200 cursor-pointer'
                     }`}
                     aria-label="이전 페이지"
                 >
@@ -43,7 +43,7 @@ const ItemPaging: React.FC<ItemPagingProps> = ({
                     className={`p-1 rounded transition-colors ${
                         currentPage === totalPages
                             ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-gray-600 hover:bg-gray-200'
+                            : 'text-gray-600 hover:bg-gray-200 cursor-pointer'
                     }`}
                     aria-label="다음 페이지"
                 >
