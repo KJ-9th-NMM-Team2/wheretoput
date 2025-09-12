@@ -4,7 +4,7 @@ import fs from 'fs';
 import fetch from 'node-fetch';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
-import { downloadFileToLocal } from '@/lib/cache-utils';
+import cacheUtils from "@/lib/cache/CacheUtils";
 
 import Replicate from "replicate";
 
@@ -85,7 +85,7 @@ async function main(furnitureId = null, imageUrl = null) {
             // 로컬에 저장 for 로컬 파일 캐싱
             const filename = `${furnitureId}.glb`;
             const cached_model_url = `public/cache/models/${filename}`;
-            await downloadFileToLocal(arrayBuffer, cached_model_url, filename, furnitureId);
+            await cacheUtils.downloadFileFromTrellisToLocal(arrayBuffer, cached_model_url, filename, furnitureId);
             console.log(`✅ 로컬 파일 캐싱 완료: ${cached_model_url}`);
 
             const update_db_url = `/cache/models/${filename}`;

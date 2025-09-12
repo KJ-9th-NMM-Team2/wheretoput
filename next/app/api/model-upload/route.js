@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 // Trellis API 사용으로 변경
 import { generateTrellisModel } from '../../trellis_api.js';
-import { ensureCacheDir, downloadFileFromS3ToLocal, useLocalFileCache, CACHE_DIR } from '@/lib/cache-utils';
+import cacheUtils, { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import path from 'path';
 
 export async function POST(request) {
   try {
     // 캐시 디렉토리 생성
-    await ensureCacheDir(CACHE_DIR);
+    await cacheUtils.ensureCacheDir(CACHE_DIR);
 
     console.log('3D 모델 생성 API 호출됨')
     
@@ -44,7 +44,7 @@ export async function POST(request) {
       try {
         console.log('캐시된 파일 확인:', localPath);
 
-        const response = await useLocalFileCache(localPath, fileName, furniture_id);
+        const response = await cacheUtils.useLocalFileCache(localPath, fileName, furniture_id);
         
         if (response) {
           return response;
@@ -57,7 +57,7 @@ export async function POST(request) {
       // S3에서 다운로드 및 캐싱
       try {   
         console.log('다운로드 파일 확인:', localPath);
-        return await downloadFileFromS3ToLocal(furniture, localPath, fileName, furniture_id);
+        return await cacheUtils.downloadFileFromS3ToLocal(furniture, localPath, fileName, furniture_id);
       } catch (downloadError) {
         // S3 URL인지 확인
         if (furniture.model_url.startsWith('https://') && furniture.model_url.includes('s3')) {
