@@ -275,7 +275,7 @@ export function SelectedModelEditModal() {
       >
         <div className="flex flex-col gap-2 overflow-auto p-4 select-none">
           {loadedModels.map((model) => (
-            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
+            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-300 active:bg-gradient-to-r active:from-green-500 active:to-green-600 active:text-white border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap cursor-pointer transition-all duration-200"
               key={model.id}
               onClick={() => (selectModel(model.id), hoveringModel(null))}
               onMouseEnter={() => hoveringModel(model.id)}

@@ -18,9 +18,9 @@ const SelectedFurnitures = ({onCategorySelect} : SelectedFurnituresProps) => {
         <div className="flex items-center">
             <button
                 key={category.id}
-                className={`py-2 px-3 text-sm rounded transition whitespace-nowrap ${selectedCategory === category.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
+                className={`py-2 px-3 text-sm rounded transition whitespace-nowrap cursor-pointer ${selectedCategory === category.id
+                    ? 'bg-green-500 text-white'
+                    : 'bg-white text-gray-800 hover:bg-green-50 hover:text-green-600 hover:border-green-200 border border-gray-200'
                     }`}
                 onClick={() => handleCategoryClick(category)}
             >
