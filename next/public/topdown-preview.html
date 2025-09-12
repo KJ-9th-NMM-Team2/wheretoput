@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탑다운 치수 보기 모드 - 기능 프리뷰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .toggle-switch {
+            transition: all 0.3s ease;
+        }
+        .toggle-switch.active {
+            background-color: #3b82f6;
+        }
+        .toggle-switch.inactive {
+            background-color: #d1d5db;
+        }
+        .toggle-ball {
+            transition: transform 0.3s ease;
+        }
+        .toggle-ball.active {
+            transform: translateX(1.5rem);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">탑다운 치수 보기 모드 기능 프리뷰</h1>
+        
+        <!-- Feature Overview -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">구현된 기능</h2>
+            <ul class="space-y-2 text-gray-700">
+                <li class="flex items-start">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span>카메라 컨트롤 패널에 "탑다운 치수" 토글 버튼 추가</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span>탑다운 모드 활성화 시 카메라를 위에서 내려다보는 뷰로 고정</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span>벽의 길이를 mm 단위로 표시하는 DimensionOverlay 컴포넌트</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span>선택된 가구의 치수(가로×세로×높이)를 표시하는 기능</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="text-green-500 mr-2">✓</span>
+                    <span>탑다운 모드에서 카메라 회전 제한 및 적절한 거리 유지</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="bg-gray-800 rounded-lg p-6 text-white mb-8">
+            <h3 class="text-lg font-semibold mb-4">Interactive Demo - Camera Control Panel</h3>
+            
+            <!-- Toggle Control -->
+            <div class="flex items-center justify-between mb-4 bg-gray-700 p-4 rounded">
+                <span class="text-sm">탑다운 치수</span>
+                <button id="topdownToggle" class="toggle-switch inactive w-12 h-6 flex items-center rounded-full p-1">
+                    <div class="toggle-ball w-4 h-4 bg-white rounded-full shadow-md"></div>
+                </button>
+            </div>
+            
+            <!-- Other Controls -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between bg-gray-700 p-4 rounded">
+                    <span class="text-sm">벽 투명화</span>
+                    <button class="toggle-switch active w-12 h-6 flex items-center rounded-full p-1">
+                        <div class="toggle-ball active w-4 h-4 bg-white rounded-full shadow-md"></div>
+                    </button>
+                </div>
+                
+                <div class="flex items-center justify-between bg-gray-700 p-4 rounded">
+                    <span class="text-sm">벽 자석</span>
+                    <button class="toggle-switch inactive w-12 h-6 flex items-center rounded-full p-1">
+                        <div class="toggle-ball w-4 h-4 bg-white rounded-full shadow-md"></div>
+                    </button>
+                </div>
+                
+                <div class="bg-gray-700 p-4 rounded">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm min-w-12">시야각</span>
+                        <input type="range" min="5" max="90" value="30" class="flex-1">
+                        <span class="text-xs min-w-8 text-right">30</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mode Comparison -->
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <!-- Normal Mode -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">일반 3D 뷰 모드</h3>
+                <div class="bg-blue-50 h-48 rounded border-2 border-dashed border-blue-200 flex items-center justify-center mb-4">
+                    <div class="text-center text-blue-600">
+                        <div class="text-4xl mb-2">🏠</div>
+                        <div class="text-sm">자유로운 3D 카메라</div>
+                        <div class="text-xs">회전, 줌, 이동 가능</div>
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 360도 자유 회전</li>
+                    <li>• 3D 원근감</li>
+                    <li>• 치수 표시 없음</li>
+                </ul>
+            </div>
+
+            <!-- Top-down Mode -->
+            <div id="topdownPreview" class="bg-white rounded-lg shadow-md p-6 border-2 border-blue-500 hidden">
+                <h3 class="text-lg font-semibold mb-4 text-blue-600">탑다운 치수 모드</h3>
+                <div class="bg-green-50 h-48 rounded border-2 border-dashed border-green-200 flex items-center justify-center mb-4 relative">
+                    <div class="text-center text-green-600">
+                        <div class="text-4xl mb-2">📐</div>
+                        <div class="text-sm">탑다운 뷰</div>
+                        <div class="text-xs">치수 표시 활성화</div>
+                    </div>
+                    <!-- Simulated dimension labels -->
+                    <div class="absolute top-2 left-4 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
+                        3500mm
+                    </div>
+                    <div class="absolute bottom-2 right-4 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        테이블<br>800×600×750mm
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 위에서 내려다보는 고정 시점</li>
+                    <li>• 벽 길이 표시 (mm)</li>
+                    <li>• 선택 가구 치수 표시</li>
+                    <li>• 편집 기능 유지</li>
+                </ul>
+            </div>
+
+            <!-- Default normal mode preview -->
+            <div id="normalPreview" class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">일반 3D 뷰 모드</h3>
+                <div class="bg-blue-50 h-48 rounded border-2 border-dashed border-blue-200 flex items-center justify-center mb-4">
+                    <div class="text-center text-blue-600">
+                        <div class="text-4xl mb-2">🏠</div>
+                        <div class="text-sm">자유로운 3D 카메라</div>
+                        <div class="text-xs">회전, 줌, 이동 가능</div>
+                    </div>
+                </div>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 360도 자유 회전</li>
+                    <li>• 3D 원근감</li>
+                    <li>• 치수 표시 없음</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Code Implementation -->
+        <div class="bg-gray-900 rounded-lg p-6 text-green-400 mb-8">
+            <h3 class="text-lg font-semibold mb-4 text-white">구현된 주요 컴포넌트</h3>
+            <div class="space-y-4 text-sm">
+                <div>
+                    <div class="text-blue-300">1. environmentSlice.js</div>
+                    <div class="ml-4 text-gray-300">- topDownDimensionMode 상태 추가</div>
+                    <div class="ml-4 text-gray-300">- setTopDownDimensionMode 함수</div>
+                </div>
+                <div>
+                    <div class="text-blue-300">2. CameraControlPanel.jsx</div>
+                    <div class="ml-4 text-gray-300">- TopDownDimensionToggle 컴포넌트</div>
+                    <div class="ml-4 text-gray-300">- 토글 UI 및 상태 연동</div>
+                </div>
+                <div>
+                    <div class="text-blue-300">3. DimensionOverlay.jsx</div>
+                    <div class="ml-4 text-gray-300">- 벽 치수 표시 라벨</div>
+                    <div class="ml-4 text-gray-300">- 가구 치수 표시 라벨</div>
+                </div>
+                <div>
+                    <div class="text-blue-300">4. TopDownCameraController.jsx</div>
+                    <div class="ml-4 text-gray-300">- 카메라 제약 조건 설정</div>
+                    <div class="ml-4 text-gray-300">- 탑다운 뷰 위치 고정</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="bg-green-100 border border-green-400 rounded-lg p-4">
+            <h3 class="text-green-800 font-semibold mb-2">구현 완료 상태</h3>
+            <p class="text-green-700">
+                탑다운 치수 보기 모드의 핵심 기능이 구현되었습니다. 
+                사용자는 카메라 컨트롤 패널에서 "탑다운 치수" 토글을 클릭하여 
+                위에서 내려다보는 뷰로 전환하고, 벽과 가구의 치수를 확인할 수 있습니다.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Interactive toggle functionality
+        const toggle = document.getElementById('topdownToggle');
+        const topdownPreview = document.getElementById('topdownPreview');
+        const normalPreview = document.getElementById('normalPreview');
+        let isActive = false;
+
+        toggle.addEventListener('click', function() {
+            isActive = !isActive;
+            
+            if (isActive) {
+                // Activate top-down mode
+                toggle.className = 'toggle-switch active w-12 h-6 flex items-center rounded-full p-1';
+                toggle.firstElementChild.className = 'toggle-ball active w-4 h-4 bg-white rounded-full shadow-md';
+                
+                // Show top-down preview
+                topdownPreview.classList.remove('hidden');
+                normalPreview.classList.add('hidden');
+            } else {
+                // Deactivate top-down mode
+                toggle.className = 'toggle-switch inactive w-12 h-6 flex items-center rounded-full p-1';
+                toggle.firstElementChild.className = 'toggle-ball w-4 h-4 bg-white rounded-full shadow-md';
+                
+                // Show normal preview
+                topdownPreview.classList.add('hidden');
+                normalPreview.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
