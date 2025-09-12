@@ -28,7 +28,7 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const loadFollowData = async () => {
       const targetUserId = userId || session?.user?.id;
       if (!targetUserId) return;
@@ -36,7 +36,7 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
       try {
         const followersData = await fetchFollowers(targetUserId);
         const followingData = await fetchFollowing(targetUserId);
-        
+
         setFollowers(followersData);
         setFollowing(followingData);
       } catch (error) {
@@ -82,21 +82,21 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
   };
 
   const router = useRouter();
-// 클릭하면 해당 사용자 마이페이지로 이동
+  // 클릭하면 해당 사용자 마이페이지로 이동
   const handleUserClick = (userId: string) => {
     router.push(`/users/${userId}`);
     onClose(); // 모달 닫기
   };
 
-  const UserCard = ({ 
-    user, 
-    isFollowing 
-  }: { 
-    user: User; 
+  const UserCard = ({
+    user,
+    isFollowing
+  }: {
+    user: User;
     isFollowing: boolean;
   }) => (
     <div className="flex items-center justify-between py-2">
-      <div 
+      <div
         className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg p-2 transition-colors"
         onClick={() => handleUserClick(user.id)}
       >
@@ -122,19 +122,19 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
           </p>
         </div>
       </div>
-      
+
       <div className="flex gap-2">
         {isFollowing ? (
           <button
             onClick={() => handleUnfollow(user.id)}
-            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
           >
             언팔로우
           </button>
         ) : (
           <button
             onClick={() => handleRemoveFollower(user.id)}
-            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
+            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
           >
             삭제
           </button>
@@ -149,7 +149,7 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md mx-4 max-h-[80vh] overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 ">
             팔로워 / 팔로잉
           </h2>
           <button
@@ -161,25 +161,23 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
             </svg>
           </button>
         </div>
-        
+
         <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab("followers")}
-            className={`flex-1 px-4 py-3 font-medium transition-colors ${
-              activeTab === "followers"
-                ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+            className={`flex-1 px-4 py-3 font-medium transition-colors cursor-pointer ${activeTab === "followers"
+              ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
           >
             팔로워 ({followers.length})
           </button>
           <button
             onClick={() => setActiveTab("following")}
-            className={`flex-1 px-4 py-3 font-medium transition-colors ${
-              activeTab === "following"
-                ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+            className={`flex-1 px-4 py-3 font-medium transition-colors cursor-pointer ${activeTab === "following"
+              ? "text-amber-700 dark:text-orange-300 border-b-2 border-amber-700 dark:border-orange-300"
+              : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
           >
             팔로잉 ({following.length})
           </button>

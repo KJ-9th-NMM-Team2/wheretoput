@@ -277,7 +277,10 @@ export function SelectedModelEditModal() {
           {loadedModels.map((model) => (
             <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
               key={model.id}
-              onClick={() => (selectModel(model.id), hoveringModel(null))}
+              onClick={() => {
+                selectModel(model.id);
+                hoveringModel(null);
+              }}
               onMouseEnter={() => hoveringModel(model.id)}
               onMouseLeave={() => hoveringModel(null)}
             >
@@ -445,7 +448,7 @@ export function SelectedModelEditModal() {
             {/* 쌓기 버튼 */}
             <button
               onClick={handleStartStackingMode}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 cursor-pointer bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
             >
               쌓기
             </button>
@@ -485,7 +488,7 @@ export function SelectedModelEditModal() {
                 removeModel(selectedModel.id);
                 deselectModel();
               }}
-              className="flex-1 bg-blue-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-500 cursor-pointer hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
             >
               가구 삭제
             </button>

@@ -145,19 +145,19 @@ export async function GET(
       `Found ${roomObjects.length} objects and ${roomWalls.length} walls for room ${room_id}`
     );
 
-    // 각 객체의 furniture 관계 상태 확인
-    roomObjects.forEach((obj, index) => {
-      console.log(
-        `Object ${index}: furniture_id=${obj.furniture_id}, length: ${obj.furnitures.length_x}, ${obj.furnitures.length_y}, ${obj.furnitures.length_z}`
-      );
-    });
+    // // 각 객체의 furniture 관계 상태 확인
+    // roomObjects.forEach((obj, index) => {
+    //   console.log(
+    //     `Object ${index}: furniture_id=${obj.furniture_id}, length: ${obj.furnitures.length_x}, ${obj.furnitures.length_y}, ${obj.furnitures.length_z}`
+    //   );
+    // });
 
-    // 벽 정보 로그
-    roomWalls.forEach((wall, index) => {
-      console.log(
-        `Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`
-      );
-    });
+    // // 벽 정보 로그
+    // roomWalls.forEach((wall, index) => {
+    //   console.log(
+    //     `Wall ${index}: length=${wall.length}, position=(${wall.position_x}, ${wall.position_y}, ${wall.position_z})`
+    //   );
+    // });
 
     // 4. room_walls에 데이터가 없으면 rooms.room_data에서 fallback 시도
     let legacyWallsData = [];
@@ -244,9 +244,9 @@ export async function GET(
         url:
           hasFurniture && useCachedUrl
             ? obj.furnitures.cached_model_url
-            : obj.furnitures.model_url 
-              ? obj.furnitures.model_url
-              : "/legacy_mesh (1).glb",
+            : obj.furnitures.model_url
+            ? obj.furnitures.model_url
+            : "/legacy_mesh (1).glb",
         isCityKit: hasFurniture
           ? obj.furnitures.model_url?.includes("citykit") || false
           : false,
