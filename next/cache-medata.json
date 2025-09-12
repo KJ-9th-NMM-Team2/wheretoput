@@ -731,9 +731,27 @@
       "accessCount": 1,
       "fileSize": 1036352,
       "createdAt": "2025. 9. 12. 오후 10:48:46"
+    },
+    "9ef5de60-0544-4a3d-a91f-f3c55b7374cb.glb": {
+      "lastAccessed": "2025. 9. 12. 오후 11:19:33",
+      "accessCount": 1,
+      "fileSize": 1095800,
+      "createdAt": "2025. 9. 12. 오후 11:19:33"
+    },
+    "63773895-b924-4534-9a8e-406965b943f8.glb": {
+      "lastAccessed": "2025. 9. 12. 오후 11:19:54",
+      "accessCount": 1,
+      "fileSize": 1121916,
+      "createdAt": "2025. 9. 12. 오후 11:19:54"
+    },
+    "331240c0-e10f-4cae-947f-9b81a68f6ab4.glb": {
+      "lastAccessed": "2025. 9. 12. 오후 11:22:09",
+      "accessCount": 1,
+      "fileSize": 1320304,
+      "createdAt": "2025. 9. 12. 오후 11:22:09"
     }
   },
-  "totalSize": 170598484,
+  "totalSize": 174136504,
   "maxSize": 314572800,
   "lastCleanup": "2025. 9. 12. 오후 3:21:16"
 }
