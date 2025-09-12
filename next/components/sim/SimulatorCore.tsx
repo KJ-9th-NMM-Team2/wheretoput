@@ -26,6 +26,8 @@ import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
 import WallTools from "./side/WallTools";
+import { WallMeasurements } from "./measurements/WallMeasurements";
+import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
 
 type position = [number, number, number];
 
@@ -550,6 +552,12 @@ export function SimulatorCore({
 
           {/* 벽 스냅 포인트 */}
           <WallSnapPoints />
+
+          {/* 측정 표시 */}
+          <Suspense fallback={null}>
+            <WallMeasurements />
+            <ObjectMeasurements />
+          </Suspense>
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}
