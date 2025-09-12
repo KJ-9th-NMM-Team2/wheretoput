@@ -19,6 +19,11 @@ import { useChatConnection } from "@/components/chat/hooks/useChatConnection";
 import { useChatMessages } from "@/components/chat/hooks/useChatMessages";
 import { useChatRooms } from "@/components/chat/hooks/useChatRooms";
 import { formatRelativeTime } from "@/components/chat/utils/chat-utils";
+import { api } from "@/lib/client/api";
+import {
+  checkCollaborationAccess,
+  setupChatRoom,
+} from "@/components/sim/collaboration/utils/collaborationUtils";
 
 // 가독성 있는 색상 생성 함수
 function generateReadableColor() {
@@ -46,9 +51,18 @@ function CollaborationPageContent({
     setCollaborationMode,
     setViewOnly,
     setCurrentUser,
-    checkUserRoom,
     saveSimulatorState,
+    currentRoomInfo,
   } = useStore();
+
+  const checkUserRoomFn = useStore((state) => state.checkUserRoom);
+
+  const checkUserRoom = useCallback(
+    (roomId: string, userId: string) => {
+      return checkUserRoomFn(roomId, userId);
+    },
+    [checkUserRoomFn]
+  );
 
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isAccessChecking, setIsAccessChecking] = useState(true);
@@ -60,28 +74,22 @@ function CollaborationPageContent({
   // 채팅 관련 상태와 훅
   const [isChatFocused, setIsChatFocused] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
-  
+
   const { token } = useChatConnection(!!selectedChatId); // 채팅방 선택 시에만 연결
-  
+
   // 채팅방 업데이트 콜백을 useCallback으로 메모이제이션
   const handleChatRoomUpdate = useCallback(() => {
     // 협업 모드에서는 채팅방 목록을 관리하지 않으므로 빈 함수
   }, []);
-  
-  const {
-    selectedMessages,
-    text,
-    setText,
-    onSendMessage,
-    onEditorKeyDown
-  } = useChatMessages(
-    !!selectedChatId, // 채팅방 선택 시에만 활성화
-    selectedChatId, // 선택된 채팅방 ID
-    token,
-    session?.user?.id || null,
-    handleChatRoomUpdate
-  );
-  
+
+  const { selectedMessages, text, setText, onSendMessage, onEditorKeyDown } =
+    useChatMessages(
+      !!selectedChatId, // 채팅방 선택 시에만 활성화
+      selectedChatId, // 선택된 채팅방 ID
+      token,
+      session?.user?.id || null,
+      handleChatRoomUpdate
+    );
 
   // 협업 모드 초기 설정
   useEffect(() => {
@@ -96,77 +104,85 @@ function CollaborationPageContent({
     });
   }, [setViewOnly, setCollaborationMode, setCurrentUser]);
 
-  // 협업 훅 활성화
-  const collaboration = useCollaboration(roomId);
-
-  // 협업 모드 접근 권한 체크
+  // 1단계: 협업 모드 접근 권한 체크 (채팅방 처리 제외)
   useEffect(() => {
-    const checkCollaborationAccess = async () => {
+    const handleCollaborationAccess = async () => {
       try {
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
 
-        // 1. 방 소유자인지 확인
+        // 방 소유자인지 확인
         let ownerStatus = false;
-        if (!session?.user.id) {
-          ownerStatus = false;
-        } else {
+        if (session?.user.id) {
           ownerStatus = await checkUserRoom(currentRoomId, session.user.id);
         }
 
-        setIsOwner(ownerStatus); // 소유자 상태 저장
+        setIsOwner(ownerStatus);
 
-        if (ownerStatus) {
-          // 방 소유자인 경우: 협업 모드 상태 확인 후 자동으로 켜기
-          const collabResult = await getColab(currentRoomId);
+        // 협업 접근 권한만 체크 (채팅방 처리는 나중에)
 
-          if (collabResult.success) {
-            if (!collabResult.data.collab_on) {
-              // 협업 모드가 꺼져있으면 켜기
-              const toggleResult = await toggleColab(currentRoomId, true);
-              if (toggleResult.success) {
-                console.log(
-                  "방 주인이므로 협업 모드를 자동으로 활성화했습니다"
-                );
-              } else {
-                console.error("협업 모드 활성화 실패:", toggleResult.error);
-              }
-            }
-            setRoomId(currentRoomId);
-            setIsAccessChecking(false);
-          } else {
-            console.error("협업 상태 확인 실패:", collabResult.error);
-            setAccessDenied(true);
-            setIsAccessChecking(false);
-          }
+        const result = await checkCollaborationAccess({
+          currentRoomId,
+          isOwner: ownerStatus,
+        });
+
+        if (result.success) {
+          setRoomId(result.roomId!); // roomId 설정하여 소켓 연결 시작
         } else {
-          // 일반 사용자인 경우: 협업 모드가 켜져있는지 확인
-          const collabResult = await getColab(currentRoomId);
-
-          if (collabResult.success && collabResult.data.collab_on) {
-            // 협업 모드가 켜져있으면 접근 허용
-            setRoomId(currentRoomId);
-            setIsAccessChecking(false);
-          } else {
-            // 협업 모드가 꺼져있거나 오류 시 접근 거부
-            console.log("협업 모드가 비활성화되어 있습니다");
-            console.log("setAccessDenied(true) 호출");
-            setAccessDenied(true);
-            setIsAccessChecking(false);
-            console.log("상태 업데이트 완료");
-          }
+          setAccessDenied(true);
+          setIsAccessChecking(false);
         }
       } catch (error) {
-        console.error("협업 모드 접근 권한 체크 실패:", error);
         setAccessDenied(true);
         setIsAccessChecking(false);
       }
     };
 
     if (session !== undefined) {
-      checkCollaborationAccess();
+      handleCollaborationAccess();
     }
   }, [params, session, checkUserRoom]);
+
+  // 2단계: 협업 소켓 연결 (roomId 설정 후)
+  const collaboration = useCollaboration(roomId);
+
+  // 3단계: 소켓 연결 완료 후 채팅방 설정
+  useEffect(() => {
+    const handleChatRoomSetup = async () => {
+      if (!roomId || !collaboration?.isConnected || !isAccessChecking) return;
+
+      try {
+        const chatResult = await setupChatRoom({
+          currentRoomId: roomId,
+          isOwner,
+          userId: session?.user?.id,
+          currentRoomInfo,
+        });
+
+        if (chatResult.success) {
+          if (chatResult.selectedChatId) {
+            setSelectedChatId(chatResult.selectedChatId);
+          }
+          setIsAccessChecking(false); // 모든 설정 완료
+        } else {
+          console.error("채팅방 설정 실패:", chatResult.error);
+          setIsAccessChecking(false); // 채팅방 실패해도 협업은 진행
+        }
+      } catch (error) {
+        console.error("채팅방 설정 중 오류:", error);
+        setIsAccessChecking(false);
+      }
+    };
+
+    handleChatRoomSetup();
+  }, [
+    roomId,
+    collaboration?.isConnected,
+    isOwner,
+    session?.user?.id,
+    currentRoomInfo,
+    isAccessChecking,
+  ]);
 
   // 접근 거부 (우선순위 높게)
   if (accessDenied) {
@@ -209,10 +225,10 @@ function CollaborationPageContent({
       try {
         const result = await toggleColab(roomId, false);
         if (result.success) {
-          collaboration.broadcastCollaborationEnd();
+          collaboration?.broadcastCollaborationEnd();
           await saveSimulatorState(); // 종료 전 DB에 저장
 
-          router.push(`/sim/${roomId}`);
+          window.location.replace(`/sim/${roomId}`);
         } else {
           console.error("협업 모드 종료 실패:", result.error);
           alert("협업 모드 종료에 실패했습니다");
@@ -255,7 +271,7 @@ function CollaborationPageContent({
         loadingMessage="협업 모드 로딩 중..."
         loadingIcon="🤝"
       />
-      
+
       {/* 게임 스타일 채팅 UI - 로그인한 사용자가 채팅방을 선택한 경우에만 표시 */}
       {session?.user?.id && selectedChatId && (
         <GameStyleChatPopup
@@ -263,7 +279,9 @@ function CollaborationPageContent({
           messages={selectedMessages}
           text={text}
           setText={setText}
-          onSendMessage={(content) => selectedChatId && onSendMessage(selectedChatId, content)}
+          onSendMessage={(content) =>
+            selectedChatId && onSendMessage(selectedChatId, content)
+          }
           onChatFocus={setIsChatFocused}
           currentUserId={session.user.id}
         />
