@@ -71,7 +71,7 @@ export function HelpPopup() {
       </div>
 
       {/* content */}
-      <div className="px-4 py-3 overflow-auto" style={{ height: 400 }} >
+      <div className="px-4 py-3 overflow-auto break-keep" style={{ height: 400 }} >
         {helpContents[index]}
       </div>
 

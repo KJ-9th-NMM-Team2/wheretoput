@@ -1614,22 +1614,24 @@ const FloorPlanEditor = () => {
                       const newScale = parseFloat(e.target.value);
                       setViewScale(newScale);
                     }}
-                    className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 bg-gray-400 rounded-lg appearance-none cursor-pointer slider"
                   />
                 </div>
 
+                <div>
                 <button
                   onClick={() => {
                     setViewScale(1);
                     setViewOffset({ x: 0, y: 0 });
                   }}
 
-                  className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors cursor-pointer "
-
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 flex items-center justify-center gap-2"
+                 
                 >
-                  Reset <RotateCcw size={18} />
+                  Reset   <RotateCcw size={18} />
                   
                 </button>
+                </div>
 
                 <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4 flex gap-x-3">
                   <span>드래그 : 화면 이동 </span>
