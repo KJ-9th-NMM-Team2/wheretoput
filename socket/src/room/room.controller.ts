@@ -34,6 +34,7 @@ export class RoomController {
     });
   }
 
+
   // 그룹 채팅방 생성
   @Post('group')
   async createGroupRoom(

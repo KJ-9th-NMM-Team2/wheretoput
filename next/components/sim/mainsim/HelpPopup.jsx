@@ -37,7 +37,7 @@ export function HelpPopup() {
       <p>다른 사용자와 함께 방을 편집할 수 있습니다.</p>
       <p>방의 소유자가 협업모드를 활성화했다면 다른 사용자가 협업모드에 참여할 수 있습니다.</p>
     </div>,
-    
+
     // 기능 아이콘 설명
     <div>
       <p className="text-xl font-semibold mb-3">기능 아이콘</p>
@@ -45,7 +45,7 @@ export function HelpPopup() {
       <p className="mb-2">링크를 다른 사용자와 공유</p>
       <div className="flex items-center text-lg font-semibold"><TbScreenshot className="mr-1" /> 화면 캡처</div>
       <p className="mb-2">현재 시뮬레이션 화면 캡처 다운로드</p>
-      <div className="flex items-center text-lg font-semibold"><FaPalette className="mr-1"/> 색상 세팅</div>
+      <div className="flex items-center text-lg font-semibold"><FaPalette className="mr-1" /> 색상 세팅</div>
       <p className="mb-2">벽 / 바닥 / 배경 색상 변경</p>
       <div className="flex items-center text-lg font-semibold"><FaCameraRetro className="mr-1" /> 카메라 세팅</div>
       <p className="mb-2">벽 투명화, 자석 on/off 설정 | 시야각 조정 | 카메라 위치 리셋</p>
@@ -81,7 +81,7 @@ export function HelpPopup() {
           <button
             onClick={goPrev}
             disabled={index === 0}
-            className={`px-3 py-1 rounded text-sm ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-400'}`}
+            className={`px-3 py-1 rounded text-sm cursor-pointer ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-400'}`}
           >
             이전
           </button>
@@ -89,7 +89,7 @@ export function HelpPopup() {
           <button
             onClick={goNext}
             disabled={index === helpContents.length - 1}
-            className={`px-3 py-1 rounded text-sm ${index === helpContents.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-400'}`}
+            className={`px-3 py-1 rounded text-sm cursor-pointer ${index === helpContents.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'bg-gray-500 hover:bg-gray-400'}`}
           >
             다음
           </button>

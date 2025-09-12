@@ -44,7 +44,7 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = f
         {/* 메인 버튼 */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 ${wallToolMode
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer ${wallToolMode
             ? 'bg-blue-500 text-white'
             : 'bg-white text-gray-800 hover:bg-gray-50'
             } border border-gray-200`}
@@ -52,7 +52,7 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = f
           <span className="text-lg">
             {activeTool ? activeTool.icon : ''}
           </span>
-          <span className="font-medium text-sm">
+          <span className="font-medium text-sm cursor-pointer">
             {activeTool ? activeTool.name : '벽 도구'}
           </span>
           <svg
@@ -71,7 +71,7 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = f
             {wallTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors ${wallToolMode === tool.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors cursor-pointer ${wallToolMode === tool.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                   }`}
                 onClick={() => handleToolSelect(tool.id)}
               >
@@ -116,7 +116,7 @@ const WallTools: React.FC<WallToolsProps> = ({ collapsed = false, isDropdown = f
           {wallTools.map((tool) => (
             <button
               key={tool.id}
-              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 ${wallToolMode === tool.id
+              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 cursor-pointer ${wallToolMode === tool.id
                 ? 'bg-blue-500 text-white border-blue-500 shadow-md'
                 : 'bg-white text-gray-800 border-gray-200 hover:bg-orange-50 hover:border-orange-200'
                 }`}

@@ -1,5 +1,5 @@
 // 채팅방 목록 관리 훅
-// 채팅방 로드, 필터링, 정렬, 1:1 채팅 시작을 담당
+// 채팅방 로드, 필터링, 정렬을 담당
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
@@ -215,6 +215,7 @@ export const useChatRooms = (
     loadRooms();
   }, [open, token, currentUserId]);
 
+
   // 1:1 채팅 시작
   const onStartDirect = useCallback(
     async (otherUserId: string, otherUserName?: string) => {
@@ -306,7 +307,6 @@ export const useChatRooms = (
     chats,
     setChats,
     setBaseChats,
-    onStartDirect,
     updateChatRoom,
     deleteChatRoom,
     refreshRooms: () => {}, // 폴링 비활성화로 인해 빈 함수 반환

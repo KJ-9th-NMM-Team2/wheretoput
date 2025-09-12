@@ -445,7 +445,7 @@ export function SelectedModelEditModal() {
             {/* 쌓기 버튼 */}
             <button
               onClick={handleStartStackingMode}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 cursor-pointer bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
             >
               쌓기
             </button>
@@ -485,7 +485,7 @@ export function SelectedModelEditModal() {
                 removeModel(selectedModel.id);
                 deselectModel();
               }}
-              className="flex-1 bg-blue-500 hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="flex-1 bg-blue-500 cursor-pointer hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
             >
               가구 삭제
             </button>

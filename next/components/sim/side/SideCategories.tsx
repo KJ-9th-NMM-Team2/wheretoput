@@ -72,7 +72,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 ${selectedCategory === cat.id
+                  className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 cursor-pointer ${selectedCategory === cat.id
                       ? 'bg-blue-500 text-white'
                       : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
                     }`}
