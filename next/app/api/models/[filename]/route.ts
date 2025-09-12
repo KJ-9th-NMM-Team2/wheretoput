@@ -1,4 +1,4 @@
-import { CACHE_DIR } from "@/lib/cache/cache-utils";
+import { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import { NextRequest } from "next/server";
 import fs from "fs/promises";
 
@@ -9,7 +9,7 @@ export async function GET(
 ) {
   const filename = await params.filename;
   console.log("filename: ", filename);
-  
+
   const filePath = `${CACHE_DIR}/${filename}`;
   try {
     const fileBuffer = await fs.readFile(filePath);
