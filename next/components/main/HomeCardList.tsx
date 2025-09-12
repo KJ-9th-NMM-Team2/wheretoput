@@ -5,17 +5,17 @@ import { FcLike } from "react-icons/fc";
 import { useState } from "react";
 
 // 메인 홈페이지 카드 리스트
-export function HomeCard({ 
-  room, 
-  isDeleteMode = false, 
-  onThumbnailClick 
-}: { 
-  room: any; 
-  isDeleteMode?: boolean; 
-  onThumbnailClick?: () => void; 
+export function HomeCard({
+  room,
+  isDeleteMode = false,
+  onThumbnailClick
+}: {
+  room: any;
+  isDeleteMode?: boolean;
+  onThumbnailClick?: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   const handleThumbnailClick = (e: React.MouseEvent) => {
     if (isDeleteMode) {
       e.preventDefault();
@@ -25,7 +25,7 @@ export function HomeCard({
 
   return (
     <Link href={isDeleteMode ? "#" : `/rooms/${room.room_id}`} className="h-full w-full group">
-      <div 
+      <div
         className="flex h-full flex-1 flex-col gap-3 rounded-lg max-w-sm w-full transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-xl bg-white dark:bg-gray-800 overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -34,12 +34,12 @@ export function HomeCard({
           <div
             className="w-full bg-center bg-no-repeat bg-cover rounded-xl flex flex-col relative overflow-hidden h-[178px] lg:h-[243px]"
             style={{
-              backgroundImage: `url('${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}'), url('/placeholder.png')`,
+              backgroundImage: `url('${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}'), url('/placeholder_1.jpg')`,
             }}
             onClick={handleThumbnailClick}
           >
-            
-            
+
+
             {/* 방 스타일 태그 */}
             {room.style && (
               <div className="absolute top-2 left-2">
@@ -83,14 +83,14 @@ export function HomeCard({
               <div className="flex items-center gap-1">
                 <FcLike className="w-4 h-4" />
                 <span className="font-medium">{room.num_likes || 0}</span>
-              </div> 
+              </div>
               <div className="flex items-center gap-1">
                 <FaCommentDots className="w-4 h-4" />
                 <span className="font-medium">{room.num_comments || 0}</span>
               </div>
-              
+
             </div>
-            
+
             {/* 생성일 */}
             {room.created_at && (
               <span className="text-xs text-gray-400">
@@ -103,8 +103,8 @@ export function HomeCard({
           </div>
 
           <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-400">조회 {room.view_count || 0}</span>
-              </div>
+            <span className="text-xs text-gray-400">조회 {room.view_count || 0}</span>
+          </div>
         </div>
       </div>
     </Link>
