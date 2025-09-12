@@ -187,7 +187,7 @@ function CameraResetButton({ controlsRef }) {
     }}>
       <button
         onClick={() => controlsRef.current.reset()}
-        className="tool-btn tool-btn-red-active mt-3"
+        className="tool-btn tool-btn-red-active mt-2"
       >
         <span className="flex items-center gap-2">
           Reset <RotateCcw size={18} />

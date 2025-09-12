@@ -12,7 +12,7 @@ export function CollapsibleSidebar({
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   useEffect(() => {
-    setIsCollapsed(selectedModelId === null);
+    setIsCollapsed(selectedModelId === null && defaultCollapsed);
   }, [selectedModelId]);
 
   const toggleCollapse = () => {

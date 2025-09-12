@@ -219,10 +219,10 @@ export async function GET(
       let useCachedUrl = false;
 
       const filePath = path.join('public', obj.furnitures.cached_model_url || "");
-      if (filePath.includes('/caches')) {
+      if (filePath.includes('/cache/models/')) {
         await fs.access(filePath);
         useCachedUrl = true;
-        console.log(`✅ Using cached file: ${filePath}`);
+        console.log(`🎃 Using cached file: ${filePath}`);
       }
 
       return {
