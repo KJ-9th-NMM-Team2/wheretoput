@@ -7,8 +7,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { filename: string } }
 ) {
-  const filename = await params.filename;
-  console.log("filename: ", filename);
+  const { filename } = await params;
+  //console.log("filename: ", filename);
 
   const filePath = `${CACHE_DIR}/${filename}`;
   try {

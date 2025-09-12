@@ -183,16 +183,17 @@ const SideItems: React.FC<SideItemsProps> = ({
               updateModelUrl,
             } = useStore.getState();
 
-            const updatedModel = {
-              ...modelWithId,
-              url: result.model_url,
-            };
-
-            // 아직 프리뷰 모드이고 같은 모델이라면 프리뷰 모델 업데이트
+            // URL이 실제로 변경된 경우에만 업데이트 (null에서 실제 URL로 변경시에만)
             if (
               currentPreviewFurniture &&
-              currentPreviewFurniture.id === modelId
+              currentPreviewFurniture.id === modelId &&
+              !currentPreviewFurniture.url && // 현재 URL이 null이고
+              result.model_url // 새 URL이 있을 때만
             ) {
+              const updatedModel = {
+                ...modelWithId,
+                url: result.model_url,
+              };
               setCurrentPreviewFurniture(updatedModel);
             } else {
               // 이미 배치된 모델이라면 배치된 모델의 URL 업데이트
