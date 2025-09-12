@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useStore } from "@/components/sim/useStore";
 
 // [09.09] 접을 수 있는 사이드바 컴포넌트
 export function CollapsibleSidebar({
@@ -7,7 +8,12 @@ export function CollapsibleSidebar({
   onClose,
   defaultCollapsed = false,
 }) {
+  const { selectedModelId } = useStore();
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  useEffect(() => {
+    setIsCollapsed(selectedModelId === null);
+  }, [selectedModelId]);
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -80,7 +86,7 @@ export function CollapsibleSidebar({
           </div>
 
           {/* 스크롤 가능한 콘텐츠 영역 */}
-          <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className="flex-1 max-h-[70vh] overflow-y-auto">{children}</div>
         </div>
       </div>
     </div>
