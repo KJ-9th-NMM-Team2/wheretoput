@@ -78,7 +78,7 @@ export function CollapsibleSidebar({
             <span className="text-base font-bold ">{title}</span>
             <button
               className="text-gray-500 hover:text-gray-700 transition-colors text-lg cursor-pointer"
-              onClick={() => (onClose, setIsCollapsed(true))}
+              onClick={() => { onClose?.(); setIsCollapsed(true); }}
               title="닫기"
             >
               ×
