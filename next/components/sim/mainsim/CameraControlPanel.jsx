@@ -10,11 +10,17 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
     cameraFov,
     cameraZoom,
     cameraMode,
+    topDownDimensionMode,
+    showWallDimensions,
+    showSelectedObjectDimensions,
     setEnableWallTransparency,
     setEnableWallMagnet,
     setCameraFov,
     setCameraZoom,
     setCameraMode,
+    setTopDownDimensionMode,
+    setShowWallDimensions,
+    setShowSelectedObjectDimensions,
   } = useStore();
 
   const baseStyle = {
@@ -60,6 +66,10 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <TopDownDimensionToggle
+            enabled={topDownDimensionMode}
+            onToggle={setTopDownDimensionMode}
+          />
           <WallTransparencyToggle
             enabled={enableWallTransparency}
             onToggle={setEnableWallTransparency}
@@ -68,15 +78,27 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
             enabled={enableWallMagnet}
             onToggle={setEnableWallMagnet}
           />
-          <ControlSlider
-            label="시야각"
-            value={cameraFov}
-            min={5}
-            max={90}
-            step={1}
-            onChange={setCameraFov}
-            displayValue={cameraFov}
-          />
+          {cameraMode === 'perspective' ? (
+            <ControlSlider
+              label="시야각"
+              value={cameraFov}
+              min={5}
+              max={90}
+              step={1}
+              onChange={setCameraFov}
+              displayValue={cameraFov}
+            />
+          ) : (
+            <ControlSlider
+              label="줌"
+              value={cameraZoom}
+              min={10}
+              max={100}
+              step={1}
+              onChange={setCameraZoom}
+              displayValue={cameraZoom}
+            />
+          )}
           <CameraResetButton controlsRef={controlsRef} />
         </div>
 
@@ -135,6 +157,26 @@ function ControlSlider({
       >
         {displayValue}
       </span>
+    </div>
+  );
+}
+
+function TopDownDimensionToggle({ enabled, onToggle }) {
+  return (
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-s text-white my-1">탑다운 치수</span>
+      <button
+        onClick={() => onToggle(!enabled)}
+        className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
+          enabled ? "bg-blue-500" : "bg-gray-300"
+        }`}
+      >
+        <div
+          className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+            enabled ? "translate-x-6" : "translate-x-0"
+          }`}
+        />
+      </button>
     </div>
   );
 }

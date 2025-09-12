@@ -23,9 +23,14 @@ export const environmentSlice = (set, get) => ({
 
   // 카메라 상태
   cameraFov: 30, // Perspective
-  // cameraZoom: 50,   // Orthographic
-  // cameraMode: 'perspective', // Perspective | Orthographic
+  cameraZoom: 50,   // Orthographic
+  cameraMode: 'perspective', // perspective | orthographic
   enableWallTransparency: true,
+  
+  // 탑다운 치수 보기 모드
+  topDownDimensionMode: false,
+  showWallDimensions: false,
+  showSelectedObjectDimensions: false,
 
   // 색상 관련 상태
   wallColor: "#FFFFFF",
@@ -65,9 +70,25 @@ export const environmentSlice = (set, get) => ({
     set({ directionalLightIntensity: intensity }),
 
   setCameraFov: (fov) => set({ cameraFov: fov }),
-  // setCameraMode: (mode) => set({ cameraMode: mode }),
+  setCameraZoom: (zoom) => set({ cameraZoom: zoom }),
+  setCameraMode: (mode) => set({ cameraMode: mode }),
   setEnableWallTransparency: (enable) =>
     set({ enableWallTransparency: enable }),
+    
+  // 탑다운 치수 모드 관련 함수
+  setTopDownDimensionMode: (enabled) => {
+    const state = get();
+    set({ 
+      topDownDimensionMode: enabled,
+      // 탑다운 모드 활성화 시 자동으로 직교 카메라와 치수 표시 활성화
+      cameraMode: enabled ? 'orthographic' : 'perspective',
+      showWallDimensions: enabled,
+      showSelectedObjectDimensions: enabled
+    });
+  },
+  
+  setShowWallDimensions: (show) => set({ showWallDimensions: show }),
+  setShowSelectedObjectDimensions: (show) => set({ showSelectedObjectDimensions: show }),
 
   setWallColor: (color, shouldBroadcast = true) => {
     set({ wallColor: color });

@@ -26,6 +26,8 @@ import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
 import WallTools from "./side/WallTools";
+import { DimensionOverlay } from "./mainsim/DimensionOverlay";
+import { TopDownCameraController } from "./mainsim/TopDownCameraController";
 
 type position = [number, number, number];
 
@@ -100,14 +102,40 @@ function Floor({ wallsData }: { wallsData: any[] }) {
 }
 
 function CameraUpdater() {
-  const fov = useStore((state) => state.cameraFov);
-  const { camera } = useThree();
-  const perspectiveCamera = camera as THREE.PerspectiveCamera;
+  const { 
+    cameraFov, 
+    cameraZoom, 
+    cameraMode, 
+    topDownDimensionMode 
+  } = useStore();
+  
+  const { camera, scene } = useThree();
 
   useEffect(() => {
-    perspectiveCamera.fov = fov;
-    perspectiveCamera.updateProjectionMatrix();
-  }, [fov, perspectiveCamera]);
+    if (cameraMode === 'perspective') {
+      // Perspective camera
+      const perspectiveCamera = camera as THREE.PerspectiveCamera;
+      perspectiveCamera.fov = cameraFov;
+      perspectiveCamera.updateProjectionMatrix();
+      
+      // 탑다운 모드일 때 카메라 위치 조정
+      if (topDownDimensionMode) {
+        perspectiveCamera.position.set(0, 50, 0);
+        perspectiveCamera.lookAt(0, 0, 0);
+      }
+    } else {
+      // Orthographic camera mode - this would need more complex implementation
+      // For now, just use perspective with top-down view
+      const perspectiveCamera = camera as THREE.PerspectiveCamera;
+      perspectiveCamera.fov = cameraFov;
+      perspectiveCamera.updateProjectionMatrix();
+      
+      if (topDownDimensionMode) {
+        perspectiveCamera.position.set(0, 50, 0);
+        perspectiveCamera.lookAt(0, 0, 0);
+      }
+    }
+  }, [cameraFov, cameraZoom, cameraMode, topDownDimensionMode, camera]);
 
   return null;
 }
@@ -550,6 +578,12 @@ export function SimulatorCore({
 
           {/* 벽 스냅 포인트 */}
           <WallSnapPoints />
+
+          {/* 치수 표시 오버레이 */}
+          <DimensionOverlay />
+
+          {/* 탑다운 카메라 컨트롤러 */}
+          <TopDownCameraController controlsRef={controlsRef} />
 
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}
