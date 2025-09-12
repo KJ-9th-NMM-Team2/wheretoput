@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
 import type { NextRequest } from "next/server";
 import path from "path";
 
