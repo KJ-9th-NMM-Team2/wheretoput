@@ -86,10 +86,15 @@ export class RoomService {
 
         // 시뮬레이터 room이 지정된 경우 rooms 테이블 업데이트 (협업용)
         if (params.simRoomId) {
-          await prisma.rooms.update({
-            where: { room_id: params.simRoomId },
-            data: { collab_chat_room_id: room.chat_room_id },
-          });
+          try {
+            await prisma.rooms.update({
+              where: { room_id: params.simRoomId },
+              data: { collab_chat_room_id: room.chat_room_id },
+            });
+          } catch (error) {
+            console.error('시뮬레이터 방 업데이트 실패:', error);
+            throw new NotFoundException(`Simulator room with id ${params.simRoomId} not found or update failed.`);
+          }
         }
 
         return room;
