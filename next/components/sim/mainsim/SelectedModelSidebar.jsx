@@ -11,6 +11,8 @@ export function SelectedModelEditModal() {
   const {
     loadedModels,
     selectedModelId,
+    selectModel,
+    hoveringModel,
     removeModel,
     updateModelPosition,
     updateModelRotation,
@@ -81,17 +83,17 @@ export function SelectedModelEditModal() {
               [type === ActionType.FURNITURE_SCALE
                 ? "scale"
                 : type === ActionType.FURNITURE_ROTATE
-                ? "rotation"
-                : "position"]:
+                  ? "rotation"
+                  : "position"]:
                 type === ActionType.FURNITURE_SCALE
                   ? { x: currentValue, y: currentValue, z: currentValue }
                   : type === ActionType.FURNITURE_ROTATE
-                  ? {
+                    ? {
                       x: currentValue[0],
                       y: currentValue[1],
                       z: currentValue[2],
                     }
-                  : {
+                    : {
                       x: currentValue[0],
                       y: currentValue[1],
                       z: currentValue[2],
@@ -100,17 +102,17 @@ export function SelectedModelEditModal() {
                 [type === ActionType.FURNITURE_SCALE
                   ? "scale"
                   : type === ActionType.FURNITURE_ROTATE
-                  ? "rotation"
-                  : "position"]:
+                    ? "rotation"
+                    : "position"]:
                   type === ActionType.FURNITURE_SCALE
                     ? { x: initialValue, y: initialValue, z: initialValue }
                     : type === ActionType.FURNITURE_ROTATE
-                    ? {
+                      ? {
                         x: initialValue[0],
                         y: initialValue[1],
                         z: initialValue[2],
                       }
-                    : {
+                      : {
                         x: initialValue[0],
                         y: initialValue[1],
                         z: initialValue[2],
@@ -148,28 +150,28 @@ export function SelectedModelEditModal() {
             [type === ActionType.FURNITURE_SCALE
               ? "scale"
               : type === ActionType.FURNITURE_ROTATE
-              ? "rotation"
-              : "position"]:
+                ? "rotation"
+                : "position"]:
               type === ActionType.FURNITURE_SCALE
                 ? { x: finalValue, y: finalValue, z: finalValue }
                 : type === ActionType.FURNITURE_ROTATE
-                ? { x: finalValue[0], y: finalValue[1], z: finalValue[2] }
-                : { x: finalValue[0], y: finalValue[1], z: finalValue[2] },
+                  ? { x: finalValue[0], y: finalValue[1], z: finalValue[2] }
+                  : { x: finalValue[0], y: finalValue[1], z: finalValue[2] },
             previousData: {
               [type === ActionType.FURNITURE_SCALE
                 ? "scale"
                 : type === ActionType.FURNITURE_ROTATE
-                ? "rotation"
-                : "position"]:
+                  ? "rotation"
+                  : "position"]:
                 type === ActionType.FURNITURE_SCALE
                   ? { x: initialValue, y: initialValue, z: initialValue }
                   : type === ActionType.FURNITURE_ROTATE
-                  ? {
+                    ? {
                       x: initialValue[0],
                       y: initialValue[1],
                       z: initialValue[2],
                     }
-                  : {
+                    : {
                       x: initialValue[0],
                       y: initialValue[1],
                       z: initialValue[2],
@@ -268,17 +270,27 @@ export function SelectedModelEditModal() {
   if (!selectedModel) {
     return (
       <CollapsibleSidebar
-        title="가구 목록"
+        title={`가구 목록 (${loadedModels.length}개)`}
         defaultCollapsed={true}
       >
-        
+        <div className="flex flex-col gap-2 overflow-auto p-4 select-none">
+          {loadedModels.map((model) => (
+            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
+              key={model.id}
+              onClick={() => selectModel(model.id)}
+              onMouseEnter={() => hoveringModel(model.id)}
+              onMouseLeave={() => hoveringModel(null)}
+            >
+              {model.name}
+            </button>
+          ))}
+        </div>
       </CollapsibleSidebar>
     );
   }
 
   return (
     <CollapsibleSidebar
-      
       title="가구 편집"
       onClose={deselectModel}
       defaultCollapsed={false}
@@ -295,19 +307,19 @@ export function SelectedModelEditModal() {
             <ControlSlider
               label={`W${Math.ceil(
                 selectedModel.length[0] *
-                  (Array.isArray(selectedModel.scale)
-                    ? selectedModel.scale[0]
-                    : selectedModel.scale)
+                (Array.isArray(selectedModel.scale)
+                  ? selectedModel.scale[0]
+                  : selectedModel.scale)
               )} × D${Math.ceil(
                 selectedModel.length[2] *
-                  (Array.isArray(selectedModel.scale)
-                    ? selectedModel.scale[2]
-                    : selectedModel.scale)
+                (Array.isArray(selectedModel.scale)
+                  ? selectedModel.scale[2]
+                  : selectedModel.scale)
               )} × H${Math.ceil(
                 selectedModel.length[1] *
-                  (Array.isArray(selectedModel.scale)
-                    ? selectedModel.scale[1]
-                    : selectedModel.scale)
+                (Array.isArray(selectedModel.scale)
+                  ? selectedModel.scale[1]
+                  : selectedModel.scale)
               )}`}
               value={
                 Array.isArray(selectedModel.scale)
@@ -324,10 +336,9 @@ export function SelectedModelEditModal() {
                   ActionType.FURNITURE_SCALE,
                   initialValue,
                   finalValue,
-                  `가구 "${
-                    selectedModel.name ||
-                    selectedModel.furnitureName ||
-                    "Unknown"
+                  `가구 "${selectedModel.name ||
+                  selectedModel.furnitureName ||
+                  "Unknown"
                   }"의 크기를 변경했습니다`
                 );
               }}
@@ -359,10 +370,9 @@ export function SelectedModelEditModal() {
                   ActionType.FURNITURE_MOVE,
                   initialPosition,
                   finalPosition,
-                  `가구 "${
-                    selectedModel.name ||
-                    selectedModel.furnitureName ||
-                    "Unknown"
+                  `가구 "${selectedModel.name ||
+                  selectedModel.furnitureName ||
+                  "Unknown"
                   }"의 높이를 변경했습니다`
                 );
               }}
@@ -400,12 +410,10 @@ export function SelectedModelEditModal() {
                     ActionType.FURNITURE_ROTATE,
                     initialRotation,
                     newRotation,
-                    `가구 "${
-                      selectedModel.name ||
-                      selectedModel.furnitureName ||
-                      "Unknown"
-                    }"의 ${axis}축을 ${
-                      degrees > 0 ? "+" : ""
+                    `가구 "${selectedModel.name ||
+                    selectedModel.furnitureName ||
+                    "Unknown"
+                    }"의 ${axis}축을 ${degrees > 0 ? "+" : ""
                     }${degrees}° 회전했습니다`
                   );
                 }}
@@ -422,10 +430,9 @@ export function SelectedModelEditModal() {
                     ActionType.FURNITURE_ROTATE,
                     initialRotation,
                     finalRotation,
-                    `가구 "${
-                      selectedModel.name ||
-                      selectedModel.furnitureName ||
-                      "Unknown"
+                    `가구 "${selectedModel.name ||
+                    selectedModel.furnitureName ||
+                    "Unknown"
                     }"의 ${axis}축을 회전했습니다`
                   );
                 }}
@@ -468,11 +475,10 @@ export function SelectedModelEditModal() {
                       object_id: selectedModel.object_id,
                     },
                   },
-                  description: `가구 "${
-                    selectedModel.name ||
+                  description: `가구 "${selectedModel.name ||
                     selectedModel.furnitureName ||
                     "Unknown"
-                  }"를 삭제했습니다`,
+                    }"를 삭제했습니다`,
                 });
 
                 // 실제 가구 삭제
