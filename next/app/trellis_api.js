@@ -1,11 +1,11 @@
 // .env 에 API 키 추가하세요!
 import 'dotenv/config';
-import fs from 'fs';
+import fs from 'fs/promises';
 import fetch from 'node-fetch';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PrismaClient } from '@prisma/client';
 import cacheUtils from "@/lib/cache/CacheUtils";
-
+import path from 'path';
 import Replicate from "replicate";
 
 // S3 클라이언트 설정
@@ -77,19 +77,26 @@ async function main(furnitureId = null, imageUrl = null) {
             // Redable이라 S3와 로컬에 사용하기 위해 분리
             const arrayBuffer = await response.arrayBuffer();
 
-            // 직접 S3에 업로드
-            const s3Key = `uploads/${furnitureName}.glb`;
-            const s3Url = await uploadToS3(arrayBuffer, s3Key);
-            console.log(`✅ S3 업로드 완료: ${s3Url}`);
-
-            // 로컬에 저장 for 로컬 파일 캐싱
+            // 1. 로컬에 저장 for 로컬 파일 캐싱
             const filename = `${furnitureId}.glb`;
             const cached_model_url = `public/cache/models/${filename}`;
             await cacheUtils.downloadFileFromTrellisToLocal(arrayBuffer, cached_model_url, filename, furnitureId);
             console.log(`✅ 로컬 파일 캐싱 완료: ${cached_model_url}`);
 
+            // 2. 로컬 파일 압축 시도
+            await cacheUtils.compressLocalGLB(cached_model_url);
+            console.log(`✅ 로컬 파일 압축 완료: ${cached_model_url}`);
+
+            // 3. 압축한 파일 불러오기
+            const localFilePath = path.join(process.cwd(), cached_model_url);
+            const compressFileBuffer = await fs.readFile(localFilePath);
+
+            // 4. 직접 S3에 업로드
+            const s3Key = `uploads/${furnitureName}.glb`;
+            const s3Url = await uploadToS3(compressFileBuffer, s3Key);
+            console.log(`✅ S3 업로드 완료: ${s3Url}`);
+
             const update_db_url = `/cache/models/${filename}`;
-            
             // DB에 저장
             if (furnitureId) {
                 await updateFurnitureModelUrl(furnitureId, s3Url, update_db_url);
