@@ -99,16 +99,16 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
         {/* 썸네일 섹션 - 75% 너비 */}
         <div className="w-3/4 mx-auto aspect-[4/3] max-h-[500px] overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-lg">
           <img
-            src={room?.thumbnail_url 
-              ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}` 
-              : "/placeholder.png"
+            src={room?.thumbnail_url
+              ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}`
+              : "/placeholder_1.jpg"
             }
             alt={room?.title || "Room thumbnail"}
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
         </div>
-        
+
         <div className="px-40 flex flex-1 justify-center">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap gap-2 p-4">
@@ -185,7 +185,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
             {/* 댓글/조회수 통계 */}
             <div className="px-4 py-2 flex items-center gap-4 text-gray-500 dark:text-gray-400 text-sm ml-auto">
               <span>조회 {room.view_count} ｜ </span>
-            
+
               <span className="-ml-2">
                 {new Date(room.updated_at).toLocaleDateString('ko-KR', {
                   month: 'long',

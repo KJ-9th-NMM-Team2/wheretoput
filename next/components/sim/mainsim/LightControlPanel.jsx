@@ -70,7 +70,7 @@ export function LightControlPanel({ isPopup = false }) {
             displayValue={`${directionalLightElevation}°`}
           />
           <ControlSlider
-            label="햇빛"
+            label="햇빛세기"
             value={directionalLightIntensity}
             min={0}
             max={5}
