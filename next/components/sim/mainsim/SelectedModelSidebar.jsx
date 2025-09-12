@@ -266,7 +266,7 @@ export function SelectedModelEditModal() {
     );
   }
 
-  // 선택된 모델이 없으면 모달을 표시하지 않음
+  // 선택된 모델이 없을 시 가구 목록 표시
   if (!selectedModel) {
     return (
       <CollapsibleSidebar
