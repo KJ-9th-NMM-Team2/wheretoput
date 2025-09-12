@@ -217,15 +217,14 @@ export async function GET(
       const hasFurniture = obj.furnitures && obj.furniture_id;
       // cached_model_url과 실제 파일 존재 여부 모두 체크
       let useCachedUrl = false;
-      if (hasFurniture && obj.furnitures.cached_model_url) {
-        const filePath = path.join('public', 'cache', 'models', obj.furnitures.cached_model_url);
-        try {
-          await fs.access(filePath);
-          useCachedUrl = true;
-          console.log(`🆚 Using cached file: ${filePath}`);
-        } catch {
-          console.log(`❌ Cached file not found, fallback to model_url: ${filePath}`);
-        }
+
+      const filePath = path.join('public', obj.furnitures.cached_model_url || "");
+      try {
+        await fs.access(filePath);
+        useCachedUrl = true;
+        console.log(`🆚 Using cached file: ${filePath}`);
+      } catch {
+        console.log(`❌ Cached file not found, fallback to model_url: ${filePath}`);
       }
 
       return {
