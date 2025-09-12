@@ -8,7 +8,7 @@ import path from 'path';
 export async function POST(request) {
   try {
     // 캐시 디렉토리 생성
-    await ensureCacheDir();
+    await ensureCacheDir(CACHE_DIR);
 
     console.log('3D 모델 생성 API 호출됨')
     
