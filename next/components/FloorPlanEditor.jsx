@@ -56,6 +56,7 @@ const FloorPlanEditor = () => {
   const [selectedScaleWall, setSelectedScaleWall] = useState(null);
   const [realLength, setRealLength] = useState("");
   const [hoveredScaleWall, setHoveredScaleWall] = useState(null); // 팝업에서 호버된 벽
+  const [hoveredEraserWall, setHoveredEraserWall] = useState(null); // 지우기 도구에서 호버된 벽
   const [imageTransform, setImageTransform] = useState(null); // 이미지 변환 정보 저장
   // 고정 격자 설정: 500mm x 500mm
   const GRID_SIZE_MM = 500; // 500mm x 500mm 고정
@@ -313,8 +314,8 @@ const FloorPlanEditor = () => {
     ctx.textRenderingOptimization = "optimizeQuality";
     ctx.imageSmoothingEnabled = true;
 
-    // 선 아래쪽으로 오프셋 (5px 아래)
-    ctx.fillText(text, 0, 5);
+    // 선 아래쪽으로 오프셋 (8px 아래)
+    ctx.fillText(text, 0, 8);
     ctx.restore();
   };
 
@@ -497,15 +498,17 @@ const FloorPlanEditor = () => {
 
     // 축척 설정용 벽 그리기 (임시)
     if (scaleWall && tool === "scale") {
-      ctx.strokeStyle = "#9900ff"; // 축척 설정용 벽은 보라색
-      ctx.lineWidth = 4 / viewScale;
-      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
+      ctx.strokeStyle = "rgba(153, 0, 255, 0.7)"; // 보라색 반투명
+      ctx.lineWidth = 10 / viewScale; // 드로잉 시와 같은 두께
+      
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(scaleWall.start.x, scaleWall.start.y);
       ctx.lineTo(scaleWall.end.x, scaleWall.end.y);
       ctx.stroke();
-      ctx.setLineDash([]);
 
       // 축척 설정용 벽의 길이 표시
       const midX = (scaleWall.start.x + scaleWall.end.x) / 2;
@@ -530,7 +533,7 @@ const FloorPlanEditor = () => {
       ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillText(`${Math.round(pixelDistance)}px`, 0, 3 / viewScale);
+      ctx.fillText(`${Math.round(pixelDistance)}px`, 0, 8 / viewScale);
       ctx.restore();
     }
 
@@ -541,9 +544,13 @@ const FloorPlanEditor = () => {
       const isPartialEraserSelected = partialEraserSelectedWall?.id === wall.id;
       const isScaleSelected = selectedScaleWall?.id === wall.id;
       const isScaleHovered = hoveredScaleWall?.id === wall.id;
+      const isEraserHovered = hoveredEraserWall?.id === wall.id;
 
       // 벽 그리기 (선택된 벽은 다른 색상)
-      if (isScaleSelected) {
+      if (isEraserHovered) {
+        ctx.strokeStyle = "#0066ff"; // 지우기 호버색
+        ctx.lineWidth = 10 / viewScale;
+      } else if (isScaleSelected) {
         ctx.strokeStyle = "#0066ff"; // 축척 설정용 선택된 벽은 파란색
         ctx.lineWidth = 5 / viewScale;
       } else if (isScaleHovered) {
@@ -551,15 +558,19 @@ const FloorPlanEditor = () => {
         ctx.lineWidth = 4 / viewScale;
       } else if (isPartialEraserSelected) {
         ctx.strokeStyle = "#ff0000"; // 부분 지우기 선택된 벽은 빨간색
-        ctx.lineWidth = 3 / viewScale;
+        ctx.lineWidth = 8 / viewScale; // 기본 벽과 동일한 두께
       } else if (isSelected) {
         ctx.strokeStyle = "#00ff00";
         ctx.lineWidth = 4 / viewScale;
       } else {
-        ctx.strokeStyle = "#2d2d2d";
-        ctx.lineWidth = 4 / viewScale;
+        ctx.strokeStyle = "rgba(43, 43, 43, 0.8)"; // 반투명 효과
+        ctx.lineWidth = 8 / viewScale; // 더 두꺼운 선
       }
 
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
       ctx.lineTo(wall.end.x, wall.end.y);
@@ -586,38 +597,53 @@ const FloorPlanEditor = () => {
       ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
+      ctx.fillText(`${distance.value}${distance.unit}`, 0, 8 / viewScale);
       ctx.restore();
     });
 
     // 부분 지우기 영역 표시
     if (isSelectingEraseArea && eraseAreaStart && eraseAreaEnd) {
-      ctx.strokeStyle = "#0004ffff";
-      ctx.lineWidth = 4 / viewScale;
-      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
-      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = "rgba(0, 68, 255, 0.7)"; // 파란색 반투명
+      ctx.lineWidth = 10 / viewScale; // 드로잉 시와 같은 두께
+      
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(eraseAreaStart.x, eraseAreaStart.y);
       ctx.lineTo(eraseAreaEnd.x, eraseAreaEnd.y);
       ctx.stroke();
-
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1.0;
     }
 
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
-      ctx.strokeStyle = "#2d2d2d";
-      ctx.lineWidth = 5 / viewScale;
-      ctx.setLineDash([3 / viewScale, 3 / viewScale]);
+      if (tool === "scale") {
+        ctx.strokeStyle = "rgba(0, 68, 255, 0.7)"; // 축척 도구일 때 파란색 반투명
+      } else {
+        ctx.strokeStyle = "rgba(43, 43, 43, 0.7)"; // 일반 벽 그리기일 때
+      }
+      ctx.lineWidth = 10 / viewScale; // 그리는 중일 때 더 두꺼운 선
+      
+      if (tool === "scale") {
+        // 축척 도구일 때는 실선
+      } else {
+        // 일반 벽 그리기일 때는 점선
+        ctx.setLineDash([3 / viewScale, 3 / viewScale]);
+      }
+      
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
       ctx.lineTo(currentPoint.x, currentPoint.y);
       ctx.stroke();
 
-      ctx.setLineDash([]);
+      if (tool !== "scale") {
+        ctx.setLineDash([]);
+      }
 
       // 현재 그리고 있는 벽의 길이 표시
       const midX = (startPoint.x + currentPoint.x) / 2;
@@ -640,7 +666,7 @@ const FloorPlanEditor = () => {
       ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
+      ctx.fillText(`${distance.value}${distance.unit}`, 0, 8 / viewScale);
       ctx.restore();
     }
 
@@ -810,6 +836,25 @@ const FloorPlanEditor = () => {
     } else if (isSelectingEraseArea && tool === "partial_eraser") {
       const coords = getCanvasCoordinates(e);
       setEraseAreaEnd(coords);
+    } else if (tool === "eraser") {
+      // 지우기 도구일 때 호버된 벽 감지
+      const coords = getCanvasCoordinates(e);
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_HOVER_DISTANCE = 20; // 20픽셀 이내의 벽만 호버 효과
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_HOVER_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      setHoveredEraserWall(closestWall);
+    } else {
+      // 다른 도구일 때는 호버 상태 초기화
+      setHoveredEraserWall(null);
     }
   };
 
@@ -880,6 +925,7 @@ const FloorPlanEditor = () => {
     eraseAreaEnd,
     viewScale,
     viewOffset,
+    hoveredEraserWall,
     // 축척 설정 관련 상태들
     isScaleSet,
     scaleWall,
@@ -1309,7 +1355,11 @@ const FloorPlanEditor = () => {
                 style={{
                   width: "1600",
                   height: "1200",
-                  cursor: tool === "wall" ? "crosshair" : "default",
+                  cursor: tool === "wall" 
+                    ? "crosshair" 
+                    : tool === "eraser" && hoveredEraserWall
+                    ? "pointer"
+                    : "default",
                 }}
               />
             </div>

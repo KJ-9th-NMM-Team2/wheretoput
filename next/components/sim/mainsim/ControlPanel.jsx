@@ -176,7 +176,7 @@ export function ControlPanel({ isPopup = false }) {
           onClick={handleSave}
           disabled={!isOwnUserRoom || !currentRoomId}
           className={`
-            w-full px-4 py-2.5 text-white border-none rounded text-sm mt-10 mb-1.5
+            w-full px-4 py-2.5 text-white border-none rounded text-sm font-bold mt-10 mb-1.5
             ${
               currentRoomId
                 ? isSaving
@@ -184,7 +184,7 @@ export function ControlPanel({ isPopup = false }) {
                   : // : isCollabModeActive && !collaborationMode
                   // ? "bg-gray-500 cursor-not-allowed"
                   isOwnUserRoom
-                  ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white cursor-pointer"
                   : "bg-gray-500 cursor-not-allowed"
                 : "bg-gray-600 cursor-not-allowed"
             }
@@ -225,12 +225,12 @@ export function ControlPanel({ isPopup = false }) {
           onClick={handleClone}
           disabled={!currentRoomId}
           className={`
-            w-full px-4 py-2.5 text-white border-none rounded text-sm mb-1.5
+            w-full px-4 py-2.5 border-none rounded text-sm mb-1.5
             ${
               currentRoomId
                 ? isCloning
                   ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-green-500 hover:bg-green-600 cursor-pointer"
+                  : "bg-white hover:bg-gray-50 text-black font-bold border-2 border-black cursor-pointer"
                 : "bg-gray-600 cursor-not-allowed"
             }
           `}
@@ -242,7 +242,7 @@ export function ControlPanel({ isPopup = false }) {
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}
-        className="w-full px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white border-none rounded text-sm cursor-pointer"
+        className="w-full px-4 py-2.5 bg-white hover:bg-gray-50 text-black font-bold border-2 border-black rounded text-sm cursor-pointer"
       >
         모든 가구 제거
       </button>
