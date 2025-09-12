@@ -277,7 +277,10 @@ export function SelectedModelEditModal() {
           {loadedModels.map((model) => (
             <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
               key={model.id}
-              onClick={() => (selectModel(model.id), hoveringModel(null))}
+              onClick={() => {
+                selectModel(model.id);
+                hoveringModel(null);
+              }}
               onMouseEnter={() => hoveringModel(model.id)}
               onMouseLeave={() => hoveringModel(null)}
             >
