@@ -176,7 +176,7 @@ export function ControlPanel({ isPopup = false }) {
           onClick={handleSave}
           disabled={!isOwnUserRoom || !currentRoomId}
           className={`
-            w-full px-4 py-2.5 text-white border-none rounded text-sm font-bold mt-10 mb-1.5
+            w-full px-4 py-2.5 text-white border-none rounded !text-base font-bold mt-10 mb-1.5
             ${
               currentRoomId
                 ? isSaving
@@ -224,25 +224,28 @@ export function ControlPanel({ isPopup = false }) {
         <button
           onClick={handleClone}
           disabled={!currentRoomId}
-          className={`
-            w-full px-4 py-2.5 border-none rounded text-sm mb-1.5
-            ${
-              currentRoomId
-                ? isCloning
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-white hover:bg-gray-50 text-black font-bold border-2 border-black cursor-pointer"
-                : "bg-gray-600 cursor-not-allowed"
-            }
-          `}
+          className={`tool-btn w-full px-4 py-2.5 !text-base my-4 !rounded ${
+            currentRoomId
+              ? isCloning
+                ? "tool-btn-inactive"
+                : "tool-btn-green-active"
+              : "tool-btn-inactive"
+          }`}
+          style={{ transform: 'none' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
         >
-          {isCloning ? "복제 중..." : `우리집에 적용하기`}
+          {isCloning ? "복제 중..." : `우리집에 적용해보기`}
         </button>
       </div>
 
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}
-        className="w-full px-4 py-2.5 bg-white hover:bg-gray-50 text-black font-bold border-2 border-black rounded text-sm cursor-pointer"
+        className="tool-btn tool-btn-green-active w-full px-4 py-2.5 !text-base my-4 !rounded"
+        style={{ transform: 'none' }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
       >
         모든 가구 제거
       </button>

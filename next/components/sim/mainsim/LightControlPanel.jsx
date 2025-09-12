@@ -33,7 +33,7 @@ export function LightControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px'}}><span className="text-lg">☀️</span> 빛 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px'}}> Lighting</h3>
 
       <div
         style={{
@@ -70,7 +70,7 @@ export function LightControlPanel({ isPopup = false }) {
             displayValue={`${directionalLightElevation}°`}
           />
           <ControlSlider
-            label="햇빛 세기"
+            label="햇빛"
             value={directionalLightIntensity}
             min={0}
             max={5}
@@ -143,7 +143,7 @@ function LightPresetDropdown({ value, onChange }) {
 
   return (
     <div className="mb-3">
-      <label className="block text-sm text-white mb-1">
+      <label className="block text-sm text-white mt-1 mb-2">
         조명 프리셋
       </label>
       <select
