@@ -36,7 +36,7 @@ export default function CollaborationChatRoomSelector({
   // 채팅 관련 훅 사용 - socket 연결은 page에서 관리하므로 여기서는 token만 가져옴
   const { token } = useChatConnection(false); // 연결하지 않고 token만 사용
   const { chats, setChats, baseChats, setBaseChats } = useChatRooms(
-    isOpen, // 팝업이 열릴 때만 활성화
+    true, // 항상 활성화하여 새 채팅방 생성 시 즉시 반영
     token,
     currentUserId,
     "", // query

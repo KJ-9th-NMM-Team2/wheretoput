@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
     let body;
     try {
       body = await req.json();
+      // console.log("body:", body);
     } catch (error) {
       console.error("JSON parsing error:", error);
       return Response.json(
@@ -185,7 +186,9 @@ export async function POST(req: NextRequest) {
           },
         });
       } catch (roomUpdateError) {
-        console.warn(`Room ${room_id} not found in rooms table, skipping room update`);
+        console.warn(
+          `Room ${room_id} not found in rooms table, skipping room update`
+        );
         // room이 없어도 가구 저장은 계속 진행
       }
     });

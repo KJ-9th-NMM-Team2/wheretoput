@@ -54,16 +54,16 @@ export function Follow({
                                 setFollowModalTab("followers");
                                 setFollowModalOpen(true);
                             }}
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
                         >
-                            팔로워 <span className="font-semibold">{followersCount}</span>
+                            팔로워 <span className="font-semibold ">{followersCount}</span>
                         </button>
                         <button
                             onClick={() => {
                                 setFollowModalTab("following");
                                 setFollowModalOpen(true);
                             }}
-                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
                         >
                             팔로잉 <span className="font-semibold">{followingCount}</span>
                         </button>
@@ -76,8 +76,8 @@ export function Follow({
                             onClick={handleFollowToggle}
                             disabled={followLoading}
                             className={`px-6 py-2 rounded-lg font-medium transition-colors ${isFollowing
-                                    ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                                    : "bg-amber-600 dark:bg-blue-500 text-white hover:bg-amber-700 dark:hover:bg-blue-700"
+                                ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                : "bg-amber-600 dark:bg-blue-500 text-white hover:bg-amber-700 dark:hover:bg-blue-700"
                                 } ${followLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}

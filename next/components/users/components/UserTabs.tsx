@@ -17,13 +17,13 @@ interface UserTabsProps {
   setEditingRoom: (room: any) => void;
 }
 
-export default function UserTabs({ 
-  user, 
-  userRooms, 
-  isOwner, 
-  isDeleteMode, 
-  selectedRooms, 
-  handleToggleDeleteMode, 
+export default function UserTabs({
+  user,
+  userRooms,
+  isOwner,
+  isDeleteMode,
+  selectedRooms,
+  handleToggleDeleteMode,
   handleBulkDelete,
   setSelectedRooms,
   setEditingRoom,
@@ -50,9 +50,9 @@ export default function UserTabs({
             onClick={() => setIsAchievement(false)}
             className={`
               text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
-              ${!isAchievement 
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              ${!isAchievement
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                 : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
               }
             `}
@@ -64,9 +64,9 @@ export default function UserTabs({
             onClick={() => setIsAchievement(true)}
             className={`
               text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
-              ${isAchievement 
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white' 
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              ${isAchievement
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                 : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
               }
             `}
@@ -81,22 +81,20 @@ export default function UserTabs({
               <button
                 onClick={handleBulkDelete}
                 disabled={selectedRooms.size === 0}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  selectedRooms.size === 0
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-red-300 text-red-700 hover:bg-red-400"
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${selectedRooms.size === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-red-300 text-red-700 hover:bg-red-400  cursor-pointer"
+                  }`}
               >
                 선택한 방 삭제 ({selectedRooms.size})
               </button>
             )}
             <button
               onClick={handleToggleDeleteMode}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                isDeleteMode
-                  ? "bg-gray-600 text-white hover:bg-gray-700"
-                  : "bg-red-100 text-red-700 hover:bg-red-200"
-              }`}
+              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${isDeleteMode
+                ? "bg-gray-600 text-white hover:bg-gray-700"
+                : "bg-red-100 text-red-700 hover:bg-red-200"
+                }`}
             >
               {isDeleteMode ? "취소" : <FaTrashCan size={20} />}
             </button>
@@ -116,10 +114,10 @@ export default function UserTabs({
                   isDeleteMode={isDeleteMode}
                   onThumbnailClick={() => handleRoomSelect(house.room_id)}
                 />
-                <DeleteRoom 
+                <DeleteRoom
                   house={house}
                   isOwner={isOwner}
-                  isDeleteMode={isDeleteMode} 
+                  isDeleteMode={isDeleteMode}
                   selectedRooms={selectedRooms}
                   handleRoomSelect={handleRoomSelect}
                   setEditingRoom={setEditingRoom}

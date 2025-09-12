@@ -16,8 +16,8 @@ export function CaptureControlPanel({ isPopup = false }) {
       bg-black bg-opacity-70 p-4 rounded text-white text-sm w-[250px] max-h-96 overflow-y-auto
       ${isPopup ? 'static' : 'absolute top-1/2 -translate-y-1/2 left-2.5 z-[100]'}
     `}>
-      <h3 className="m-0 mb-2.5 text-base">
-        <span > 화면 캡쳐</span> 
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}>
+        <span > Screen Caputure </span> 
       </h3>
 
       <div className="cursor-default">
@@ -31,9 +31,10 @@ function CaptureButton({ Click }) {
   return (
     <button
       onClick={Click}
-      className="w-full px-4 py-2.5 bg-blue-500 hover:bg-green-600 text-white border-none rounded text-sm cursor-pointer transition-colors duration-200"
+      className="w-full px-4 py-2.5 bg-blue-500 hover:bg-green-600 text-white border-none rounded text-md cursor-pointer transition-colors duration-200
+      tool-btn tool-btn-green-active"
     >
-      현재 화면 다운로드
+      DownLoad
     </button>
   );
 }

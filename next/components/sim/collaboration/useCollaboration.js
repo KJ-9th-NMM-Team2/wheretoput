@@ -118,21 +118,21 @@ export function useCollaboration(roomId) {
     });
 
     socket.current.on("user-left", async (data) => {
-      console.log("🔴 user-left 이벤트 수신:", data);
+      console.log("🔴 user-left 이벤트 수신:", data, roomId);
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
         // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
         if (data.reason === "collaboration-ended") {
           alert("방 소유자가 협업 모드를 종료하여 방에서 나갔습니다.");
-          router.push(roomId ? `/sim/${roomId}` : `/`);
+          router.replace(roomId ? `/sim/${roomId}` : `/`);
         } else if (data.reason === "time-out") {
           alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
-          router.push(roomId ? `/sim/${roomId}` : `/`);
+          router.replace(roomId ? `/sim/${roomId}` : `/`);
         } else if (data.reason === "duplicate-connection") {
           alert(
-            "동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다."
+            `동일한 계정으로 다른 탭에서 접속하여 현재 연결이 해제되었습니다.`
           );
-          router.push(roomId ? `/sim/${roomId}` : `/`);
+          window.location.href = roomId ? `/sim/${roomId}` : `/`;
         }
       } else {
         // 사용자 정보 제거
@@ -289,7 +289,7 @@ export function useCollaboration(roomId) {
     socket.current.on("wall-added", (data) => {
       if (data.userId !== currentUser.id) {
         console.log("wall-added 데이터 수신:", data);
-        addWallWithId(data.wallData, false);  // 완성된 벽 객체 사용
+        addWallWithId(data.wallData, false); // 완성된 벽 객체 사용
       }
     });
 

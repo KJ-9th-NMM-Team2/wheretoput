@@ -120,11 +120,8 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
     if (fromParam === 'create' || fromStorage === 'create') {
       router.push('/');
     } else {
-      if (accessType === 2) {
-        window.history.go(-2);
-        return;
-      }
-      router.back();
+      // 협업모드든 일반모드든 홈으로 이동
+      router.push('/');
     }
   };
 
@@ -139,14 +136,14 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
             <button
                 type="button"
                 onClick={handleSettingsClick}
-                className="ml-2 px-2 py-1 rounded-md text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors shadow flex items-center"
+                className="ml-2 px-2 py-1 rounded-md text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors shadow flex items-center cursor-pointer"
               >
               {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
             </button>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className={`text-gray-500 hover:text-gray-700 transition-all duration-300 
+            className={`text-gray-500 hover:text-gray-700 transition-all duration-300 cursor-pointer 
             ${
               collapsed ? "" : "ml-auto" // 접혔을 때 안쪽으로
             }`}

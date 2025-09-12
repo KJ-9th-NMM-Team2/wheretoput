@@ -1,5 +1,7 @@
 import React from "react";
 import { useStore } from "@/components/sim/useStore";
+import { RotateCcw } from "lucide-react";
+
 
 export function CameraControlPanel({ isPopup = false, controlsRef }) {
   const {
@@ -43,8 +45,8 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
         ...positionStyle,
       }}
     >
-      <h3 style={{ margin: "0 0 10px 0", fontSize: "16px" }}>
-        <span className="text-lg">📷</span> 카메라 세팅
+      <h3 style={{ margin: "0 0 10px 0", fontSize: "20px" }}>
+        Display
       </h3>
 
       <div
@@ -102,7 +104,7 @@ function ControlSlider({
         display: "flex",
         alignItems: "center",
         gap: "3px",
-      }}
+      }} 
     >
       <span
         style={{
@@ -120,6 +122,7 @@ function ControlSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="slider-small"
         style={{ flex: 1 }}
       />
       <span
@@ -139,7 +142,7 @@ function ControlSlider({
 function WallTransparencyToggle({ enabled, onToggle }) {
   return (
     <div className="flex items-center justify-between mb-2">
-      <span className="text-s text-white">벽 투명화 on/off</span>
+      <span className="text-s text-white my-1">벽 투명화</span>
       <button
         onClick={() => onToggle(!enabled)}
         className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
@@ -159,7 +162,7 @@ function WallTransparencyToggle({ enabled, onToggle }) {
 function WallMagnetToggle({ enabled, onToggle }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <span className="text-s text-white">벽 자석 on/off</span>
+      <span className="text- text-white">벽 자석</span>
       <button
         onClick={() => onToggle(!enabled)}
         className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
@@ -184,10 +187,10 @@ function CameraResetButton({ controlsRef }) {
     }}>
       <button
         onClick={() => controlsRef.current.reset()}
-        className="fit-content bg-red-500 border-none rounded cursor-pointer hover:bg-blue-600 duration-200"
+        className="tool-btn tool-btn-red-active mt-2"
       >
-        <span className="block px-10 py-1.5 text-white text-sm hover:translate-y-0.5 duration-200">
-          카메라 위치 리셋
+        <span className="flex items-center gap-2">
+          Reset <RotateCcw size={18} />
         </span>
       </button>
     </div>

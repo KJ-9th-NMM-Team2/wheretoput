@@ -34,7 +34,7 @@ export function ColorControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}><span className="text-lg">🎨</span> 색상 세팅</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}> Colors </h3>
 
       <div
         style={{
@@ -46,31 +46,30 @@ export function ColorControlPanel({ isPopup = false }) {
           cursor: 'default'
         }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-white">색상 대상</span>
-          <div className="flex bg-gray-200 rounded-lg overflow-hidden">
+        <div className="flex items-center justify-center mb-3">
+          <div className="flex justify-center bg-gray-200 rounded-lg overflow-hidden my-2">
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "wall"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "wall"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("wall")}
             >
               벽
             </button>
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "floor"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "floor"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("floor")}
             >
               바닥
             </button>
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "background"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "background"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("background")}
             >
@@ -80,8 +79,15 @@ export function ColorControlPanel({ isPopup = false }) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div>
-            <p className="text-sm mb-1">{colorTarget === 'wall' ? '벽' : colorTarget === 'floor' ? '바닥' : '배경'} 색상</p>
-            <HexColorPicker style={{ width: '100%', height: '120px' }} color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor} onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
+            
+            <HexColorPicker
+              // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
+              style={{ 
+                width: '100%',
+                height: '120px'
+              }}
+              color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
+              onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
           </div>
         </div>
       </div>

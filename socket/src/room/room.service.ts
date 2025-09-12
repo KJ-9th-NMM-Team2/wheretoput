@@ -12,10 +12,10 @@ export class RoomService {
   }
 
   // 그룹 채팅방 생성
-  async createGroupRoom(params: { 
-    currentUserId: string; 
+  async createGroupRoom(params: {
+    currentUserId: string;
     participantIds: string[];
-    roomName?: string;
+    simRoomId?: string; // 협업용 시뮬레이터 room ID (선택적)
   }) {
     try {
       if (!this.prisma) {
@@ -35,11 +35,23 @@ export class RoomService {
         console.error('참가자 정보 조회 실패:', error);
       }
 
-      // 방 이름 생성 (사용자가 지정하지 않은 경우)
-      const roomName = params.roomName || 
-        (participantNames.length > 0 
-          ? participantNames.join(', ')
-          : `그룹 채팅 (${params.participantIds.length + 1}명)`);
+      // 방 이름 생성 - simRoomId가 있으면 해당 시뮬레이터 방의 title을 사용
+      let roomName: string | null = null;
+
+      if (params.simRoomId) {
+        try {
+          const simRoom = await this.prisma.rooms.findUnique({
+            where: { room_id: params.simRoomId },
+            select: { title: true },
+          });
+
+          if (simRoom?.title) {
+            roomName = simRoom.title;
+          }
+        } catch (error) {
+          console.error('시뮬레이터 방 정보 조회 실패:', error);
+        }
+      }
 
       // 트랜잭션으로 채팅방 및 참가자 생성
       const result = await this.prisma.$transaction(async (prisma) => {
@@ -48,7 +60,6 @@ export class RoomService {
           data: {
             name: roomName,
             creator_id: params.currentUserId,
-            other_user_ids: params.participantIds,
             is_private: true, // 그룹 채팅은 기본적으로 비공개
           },
         });
@@ -73,6 +84,19 @@ export class RoomService {
           });
         }
 
+        // 시뮬레이터 room이 지정된 경우 rooms 테이블 업데이트 (협업용)
+        if (params.simRoomId) {
+          try {
+            await prisma.rooms.update({
+              where: { room_id: params.simRoomId },
+              data: { collab_chat_room_id: room.chat_room_id },
+            });
+          } catch (error) {
+            console.error('시뮬레이터 방 업데이트 실패:', error);
+            throw new NotFoundException(`Simulator room with id ${params.simRoomId} not found or update failed.`);
+          }
+        }
+
         return room;
       });
 
@@ -84,12 +108,15 @@ export class RoomService {
           is_private: true,
           created_at: result.created_at,
         };
-        
+
         // 모든 참가자에게 방 생성 알림
-        const allParticipants = [params.currentUserId, ...params.participantIds];
+        const allParticipants = [
+          params.currentUserId,
+          ...params.participantIds,
+        ];
         this.socketServer.emit('room:created', {
           room: roomData,
-          participants: allParticipants
+          participants: allParticipants,
         });
       }
 
@@ -112,15 +139,9 @@ export class RoomService {
           OR: [
             {
               creator_id: params.currentUserId,
-              other_user_ids: {
-                array_contains: params.otherUserId,
-              },
             },
             {
               creator_id: params.otherUserId,
-              other_user_ids: {
-                array_contains: params.currentUserId,
-              },
             },
           ],
         },
@@ -146,12 +167,12 @@ export class RoomService {
       if (existingRoom) {
         // 두 참가자의 상태 확인
         const myParticipant = existingRoom.chat_participants?.find(
-          p => p.user_id === params.currentUserId
+          (p) => p.user_id === params.currentUserId,
         );
         const otherParticipant = existingRoom.chat_participants?.find(
-          p => p.user_id === params.otherUserId
+          (p) => p.user_id === params.otherUserId,
         );
-        
+
         // 트랜잭션으로 양쪽 모두 다시 참여 처리
         await this.prisma.$transaction(async (prisma) => {
           // 내가 나간 상태라면 다시 참여 (left_at은 유지해서 그 이후 메시지만 보이도록)
@@ -169,7 +190,7 @@ export class RoomService {
               },
             });
           }
-          
+
           // 상대방이 나간 상태라면 다시 참여
           if (otherParticipant && otherParticipant.is_left) {
             await prisma.chat_participants.update({
@@ -186,11 +207,14 @@ export class RoomService {
             });
           }
         });
-        
+
         // 기존 방을 리턴할 때도 올바른 이름으로 업데이트해서 리턴
         return {
           ...existingRoom,
-          name: existingRoom.name || otherParticipant?.User?.name || `사용자 ${params.otherUserId}`,
+          name:
+            existingRoom.name ||
+            otherParticipant?.User?.name ||
+            `사용자 ${params.otherUserId}`,
         };
       }
 
@@ -218,7 +242,6 @@ export class RoomService {
           data: {
             name: roomName,
             creator_id: params.currentUserId,
-            other_user_ids: [params.otherUserId],
           },
         });
 
@@ -249,11 +272,11 @@ export class RoomService {
           is_private: true,
           created_at: result.created_at,
         };
-        
+
         // 양쪽 사용자에게 방 생성 알림
         this.socketServer.emit('room:created', {
           room: roomData,
-          participants: [params.currentUserId, params.otherUserId]
+          participants: [params.currentUserId, params.otherUserId],
         });
       }
 
@@ -330,6 +353,93 @@ export class RoomService {
     }
   }
 
+  // 기존 채팅방에 참가자 추가 (협업용)
+  async addParticipantToRoom(roomId: string, userId: string) {
+    try {
+      // 이미 참가자인지 확인
+      const existingParticipant =
+        await this.prisma.chat_participants.findUnique({
+          where: {
+            chat_room_id_user_id: {
+              chat_room_id: roomId,
+              user_id: userId,
+            },
+          },
+        });
+
+      if (existingParticipant) {
+        // 이미 참가자라면 is_left가 true인 경우 다시 참여 처리
+        if (existingParticipant.is_left) {
+          await this.prisma.chat_participants.update({
+            where: {
+              chat_room_id_user_id: {
+                chat_room_id: roomId,
+                user_id: userId,
+              },
+            },
+            data: {
+              is_left: false,
+            },
+          });
+        }
+        return existingParticipant;
+      }
+
+      // 새 참가자 추가
+      const newParticipant = await this.prisma.chat_participants.create({
+        data: {
+          chat_room_id: roomId,
+          user_id: userId,
+          is_admin: false,
+        },
+      });
+
+      // 소켓 이벤트 전송 (참가자 추가 알림)
+      if (this.socketServer) {
+        this.socketServer.emit('participant:added', {
+          roomId: roomId,
+          userId: userId,
+        });
+      }
+
+      return newParticipant;
+    } catch (error: any) {
+      throw new Error(`Failed to add participant to room: ${error.message}`);
+    }
+  }
+
+  // 시뮬레이터 room의 협업 채팅방 조회
+  async getCollabChatRoom(simRoomId: string) {
+    try {
+      const room = await this.prisma.rooms.findUnique({
+        where: { room_id: simRoomId },
+        select: { collab_chat_room_id: true },
+      });
+
+      if (!room?.collab_chat_room_id) {
+        return null;
+      }
+
+      // 채팅방 정보 조회
+      const chatRoom = await this.prisma.chat_rooms.findUnique({
+        where: { chat_room_id: room.collab_chat_room_id },
+        include: {
+          chat_participants: {
+            include: {
+              User: {
+                select: { id: true, name: true },
+              },
+            },
+          },
+        },
+      });
+
+      return chatRoom;
+    } catch (error: any) {
+      throw new Error(`Failed to get collab chat room: ${error.message}`);
+    }
+  }
+
   // 사용자 방 목록 조회
   async getUserRooms(userId: string) {
     try {
@@ -348,9 +458,34 @@ export class RoomService {
         },
       });
 
-      // 참가자로 속한 방 리스트를 반환
+      // 각 채팅방에 대해 시뮬레이터 방 정보도 함께 조회
+      const roomsWithSimInfo = await Promise.all(
+        rows.map(async (p: { chat_rooms: any }) => {
+          const chatRoom = p.chat_rooms;
+          
+          // 해당 채팅방이 협업 채팅방인지 확인하고 시뮬레이터 방 제목 조회
+          try {
+            const simRoom = await this.prisma.rooms.findFirst({
+              where: { collab_chat_room_id: chatRoom.chat_room_id },
+              select: { title: true },
+            });
+            
+            return {
+              ...chatRoom,
+              sim_room_title: simRoom?.title || null,
+            };
+          } catch (error) {
+            console.error('시뮬레이터 방 정보 조회 실패:', error);
+            return {
+              ...chatRoom,
+              sim_room_title: null,
+            };
+          }
+        })
+      );
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return rows.map((p: { chat_rooms: any }) => p.chat_rooms);
+      return roomsWithSimInfo;
     } catch (error: any) {
       throw new Error(`Failed to get user rooms: ${error.message}`);
     }

@@ -413,7 +413,7 @@ export function ControlIcons({ controlsRef }) {
 
             {/* 공유 팝업 내용 */}
             <div className="text-white text-center">
-              <h3 className="mb-5 text-lg font-semibold">공유하기</h3>
+              <h3 className="mb-5 text-lg font-semibold"></h3>
 
               {/* QR 코드 영역 */}
               <div className="w-[250px] h-[250px] border-2 border-dashed border-gray-600 mx-auto mb-8 flex items-center justify-center bg-white/10 rounded-xl">
@@ -427,9 +427,12 @@ export function ControlIcons({ controlsRef }) {
               {/* 링크 복사 버튼 */}
               <button
                 onClick={copyToClipboard}
-                className="w-full p-4 bg-green-500 text-white border-none rounded-lg text-lg font-bold cursor-pointer transition-colors duration-200 mb-5 hover:bg-green-600"
+                className="tool-btn tool-btn-green-active w-full p-4 text-lg font-bold mb-5"
+                style={{ transform: 'none' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
               >
-                📋 링크 복사하기
+                링크 복사
               </button>
 
               {/* 링크 표시 */}
@@ -447,7 +450,7 @@ export function ControlIcons({ controlsRef }) {
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            className="relative bg-black/90 rounded-lg p-8 w-[400px] max-w-[90vw] max-h-[90vh] overflow-hidden"
+            className="relative bg-black/90 rounded-lg p-8 w-[500px] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
