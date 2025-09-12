@@ -1,3 +1,4 @@
 .env
 /generated/prisma
 /node_modules
+.github/copilot-instructions.md
