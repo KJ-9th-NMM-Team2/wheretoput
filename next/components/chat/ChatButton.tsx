@@ -22,24 +22,13 @@ export default function ChatButton({
   currentUserId: string | null;
 }) {
   const pathname = usePathname();
-
-  if (!currentUserId) return null;
-
-  // sim/collaboration, sim/mobile 페이지에서는 채팅 버튼을 숨김
-  if (
-    pathname?.includes("/sim/collaboration/") ||
-    pathname?.includes("/sim/mobile/")
-  ) {
-    return null;
-  }
-
   const [open, setOpen] = useState(false);
   const [select, setSelect] = useState<"전체" | "읽지 않음">("전체");
   const [selectedChatId, setselectedChatId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
-  // 분리된 훅들 사용
+  // 분리된 훅들 사용 - 조건부 return 전에 모든 Hook 호출
   const { token } = useChatConnection(open);
 
   // 새 메시지 알림 처리
@@ -79,7 +68,6 @@ export default function ChatButton({
     chats,
     setChats,
     setBaseChats,
-    onStartDirect,
     updateChatRoom,
     deleteChatRoom,
     sseConnection,
@@ -199,6 +187,18 @@ export default function ChatButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
+
+  // 조건부 return들 - 모든 Hook 호출 이후에 배치
+  if (!currentUserId) return null;
+
+  // sim/collaboration, sim/mobile 페이지에서는 채팅 버튼을 숨김
+  if (
+    pathname?.includes("/sim/collaboration/") ||
+    pathname?.includes("/sim/mobile/")
+  ) {
+    return null;
+  }
+
   // 1:1 채팅 시작 핸들러
   const handleStartDirect = async (
     otherUserId: string,
@@ -216,6 +216,7 @@ export default function ChatButton({
       }, 100);
     }
   };
+
 
   return (
     <>
@@ -258,7 +259,6 @@ export default function ChatButton({
             onSendMessage={onSendMessage}
             onEditorKeyDown={onEditorKeyDown}
             onChatSelect={(chatId) => setselectedChatId(chatId)}
-            onStartDirect={handleStartDirect}
             onBack={() => {
               // 채팅방에서 나갈 때 해당 채팅방의 읽음 상태를 현재 시간으로 업데이트
               if (selectedChatId) {

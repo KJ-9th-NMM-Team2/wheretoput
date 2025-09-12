@@ -11,14 +11,14 @@ export default function SortedHouseList({
   initQuery = "",
 }: {
   data: any[];
-  initQuery: string; 
+  initQuery: string;
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const urlSortType = searchParams.get('order') as "view" | "new" | "like" | null;
   // 쿼리가 바뀔 때 실행된다.
   const [currentQuery, setCurrentQuery] = useState(initQuery);
-  
+
   // 검색값
   const [searchInput, setSearchInput] = useState(initQuery);
 
@@ -26,7 +26,7 @@ export default function SortedHouseList({
   const [sortType, setSortType] = useState<"view" | "new" | "like">(urlSortType || "view");
 
   // 띄울 데이터
-  const [data, setData] = useState<any[]>(initialData);  
+  const [data, setData] = useState<any[]>(initialData);
 
   // currentQuery 변경 시 fetch (초기 로드)
   useEffect(() => {
@@ -59,64 +59,62 @@ export default function SortedHouseList({
     <>
       <div className="px-20 flex flex-1 justify-center py-5">
         <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-        {/* 검색바 */}
-        <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} onSearch={handlerSearch} setSortType={setSortType}/>
-        <div className="flex gap-3 p-3 flex-wrap pr-4">
-          {/* // 정렬버튼 */}
-          <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${
-              sortType === "view"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-            }`}
-            onClick={() => {
-              setSortType("view");
-              router.push(`/search?order=view${(currentQuery) ? `&q=${currentQuery}` : ''}`);
-            }}
-          >
-            <span className="text-sm">조회수 순</span>
-          </button>
-          <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${
-              sortType === "new"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-            }`}
-            onClick={() => {
-              setSortType("new");
-              router.push(`/search?order=new${(currentQuery) ? `&q=${currentQuery}` : ''}`);
-            }}
-          >
-            <span className="text-sm">최신 순</span>
-          </button>
-          <button
-            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${
-              sortType === "like"
-                ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-            }`}
-            onClick={() => {
-              setSortType("like");
-              router.push(`/search?order=like${(currentQuery) ? `&q=${currentQuery}` : ''}`);}
-            }
-          >
-            <span className="text-sm">좋아요 순</span>
-          </button>
-        </div>
-        {data && data.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
-            {data.map((house: any) => (
-              <HomeCard key={house.room_id} room={house} />
-            ))}
+          {/* 검색바 */}
+          <SearchBar searchInput={searchInput} setSearchInput={setSearchInput} onSearch={handlerSearch} setSortType={setSortType} />
+          <div className="flex gap-3 p-3 flex-wrap pr-4">
+            {/* // 정렬버튼 */}
+            <button
+              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
+            ${sortType === "view"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
+                }`}
+              onClick={() => {
+                setSortType("view");
+                router.push(`/search?order=view${(currentQuery) ? `&q=${currentQuery}` : ''}`);
+              }}
+            >
+              <span className="text-sm cursor-pointer">조회수 순</span>
+            </button>
+            <button
+              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
+            ${sortType === "new"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
+                }`}
+              onClick={() => {
+                setSortType("new");
+                router.push(`/search?order=new${(currentQuery) ? `&q=${currentQuery}` : ''}`);
+              }}
+            >
+              <span className="text-sm cursor-pointer">최신 순</span>
+            </button>
+            <button
+              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
+            ${sortType === "like"
+                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
+                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
+                }`}
+              onClick={() => {
+                setSortType("like");
+                router.push(`/search?order=like${(currentQuery) ? `&q=${currentQuery}` : ''}`);
+              }
+              }
+            >
+              <span className="text-sm cursor-pointer">좋아요 순</span>
+            </button>
           </div>
-        ) : (
-          <div className="flex justify-center items-center h-60">
-            <p className="text-gray-500">입력된 방 혹은 유저를 찾을 수 없습니다</p>
-          </div>
-        )}
+          {data && data.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
+              {data.map((house: any) => (
+                <HomeCard key={house.room_id} room={house} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-60">
+              <p className="text-gray-500">입력된 방 혹은 유저를 찾을 수 없습니다</p>
+            </div>
+          )}
         </div>
       </div>
     </>

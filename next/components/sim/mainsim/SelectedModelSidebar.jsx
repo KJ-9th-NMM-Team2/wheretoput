@@ -277,7 +277,10 @@ export function SelectedModelEditModal() {
           {loadedModels.map((model) => (
             <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-300 active:bg-gradient-to-r active:from-green-500 active:to-green-600 active:text-white border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap cursor-pointer transition-all duration-200"
               key={model.id}
-              onClick={() => (selectModel(model.id), hoveringModel(null))}
+              onClick={() => {
+                selectModel(model.id);
+                hoveringModel(null);
+              }}
               onMouseEnter={() => hoveringModel(model.id)}
               onMouseLeave={() => hoveringModel(null)}
             >
@@ -446,6 +449,7 @@ export function SelectedModelEditModal() {
             <button
               onClick={handleStartStackingMode}
               className="tool-btn tool-btn-green-active flex-1"
+
             >
               쌓기
             </button>
@@ -486,6 +490,7 @@ export function SelectedModelEditModal() {
                 deselectModel();
               }}
               className="tool-btn tool-btn-red-active flex-1"
+
             >
               삭제
             </button>

@@ -99,8 +99,8 @@ class CacheManager {
                 return;
             }
 
-            console.log("recordFileAccess metadata", metadata);
-            console.log("recordFileAccess fileSize", fileSize);
+            // console.log("recordFileAccess metadata", metadata);
+            // console.log("recordFileAccess fileSize", fileSize);
 
             const currentTime = new Date().toLocaleString('ko-KR', {timeZone: 'Asia/Seoul'});
 

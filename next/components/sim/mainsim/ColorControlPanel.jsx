@@ -49,27 +49,27 @@ export function ColorControlPanel({ isPopup = false }) {
         <div className="flex items-center justify-center mb-3">
           <div className="flex justify-center bg-gray-200 rounded-lg overflow-hidden my-2">
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "wall"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "wall"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("wall")}
             >
               벽
             </button>
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "floor"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "floor"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("floor")}
             >
               바닥
             </button>
             <button
-              className={`px-3 py-1 text-xs transition-colors ${colorTarget === "background"
-                  ? "bg-blue-500 text-white"
-                  : "text-gray-600 hover:bg-gray-300"
+              className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "background"
+                ? "bg-blue-500 text-white"
+                : "text-gray-600 hover:bg-gray-300"
                 }`}
               onClick={() => setColorTarget("background")}
             >

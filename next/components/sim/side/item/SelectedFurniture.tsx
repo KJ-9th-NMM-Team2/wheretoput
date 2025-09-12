@@ -5,7 +5,7 @@ interface SelectedFurnituresProps {
     onCategorySelect: (category: string) => void;
 }
 
-const SelectedFurnitures = ({onCategorySelect} : SelectedFurnituresProps) => {
+const SelectedFurnitures = ({ onCategorySelect }: SelectedFurnituresProps) => {
     const category = { id: -1, name: "배치한 가구 목록" };
     const { selectedCategory, setSelectedCategory } = useStore();
 
@@ -21,6 +21,7 @@ const SelectedFurnitures = ({onCategorySelect} : SelectedFurnituresProps) => {
                 className={`py-2 px-3 text-sm rounded transition whitespace-nowrap cursor-pointer ${selectedCategory === category.id
                     ? 'bg-green-500 text-white'
                     : 'bg-white text-gray-800 hover:bg-green-50 hover:text-green-600 hover:border-green-200 border border-gray-200'
+
                     }`}
                 onClick={() => handleCategoryClick(category)}
             >

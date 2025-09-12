@@ -87,9 +87,8 @@ export function CommentCard({
 
   return (
     <div
-      className={`flex w-full flex-row items-start justify-start gap-3 p-4 transition-opacity ${
-        isLoading ? "opacity-70" : ""
-      }`}
+      className={`flex w-full flex-row items-start justify-start gap-3 p-4 transition-opacity ${isLoading ? "opacity-70" : ""
+        }`}
     >
       <Link href={`/users/${comment.user.id}`}>
         {comment.user.image ? (
@@ -175,11 +174,10 @@ export function CommentCard({
             />
             <div className="flex gap-2 mt-2">
               <button
-                className={`px-3 py-1 text-xs font-bold text-white rounded-xl flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
-                  isLoading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-                }`}
+                className={`px-3 py-1 text-xs font-bold text-white rounded-xl flex items-center gap-1 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                  }`}
                 onClick={handleEdit}
                 disabled={isLoading}
               >
@@ -276,15 +274,14 @@ export default function CommentsList({
         />
         <button
           type="submit"
-          className={`rounded-2xl px-4 py-2 text-sm font-bold text-white flex items-center gap-2 min-w-[80px] justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
-            isLoading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-          }`}
+          className={`cursor-pointer rounded-2xl px-4 py-2 text-sm font-bold text-white flex items-center gap-2 min-w-[80px] justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${isLoading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+            }`}
           disabled={isLoading}
         >
           {isLoading && (
-            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full " ></div>
           )}
           {isLoading ? "등록중..." : "등록"}
         </button>

@@ -28,6 +28,7 @@ export function RotationControl({
     <div className="mb-3">
       {/* 라벨과 값 표시 */}
       <div className="flex justify-between items-center mb-2">
+
         <span className="text-xs text-gray-600">{`${axis}축 회전`}</span>
         <div className="flex gap-2">
           <button
@@ -97,6 +98,7 @@ export function RotationControl({
             className="w-12 text-xs text-right bg-transparent border-none outline-none text-gray-700"
           />
           <span className="text-xs text-gray-500 ml-1">°</span>
+
         </div>
       </div>
 
