@@ -33,7 +33,7 @@ export class ChatController {
       limit: n,
       beforeId: before,
     });
-    console.log('확인한 메시지', messages);
+    // console.log('확인한 메시지', messages);
     return { roomId, messages };
   }
 
@@ -54,14 +54,8 @@ export class ChatController {
 
   // 채팅방 나가기 (개별 유저)
   @Delete(':roomId/leave')
-  async leaveRoom(
-    @Param('roomId') roomId: string,
-    @Request() req: any,
-  ) {
-    const result = await this.chatService.leaveRoom(
-      roomId,
-      req.user.userId,
-    );
+  async leaveRoom(@Param('roomId') roomId: string, @Request() req: any) {
+    const result = await this.chatService.leaveRoom(roomId, req.user.userId);
     return result;
   }
 

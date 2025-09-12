@@ -51,10 +51,18 @@ function CollaborationPageContent({
     setCollaborationMode,
     setViewOnly,
     setCurrentUser,
-    checkUserRoom,
     saveSimulatorState,
     currentRoomInfo,
   } = useStore();
+
+  const checkUserRoomFn = useStore((state) => state.checkUserRoom);
+
+  const checkUserRoom = useCallback(
+    (roomId: string, userId: string) => {
+      return checkUserRoomFn(roomId, userId);
+    },
+    [checkUserRoomFn]
+  );
 
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isAccessChecking, setIsAccessChecking] = useState(true);
@@ -100,10 +108,8 @@ function CollaborationPageContent({
   useEffect(() => {
     const handleCollaborationAccess = async () => {
       try {
-        console.log("1단계 시작 - 세션:", session);
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
-        console.log("1단계 - 현재 roomId:", currentRoomId);
 
         // 방 소유자인지 확인
         let ownerStatus = false;
@@ -135,7 +141,7 @@ function CollaborationPageContent({
     if (session !== undefined) {
       handleCollaborationAccess();
     }
-  }, [params, session]);
+  }, [params, session, checkUserRoom]);
 
   // 2단계: 협업 소켓 연결 (roomId 설정 후)
   const collaboration = useCollaboration(roomId);

@@ -112,7 +112,7 @@ export async function setupChatRoom({
       try {
         const joinResponse = await api.post(
           `${process.env.NEXT_PUBLIC_API_URL}/rooms/collab/${currentRoomId}/join`,
-          { simRoomId: currentRoomId }
+          {}
         );
 
         if (joinResponse.data.chatRoom) {
@@ -153,7 +153,7 @@ export async function setupChatRoom({
       try {
         const joinResponse = await api.post(
           `${process.env.NEXT_PUBLIC_API_URL}/rooms/collab/${currentRoomId}/join`,
-          { simRoomId: currentRoomId }
+          {}
         );
 
         if (joinResponse.data.joined && joinResponse.data.chatRoom) {

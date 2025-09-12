@@ -37,7 +37,7 @@ export class RoomService {
       }
 
       // 방 이름 생성 (사용자가 지정하지 않은 경우)
-      const roomName = null;
+      const roomName = params.roomName || null;
 
       // 트랜잭션으로 채팅방 및 참가자 생성
       const result = await this.prisma.$transaction(async (prisma) => {
