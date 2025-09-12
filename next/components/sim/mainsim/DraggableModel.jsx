@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import {
   useTexture,
+  useGLTF
 } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
@@ -8,7 +9,6 @@ import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
-import { useDracoGLTF } from "../utils/useDracoLoader";
 
 export function DraggableModel({
   modelId,
@@ -22,8 +22,7 @@ export function DraggableModel({
   type = "glb",
   onModelLoaded,
 }) {
-
-  // console.log("URL check is cache or S3_url", url);
+  // console.log("url check cache or s3?", url);
   
   // scale 값을 안전하게 처리
   const safeScale = (() => {
@@ -56,7 +55,7 @@ export function DraggableModel({
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   const { scene, animations } = hasValidUrl
-    ? useDracoGLTF(url) // DRACO 커스텀 훅
+    ? useGLTF(url)
     : { scene: null, animations: null };
 
   useEffect(() => {
