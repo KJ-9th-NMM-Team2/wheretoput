@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     let body;
     try {
       body = await req.json();
-      console.log("body:", body);
+      // console.log("body:", body);
     } catch (error) {
       console.error("JSON parsing error:", error);
       return Response.json(
