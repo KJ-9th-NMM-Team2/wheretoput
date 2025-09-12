@@ -212,4 +212,33 @@ html.dark .tool-btn-inactive:hover {
   border-radius: 5px;
 }
 
+/* Control Panel용 작은 슬라이더 스타일 */
+.slider-small {
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #6aeeff 0%, #ADB6FF 100%);
+  outline: none;
+  height: 3px;
+}
+
+/* 작은 슬라이더 버튼 - 크롬, 사파리 */
+.slider-small::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  cursor: pointer;
+  border: 1.5px solid #87CEEB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 작은 슬라이더 트랙 - 크롬, 사파리 */
+.slider-small::-webkit-slider-track {
+  background: linear-gradient(to right, #87CEEB 0%, #ADB6FF 100%);
+  height: 3px;
+  border-radius: 3px;
+}
+
 

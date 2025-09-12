@@ -298,7 +298,7 @@ export function SelectedModelEditModal() {
       <div className="p-4 select-none">
         {/* 가구이름 표시 */}
         <div className="bg-gradient-to-br from-slate-50 to-gray-50 border border-gray-200 rounded-xl p-4 shadow-sm">
-          <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
+          <div className="font-bold mb-3 text-sm flex items-center gap-2 break-words text-gray-800">
             {selectedModel.name}
           </div>
 

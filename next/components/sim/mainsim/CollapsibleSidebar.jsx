@@ -74,11 +74,11 @@ export function CollapsibleSidebar({
       <div className="w-80 max-h-[80vh] select-none">
         <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl rounded-xl overflow-hidden">
           {/* 헤더 */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-            <span className="text-lg font-bold ">{title}</span>
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+            <span className="text-lg font-bold text-gray-800">{title}</span>
             <button
               onClick={() => (onClose, setIsCollapsed(true))}
-              className="text-gray-500 hover:text-gray-700 transition-colors text-lg"
+              className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-all duration-200 text-xl"
               title="닫기"
             >
               ×
