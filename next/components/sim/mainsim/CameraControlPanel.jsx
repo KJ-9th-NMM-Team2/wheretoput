@@ -104,7 +104,7 @@ function ControlSlider({
         display: "flex",
         alignItems: "center",
         gap: "3px",
-      }}
+      }} 
     >
       <span
         style={{
