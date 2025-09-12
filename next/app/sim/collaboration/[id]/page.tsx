@@ -234,8 +234,8 @@ function CollaborationPageContent({
         console.error("협업 모드 종료 실패:", result.error);
         alert("협업 모드 종료에 실패했습니다");
 
-      } 
-     catch (error) {
+      }
+    } catch (error) {
       console.error("협업 종료 중 오류:", error);
       alert("협업 모드 종료 중 오류가 발생했습니다");
     }
