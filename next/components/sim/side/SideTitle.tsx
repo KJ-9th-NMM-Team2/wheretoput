@@ -120,11 +120,8 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
     if (fromParam === 'create' || fromStorage === 'create') {
       router.push('/');
     } else {
-      if (accessType === 2) {
-        window.history.go(-2);
-        return;
-      }
-      router.back();
+      // 협업모드든 일반모드든 홈으로 이동
+      router.push('/');
     }
   };
 
