@@ -242,7 +242,7 @@ export function ControlPanel({ isPopup = false }) {
       {/* 전체 모델 제거 버튼 */}
       <button
         onClick={clearAllModels}
-        className="tool-btn tool-btn-green-active w-full px-4 py-2.5 !text-base my-4 !rounded"
+        className="tool-btn tool-btn-red-active w-full px-4 py-2.5 !text-base my-4 !rounded"
         style={{ transform: 'none' }}
         onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
         onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}

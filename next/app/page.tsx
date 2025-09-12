@@ -46,7 +46,7 @@ export default async function Page() {
               {/* 시작 버튼 */}
               <div className="mt-8 flex justify-center ">
                 <Link href="/create" passHref>
-                  <button className="text-xl px-8 py-4 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">
+                  <button className="text-2xl px-4 py-4 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer tracking-wider">
                     Get Started
                   </button>
                 </Link>

@@ -571,7 +571,7 @@ const FloorPlanEditor = () => {
         ctx.lineWidth = 8 / viewScale; // 기본 벽과 동일한 두께
       } else if (isSelected) {
         ctx.strokeStyle = "#0066ff"; // 선택된 벽도 파란색
-        ctx.lineWidth = 4 / viewScale;
+        ctx.lineWidth = 8 / viewScale;
       } else {
         ctx.strokeStyle = "rgba(43, 43, 43, 0.8)"; // 반투명 효과
         ctx.lineWidth = 8 / viewScale; // 더 두꺼운 선
@@ -1264,7 +1264,14 @@ const FloorPlanEditor = () => {
             {/* 그리기 도구 그룹 */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setTool(tool === "wall" ? "none" : "wall")}
+                onClick={() => {
+                  const newTool = tool === "wall" ? "none" : "wall";
+                  setTool(newTool);
+                  if (tool === "select") {
+                    setSelectedWall(null);
+                    setEditingWallLength("");
+                  }
+                }}
                 className={`tool-btn ${
                   tool === "wall" ? "tool-btn-active" : "tool-btn-inactive"
                 }`}
@@ -1275,7 +1282,14 @@ const FloorPlanEditor = () => {
               </button>
 
               <button
-                onClick={() => setTool(tool === "select" ? "none" : "select")}
+                onClick={() => {
+                  const newTool = tool === "select" ? "none" : "select";
+                  setTool(newTool);
+                  if (newTool === "none") {
+                    setSelectedWall(null);
+                    setEditingWallLength("");
+                  }
+                }}
                 className={`tool-btn ${
                   tool === "select" ? "tool-btn-active" : "tool-btn-inactive"
                 }`}
@@ -1288,7 +1302,14 @@ const FloorPlanEditor = () => {
             {/* 지우기 도구 그룹 */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
+                onClick={() => {
+                  const newTool = tool === "eraser" ? "none" : "eraser";
+                  setTool(newTool);
+                  if (tool === "select") {
+                    setSelectedWall(null);
+                    setEditingWallLength("");
+                  }
+                }}
                 className={`tool-btn ${
                   tool === "eraser" ? "tool-btn-active" : "tool-btn-inactive"
                 }`}
@@ -1302,6 +1323,10 @@ const FloorPlanEditor = () => {
                   const newTool =
                     tool === "partial_eraser" ? "none" : "partial_eraser";
                   setTool(newTool);
+                  if (tool === "select") {
+                    setSelectedWall(null);
+                    setEditingWallLength("");
+                  }
                   setPartialEraserSelectedWall(null);
                   setIsSelectingEraseArea(false);
                   setEraseAreaStart(null);
@@ -1515,106 +1540,57 @@ const FloorPlanEditor = () => {
                 </div>
               )}
 
-              {tool === "select" && (
+              {tool === "select" && selectedWall && (
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
-                  {selectedWall && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                      <h5 className="font-semibold text-blue-700 dark:text-blue-300 mb-3">
-                        선택된 벽
-                      </h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                        현재 길이:{" "}
-                        {(() => {
-                          const dist = calculateDistance(
-                            selectedWall.start,
-                            selectedWall.end
-                          );
-                          return `${dist.value}${dist.unit}`;
-                        })()}
-                      </p>
+                  <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-lg">
+                    선택된 벽
+                  </h4>
+                  <p className="text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                    현재 길이 : {(() => {
+                      const dist = calculateDistance(
+                        selectedWall.start,
+                        selectedWall.end
+                      );
+                      return `${dist.value}${dist.unit}`;
+                    })()}
+                  </p>
 
-                      {isScaleSet && (
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                            길이 조정 (mm):
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={editingWallLength}
-                              onChange={(e) =>
-                                setEditingWallLength(e.target.value)
-                              }
-                              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
-                              placeholder="길이 입력"
-                            />
-                            <button
-                              onClick={() => {
-                                const newLength = parseFloat(editingWallLength);
-                                if (newLength && newLength > 0) {
-                                  adjustWallLength(selectedWall.id, newLength);
-                                }
-                              }}
-                              className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
-                            >
-                              적용
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {!isScaleSet && (
-                        <div className="mb-3">
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
-                          </p>
-                        </div>
-                      )}
-
-                      {isScaleSet && (
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                            길이 조정 (mm):
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              value={editingWallLength}
-                              onChange={(e) =>
-                                setEditingWallLength(e.target.value)
-                              }
-                              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
-                              placeholder="길이 입력"
-                            />
-                            <button
-                              onClick={() => {
-                                const newLength = parseFloat(editingWallLength);
-                                if (newLength && newLength > 0) {
-                                  adjustWallLength(selectedWall.id, newLength);
-                                }
-                              }}
-                              className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
-                            >
-                              적용
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          setWalls((prev) =>
-                            prev.filter((wall) => wall.id !== selectedWall.id)
-                          );
-                          setSelectedWall(null);
-                          setEditingWallLength("");
-                        }}
-                        className="w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
-                      >
-                        삭제
-                      </button>
+                  {isScaleSet && (
+                    <div className="mb-3">
+                      <label className="text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                        길이 조정 (mm) :
+                      </label>
+                      <div className="flex gap-2 mt-2">
+                        <input
+                          type="number"
+                          value={editingWallLength}
+                          onChange={(e) =>
+                            setEditingWallLength(e.target.value)
+                          }
+                          className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
+                          placeholder="길이 입력"
+                        />
+                        <button
+                          onClick={() => {
+                            const newLength = parseFloat(editingWallLength);
+                            if (newLength && newLength > 0) {
+                              adjustWallLength(selectedWall.id, newLength);
+                            }
+                          }}
+                          className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+                        >
+                          적용
+                        </button>
+                      </div>
                     </div>
                   )}
+
+                  {!isScaleSet && (
+                    <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                      정확한 길이 조정을 위해, '축척 설정'을 먼저 해주세요.
+                    </p>
+                  )}
+
                 </div>
               )}
 

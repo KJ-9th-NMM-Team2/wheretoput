@@ -74,7 +74,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
                   key={cat.id}
                   className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 cursor-pointer ${selectedCategory === cat.id
                       ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 hover:bg-orange-200 hover:text-white border border-gray-200'
+                      : 'bg-white text-gray-800 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 border border-gray-200'
                     }`}
                   onClick={() => handleCategoryClick(cat)}
                 >

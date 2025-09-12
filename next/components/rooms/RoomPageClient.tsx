@@ -96,32 +96,28 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   return (
     <>
       <div className="layout-container flex h-full grow flex-col">
+        {/* 썸네일 섹션 - 75% 너비 */}
+        <div className="w-3/4 mx-auto aspect-[4/3] max-h-[500px] overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-lg">
+          <img
+            src={room?.thumbnail_url 
+              ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}` 
+              : "/placeholder.png"
+            }
+            alt={room?.title || "Room thumbnail"}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+        </div>
+        
         <div className="px-40 flex flex-1 justify-center">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap gap-2 p-4">
               <span className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal"></span>
             </div>
-            <div className="@container">
-              <div className="@[480px]:px-4 @[480px]:py-3">
-                <div
-                  className="bg-cover bg-center flex flex-col justify-end overflow-hidden bg-white dark:bg-gray-800 @[480px]:rounded-xl min-h-80"
-                  style={{
-                    backgroundImage: room?.thumbnail_url
-                      ? `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
-     url("${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}"), 
-     url("/placeholder.png")`
-                      : `linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), 
-     url("/placeholder.png")`,
-                  }}
-                >
-
-                </div>
-              </div>
-              <div className="px-4 py-6">
-                <h1 className="text-[#181411] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
-                  {room?.title}
-                </h1>
-              </div>
+            <div className="px-4 py-6">
+              <h1 className="text-[#181411] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
+                {room?.title}
+              </h1>
             </div>
             <div>
               {room.root_room_id && room.rooms ? (

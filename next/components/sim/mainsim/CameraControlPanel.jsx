@@ -104,7 +104,7 @@ function ControlSlider({
         display: "flex",
         alignItems: "center",
         gap: "3px",
-      }}
+      }} 
     >
       <span
         style={{
@@ -122,6 +122,7 @@ function ControlSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="slider-small"
         style={{ flex: 1 }}
       />
       <span
@@ -186,9 +187,9 @@ function CameraResetButton({ controlsRef }) {
     }}>
       <button
         onClick={() => controlsRef.current.reset()}
-        className="fit-content bg-gray-400 border-none rounded cursor-pointer duration-200 mt-3"
+        className="tool-btn tool-btn-red-active mt-3"
       >
-        <span className="flex items-center gap-2 px-5 py-1.5 text-white text-sm hover:translate-y-0.5 duration-200">
+        <span className="flex items-center gap-2">
           Reset <RotateCcw size={18} />
         </span>
       </button>

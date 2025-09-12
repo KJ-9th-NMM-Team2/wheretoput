@@ -19,11 +19,13 @@ import { useChatConnection } from "@/components/chat/hooks/useChatConnection";
 import { useChatMessages } from "@/components/chat/hooks/useChatMessages";
 import { useChatRooms } from "@/components/chat/hooks/useChatRooms";
 import { formatRelativeTime } from "@/components/chat/utils/chat-utils";
+import EndCollaborationModal from "@/components/sim/collaboration/EndCollaborationModal";
 import { api } from "@/lib/client/api";
 import {
   checkCollaborationAccess,
   setupChatRoom,
 } from "@/components/sim/collaboration/utils/collaborationUtils";
+
 
 // 가독성 있는 색상 생성 함수
 function generateReadableColor() {
@@ -74,6 +76,9 @@ function CollaborationPageContent({
   // 채팅 관련 상태와 훅
   const [isChatFocused, setIsChatFocused] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  
+  // 협업 종료 모달 상태
+  const [isEndModalOpen, setIsEndModalOpen] = useState(false);
 
   const { token } = useChatConnection(!!selectedChatId); // 채팅방 선택 시에만 연결
 
@@ -217,27 +222,24 @@ function CollaborationPageContent({
   const handleEndCollaboration = async () => {
     if (!roomId) return;
 
-    if (
-      confirm(
-        "협업 모드를 종료하시겠습니까? 현재 상태가 저장되고 모든 사용자가 퇴장됩니다."
-      )
-    ) {
-      try {
-        const result = await toggleColab(roomId, false);
-        if (result.success) {
-          collaboration?.broadcastCollaborationEnd();
-          await saveSimulatorState(); // 종료 전 DB에 저장
 
-          window.location.replace(`/sim/${roomId}`);
-        } else {
-          console.error("협업 모드 종료 실패:", result.error);
-          alert("협업 모드 종료에 실패했습니다");
-        }
-      } catch (error) {
-        console.error("협업 종료 중 오류:", error);
-        alert("협업 모드 종료 중 오류가 발생했습니다");
-      }
+    try {
+      const result = await toggleColab(roomId, false);
+      if (result.success) {
+        collaboration.broadcastCollaborationEnd();
+        await saveSimulatorState(); // 종료 전 DB에 저장
+
+        router.push(`/sim/${roomId}`);
+      } else {
+        console.error("협업 모드 종료 실패:", result.error);
+        alert("협업 모드 종료에 실패했습니다");
+
+      } 
+     catch (error) {
+      console.error("협업 종료 중 오류:", error);
+      alert("협업 모드 종료 중 오류가 발생했습니다");
     }
+    setIsEndModalOpen(false);
   };
 
   return (
@@ -255,7 +257,7 @@ function CollaborationPageContent({
             {/* 방 소유자에게만 협업 종료 버튼 표시 */}
             {isOwner && (
               <CollaborationEndButton
-                onEndCollaboration={handleEndCollaboration}
+                onEndCollaboration={() => setIsEndModalOpen(true)}
               />
             )}
             {/* 채팅방 선택 버튼 - 로그인한 사용자에게만 표시 */}
@@ -286,6 +288,13 @@ function CollaborationPageContent({
           currentUserId={session.user.id}
         />
       )}
+
+      {/* 협업 종료 확인 모달 */}
+      <EndCollaborationModal
+        isOpen={isEndModalOpen}
+        onConfirm={handleEndCollaboration}
+        onCancel={() => setIsEndModalOpen(false)}
+      />
     </>
   );
 }

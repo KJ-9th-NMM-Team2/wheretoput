@@ -275,7 +275,7 @@ export function SelectedModelEditModal() {
       >
         <div className="flex flex-col gap-2 overflow-auto p-4 select-none">
           {loadedModels.map((model) => (
-            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
+            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-300 active:bg-gradient-to-r active:from-green-500 active:to-green-600 active:text-white border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap cursor-pointer transition-all duration-200"
               key={model.id}
               onClick={() => {
                 selectModel(model.id);
@@ -300,30 +300,34 @@ export function SelectedModelEditModal() {
     >
       <div className="p-4 select-none">
         {/* 가구이름 표시 */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-          <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 border border-gray-200 rounded-xl p-4 shadow-sm">
+          <div className="font-bold mb-3 text-sm flex items-center gap-2 break-words text-gray-800">
             {selectedModel.name}
           </div>
 
           {/* 크기 조정 */}
           <div className="mb-4 font-bold ">
             <ControlSlider
-              label={`W${Math.ceil(
+              label={`W ${Math.ceil(
                 selectedModel.length[0] *
                 (Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
                   : selectedModel.scale)
+
               )} × H${Math.ceil(
+
                 selectedModel.length[1] *
                 (Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[1]
                   : selectedModel.scale)
+
               )} × D${Math.ceil(
                 selectedModel.length[2] *
                 (Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[2]
                   : selectedModel.scale)
               )}`}
+
               value={
                 Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
@@ -448,7 +452,8 @@ export function SelectedModelEditModal() {
             {/* 쌓기 버튼 */}
             <button
               onClick={handleStartStackingMode}
-              className="flex-1 cursor-pointer bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="tool-btn tool-btn-green-active flex-1"
+
             >
               쌓기
             </button>
@@ -488,9 +493,10 @@ export function SelectedModelEditModal() {
                 removeModel(selectedModel.id);
                 deselectModel();
               }}
-              className="flex-1 bg-blue-500 cursor-pointer hover:bg-red-600 text-white py-3 px-4 rounded-md text-md font-semibold transition-colors flex items-center justify-center gap-2"
+              className="tool-btn tool-btn-red-active flex-1"
+
             >
-              가구 삭제
+              삭제
             </button>
           </div>
         </div>

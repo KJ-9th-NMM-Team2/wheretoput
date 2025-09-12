@@ -101,7 +101,10 @@ export function CollaborationEndButton({ onEndCollaboration }) {
     <div className="fixed top-16 right-4 z-50">
       <button
         onClick={onEndCollaboration}
-        className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-lg font-medium hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all shadow-lg"
+        className="tool-btn tool-btn-red-active px-4 py-2.5 !text-base !rounded"
+        style={{ transform: 'none' }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
         title="협업 모드를 종료하고 개인 편집 모드로 돌아갑니다"
       >
         협업 종료

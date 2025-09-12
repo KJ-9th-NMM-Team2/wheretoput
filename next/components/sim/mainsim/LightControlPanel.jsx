@@ -113,6 +113,7 @@ function ControlSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="slider-small"
         style={{ flex: 1 }}
       />
       <span style={{
