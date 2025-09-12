@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import { WallDetector } from "@/app/wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import CreateRoomModal from "@/components/CreateRoomModal"
+import CreateRoomModal from "@/components/CreateRoomModal";
 
 import {
   Square,
@@ -14,6 +14,8 @@ import {
   Scissors,
   ChevronLeft,
   ChevronRight,
+  Brush,
+  RotateCcw,
 } from "lucide-react";
 
 const FloorPlanEditor = () => {
@@ -56,6 +58,10 @@ const FloorPlanEditor = () => {
   const [selectedScaleWall, setSelectedScaleWall] = useState(null);
   const [realLength, setRealLength] = useState("");
   const [hoveredScaleWall, setHoveredScaleWall] = useState(null); // 팝업에서 호버된 벽
+  const [hoveredEraserWall, setHoveredEraserWall] = useState(null); // 지우기 도구에서 호버된 벽
+  const [hoveredSelectWall, setHoveredSelectWall] = useState(null); // 선택 도구에서 호버된 벽
+  const [hoveredPartialEraserWall, setHoveredPartialEraserWall] =
+    useState(null); // 부분지우기 도구에서 호버된 벽
   const [imageTransform, setImageTransform] = useState(null); // 이미지 변환 정보 저장
   // 고정 격자 설정: 500mm x 500mm
   const GRID_SIZE_MM = 500; // 500mm x 500mm 고정
@@ -218,12 +224,12 @@ const FloorPlanEditor = () => {
             x: wall.start.x + (wall.end.x - wall.start.x) * tStart,
             y: wall.start.y + (wall.end.y - wall.start.y) * tStart,
           };
-          const snappedEnd = snapToGrid(newEnd.x, newEnd.y);
+          // 격자 스냅 제거 - 정확한 좌표 유지로 각도 보존
 
           resultWalls.push({
             id: Date.now() + Math.random(),
             start: wall.start,
-            end: snappedEnd,
+            end: newEnd,
           });
         }
 
@@ -233,11 +239,11 @@ const FloorPlanEditor = () => {
             x: wall.start.x + (wall.end.x - wall.start.x) * tEnd,
             y: wall.start.y + (wall.end.y - wall.start.y) * tEnd,
           };
-          const snappedStart = snapToGrid(newStart.x, newStart.y);
+          // 격자 스냅 제거 - 정확한 좌표 유지로 각도 보존
 
           resultWalls.push({
             id: Date.now() + Math.random() + 1,
-            start: snappedStart,
+            start: newStart,
             end: wall.end,
           });
         }
@@ -278,6 +284,28 @@ const FloorPlanEditor = () => {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  // 점을 선분 위에 투영시키는 함수 (부분 지우기에서 사용)
+  const projectPointOntoWall = (point, wall) => {
+    const A = point.x - wall.start.x;
+    const B = point.y - wall.start.y;
+    const C = wall.end.x - wall.start.x;
+    const D = wall.end.y - wall.start.y;
+
+    const dot = A * C + B * D;
+    const lenSq = C * C + D * D;
+
+    if (lenSq === 0) return { x: wall.start.x, y: wall.start.y };
+
+    // 매개변수를 0과 1 사이로 제한하여 선분 위에만 투영
+    let param = dot / lenSq;
+    param = Math.max(0, Math.min(1, param));
+
+    return {
+      x: wall.start.x + param * C,
+      y: wall.start.y + param * D,
+    };
+  };
+
   // 마우스 위치를 캔버스 좌표로 변환 (중앙 기준 좌표계, 뷰포트 변환 포함)
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
@@ -313,8 +341,8 @@ const FloorPlanEditor = () => {
     ctx.textRenderingOptimization = "optimizeQuality";
     ctx.imageSmoothingEnabled = true;
 
-    // 선 아래쪽으로 오프셋 (5px 아래)
-    ctx.fillText(text, 0, 5);
+    // 선 아래쪽으로 오프셋 (8px 아래)
+    ctx.fillText(text, 0, 8);
     ctx.restore();
   };
 
@@ -497,41 +525,18 @@ const FloorPlanEditor = () => {
 
     // 축척 설정용 벽 그리기 (임시)
     if (scaleWall && tool === "scale") {
-      ctx.strokeStyle = "#9900ff"; // 축척 설정용 벽은 보라색
-      ctx.lineWidth = 4 / viewScale;
-      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
+      ctx.strokeStyle = "rgba(0, 102, 255, 0.7)"; // 파란색 반투명
+      ctx.lineWidth = 10 / viewScale; // 드로잉 시와 같은 두께
+
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(scaleWall.start.x, scaleWall.start.y);
       ctx.lineTo(scaleWall.end.x, scaleWall.end.y);
       ctx.stroke();
-      ctx.setLineDash([]);
-
-      // 축척 설정용 벽의 길이 표시
-      const midX = (scaleWall.start.x + scaleWall.end.x) / 2;
-      const midY = (scaleWall.start.y + scaleWall.end.y) / 2;
-      const pixelDistance = Math.sqrt(
-        Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
-          Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
-      );
-      const angle = Math.atan2(
-        scaleWall.end.y - scaleWall.start.y,
-        scaleWall.end.x - scaleWall.start.x
-      );
-
-      ctx.save();
-      ctx.translate(midX, midY);
-      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-        ctx.rotate(angle + Math.PI);
-      } else {
-        ctx.rotate(angle);
-      }
-      ctx.fillStyle = "#9900ff";
-      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(`${Math.round(pixelDistance)}px`, 0, 3 / viewScale);
-      ctx.restore();
+      // 축척 설정용 벽의 px 표시 제거 (치수 텍스트 숨김)
     }
 
     // 완성된 벽들 그리기
@@ -541,107 +546,142 @@ const FloorPlanEditor = () => {
       const isPartialEraserSelected = partialEraserSelectedWall?.id === wall.id;
       const isScaleSelected = selectedScaleWall?.id === wall.id;
       const isScaleHovered = hoveredScaleWall?.id === wall.id;
+      const isEraserHovered = hoveredEraserWall?.id === wall.id;
+      const isSelectHovered = hoveredSelectWall?.id === wall.id;
+      const isPartialEraserHovered = hoveredPartialEraserWall?.id === wall.id;
 
       // 벽 그리기 (선택된 벽은 다른 색상)
-      if (isScaleSelected) {
+      if (isEraserHovered) {
+        ctx.strokeStyle = "#0066ff"; // 지우기 호버색
+        ctx.lineWidth = 10 / viewScale;
+      } else if (isPartialEraserHovered) {
+        ctx.strokeStyle = "#0066ff"; // 부분지우기 호버색
+        ctx.lineWidth = 10 / viewScale;
+      } else if (isSelectHovered) {
+        ctx.strokeStyle = "#0066ff"; // 선택 도구 호버색
+        ctx.lineWidth = 10 / viewScale;
+      } else if (isScaleSelected) {
         ctx.strokeStyle = "#0066ff"; // 축척 설정용 선택된 벽은 파란색
         ctx.lineWidth = 5 / viewScale;
       } else if (isScaleHovered) {
-        ctx.strokeStyle = "#00aa00"; // 호버된 벽은 초록색
+        ctx.strokeStyle = "#0066ff"; // 축척 호버된 벽도 파란색
         ctx.lineWidth = 4 / viewScale;
       } else if (isPartialEraserSelected) {
         ctx.strokeStyle = "#ff0000"; // 부분 지우기 선택된 벽은 빨간색
-        ctx.lineWidth = 3 / viewScale;
+        ctx.lineWidth = 8 / viewScale; // 기본 벽과 동일한 두께
       } else if (isSelected) {
-        ctx.strokeStyle = "#00ff00";
+        ctx.strokeStyle = "#0066ff"; // 선택된 벽도 파란색
         ctx.lineWidth = 4 / viewScale;
       } else {
-        ctx.strokeStyle = "#2d2d2d";
-        ctx.lineWidth = 4 / viewScale;
+        ctx.strokeStyle = "rgba(43, 43, 43, 0.8)"; // 반투명 효과
+        ctx.lineWidth = 8 / viewScale; // 더 두꺼운 선
       }
+
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(wall.start.x, wall.start.y);
       ctx.lineTo(wall.end.x, wall.end.y);
       ctx.stroke();
 
-      // 길이 표시 (선 아래에 작게)
-      const midX = (wall.start.x + wall.end.x) / 2;
-      const midY = (wall.start.y + wall.end.y) / 2;
-      const distance = calculateDistance(wall.start, wall.end);
-      const angle = Math.atan2(
-        wall.end.y - wall.start.y,
-        wall.end.x - wall.start.x
-      );
+      // 길이 표시 (축척 설정 모드가 아닐 때만)
+      if (tool !== "scale") {
+        const midX = (wall.start.x + wall.end.x) / 2;
+        const midY = (wall.start.y + wall.end.y) / 2;
+        const distance = calculateDistance(wall.start, wall.end);
+        const angle = Math.atan2(
+          wall.end.y - wall.start.y,
+          wall.end.x - wall.start.x
+        );
 
-      // 텍스트 크기도 줌에 따라 조정
-      ctx.save();
-      ctx.translate(midX, midY);
-      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-        ctx.rotate(angle + Math.PI);
-      } else {
-        ctx.rotate(angle);
+        // 텍스트 크기도 줌에 따라 조정
+        ctx.save();
+        ctx.translate(midX, midY);
+        if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+          ctx.rotate(angle + Math.PI);
+        } else {
+          ctx.rotate(angle);
+        }
+        ctx.fillStyle = "#333333";
+        ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(`${distance.value}${distance.unit}`, 0, 8 / viewScale);
+        ctx.restore();
       }
-      ctx.fillStyle = "#333333";
-      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
-      ctx.restore();
     });
 
     // 부분 지우기 영역 표시
     if (isSelectingEraseArea && eraseAreaStart && eraseAreaEnd) {
-      ctx.strokeStyle = "#0004ffff";
-      ctx.lineWidth = 4 / viewScale;
-      ctx.setLineDash([5 / viewScale, 5 / viewScale]);
-      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = "rgba(0, 68, 255, 0.7)"; // 파란색 반투명
+      ctx.lineWidth = 10 / viewScale; // 드로잉 시와 같은 두께
+
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(eraseAreaStart.x, eraseAreaStart.y);
       ctx.lineTo(eraseAreaEnd.x, eraseAreaEnd.y);
       ctx.stroke();
-
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 1.0;
     }
 
     // 현재 그리고 있는 벽 그리기
     if (isDrawing && startPoint && currentPoint) {
-      ctx.strokeStyle = "#2d2d2d";
-      ctx.lineWidth = 5 / viewScale;
-      ctx.setLineDash([3 / viewScale, 3 / viewScale]);
+      if (tool === "scale") {
+        ctx.strokeStyle = "rgba(0, 68, 255, 0.7)"; // 축척 도구일 때 파란색 반투명
+      } else {
+        ctx.strokeStyle = "rgba(43, 43, 43, 0.7)"; // 일반 벽 그리기일 때
+      }
+      ctx.lineWidth = 10 / viewScale; // 그리는 중일 때 더 두꺼운 선
+
+      if (tool === "scale") {
+        // 축척 도구일 때는 실선
+      } else {
+        // 일반 벽 그리기일 때는 점선
+        ctx.setLineDash([3 / viewScale, 3 / viewScale]);
+      }
+
+      // 물감 느낌을 위한 부드러운 선 설정
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
       ctx.lineTo(currentPoint.x, currentPoint.y);
       ctx.stroke();
 
-      ctx.setLineDash([]);
-
-      // 현재 그리고 있는 벽의 길이 표시
-      const midX = (startPoint.x + currentPoint.x) / 2;
-      const midY = (startPoint.y + currentPoint.y) / 2;
-      const distance = calculateDistance(startPoint, currentPoint);
-      const angle = Math.atan2(
-        currentPoint.y - startPoint.y,
-        currentPoint.x - startPoint.x
-      );
-
-      // 임시 벽의 치수 표시
-      ctx.save();
-      ctx.translate(midX, midY);
-      if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
-        ctx.rotate(angle + Math.PI);
-      } else {
-        ctx.rotate(angle);
+      if (tool !== "scale") {
+        ctx.setLineDash([]);
       }
-      ctx.fillStyle = "#ff9933";
-      ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(`${distance.value}${distance.unit}`, 0, 3 / viewScale);
-      ctx.restore();
+
+      // 현재 그리고 있는 벽의 길이 표시 (축척 설정 모드가 아닐 때만)
+      if (tool !== "scale") {
+        const midX = (startPoint.x + currentPoint.x) / 2;
+        const midY = (startPoint.y + currentPoint.y) / 2;
+        const distance = calculateDistance(startPoint, currentPoint);
+        const angle = Math.atan2(
+          currentPoint.y - startPoint.y,
+          currentPoint.x - startPoint.x
+        );
+
+        // 임시 벽의 치수 표시
+        ctx.save();
+        ctx.translate(midX, midY);
+        if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+          ctx.rotate(angle + Math.PI);
+        } else {
+          ctx.rotate(angle);
+        }
+        ctx.fillStyle = "#0066ff";
+        ctx.font = `bold ${12 / viewScale}px 'Segoe UI', Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(`${distance.value}${distance.unit}`, 0, 8 / viewScale);
+        ctx.restore();
+      }
     }
 
     // 뷰포트 변환 복원
@@ -792,9 +832,14 @@ const FloorPlanEditor = () => {
         }
       } else {
         // 2단계: 지울 영역 선택 시작
+        // 시작점도 선택된 선분 위로 제한
+        const constrainedStart = projectPointOntoWall(
+          coords,
+          partialEraserSelectedWall
+        );
         setIsSelectingEraseArea(true);
-        setEraseAreaStart(coords);
-        setEraseAreaEnd(coords);
+        setEraseAreaStart(constrainedStart);
+        setEraseAreaEnd(constrainedStart);
       }
     }
   };
@@ -807,9 +852,71 @@ const FloorPlanEditor = () => {
       const coords = getCanvasCoordinates(e);
       const orthogonal = snapToOrthogonal(startPoint, coords);
       setCurrentPoint(orthogonal);
-    } else if (isSelectingEraseArea && tool === "partial_eraser") {
+    } else if (
+      isSelectingEraseArea &&
+      tool === "partial_eraser" &&
+      partialEraserSelectedWall
+    ) {
       const coords = getCanvasCoordinates(e);
-      setEraseAreaEnd(coords);
+      // 마우스 좌표를 선택된 선분 위로 제한
+      const constrainedCoords = projectPointOntoWall(
+        coords,
+        partialEraserSelectedWall
+      );
+      setEraseAreaEnd(constrainedCoords);
+    } else if (tool === "eraser") {
+      // 지우기 도구일 때 호버된 벽 감지
+      const coords = getCanvasCoordinates(e);
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_HOVER_DISTANCE = 20; // 20픽셀 이내의 벽만 호버 효과
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_HOVER_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      setHoveredEraserWall(closestWall);
+    } else if (tool === "select") {
+      // 선택 도구일 때 호버된 벽 감지
+      const coords = getCanvasCoordinates(e);
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_HOVER_DISTANCE = 30; // 30픽셀 이내의 벽만 호버 효과
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_HOVER_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      setHoveredSelectWall(closestWall);
+    } else if (tool === "partial_eraser" && !partialEraserSelectedWall) {
+      // 부분지우기 도구일 때 (1단계: 벽 선택 전) 호버된 벽 감지
+      const coords = getCanvasCoordinates(e);
+      let closestWall = null;
+      let closestDistance = Infinity;
+      const MAX_HOVER_DISTANCE = 30; // 30픽셀 이내의 벽만 호버 효과
+
+      walls.forEach((wall) => {
+        const distance = getDistanceToWall(coords, wall);
+        if (distance < closestDistance && distance < MAX_HOVER_DISTANCE) {
+          closestDistance = distance;
+          closestWall = wall;
+        }
+      });
+
+      setHoveredPartialEraserWall(closestWall);
+    } else {
+      // 다른 도구일 때는 호버 상태 초기화
+      setHoveredEraserWall(null);
+      setHoveredSelectWall(null);
+      setHoveredPartialEraserWall(null);
     }
   };
 
@@ -880,6 +987,9 @@ const FloorPlanEditor = () => {
     eraseAreaEnd,
     viewScale,
     viewOffset,
+    hoveredEraserWall,
+    hoveredSelectWall,
+    hoveredPartialEraserWall,
     // 축척 설정 관련 상태들
     isScaleSet,
     scaleWall,
@@ -989,9 +1099,7 @@ const FloorPlanEditor = () => {
         containerHeight: canvasHeight,
       });
 
-      alert(
-        `벽 검출이 완료되었습니다! (${detectedWalls.length}개 검출) '축척 설정' 버튼을 클릭해서 축척을 설정하세요.`
-      );
+      alert(`벽 검출이 완료되었습니다!`);
     } catch (error) {
       console.error("Wall detection failed:", error);
       alert("벽 검출에 실패했습니다.");
@@ -1106,13 +1214,11 @@ const FloorPlanEditor = () => {
       }
 
       // 이전 페이지가 create임을 저장
-      sessionStorage.setItem('previousPage', 'create');
+      sessionStorage.setItem("previousPage", "create");
 
       // 모달 표시를 위해 상태 설정
       setCreatedRoomId(roomId);
       setShowCreateModal(true);
-
-      
     } catch (error) {
       console.error("Room creation failed:", error);
       alert("방 생성에 실패했습니다. 다시 시도해주세요.");
@@ -1163,11 +1269,11 @@ const FloorPlanEditor = () => {
                   tool === "wall" ? "tool-btn-active" : "tool-btn-inactive"
                 }`}
               >
-                <Square size={14} />
+                <Brush size={18} />
                 <span className="hidden sm:inline">드로잉</span>
                 <span className="sm:hidden">벽</span>
               </button>
-              
+
               <button
                 onClick={() => setTool(tool === "select" ? "none" : "select")}
                 className={`tool-btn ${
@@ -1184,7 +1290,7 @@ const FloorPlanEditor = () => {
               <button
                 onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
                 className={`tool-btn ${
-                  tool === "eraser" ? "tool-btn-red-active" : "tool-btn-inactive"
+                  tool === "eraser" ? "tool-btn-active" : "tool-btn-inactive"
                 }`}
               >
                 <Eraser size={14} />
@@ -1193,7 +1299,8 @@ const FloorPlanEditor = () => {
 
               <button
                 onClick={() => {
-                  const newTool = tool === "partial_eraser" ? "none" : "partial_eraser";
+                  const newTool =
+                    tool === "partial_eraser" ? "none" : "partial_eraser";
                   setTool(newTool);
                   setPartialEraserSelectedWall(null);
                   setIsSelectingEraseArea(false);
@@ -1201,7 +1308,9 @@ const FloorPlanEditor = () => {
                   setEraseAreaEnd(null);
                 }}
                 className={`tool-btn ${
-                  tool === "partial_eraser" ? "tool-btn-red-active" : "tool-btn-inactive"
+                  tool === "partial_eraser"
+                    ? "tool-btn-active"
+                    : "tool-btn-inactive"
                 }`}
               >
                 <Scissors size={14} />
@@ -1241,7 +1350,7 @@ const FloorPlanEditor = () => {
                   !uploadedImage
                     ? "tool-btn-inactive"
                     : tool === "scale"
-                    ? "tool-btn-purple-active"
+                    ? "tool-btn-active"
                     : "tool-btn-inactive"
                 }`}
               >
@@ -1309,7 +1418,18 @@ const FloorPlanEditor = () => {
                 style={{
                   width: "1600",
                   height: "1200",
-                  cursor: tool === "wall" ? "crosshair" : "default",
+                  cursor:
+                    tool === "wall"
+                      ? "crosshair"
+                      : tool === "eraser" && hoveredEraserWall
+                      ? "pointer"
+                      : tool === "select" && hoveredSelectWall
+                      ? "pointer"
+                      : tool === "partial_eraser" && hoveredPartialEraserWall
+                      ? "pointer"
+                      : tool === "none" || !tool
+                      ? "grab"
+                      : "default",
                 }}
               />
             </div>
@@ -1325,15 +1445,9 @@ const FloorPlanEditor = () => {
             style={{ borderRight: "none" }}
           >
             {isSidebarCollapsed ? (
-              <ChevronLeft
-                size={16}
-                className="text-black dark:text-white"
-              />
+              <ChevronLeft size={16} className="text-black dark:text-white" />
             ) : (
-              <ChevronRight
-                size={16}
-                className="text-black dark:text-white"
-              />
+              <ChevronRight size={16} className="text-black dark:text-white" />
             )}
           </button>
 
@@ -1354,43 +1468,34 @@ const FloorPlanEditor = () => {
 
               {/* 축척 설정 도구 */}
               {tool === "scale" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+                  <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-lg">
                     축척 설정 도구
                   </h4>
                   {!scaleWall ? (
-                    <p className="text-sm text-gray-100 dark:text-gray-100 mb-3">
-                      기준이 될 벽을 그려주세요. (보라색 점선으로 표시됩니다)
+                    <p className="text-sm text-gray-700 dark:text-gray-100 mb-3">
+                      기준이 될 벽을 그려주세요.
                     </p>
                   ) : (
                     <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                        그린 벽:{" "}
-                        {Math.round(
-                          Math.sqrt(
-                            Math.pow(scaleWall.end.x - scaleWall.start.x, 2) +
-                              Math.pow(scaleWall.end.y - scaleWall.start.y, 2)
-                          )
-                        )}
-                        픽셀
-                      </p>
+        
                       <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-1">
-                          실제 길이 (mm):
+                        <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-3">
+                          실제 길이 (mm) :
                         </label>
                         <input
                           type="number"
                           value={scaleRealLength}
                           onChange={(e) => setScaleRealLength(e.target.value)}
                           placeholder="예: 3000"
-                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-amber-400 dark:focus:ring-amber-500 transition-all duration-200"
+                          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                         />
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-3">
                         <button
                           onClick={applyScale}
                           disabled={!scaleRealLength}
-                          className="flex-1 px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 transition-colors duration-200 disabled:opacity-50"
+                          className={`flex-1 px-4 py-2 font-semibold rounded-lg transition-all cursor-pointer ${!scaleRealLength ? "tool-btn-inactive" : "tool-btn-active"} disabled:cursor-not-allowed`}
                         >
                           축척 적용
                         </button>
@@ -1400,7 +1505,7 @@ const FloorPlanEditor = () => {
                             setScaleRealLength("");
                             setTool("wall");
                           }}
-                          className="flex-1 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors duration-200"
+                          className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                         >
                           취소
                         </button>
@@ -1410,32 +1515,11 @@ const FloorPlanEditor = () => {
                 </div>
               )}
 
-              {tool === "wall" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    드로잉 모드
-                  </h4>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                    클릭하고 드래그하여 벽을 그립니다. 격자에 자동으로
-                    맞춰집니다.
-                  </p>
-                  <p className="text-xs text-gray-700 dark:text-gray-300">
-                    각 벽에 자동으로 길이가 표시됩니다.
-                  </p>
-                </div>
-              )}
-
               {tool === "select" && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    선택 모드
-                  </h4>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                    벽을 클릭하여 선택하고 편집할 수 있습니다.
-                  </p>
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
                   {selectedWall && (
-                    <div className="bg-green-50 p-3 rounded border border-green-200">
-                      <h5 className="font-medium text-green-700 mb-2">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <h5 className="font-semibold text-blue-700 dark:text-blue-300 mb-3">
                         선택된 벽
                       </h5>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
@@ -1451,17 +1535,17 @@ const FloorPlanEditor = () => {
 
                       {isScaleSet && (
                         <div className="mb-3">
-                          <label className="block text-xs font-medium text-green-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                             길이 조정 (mm):
                           </label>
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             <input
                               type="number"
                               value={editingWallLength}
                               onChange={(e) =>
                                 setEditingWallLength(e.target.value)
                               }
-                              className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                               placeholder="길이 입력"
                             />
                             <button
@@ -1471,7 +1555,7 @@ const FloorPlanEditor = () => {
                                   adjustWallLength(selectedWall.id, newLength);
                                 }
                               }}
-                              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                              className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                             >
                               적용
                             </button>
@@ -1489,17 +1573,17 @@ const FloorPlanEditor = () => {
 
                       {isScaleSet && (
                         <div className="mb-3">
-                          <label className="block text-xs font-medium text-green-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
                             길이 조정 (mm):
                           </label>
-                          <div className="flex gap-1">
+                          <div className="flex gap-2">
                             <input
                               type="number"
                               value={editingWallLength}
                               onChange={(e) =>
                                 setEditingWallLength(e.target.value)
                               }
-                              className="flex-1 px-2 py-1 text-xs border border-green-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                              className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                               placeholder="길이 입력"
                             />
                             <button
@@ -1509,19 +1593,11 @@ const FloorPlanEditor = () => {
                                   adjustWallLength(selectedWall.id, newLength);
                                 }
                               }}
-                              className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+                              className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
                             >
                               적용
                             </button>
                           </div>
-                        </div>
-                      )}
-
-                      {!isScaleSet && (
-                        <div className="mb-3">
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            정확한 길이 조정을 위해 '축척 설정'을 먼저 하세요.
-                          </p>
                         </div>
                       )}
 
@@ -1533,7 +1609,7 @@ const FloorPlanEditor = () => {
                           setSelectedWall(null);
                           setEditingWallLength("");
                         }}
-                        className="w-full px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                        className="w-full px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
                       >
                         삭제
                       </button>
@@ -1542,56 +1618,15 @@ const FloorPlanEditor = () => {
                 </div>
               )}
 
-              {tool === "eraser" && (
-                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight ">
-                    지우기 모드
-                  </h4>
-                  <p className="text-sm text-gray-300">
-                    클릭하여 벽을 삭제할 수 있습니다.
-                  </p>
-                </div>
-              )}
-
-              {tool === "partial_eraser" && (
-                <div className="g-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    부분 지우기 모드
-                  </h4>
-                  {!partialEraserSelectedWall ? (
-                    <p className="text-sm text-gray-300">
-                      1단계: 자를 벽을 클릭하여 선택하세요. (빨간색으로
-                      표시됩니다)
-                    </p>
-                  ) : (
-                    <div>
-                      <p className="text-sm text-gray-700 dark:text-gray-100 mb-2">
-                        2단계: 지울 영역을 드래그하여 선택하세요.
-                      </p>
-                      <button
-                        onClick={() => {
-                          setPartialEraserSelectedWall(null);
-                          setIsSelectingEraseArea(false);
-                          setEraseAreaStart(null);
-                          setEraseAreaEnd(null);
-                        }}
-                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
-                      >
-                        선택 취소
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
               {/* 뷰포트 컨트롤 */}
-              <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-lg">
                   배율 조절
                 </h4>
 
                 <div className="mb-3">
                   <label className=" text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    현재 배율: {Math.round(viewScale * 100)}%
+                    현재 배율 : {Math.round(viewScale * 100)} %
                   </label>
                   <input
                     type="range"
@@ -1612,25 +1647,28 @@ const FloorPlanEditor = () => {
                     setViewScale(1);
                     setViewOffset({ x: 0, y: 0 });
                   }}
-                  className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                  className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 flex items-center justify-center gap-2"
                 >
-                  초기 위치로
+                  Reset <RotateCcw size={18} />
+                  
                 </button>
 
-                <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4">
-                  드래그: 화면 이동 | 휠: 줌 | 도구 OFF 시 가능
+                <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4 flex gap-x-3">
+                  <span>드래그 : 화면 이동 </span>
+                  <span> | </span>
+                  <span>휠 : 줌 In / Out</span>
                 </p>
               </div>
 
               {/* 배경 이미지 투명도 조정 */}
               {uploadedImage && (
-                <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg border border-gray-400 dark:border-gray-600 dark:bg-gray-700 shadow-sm mb-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+                  <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4 text-lg">
                     배경 이미지 설정
                   </h4>
                   <div className="mb-2">
                     <label className="text-gray-800 dark:text-gray-100 tracking-tight mb-1">
-                      투명도: {Math.round(backgroundOpacity * 100)}%
+                      투명도 : {Math.round(backgroundOpacity * 100)} %
                     </label>
                     <input
                       type="range"
@@ -1650,9 +1688,9 @@ const FloorPlanEditor = () => {
                       setCachedBackgroundImage(null);
                       alert("배경 이미지가 제거되었습니다.");
                     }}
-                    className="w-full px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors"
+                    className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                   >
-                    배경 이미지 제거
+                    배경 제거
                   </button>
                 </div>
               )}
@@ -1662,7 +1700,7 @@ const FloorPlanEditor = () => {
       </div>
 
       {/* 방 생성 완료 모달 */}
-      <CreateRoomModal 
+      <CreateRoomModal
         isOpen={showCreateModal}
         onClose={handleCloseModal}
         onConfirm={handleConfirmGoToSimulator}
