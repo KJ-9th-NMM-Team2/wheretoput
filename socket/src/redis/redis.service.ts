@@ -45,6 +45,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       version: state.version.toString(),
     });
 
+    // 마지막 수정으로부터 24시간 후 삭제
     await this.client.expire(key, 24 * 60 * 60);
     console.log(`🔴 Room state updated in Redis for room ${roomId}`);
   }

@@ -453,9 +453,34 @@ export class RoomService {
         },
       });
 
-      // 참가자로 속한 방 리스트를 반환
+      // 각 채팅방에 대해 시뮬레이터 방 정보도 함께 조회
+      const roomsWithSimInfo = await Promise.all(
+        rows.map(async (p: { chat_rooms: any }) => {
+          const chatRoom = p.chat_rooms;
+          
+          // 해당 채팅방이 협업 채팅방인지 확인하고 시뮬레이터 방 제목 조회
+          try {
+            const simRoom = await this.prisma.rooms.findFirst({
+              where: { collab_chat_room_id: chatRoom.chat_room_id },
+              select: { title: true },
+            });
+            
+            return {
+              ...chatRoom,
+              sim_room_title: simRoom?.title || null,
+            };
+          } catch (error) {
+            console.error('시뮬레이터 방 정보 조회 실패:', error);
+            return {
+              ...chatRoom,
+              sim_room_title: null,
+            };
+          }
+        })
+      );
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return rows.map((p: { chat_rooms: any }) => p.chat_rooms);
+      return roomsWithSimInfo;
     } catch (error: any) {
       throw new Error(`Failed to get user rooms: ${error.message}`);
     }

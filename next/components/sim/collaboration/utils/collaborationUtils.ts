@@ -27,25 +27,26 @@ export interface ChatRoomSetupParams {
 }
 
 /**
- * 협업 모드 접근 권한만 체크하는 함수
+ * 협업 모드 접근 권한만 체크하는 함수 (최적화됨)
  */
 export async function checkCollaborationAccess({
   currentRoomId,
   isOwner,
 }: CollaborationAccessParams): Promise<CollaborationAccessResult> {
   try {
+    // 협업 상태 확인 (방장/비방장 공통)
+    const collabResult = await getColab(currentRoomId);
+
+    if (!collabResult.success) {
+      return {
+        success: false,
+        accessDenied: true,
+        error: "협업 상태 확인 실패",
+      };
+    }
+
     if (isOwner) {
       // 방장인 경우 - 협업 모드가 꺼져있으면 켜기
-      const collabResult = await getColab(currentRoomId);
-
-      if (!collabResult.success) {
-        return {
-          success: false,
-          accessDenied: true,
-          error: "협업 상태 확인 실패",
-        };
-      }
-
       if (!collabResult.data.collab_on) {
         // 협업 모드가 꺼져있으면 자동으로 켜기
         const toggleResult = await toggleColab(currentRoomId, true);
@@ -64,16 +65,6 @@ export async function checkCollaborationAccess({
       };
     } else {
       // 방장이 아닌 경우 - 협업 모드 상태만 확인
-      const collabResult = await getColab(currentRoomId);
-
-      if (!collabResult.success) {
-        return {
-          success: false,
-          accessDenied: true,
-          error: "협업 상태 확인 실패",
-        };
-      }
-
       if (!collabResult.data.collab_on) {
         // 협업 모드 꺼진 경우 접근 거부
         return {
