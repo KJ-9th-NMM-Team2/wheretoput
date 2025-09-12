@@ -122,11 +122,11 @@ export async function setupChatRoom({
           };
         } else {
           // 채팅방이 없는 경우 새로 생성
+          console.log("채팅방 생성 이름:", currentRoomInfo);
           const response = await api.post(
             `${process.env.NEXT_PUBLIC_API_URL}/rooms/group`,
             {
               participantIds: [],
-              roomName: currentRoomInfo?.title || "협업 채팅방",
               simRoomId: currentRoomId,
             }
           );

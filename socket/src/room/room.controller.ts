@@ -40,7 +40,6 @@ export class RoomController {
     @Body()
     body: {
       participantIds: string[];
-      roomName?: string;
       simRoomId?: string; // 협업용 시뮬레이터 room ID
     },
     @Request() req: any,
@@ -57,7 +56,6 @@ export class RoomController {
       const room = await this.roomService.createGroupRoom({
         currentUserId: req.user.userId,
         participantIds: body.participantIds,
-        roomName: body.roomName,
         simRoomId: body.simRoomId,
       });
 

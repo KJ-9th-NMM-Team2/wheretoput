@@ -15,7 +15,6 @@ export class RoomService {
   async createGroupRoom(params: {
     currentUserId: string;
     participantIds: string[];
-    roomName?: string;
     simRoomId?: string; // 협업용 시뮬레이터 room ID (선택적)
   }) {
     try {
@@ -36,8 +35,23 @@ export class RoomService {
         console.error('참가자 정보 조회 실패:', error);
       }
 
-      // 방 이름 생성 (사용자가 지정하지 않은 경우)
-      const roomName = params.roomName || null;
+      // 방 이름 생성 - simRoomId가 있으면 해당 시뮬레이터 방의 title을 사용
+      let roomName: string | null = null;
+
+      if (params.simRoomId) {
+        try {
+          const simRoom = await this.prisma.rooms.findUnique({
+            where: { room_id: params.simRoomId },
+            select: { title: true },
+          });
+
+          if (simRoom?.title) {
+            roomName = simRoom.title;
+          }
+        } catch (error) {
+          console.error('시뮬레이터 방 정보 조회 실패:', error);
+        }
+      }
 
       // 트랜잭션으로 채팅방 및 참가자 생성
       const result = await this.prisma.$transaction(async (prisma) => {
