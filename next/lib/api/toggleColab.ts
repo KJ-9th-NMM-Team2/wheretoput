@@ -20,6 +20,7 @@ export async function getColab(room_id: string): Promise<ToggleResult> {
       const data = await response.json();
       return { success: true, data };
     }
+
     const error = await response.text();
     return { success: false, error };
   } catch (error) {

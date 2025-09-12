@@ -11,6 +11,8 @@ export function SelectedModelEditModal() {
   const {
     loadedModels,
     selectedModelId,
+    selectModel,
+    hoveringModel,
     removeModel,
     updateModelPosition,
     updateModelRotation,
@@ -238,7 +240,7 @@ export function SelectedModelEditModal() {
         defaultCollapsed={false}
       >
         <div className="p-4 select-none">
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
             <div className="font-bold mb-3 text-sm">
               위에 올릴 가구를 선택하세요
             </div>
@@ -264,21 +266,38 @@ export function SelectedModelEditModal() {
     );
   }
 
-  // 선택된 모델이 없으면 모달을 표시하지 않음
+  // 선택된 모델이 없을 시 가구 목록 표시
   if (!selectedModel) {
-    return null;
+    return (
+      <CollapsibleSidebar
+        title={`가구 목록 (${loadedModels.length}개)`}
+        defaultCollapsed={true}
+      >
+        <div className="flex flex-col gap-2 overflow-auto p-4 select-none">
+          {loadedModels.map((model) => (
+            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-200 border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap"
+              key={model.id}
+              onClick={() => (selectModel(model.id), hoveringModel(null))}
+              onMouseEnter={() => hoveringModel(model.id)}
+              onMouseLeave={() => hoveringModel(null)}
+            >
+              {model.name}
+            </button>
+          ))}
+        </div>
+      </CollapsibleSidebar>
+    );
   }
 
   return (
     <CollapsibleSidebar
-
       title="가구 편집"
       onClose={deselectModel}
       defaultCollapsed={false}
     >
-      <div className="px-4 mt-6 select-none">
+      <div className="p-4 select-none">
         {/* 가구이름 표시 */}
-        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <div className="font-bold mb-3 text-sm flex items-center gap-2  break-words">
             {selectedModel.name}
           </div>

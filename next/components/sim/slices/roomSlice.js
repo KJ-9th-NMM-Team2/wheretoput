@@ -257,19 +257,16 @@ export const roomSlice = (set, get) => ({
 
         if (floorPlanData.walls && floorPlanData.pixelToMmRatio) {
           try {
-            const wallsResponse = await fetch(
-              `/api/room-walls/${newRoomId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  walls: floorPlanData.walls,
-                  pixelToMmRatio: floorPlanData.pixelToMmRatio,
-                }),
-              }
-            );
+            const wallsResponse = await fetch(`/api/room-walls/${newRoomId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                walls: floorPlanData.walls,
+                pixelToMmRatio: floorPlanData.pixelToMmRatio,
+              }),
+            });
 
             if (wallsResponse.ok) {
               const wallsResult = await wallsResponse.json();
@@ -277,10 +274,7 @@ export const roomSlice = (set, get) => ({
                 `벽 데이터 저장 완료: ${wallsResult.saved_count}개 벽`
               );
             } else {
-              console.error(
-                "벽 데이터 저장 실패:",
-                wallsResponse.statusText
-              );
+              console.error("벽 데이터 저장 실패:", wallsResponse.statusText);
             }
           } catch (wallError) {
             console.error("벽 데이터 저장 중 오류:", wallError);

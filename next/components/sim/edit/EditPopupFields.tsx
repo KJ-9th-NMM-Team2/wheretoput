@@ -19,8 +19,8 @@ export const EditPopupFields = ({
         <div className="space-y-4">
             {/* 방 이름 */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    방 이름
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Title
                 </label>
                 <input
                     type="text"
@@ -35,8 +35,8 @@ export const EditPopupFields = ({
             </div>
             {/* 방 설명 */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    방 설명
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                    Description
                 </label>
                 <textarea
                     value={description}

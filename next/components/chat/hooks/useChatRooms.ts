@@ -30,7 +30,7 @@ export const useChatRooms = (
    * 역할 분리:
    * - WebSocket: 실시간 메시지 송수신 (채팅방 안에서)
    * - SSE: 채팅방 목록 업데이트 (백그라운드 알림)
-   * 
+   *
    * 충돌 방지:
    * - SSE는 타임스탬프 기반으로 중복 업데이트 방지
    * - 새 메시지 알림은 백그라운드에서만 처리
@@ -41,19 +41,25 @@ export const useChatRooms = (
     (roomId: string, updates: Partial<ChatListItem>) => {
       // 타임스탬프 기반 중복 방지 (WebSocket 업데이트와 충돌 방지)
       setBaseChats((prev) => {
-        const existingRoom = prev.find(c => c.chat_room_id === roomId);
-        
+        const existingRoom = prev.find((c) => c.chat_room_id === roomId);
+
         // 기존 메시지보다 새로운 메시지인 경우에만 업데이트
-        if (existingRoom && updates.lastMessageAt && existingRoom.lastMessageAt) {
+        if (
+          existingRoom &&
+          updates.lastMessageAt &&
+          existingRoom.lastMessageAt
+        ) {
           const newMessageTime = new Date(updates.lastMessageAt).getTime();
-          const existingMessageTime = new Date(existingRoom.lastMessageAt).getTime();
-          
+          const existingMessageTime = new Date(
+            existingRoom.lastMessageAt
+          ).getTime();
+
           // 기존 메시지가 더 최신이면 업데이트하지 않음 (WebSocket이 이미 처리함)
           if (existingMessageTime >= newMessageTime) {
             return prev;
           }
         }
-        
+
         const updated = prev.map((c) =>
           c.chat_room_id === roomId ? { ...c, ...updates } : c
         );
@@ -99,7 +105,6 @@ export const useChatRooms = (
     onReadUpdate: handleSSEReadUpdate,
   });
 
-
   // 방 목록 로드 - 요청 제한 추가
   useEffect(() => {
     if (!open || !token) {
@@ -108,17 +113,17 @@ export const useChatRooms = (
 
     let isLoading = false;
     let lastLoadTime = 0;
-    
+
     const loadRooms = async () => {
       // 중복 요청 방지
       if (isLoading) return;
-      
+
       // 최소 간격 제한 (3초)
       const now = Date.now();
       if (now - lastLoadTime < 3000) {
         return;
       }
-      
+
       isLoading = true;
       lastLoadTime = now;
 
@@ -148,12 +153,17 @@ export const useChatRooms = (
 
           // 채팅방 이름 우선순위 적용:
           // 1순위: 사용자가 설정한 커스텀 이름 (custom_room_name)
-          // 2순위: 나를 제외한 참가자들의 이름
-          // 3순위: 기본 채팅방 이름 (r.name)
+          // 2순위: 기본 채팅방 이름 (r.name)
+          // 3순위: 나를 제외한 참가자들의 이름
+
           let roomName = r.custom_room_name;
-          if (!roomName) {
+          if (!roomName && r.name) {
+            roomName = r.name;
+          } else {
             const otherParticipants = r.chat_participants
-              .filter((participant: any) => participant.user_id !== currentUserId)
+              .filter(
+                (participant: any) => participant.user_id !== currentUserId
+              )
               .map((participant: any) => participant.user?.name || "이름 없음");
 
             if (otherParticipants.length > 0) {
@@ -183,7 +193,6 @@ export const useChatRooms = (
             result.last_read_at = result.lastMessageAt;
           }
 
-
           return result;
         });
 
@@ -207,6 +216,65 @@ export const useChatRooms = (
   }, [open, token, currentUserId]);
 
 
+  // 1:1 채팅 시작
+  const onStartDirect = useCallback(
+    async (otherUserId: string, otherUserName?: string) => {
+      if (!token) {
+        console.error("토큰이 없습니다");
+        return null;
+      }
+
+      const { data } = await api.post(
+        `${NEXT_API_URL}/api/backend/rooms/direct`,
+        {
+          currentUserId: currentUserId || session?.user?.id,
+          otherUserId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log("🔍 API Response:", data);
+      console.log("🔍 otherUserName:", otherUserName);
+      console.log("🔍 data.name:", data?.name);
+
+      const roomId =
+        data?.chat_room_id ?? data?.roomId ?? data?.id ?? String(data?.room_id);
+      if (!roomId) return null;
+
+      setBaseChats((prev) => {
+        const existingIndex = prev.findIndex((c) => c.chat_room_id === roomId);
+        if (existingIndex !== -1) {
+          const next = [...prev];
+          // 기존 채팅방의 이름을 API 응답으로 업데이트 (null이면 otherUserName 사용)
+          next[existingIndex] = {
+            ...next[existingIndex],
+            name: data?.name ?? otherUserName ?? next[existingIndex].name,
+          };
+          setChats(recomputeChats(next, "", "전체", currentUserId));
+          return next;
+        }
+        const next = [
+          {
+            chat_room_id: roomId,
+            name: data?.name ?? otherUserName ?? "새 대화", // 채팅방 이름 우선, 없으면 상대방 이름
+            is_private: true,
+            lastMessage: "",
+            lastMessageAt: undefined, // 빈 채팅방은 마지막 메시지 시간이 없음
+            last_read_at: new Date().toISOString(), // 생성과 동시에 읽음 처리
+            searchIndex: "",
+          },
+          ...prev,
+        ];
+        setChats(recomputeChats(next, "", "전체", currentUserId));
+        return next;
+      });
+
+      return roomId;
+    },
+    [token, currentUserId, session?.user?.id]
+  );
 
   // 채팅방 업데이트 (메시지 수신 시 사용)
   const updateChatRoom = useCallback(

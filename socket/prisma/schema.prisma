@@ -134,6 +134,7 @@ model chat_rooms {
   chat_messages     chat_messages[]
   chat_participants chat_participants[]
   User              User                @relation(fields: [creator_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  rooms             rooms[]
 
   @@schema("chat")
 }
@@ -150,21 +151,22 @@ model categories {
 }
 
 model furnitures {
-  furniture_id String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  name         String         @db.VarChar(200)
-  description  String?
-  length_x     Decimal        @db.Decimal(10, 2)
-  length_y     Decimal        @db.Decimal(10, 2)
-  length_z     Decimal        @db.Decimal(10, 2)
-  image_url    String?
-  model_url    String?
-  price        Decimal?       @db.Decimal(12, 2)
-  brand        String?        @db.VarChar(100)
-  is_active    Boolean?       @default(false)
-  created_at   DateTime?      @default(now()) @db.Timestamp(6)
-  updated_at   DateTime?      @default(now()) @db.Timestamp(6)
-  category_id  Int
-  room_objects room_objects[]
+  furniture_id     String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String         @db.VarChar(200)
+  description      String?
+  length_x         Decimal        @db.Decimal(10, 2)
+  length_y         Decimal        @db.Decimal(10, 2)
+  length_z         Decimal        @db.Decimal(10, 2)
+  image_url        String?
+  model_url        String?
+  price            Decimal?       @db.Decimal(12, 2)
+  brand            String?        @db.VarChar(100)
+  is_active        Boolean?       @default(false)
+  created_at       DateTime?      @default(now()) @db.Timestamp(6)
+  updated_at       DateTime?      @default(now()) @db.Timestamp(6)
+  category_id      Int
+  cached_model_url String?        @db.VarChar(255)
+  room_objects     room_objects[]
 
   @@schema("furniture")
 }
@@ -239,29 +241,31 @@ model room_walls {
 }
 
 model rooms {
-  room_id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id            String
-  title              String          @db.VarChar(100)
-  description        String?
-  room_data          Json?
-  thumbnail_url      String?
-  is_public          Boolean?        @default(true)
-  view_count         Int?            @default(0)
-  created_at         DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at         DateTime?       @default(now()) @db.Timestamp(6)
-  root_room_id       String?         @db.Uuid
-  collab_on          Boolean?        @default(false)
-  wall_color         String          @default("#FFFFFF")
-  floor_color        String          @default("#D2B48C")
-  background_color   String          @default("#87CEEB")
-  environment_preset String          @default("apartment")
-  room_comments      room_comments[]
-  room_likes         room_likes[]
-  room_objects       room_objects[]
-  room_walls         room_walls[]
-  rooms              rooms?          @relation("roomsTorooms", fields: [root_room_id], references: [room_id], onUpdate: NoAction, map: "fk_rooms_root_room")
-  other_rooms        rooms[]         @relation("roomsTorooms")
-  User               User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  room_id             String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id             String
+  title               String          @db.VarChar(100)
+  description         String?
+  room_data           Json?
+  thumbnail_url       String?
+  is_public           Boolean?        @default(true)
+  view_count          Int?            @default(0)
+  created_at          DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?       @default(now()) @db.Timestamp(6)
+  root_room_id        String?         @db.Uuid
+  collab_on           Boolean?        @default(false)
+  wall_color          String          @default("#FFFFFF")
+  floor_color         String          @default("#D2B48C")
+  background_color    String          @default("#87CEEB")
+  environment_preset  String          @default("apartment")
+  collab_chat_room_id String?         @db.Uuid
+  room_comments       room_comments[]
+  room_likes          room_likes[]
+  room_objects        room_objects[]
+  room_walls          room_walls[]
+  chat_rooms          chat_rooms?     @relation(fields: [collab_chat_room_id], references: [chat_room_id], onUpdate: NoAction, map: "fk_rooms_collab_chat_room")
+  rooms               rooms?          @relation("roomsTorooms", fields: [root_room_id], references: [room_id], onUpdate: NoAction, map: "fk_rooms_root_room")
+  other_rooms         rooms[]         @relation("roomsTorooms")
+  User                User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([is_public], map: "idx_rooms_public")
   @@index([root_room_id], map: "idx_rooms_root_room_id")

@@ -1,9 +1,9 @@
-import { CACHE_DIR } from "@/lib/cache-utils";
+import { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import { prisma } from "@/lib/prisma";
 import fs from "fs/promises";
 
 // 여태까지 저장 되었던 파일들을 cached_model_url로 넣기 위함
-export async function GET() {
+async function GET() {
     try {
         // 디렉토리 내 파일 목록 가져오기
         const files = await fs.readdir(CACHE_DIR);

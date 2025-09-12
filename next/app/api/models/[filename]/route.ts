@@ -1,15 +1,15 @@
-import { CACHE_DIR } from "@/lib/cache-utils";
+import { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import { NextRequest } from "next/server";
 import fs from "fs/promises";
 
-// 로컬 서빙 파일
+// 로컬에 파일 서빙하는 서비스 로직
 export async function GET(
   request: NextRequest,
   { params }: { params: { filename: string } }
 ) {
-  const a_params = await params;
-  const filename = a_params.filename;
+  const filename = await params.filename;
   console.log("filename: ", filename);
+
   const filePath = `${CACHE_DIR}/${filename}`;
   try {
     const fileBuffer = await fs.readFile(filePath);
