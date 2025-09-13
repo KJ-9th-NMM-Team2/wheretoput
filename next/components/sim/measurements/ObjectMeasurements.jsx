@@ -23,9 +23,9 @@ export function ObjectMeasurements() {
         : [length, length, length];
 
       // mm 단위로 변환
-      const width = Math.round(actualScale[0] * actualLength[0]);
-      const height = Math.round(actualScale[1] * actualLength[1]);
-      const depth = Math.round(actualScale[2] * actualLength[2]);
+      const width = Math.ceil(actualScale[0] * actualLength[0]);
+      const height = Math.ceil(actualScale[1] * actualLength[1]);
+      const depth = Math.ceil(actualScale[2] * actualLength[2]);
 
       // 회전 값 추출 (Y축 회전)
       const rotationY = Array.isArray(rotation) ? rotation[1] : 0;
