@@ -198,7 +198,7 @@ export default function CollaborationChatRoomSelector({
                 }}
                 onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
                 className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer ${selectedChatId === chat.chat_room_id
-                    ? "bg-orange-50 text-orange-600"
+                    ? "bg-blue-50 text-blue-600"
                     : "text-gray-700"
                   }`}
               >
@@ -255,7 +255,7 @@ export default function CollaborationChatRoomSelector({
                 type="text"
                 defaultValue={renameModal.chatName}
                 placeholder="새로운 이름을 입력하세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const newName = (e.target as HTMLInputElement).value.trim();
@@ -286,7 +286,7 @@ export default function CollaborationChatRoomSelector({
                     handleRenameRoom(renameModal.chatId, newName);
                   }
                 }}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition cursor-pointer"
               >
                 변경
               </button>

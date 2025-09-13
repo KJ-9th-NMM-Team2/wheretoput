@@ -102,7 +102,7 @@ export default function MessageBubble({
             message.message_type === "image" ? "p-1" : "px-3 py-2",
             "rounded-2xl whitespace-pre-wrap break-words",
             isMine
-              ? "bg-orange-500 text-white rounded-br-sm"
+              ? "bg-gradient-to-r from-blue-400 to-cyan-400 text-white rounded-br-sm"
               : "bg-gray-100 text-gray-900 rounded-bl-sm",
           ].join(" ")}
         >
