@@ -1230,7 +1230,7 @@ const FloorPlanEditor = () => {
   return (
     <div className="w-full h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* 툴바 */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-300 px-4 lg:px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg sticky top-0 z-50">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-amber-100 px-4 lg:px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg sticky top-0 z-50">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           {/* 첫 번째 행: 로고, 제목, 완료 버튼 */}
           <div className="flex items-center justify-between">
@@ -1426,7 +1426,7 @@ const FloorPlanEditor = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
         <div className="flex-1 p-0 overflow-hidden flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg border border-amber-100 overflow-hidden">
             <div
               ref={containerRef}
               className="relative"
