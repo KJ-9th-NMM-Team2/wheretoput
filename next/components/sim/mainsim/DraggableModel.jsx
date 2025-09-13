@@ -1,8 +1,5 @@
 import React, { useRef, useEffect, useMemo } from "react";
-import {
-  useTexture,
-  useGLTF
-} from "@react-three/drei";
+import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
@@ -23,7 +20,7 @@ export function DraggableModel({
   onModelLoaded,
 }) {
   // console.log("url check cache or s3?", url);
-  
+
   // scale 값을 안전하게 처리
   const safeScale = (() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];

@@ -8,6 +8,10 @@ export const uiSlice = (set, get) => ({
   viewOnly: false,
   setViewOnly: (value) => set({ viewOnly: value }),
 
+  // 측정 기능 상태
+  showMeasurements: false,
+  setShowMeasurements: (show) => set({ showMeasurements: show }),
+
   // 업적 상태
   setAchievements: (achievements) => set({ achievements }),
 });

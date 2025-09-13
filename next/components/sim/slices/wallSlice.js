@@ -96,12 +96,12 @@ export const wallSlice = (set, get) => ({
             [
               position[0] - halfWidth * cos,
               position[1],
-              position[2] - halfWidth * sin,
+              position[2] + halfWidth * sin,  // sin 부호 변경
             ],
             [
               position[0] + halfWidth * cos,
               position[1],
-              position[2] + halfWidth * sin,
+              position[2] - halfWidth * sin,  // sin 부호 변경
             ],
           ];
 
@@ -135,12 +135,12 @@ export const wallSlice = (set, get) => ({
             [
               position[0] - halfWidth * cos,
               position[1],
-              position[2] - halfWidth * sin,
+              position[2] + halfWidth * sin,  // sin 부호 변경
             ],
             [
               position[0] + halfWidth * cos,
               position[1],
-              position[2] + halfWidth * sin,
+              position[2] - halfWidth * sin,  // sin 부호 변경
             ],
           ];
 

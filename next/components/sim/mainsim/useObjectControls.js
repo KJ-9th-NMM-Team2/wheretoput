@@ -17,8 +17,13 @@ export function useObjectControls(
   meshRef
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
-  const { loadedModels, isModelLocked, wallsData, enableWallMagnet, wallToolMode } =
-    useStore();
+  const {
+    loadedModels,
+    isModelLocked,
+    wallsData,
+    enableWallMagnet,
+    wallToolMode,
+  } = useStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isScaling, setIsScaling] = useState(false);
   const [dragOffset, setDragOffset] = useState(new THREE.Vector3());
@@ -383,7 +388,7 @@ export function useObjectControls(
       e.stopPropagation();
 
       // 벽 추가 모드일 때는 가구 클릭 무시
-      if (wallToolMode === 'add') {
+      if (wallToolMode === "add") {
         return;
       }
 
