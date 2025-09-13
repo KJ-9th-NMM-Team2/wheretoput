@@ -54,7 +54,7 @@ export function CaptureModal() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[9999]">
       <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[90vh] overflow-auto shadow-2xl">
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-4">
@@ -81,7 +81,7 @@ export function CaptureModal() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={handleDownload}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium cursor-pointer"
+            className="tool-btn flex items-center gap-2 !px-6 py-3 text-white font-medium text-sm"
           >
             <Download size={20} />
             다운로드
@@ -91,7 +91,7 @@ export function CaptureModal() {
           {isOwnUserRoom && (
             <button
               onClick={handleUpload}
-              className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-medium cursor-pointer"
+              className="tool-btn tool-btn-green-active flex items-center gap-2 px-6 py-3 text-white font-medium text-sm cursor-pointer"
             >
               <Upload size={20} />
               썸네일로 지정
@@ -100,7 +100,7 @@ export function CaptureModal() {
 
           <button
             onClick={handleClose}
-            className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium cursor-pointer"
+            className="flex items-center gap-2 !px-8 py-3 bg-gray-500 hover:bg-gray-600 transition-colors font-medium text-sm tool-btn-gray"
           >
             닫기
           </button>
