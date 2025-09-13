@@ -64,44 +64,31 @@ export default function SortedHouseList({
           <div className="flex gap-3 p-3 flex-wrap pr-4">
             {/* // 정렬버튼 */}
             <button
-              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${sortType === "view"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-                }`}
+              className={`tool-btn ${sortType === "view" ? "tool-btn-active" : "tool-btn-inactive"}`}
               onClick={() => {
                 setSortType("view");
                 router.push(`/search?order=view${(currentQuery) ? `&q=${currentQuery}` : ''}`);
               }}
             >
-              <span className="text-sm cursor-pointer">조회수 순</span>
+              <span className="text-sm">조회수 순</span>
             </button>
             <button
-              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${sortType === "new"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-                }`}
+              className={`tool-btn ${sortType === "new" ? "tool-btn-active" : "tool-btn-inactive"}`}
               onClick={() => {
                 setSortType("new");
                 router.push(`/search?order=new${(currentQuery) ? `&q=${currentQuery}` : ''}`);
               }}
             >
-              <span className="text-sm cursor-pointer">최신 순</span>
+              <span className="text-sm">최신 순</span>
             </button>
             <button
-              className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-2xl pl-4 pr-4 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg
-            ${sortType === "like"
-                  ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium"
-                  : "bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-600 border border-gray-200 dark:border-gray-600"
-                }`}
+              className={`tool-btn ${sortType === "like" ? "tool-btn-active" : "tool-btn-inactive"}`}
               onClick={() => {
                 setSortType("like");
                 router.push(`/search?order=like${(currentQuery) ? `&q=${currentQuery}` : ''}`);
-              }
-              }
+              }}
             >
-              <span className="text-sm cursor-pointer">좋아요 순</span>
+              <span className="text-sm">좋아요 순</span>
             </button>
           </div>
           {data && data.length > 0 ? (
