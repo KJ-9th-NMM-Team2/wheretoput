@@ -12,6 +12,7 @@ import EditPopup from "@/components/sim/side/EditPopup";
 import { useRouter } from "next/navigation";
 import { deleteRoom } from "@/lib/roomService";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+import { useStore } from "@/components/sim/useStore";
 
 interface RoomPageClientProps {
   room: any;
@@ -26,6 +27,8 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   const [followLoading, setFollowLoading] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const { cloneSimulatorState, setCurrentRoomId, loadSimulatorState } = useStore();
 
   // 조회수 1 증가
   useEffect(() => {
@@ -128,6 +131,26 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
     setShowDeleteModal(false);
   };
 
+  // 방 복제하기
+  const handleClone = async () => {
+    try {
+      // 복제할 방 ID를 설정
+      setCurrentRoomId(room.room_id);
+
+      // 먼저 방 데이터를 로드 (wallsOnly = false로 모든 데이터 로드)
+      await loadSimulatorState(room.room_id, false);
+
+      // 로드된 데이터로 복제 실행
+      const result = await cloneSimulatorState();
+      console.log(result);
+      const cloned_room_id = result.room_id;
+      // 해당 링크로 이동
+      window.location.href = `/sim/${cloned_room_id}`;
+    } catch (error) {
+      console.error("복제 실패:", error);
+    }
+  };
+
   const isOwnRoom = session?.user?.id === room.user.id;
 
 
@@ -182,6 +205,12 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                     <span className="truncate">3D View</span>
                   </button>
                 </Link>
+                <button
+                  onClick={handleClone}
+                  className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <span className="truncate">우리집에 적용</span>
+                </button>
                 {!loading && <LikeButton room={room} liked={liked} />}
               </div>
             </div>
