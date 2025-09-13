@@ -16,7 +16,7 @@ export function PreviewBox({
   color = "#ff6600",
 }: PreviewBoxProps) {
   const meshRef = useRef<THREE.Mesh>(null);
-  console.log("preview box size: ", size);
+  // console.log("preview box size: ", size);
 
   return (
     <mesh
