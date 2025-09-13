@@ -27,3 +27,5 @@ services:
       - ECR_REPO_NEXT=${ECR_REPO_NEXT}
       - IMAGE_TAG=latest
     restart: unless-stopped
+    volumes:
+      - ./cache/models:/app/public/cache/models
