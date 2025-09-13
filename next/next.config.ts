@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
         hostname: "wheretoput-bucket.s3.ap-northeast-2.amazonaws.com",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "d1nm7fd0tbcwyl.cloudfront.net",
+        pathname: "**",
+      },
     ],
   },
 };

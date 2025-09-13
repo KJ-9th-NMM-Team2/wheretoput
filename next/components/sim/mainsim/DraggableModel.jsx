@@ -6,6 +6,7 @@ import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
+import { convertS3ToCdnUrl } from "@/lib/api/api-url";
 
 export function DraggableModel({
   modelId,
@@ -52,7 +53,7 @@ export function DraggableModel({
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   const { scene, animations } = hasValidUrl
-    ? useGLTF(url)
+    ? useGLTF(convertS3ToCdnUrl(url))
     : { scene: null, animations: null };
 
   useEffect(() => {

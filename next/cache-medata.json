@@ -839,9 +839,15 @@
       "accessCount": 2,
       "fileSize": 1456488,
       "createdAt": "2025. 9. 12. 오후 11:28:13"
+    },
+    "cf8ed5b0-4863-4cf8-ad64-ba133e225f5c.glb": {
+      "lastAccessed": "2025. 9. 13. 오후 9:49:16",
+      "accessCount": 2,
+      "fileSize": 1126516,
+      "createdAt": "2025. 9. 13. 오후 9:33:20"
     }
   },
-  "totalSize": 197324616,
+  "totalSize": 198451132,
   "maxSize": 314572800,
   "lastCleanup": "2025. 9. 12. 오후 3:21:16"
 }
