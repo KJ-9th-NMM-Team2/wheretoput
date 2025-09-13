@@ -139,7 +139,13 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
           </div>
           <button
             onClick={onBack}
-            className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer transition-transform hover:scale-110"
+            className="
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 
+              dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 
+              border border-gray-200 dark:border-gray-600
+            "
           >
             ←
           </button>
@@ -209,7 +215,13 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
             {/* 이미지 버튼 */}
             <button
               onClick={handleImageClick}
-              className="px-2 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 cursor-pointer transition-transform hover:scale-110"
+              className="
+                text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+                hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+                text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 
+                dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 
+                border border-gray-200 dark:border-gray-600
+              "
             >
               <MdImage size={20} />
             </button>
@@ -221,16 +233,20 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
               onFocus={() => onChatFocus?.(true)}
               onBlur={() => onChatFocus?.(false)}
               rows={1}
-              className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-300 max-h-40"
+              className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-300 max-h-40"
             />
             <button
               ref={sendButtonRef}
               onClick={sendWithImage}
               disabled={!text.trim() && !selectedImage}
-              className={`px-3 py-2 rounded-lg text-white cursor-pointer transition-transform ${text.trim() || selectedImage
-                ? "bg-orange-500 hover:bg-orange-600 hover:scale-105"
-                : "bg-gray-300 cursor-not-allowed"
-                }`}
+              className={`
+                text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+                hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
+                ${text.trim() || selectedImage
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-pointer'
+                  : 'text-gray-700 bg-gray-200 cursor-not-allowed border border-gray-200 dark:border-gray-600'
+                }
+              `}
             >
               전송
             </button>
