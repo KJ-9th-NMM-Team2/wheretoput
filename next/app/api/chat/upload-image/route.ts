@@ -10,6 +10,74 @@ const s3Client = new S3Client({
   },
 });
 
+/**
+ * @swagger
+ * /api/chat/upload-image:
+ * post:
+ * tags:
+ * - Chat
+ * summary: 이미지를 S3 버킷에 업로드합니다.
+ * description: 클라이언트로부터 받은 이미지 파일을 검증 후, 고유한 이름으로 S3 버킷에 업로드하고 S3 키를 반환합니다. 최대 10MB 크기의 이미지(JPEG, PNG 등)만 허용합니다.
+ * requestBody:
+ * required: true
+ * content:
+ * multipart/form-data:
+ * schema:
+ * type: object
+ * properties:
+ * image:
+ * type: string
+ * format: binary
+ * description: 업로드할 이미지 파일
+ * responses:
+ * '200':
+ * description: 이미지 업로드 성공
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * success:
+ * type: boolean
+ * example: true
+ * imageUrl:
+ * type: string
+ * description: S3 버킷에 저장된 파일의 키 (URL 아님)
+ * example: "chat/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg"
+ * filename:
+ * type: string
+ * description: 원본 파일명
+ * example: "my-photo.jpg"
+ * size:
+ * type: number
+ * description: 업로드된 파일 크기 (바이트)
+ * example: 524288
+ * type:
+ * type: string
+ * description: 파일 타입
+ * example: "image/jpeg"
+ * '400':
+ * description: 잘못된 요청
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * error:
+ * type: string
+ * example: "파일이 없습니다"
+ * '500':
+ * description: 서버 내부 오류
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * error:
+ * type: string
+ * example: "이미지 업로드에 실패했습니다"
+ */
+
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData();

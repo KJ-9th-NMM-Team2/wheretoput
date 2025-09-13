@@ -67,14 +67,19 @@ export default function UserPage({
   });
 
   if (loading) {
-    return <div className="px-40 py-5">Loading...</div>;
+    return <div className="px-20 flex flex-1 justify-center py-5">
+      <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        Loading...
+      </div>
+    </div>;
   }
 
   if (!user) {
     return <UserNotFound />;
   }
   return (
-    <div className="px-40 py-5">
+    <div className="px-20 flex flex-1 justify-center py-5">
+      <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
       <Follow 
         user={user}
         followersCount={followersCount}
@@ -116,6 +121,7 @@ export default function UserPage({
         initialTab={followModalTab}
         userId={user?.user_id}
       />
+      </div>
     </div>
   );
 }

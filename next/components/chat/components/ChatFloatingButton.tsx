@@ -4,6 +4,8 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import styles from "../ChatButton.module.scss";
+import { IoChatboxEllipsesSharp } from "react-icons/io5";
+
 
 interface ChatFloatingButtonProps {
   onClick: () => void;
@@ -22,13 +24,13 @@ const ChatFloatingButton = forwardRef<HTMLButtonElement, ChatFloatingButtonProps
         onClick={onClick}
         aria-label="채팅 열기"
       >
-        💬
+        <IoChatboxEllipsesSharp className="w-6 h-6 text-white" />
         {hasUnreadMessages && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="absolute -top-2 -right-2 bg-orange-500 rounded-full w-3 h-3 shadow-lg"
+            className="absolute -top-2 -right-2 bg-blue-500 rounded-full w-3 h-3 shadow-lg"
           />
         )}
       </motion.button>

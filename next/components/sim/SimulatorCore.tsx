@@ -1,9 +1,15 @@
 "use client";
 
-
-import React, { useRef, Suspense, useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  Suspense,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
@@ -26,6 +32,10 @@ import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
 import WallTools from "./side/WallTools";
+import { WallMeasurements } from "./measurements/WallMeasurements";
+import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
+import { CaptureModal } from "./mainsim/CaptureModal";
+import { CaptureHandler } from "./mainsim/CaptureHandler";
 
 type position = [number, number, number];
 
@@ -99,8 +109,9 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   );
 }
 
-function CameraUpdater() {
+function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
   const fov = useStore((state) => state.cameraFov);
+  const showMeasurements = useStore((state) => state.showMeasurements);
   const { camera } = useThree();
   const perspectiveCamera = camera as THREE.PerspectiveCamera;
 
@@ -108,6 +119,33 @@ function CameraUpdater() {
     perspectiveCamera.fov = fov;
     perspectiveCamera.updateProjectionMatrix();
   }, [fov, perspectiveCamera]);
+
+  // 치수 모드 시 탑뷰로 자동 전환
+  useEffect(() => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current;
+
+      if (showMeasurements) {
+        // 측정 모드 켜짐: 카메라를 위에서 내려다보는 위치로 이동
+        const target = controls.target;
+        const topViewPosition = new THREE.Vector3(target.x, 30, target.z);
+
+        // 부드럽게 이동
+        controls.object.position.copy(topViewPosition);
+        controls.object.lookAt(target);
+        controls.update();
+      } else {
+        // 측정 모드 꺼짐: 카메라 제한 해제하고 기본 위치로 복귀
+        const target = controls.target;
+        const defaultPosition = new THREE.Vector3(target.x, 20, target.z + 30);
+
+        // 기본 위치로 부드럽게 이동
+        controls.object.position.copy(defaultPosition);
+        controls.object.lookAt(target);
+        controls.update();
+      }
+    }
+  }, [showMeasurements, controlsRef]);
 
   return null;
 }
@@ -183,30 +221,38 @@ export function SimulatorCore({
     removeWall,
     setSelectedWallId,
     isChatFocused,
+    showMeasurements,
   } = useStore();
 
   const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
+  const [preloadedUrls, setPreloadedUrls] = useState(new Set<string>());
 
   // 상태 기반 속도 측정
   useEffect(() => {
-    if (!loadedModels.legnth && !startTime) {
+    if (!loadedModels.length && !startTime) {
       setStartTime(performance.now());
     }
   }, []);
 
-  const handleModelLoaded = useCallback((modelId: string) => {
-    setLoadedModelIds(prev => {
-      const newSet = new Set(prev);
-      newSet.add(modelId);
-        
-      if (newSet.size === loadedModels.length) {
-        console.log('모든 모델 실제 로드 완료:', performance.now() - startTime);
-      }
-      
-      return newSet;
-    });
-  }, [loadedModels.length, startTime]);
+  const handleModelLoaded = useCallback(
+    (modelId: string) => {
+      setLoadedModelIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.add(modelId);
+
+        if (newSet.size === loadedModels.length) {
+          console.log(
+            "모든 모델 실제 로드 완료:",
+            performance.now() - startTime
+          );
+        }
+
+        return newSet;
+      });
+    },
+    [loadedModels.length, startTime]
+  );
 
   // Suspense fallback이 완전히 사라진 후
   // useEffect(() => {
@@ -215,6 +261,54 @@ export function SimulatorCore({
   //     console.log(`모든 모델 로드 완료: ${endTime - startTime}ms`);
   //   }
   // }, [loadedModels]);
+
+  // GLB 파일 병렬 preload (중복 방지)
+  // useEffect(() => {
+  //   if (loadedModels.length > 0) {
+  //     // 유효한 GLB URL들만 필터링
+  //     const validUrls = loadedModels
+  //       .map((model) => model.url)
+  //       .filter(
+  //         (url) =>
+  //           url &&
+  //           typeof url === "string" &&
+  //           !url.includes("/legacy_mesh") &&
+  //           !preloadedUrls.has(url) // 이미 preload한 URL 제외
+  //       );
+
+  //     if (validUrls.length === 0) {
+  //       return; // 새로운 URL이 없으면 종료
+  //     }
+
+  //     console.log(
+  //       `🚀 Starting parallel preload for ${validUrls.length} new models`
+  //     );
+
+  //     // 6개씩 배치로 병렬 다운로드 시작
+  //     const MAX_CONCURRENT = 6;
+  //     const batches = [];
+
+  //     for (let i = 0; i < validUrls.length; i += MAX_CONCURRENT) {
+  //       batches.push(validUrls.slice(i, i + MAX_CONCURRENT));
+  //     }
+
+  //     batches.forEach((batch, batchIndex) => {
+  //       setTimeout(() => {
+  //         batch.forEach((url) => {
+  //           try {
+  //             useGLTF.preload(url);
+  //             // preload 완료된 URL 추가
+  //             setPreloadedUrls((prev) => new Set([...prev, url]));
+  //           } catch (error) {
+  //             console.warn(`Failed to preload: ${url}`, error);
+  //           }
+  //         });
+  //       }, batchIndex * 100); // 100ms 간격으로 배치 시작
+  //     });
+
+  //     console.log(`📊 Started ${batches.length} batches of parallel downloads`);
+  //   }
+  // }, [loadedModels, preloadedUrls]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -235,10 +329,8 @@ export function SimulatorCore({
             }
 
             // 방 소유권 확인 (자동저장을 위해 필요)
-
             if (session?.user?.id) {
               await checkUserRoom(roomId, session.user.id);
-            } else {
             }
           } catch (loadError) {
             console.log(
@@ -375,7 +467,10 @@ export function SimulatorCore({
         {/* 벽 도구 드롭다운 */}
         {!viewOnly && <WallTools isDropdown={true} />}
 
-        <SelectedModelEditModal />
+        {!viewOnly && <SelectedModelEditModal />}
+
+        {/* 캡처 모달 */}
+        <CaptureModal />
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
@@ -389,7 +484,7 @@ export function SimulatorCore({
         >
           <Environment preset={environmentPreset} background={false} />
 
-          <CameraUpdater />
+          <CameraUpdater controlsRef={controlsRef} />
           <color attach="background" args={[backgroundColor]} />
           <directionalLight
             position={directionalLightPosition}
@@ -438,25 +533,27 @@ export function SimulatorCore({
             </>
           )}
 
-          {useMemo(() => 
-            loadedModels.map((model: any) => (
-              <Suspense key={model.id} fallback={null}>
-                <DraggableModel
-                  key={model.id}
-                  modelId={model.id}
-                  url={model.url}
-                  position={model.position}
-                  rotation={model.rotation}
-                  scale={model.scale}
-                  length={model.length}
-                  controlsRef={controlsRef}
-                  isCityKit={model.isCityKit}
-                  texturePath={model.texturePath}
-                  type={model.isCityKit ? "building" : "glb"}
-                  onModelLoaded={handleModelLoaded}
-                />
-              </Suspense>
-            )), [loadedModels, controlsRef]
+          {useMemo(
+            () =>
+              loadedModels.map((model: any) => (
+                <Suspense key={model.id} fallback={null}>
+                  <DraggableModel
+                    key={model.id}
+                    modelId={model.id}
+                    url={model.url}
+                    position={model.position}
+                    rotation={model.rotation}
+                    scale={model.scale}
+                    length={model.length}
+                    controlsRef={controlsRef}
+                    isCityKit={model.isCityKit}
+                    texturePath={model.texturePath}
+                    type={model.isCityKit ? "building" : "glb"}
+                    onModelLoaded={handleModelLoaded}
+                  />
+                </Suspense>
+              )),
+            [loadedModels, controlsRef]
           )}
 
           {/* 프리뷰 모드 */}
@@ -469,39 +566,57 @@ export function SimulatorCore({
             rotation={[-Math.PI / 2, 0, 0]}
             onPointerDown={(event) => {
               // 벽 추가 모드에서의 바닥 클릭 처리
-              if (wallToolMode === 'add') {
-                if (event.button != 0)
-                  return;
+              if (wallToolMode === "add") {
+                if (event.button != 0) return;
 
                 event.stopPropagation();
                 const point = event.point;
                 const clickPoint = [point.x, 0, point.z];
-                
+
                 // 스냅 포인트 근처인지 확인하고 자동으로 스냅
-                const snappedPoint = autoSnapToNearestWallEndpoint(clickPoint, wallsData, 1.0);
-                
+                const snappedPoint = autoSnapToNearestWallEndpoint(
+                  clickPoint,
+                  wallsData,
+                  1.0
+                );
+
                 if (!wallDrawingStart) {
                   // 시작점 설정
                   setWallDrawingStart(snappedPoint);
                 } else {
                   // 직선 벽을 위한 좌표 정렬
                   let alignedEndPoint = snappedPoint;
-                  
+
                   // 시작점과 끝점이 다를 때만 정렬 처리
-                  if (wallDrawingStart[0] !== snappedPoint[0] || wallDrawingStart[2] !== snappedPoint[2]) {
-                    const deltaX = Math.abs(snappedPoint[0] - wallDrawingStart[0]);
-                    const deltaZ = Math.abs(snappedPoint[2] - wallDrawingStart[2]);
-                    
+                  if (
+                    wallDrawingStart[0] !== snappedPoint[0] ||
+                    wallDrawingStart[2] !== snappedPoint[2]
+                  ) {
+                    const deltaX = Math.abs(
+                      snappedPoint[0] - wallDrawingStart[0]
+                    );
+                    const deltaZ = Math.abs(
+                      snappedPoint[2] - wallDrawingStart[2]
+                    );
+
                     // 더 긴 축을 기준으로 직선 벽 생성
                     if (deltaX > deltaZ) {
                       // X축 방향 벽 (Z좌표를 시작점과 동일하게)
-                      alignedEndPoint = [snappedPoint[0], 0, wallDrawingStart[2]];
+                      alignedEndPoint = [
+                        snappedPoint[0],
+                        0,
+                        wallDrawingStart[2],
+                      ];
                     } else {
                       // Z축 방향 벽 (X좌표를 시작점과 동일하게)
-                      alignedEndPoint = [wallDrawingStart[0], 0, snappedPoint[2]];
+                      alignedEndPoint = [
+                        wallDrawingStart[0],
+                        0,
+                        snappedPoint[2],
+                      ];
                     }
                   }
-                  
+
                   // 끝점으로 벽 생성
                   addWall(wallDrawingStart, alignedEndPoint);
                   // 벽 생성 완료 후 시작점 초기화 (연속 그리기 비활성화)
@@ -524,22 +639,38 @@ export function SimulatorCore({
           <OrbitControls
             ref={controlsRef}
             enableZoom={true}
-            enableRotate={true}
+            enableRotate={!showMeasurements}
             enablePan={true}
-            enableDamping={isMobile ? true : false}
-            dampingFactor={isMobile ? 0.05 : undefined}
+            enableDamping={false}
             rotateSpeed={isMobile ? 0.8 : 0.3}
-            panSpeed={isMobile ? 1.0 : 0.5}
-            zoomSpeed={isMobile ? 0.8 : undefined}
+            panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
+            zoomSpeed={isMobile ? 0.8 : 1.0}
             minDistance={isMobile ? 1 : 8}
             maxDistance={50}
-            maxPolarAngle={isMobile ? Math.PI * 0.95 : undefined}
-            minPolarAngle={isMobile ? Math.PI * 0.05 : undefined}
+            maxPolarAngle={
+              showMeasurements
+                ? (Math.PI * 18) / 180
+                : isMobile
+                ? Math.PI * 0.95
+                : Math.PI
+            }
+            minPolarAngle={
+              showMeasurements
+                ? (Math.PI * 18) / 180
+                : isMobile
+                ? Math.PI * 0.05
+                : 0
+            }
+            mouseButtons={{
+              LEFT: showMeasurements ? 2 : 0, // 측정 모드에서는 왼쪽 클릭으로 패닝
+              MIDDLE: 1, // 휠 클릭으로 줌
+              RIGHT: showMeasurements ? undefined : 2, // 측정 모드에서는 우클릭 비활성화
+            }}
             touches={
               isMobile
                 ? {
-                    ONE: 0, // 한 손가락으로 회전
-                    TWO: 2, // 두 손가락으로 확대축소, 이동
+                    ONE: showMeasurements ? 2 : 0, // 측정 모드에서는 한 손가락으로 패닝
+                    TWO: 1, // 두 손가락으로 확대축소
                   }
                 : undefined
             }
@@ -551,10 +682,17 @@ export function SimulatorCore({
           {/* 벽 스냅 포인트 */}
           <WallSnapPoints />
 
+          {/* 측정 표시 */}
+          <Suspense fallback={null}>
+            <WallMeasurements />
+            <ObjectMeasurements />
+          </Suspense>
+
           {/* Canvas 내부 추가 요소들 (협업 모드 커서 등) */}
           {canvasChildren}
 
           <CanvasImageLogger />
+          <CaptureHandler />
         </Canvas>
       </div>
     </div>

@@ -34,6 +34,7 @@ const ShoppingLink: React.FC<ShoppingLinkProps> = ({
         inline-flex items-center gap-1 px-2 py-1 
         text-xs bg-blue-500 hover:bg-blue-600 
         text-white rounded transition-colors 
+        
         ${className} cursor-pointer
       `}
       title={`${furnitureName} 온라인에서 찾기`}

@@ -58,23 +58,30 @@ export function HomeCard({
           </p>
 
           {/* 작성자 프로필 정보 */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-orange-600 flex items-center justify-center overflow-hidden">
-              {room.user?.image ? (
-                <img
-                  src={room.user.image}
-                  alt={room.user.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-sm font-bold text-amber-700 dark:text-orange-200">
-                  {room.user?.name?.[0]?.toUpperCase() || "?"}
-                </span>
-              )}
+          <div className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-orange-600 flex items-center justify-center overflow-hidden">
+                {room.user?.image ? (
+                  <img
+                    src={room.user.image}
+                    alt={room.user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-amber-700 dark:text-orange-200">
+                    {room.user?.name?.[0]?.toUpperCase() || "?"}
+                  </span>
+                )}
+              </div>
+              <span className="text-black dark:text-gray-100 text-base font-medium">
+                {room.user?.display_name || room.user?.name || "익명"}
+              </span>
             </div>
-            <span className="text-black dark:text-gray-100 text-base font-medium">
-              {room.user?.display_name || room.user?.name || "익명"}
-            </span>
+            {!room.is_public && (
+              <span className="px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                비공개
+              </span>
+            )}
           </div>
 
           {/* 댓글,조회수 */}

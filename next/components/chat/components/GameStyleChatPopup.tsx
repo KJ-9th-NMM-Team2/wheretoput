@@ -256,7 +256,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
                         }`}>
                         <div
                           className={`max-w-xs px-3 py-2 rounded-lg shadow-sm backdrop-blur-sm border transition-all duration-200 ${message.senderId === currentUserId
-                            ? "bg-orange-500/80 text-white border-blue-400/50"
+                            ? "bg-gradient-to-r from-blue-400/80 to-cyan-400/80 text-white border-blue-400/50"
                             : "bg-white/90 text-black border-gray-300/50"
                             }`}
                         >
@@ -347,12 +347,12 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
               onFocus={() => onChatFocus?.(true)}
               onBlur={() => onChatFocus?.(false)}
               placeholder="메시지 입력..."
-              className="flex-1 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 text-sm placeholder-gray-500 text-black h-9"
+              className="flex-1 px-3 py-2 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-sm placeholder-gray-500 text-black h-9"
             />
             {/* 이미지 버튼 */}
             <button
               onClick={handleImageClick}
-              className="px-2 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 cursor-pointer transition-transform hover:scale-110"
+              className="px-2 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 cursor-pointer transition-transform hover:scale-110"
             >
               <MdImage size={20} />
             </button>
@@ -360,7 +360,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
               ref={sendButtonRef}
               onClick={sendWithImage}
               disabled={!text.trim() && !selectedImage}
-              className="px-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-w-[48px] flex items-center justify-center h-9"
+              className="px-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-w-[48px] flex items-center justify-center h-9"
             >
               <svg
                 className="w-4 h-4"

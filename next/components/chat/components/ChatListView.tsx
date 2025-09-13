@@ -263,8 +263,15 @@ export default function ChatListView({
         <b>채팅</b>
         <button
           onClick={handleUserListClick}
-          className={`px-3 py-1 text-white text-sm rounded-lg transition cursor-pointer ${showUserList ? "bg-orange-600" : "bg-orange-500 hover:bg-orange-600"
-            }`}
+          className={`
+            text-md font-medium leading-normal px-3 py-1 rounded-2xl transition-all duration-300
+            hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+            flex items-center justify-center
+            ${showUserList
+              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+              : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+            }
+          `}
           aria-label="유저 목록"
         >
           👥
@@ -295,10 +302,14 @@ export default function ChatListView({
               setSelect("전체");
               setChats(recomputeChats(baseChats, query, "전체", currentUserId));
             }}
-            className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "전체"
-              ? "bg-gray-200 text-orange-500"
-              : "bg-transparent hover:bg-gray-200"
-              }`}
+            className={`
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              ${select === "전체"
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+              }
+            `}
           >
             전체
           </button>
@@ -310,10 +321,14 @@ export default function ChatListView({
                 recomputeChats(baseChats, query, "읽지 않음", currentUserId)
               );
             }}
-            className={`px-3 py-2 rounded-xl transition cursor-pointer ${select === "읽지 않음"
-              ? "bg-gray-200 text-orange-500"
-              : "bg-transparent hover:bg-gray-200"
-              }`}
+            className={`
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              ${select === "읽지 않음"
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+              }
+            `}
           >
             읽지 않음
           </button>
@@ -321,10 +336,14 @@ export default function ChatListView({
 
         {showUserList && (
           <button
-            className={`px-3 py-1 text-sm rounded-lg transition ${selectedUserIds.length > 0 && !loading
-              ? "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+            className={`
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
+              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
+              ${selectedUserIds.length > 0 && !loading
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-pointer'
+                : 'text-gray-700 bg-gray-200 cursor-not-allowed border border-gray-200 dark:border-gray-600'
+              }
+            `}
             disabled={selectedUserIds.length === 0 || loading}
             onClick={createGroupChatRoom}
           >
@@ -354,13 +373,13 @@ export default function ChatListView({
                     key={user.id}
                     onClick={() => toggleUserSelection(user.id)}
                     className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${isSelected
-                      ? "bg-orange-50 border-2 border-orange-200"
+                      ? "bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200"
                       : "hover:bg-gray-100 border-2 border-transparent"
                       }`}
                   >
                     {/* 체크박스 */}
                     <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${isSelected
-                      ? "bg-orange-500 border-orange-500"
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-500 border-blue-500"
                       : "border-gray-300 hover:border-gray-400"
                       }`}>
                       {isSelected && (
@@ -387,7 +406,7 @@ export default function ChatListView({
 
                     {/* 사용자 이름 */}
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium truncate ${isSelected ? "text-orange-700" : "text-gray-900"
+                      <div className={`font-medium truncate ${isSelected ? "text-blue-700" : "text-gray-900"
                         }`}>
                         {user.name}
                       </div>
@@ -459,7 +478,7 @@ export default function ChatListView({
                     <div className="flex items-center gap-2">
                       {isDeleting && <span className="text-xs">⏳</span>}
                       {unread && (
-                        <span className="w-3 h-3 rounded-full bg-orange-500" />
+                        <span className="w-3 h-3 rounded-full bg-blue-500" />
                       )}
                       <div className="text-xs text-gray-400">
                         {formatRelativeTime(chat.lastMessageAt)}
@@ -493,7 +512,7 @@ export default function ChatListView({
                   <div className="flex items-center gap-2">
                     {isDeleting && <span className="text-xs">⏳</span>}
                     {unread && (
-                      <span className="w-3 h-3 rounded-full bg-orange-500" />
+                      <span className="w-3 h-3 rounded-full bg-blue-500" />
                     )}
                     <div className="text-xs text-gray-400">
                       {formatRelativeTime(chat.lastMessageAt)}
@@ -525,7 +544,7 @@ export default function ChatListView({
           <button
             onClick={() => openLeaveModal(contextMenu.chatId)}
             disabled={deleting === contextMenu.chatId}
-            className="w-full text-left px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             채팅방 나가기
           </button>
@@ -566,7 +585,7 @@ export default function ChatListView({
               <button
                 onClick={() => handleLeaveRoom(leaveModal.chatId)}
                 disabled={deleting === leaveModal.chatId}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                 autoFocus
               >
                 {deleting === leaveModal.chatId ? "나가는 중..." : "나가기"}
@@ -591,7 +610,7 @@ export default function ChatListView({
                 type="text"
                 defaultValue={renameModal.chatName}
                 placeholder="새로운 이름을 입력하세요"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     const newName = (e.target as HTMLInputElement).value.trim();
@@ -622,7 +641,7 @@ export default function ChatListView({
                     handleRenameRoom(renameModal.chatId, newName);
                   }
                 }}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition cursor-pointer"
+                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg transition cursor-pointer"
               >
                 변경
               </button>

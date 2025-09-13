@@ -412,7 +412,7 @@ export function ControlIcons({ controlsRef }) {
             </button>
 
             {/* 공유 팝업 내용 */}
-            <div className="text-white text-center">
+            <div className="text-white text-center ">
               <h3 className="mb-5 text-lg font-semibold"></h3>
 
               {/* QR 코드 영역 */}
@@ -425,15 +425,17 @@ export function ControlIcons({ controlsRef }) {
               </div>
 
               {/* 링크 복사 버튼 */}
-              <button
-                onClick={copyToClipboard}
-                className="tool-btn tool-btn-green-active w-full p-4 text-lg font-bold mb-5"
-                style={{ transform: 'none' }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-              >
-                링크 복사
-              </button>
+              <div className="flex justify-center">
+                <button
+                  onClick={copyToClipboard}
+                  className="tool-btn tool-btn-green-active w-[230px] p-4 !text-lg font-bold mb-5"
+                  style={{ transform: 'none' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+                >
+                  링크 복사
+                </button>
+              </div>
 
               {/* 링크 표시 */}
               <div className="mt-1 p-3 bg-white/10 rounded text-xs break-all text-gray-300">
