@@ -1,122 +1,66 @@
-# 🏠 어따놀래
+#  어따놀래
 
-**차세대 3D 인테리어 시뮬레이터**
+> **차세대 3D 인테리어 시뮬레이터**
 
-누구나 쉽게, 내 공간을 직접 디자인하고 전 세계 사람들과 아이디어를 공유하는 플랫폼
+> [**서비스 사용하기 - 바로가기**]()
 
----
+> [**서비스 소개 영상 - 바로가기**]()
 
-## 1. 📖 프로젝트 개요
+> [**팀 노션 구경하기 - Notion**]()
 
-**어따놀래**는 이사, 가구 구매, 또는 방 구조 변경을 고민하는 모든 사람들을 위한 **웹 기반 3D 인테리어 시뮬레이터**입니다.
 
-- 복잡한 프로그램 없이 웹 브라우저에서 2D 도면을 그릴 수 있음
-- AI를 통해 가구 사진을 **3D 모델**로 변환
-- 가상 공간에 배치 후, 커뮤니티를 통해 다른 사람들과 **아이디어 공유 및 피드백** 가능
-- 전문가와의 소통, 협업 기능 제공
+<br/>
 
----
+## 📋 목차
+#### [**1. 프로젝트 기간**](#Period)
+#### [**2. 프로젝트 개요**](#어따놀래)
+#### [**3. 팀원**](#Team)
+#### [**4. 기술스택 및 개발환경**](#Stack)
+#### [**5. 서비스 아키텍처**](#Architecture)
+#### [**6. 프로젝트 포스터**](#Poster)
 
-## 2. 💡 주제 선정 배경
+<a name="Period"></a>
+## 📌 프로젝트 기간
+*2025.08.27 ~ 2025.09.27 (5주)*
 
-이사나 가구 구매 시 생기는 막막함을 해결하기 위해 **세 가지 목표**를 설정했습니다.
+<a name="어따놀래"></a>
 
-1. **직관적인 경험**
+## 📌 프로젝트 개요
+**누구나 쉽게, 내 공간을 직접 디자인하고 사람들과 아이디어를 공유하는 플랫폼**
 
-   - 3D에 익숙하지 않아도 게임처럼 쉽고 재미있게 설계 가능
+### **기획 배경**
+> 이사나 가구 구매 시 생기는 막막함을 해결하고, 3D에 익숙하지 >않은 사용자도 게임처럼 쉽고 재미있게 공간을 설계하는 경험을 >제공하고자 했습니다. 또한, AI 기술을 접목하여 사진 한 장만으로 >원하는 가구를 3D로 변환하고, 친구나 전문가와 아이디어를 >공유하는 **소셜 인테리어 플랫폼**을 목표로 기획했습니다.
 
-2. **AI 기술 접목**
+### **서비스 주요 기능**
+> 1. **나만의 공간 만들기**: 웹에서 2D 도면을 그리면 실시간으로 3D 공간이 생성됩니다.
+> 2. **AI 가구 모델링**: 가구 사진을 올리면 AI가 분석하여 3D 모델(.glb)을 자동 생성하고 개인 라이브러리에 저장해 줍니다.
+> 3. **3D 시뮬레이터**: 드래그 앤 드롭 방식으로 가구를 배치하고 실시간으로 총비용을 계산할 수 있습니다.
+> 4. **커뮤니티**: 완성된 디자인을 공유하고, 다른 사용자와 실시간 채팅 및 공간 공동 편집이 가능합니다.
 
-   - 사진 한 장으로 원하는 가구를 가상 공간에 자동 배치
+<a name="Team"></a>
+## 📌 팀원
 
-3. **소통과 공유**
+| 이름 | 깃허브 | 포지션 | 이름 | 깃허브 | 포지션 |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| | | ![](https://img.shields.io/badge/-FE-blue) | | | ![](https://img.shields.io/badge/-BE-red) |
+| | | ![](https://img.shields.io/badge/-FE-blue) | | | ![](https://img.shields.io/badge/-BE-red) |
 
-   - 친구, 동거인, 전문가와 함께 아이디어를 나누는 **소셜 인테리어 플랫폼**
 
----
+<a name="Stack"></a>
+## 📌 기술스택 및 개발환경
+| 분류 | 기술 |
+| :--- | :--- |
+| **Frontend** | <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white"> <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black"> <img src="https://img.shields.io/badge/React Three Fiber-000000?style=for-the-badge&logo=three.js&logoColor=white"> <img src="https://img.shields.io/badge/OpenCV.js-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white"> <img src="https://img.shields.io/badge/Socket.io client-010101?style=for-the-badge&logo=socket.io&logoColor=white"> |
+| **Backend (Socket)** | <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white"> <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white"> |
+| **Database** | <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"> |
+| **AI** | **Trellis (Image-to-3D)** |
+| **Storage** | <img src="https://img.shields.io/badge/Amazon S3-569A31?style=for-the-badge&logo=Amazon S3&logoColor=white"> |
+| **DevOps** | <img src="https://shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"> <img src="https://img.shields.io/badge/Amazon EC2-FF9900?style=for-the-badge&logo=Amazon EC2&logoColor=white"> |
 
-## 3. ✨ 핵심 기능
+<a name="Architecture"></a>
+## 📌 서비스 아키텍처
+<img src="next\public\Project_Architecture.png">
 
-### 🎨 1. 나만의 공간 만들기 (도면 그리기)
 
-- **2D 기반 드로잉**: 격자(Grid) UI에서 직관적으로 벽 그리기
-- **정밀 제어**: 벽 길이, 두께 등 수치 입력 가능
-- **문/창문 배치**: 에셋 라이브러리 활용
-- **실시간 3D 변환**: 2D → 3D 자동 반영
-
-### 🤖 2. AI 가구 모델링 (사진 → 3D 변환)
-
-- **이미지 업로드** → AI 분석
-- **3D 모델(.glb) 자동 생성**
-- **개인 라이브러리 저장 및 재사용 가능**
-
-### 🛋️ 3. 3D 가구 배치 시뮬레이터
-
-- **드래그 앤 드롭**으로 직관적인 배치
-- **React Three Fiber 기반 실시간 렌더링**
-- **정밀 변환** (위치, 회전, 크기 조정)
-- **실시간 비용 계산** (총 가구 가격 집계)
-
-### 💬 4. 커뮤니티 및 소셜 기능
-
-- **디자인 공유**: 스냅샷과 함께 게시
-- **사용자 팔로우 & 피드 구독**
-- **실시간 협업 채팅** (NestJS WebSocket)
-- **멀티 유저 공간 편집 지원**
-
----
-
-## 4. 🛠️ 기술 스택 및 아키텍처
-
-### 🏗️ 아키텍처
-
-```
-┌────────────────────┐
-│  Frontend (Client) │
-└────────────────────┘
-├── ⚛️ Next.js (UI, SSR/SSG, API Server)
-├── 🧊 React Three Fiber (3D Rendering)
-├── 🎨 OpenCV.js (Floor Plan Analysis)
-└── 🔌 WebSocket Client (Socket.io-client)
-     │
-     │ (WebSocket Connection)
-     ▼
-┌────────────────────┐
-│  Socket Server     │
-└────────────────────┘
-├── ✅ NestJS (Real-time Communication)
-└── 🌐 WebSocket Gateway
-
-┌────────────────────┐
-│  External Services │
-└────────────────────┘
-├── 🤖 AI: Trellis (Image-to-3D)
-├── 🗄️ DB: PostgreSQL (Metadata Storage)
-└── 📦 Storage: Amazon S3 (File Storage)
-```
-
-### ⚙️ 기술 스택
-
-- **Frontend**: Next.js, React, React Three Fiber, OpenCV.js, Socket.io-client
-- **Backend (Socket)**: NestJS, Socket.io
-- **Database**: PostgreSQL
-- **AI**: Trellis
-- **Storage**: Amazon S3
-- **DevOps**: Docker, Amazon EC2
-
-### 작업 가이드
-
-```
-# 개발환경
-npm run dev
-
-# 배포환경
-npm run prod
-
-# 컨테이너 종료
-npm run down
-
-# 빌드가 필요할 때:
-npm run dev:build
-npm run prod:build
-```
+<a name="Poster"></a>
+## 📌 프로젝트 포스터
