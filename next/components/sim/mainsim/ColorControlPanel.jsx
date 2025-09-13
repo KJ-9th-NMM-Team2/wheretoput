@@ -80,7 +80,14 @@ export function ColorControlPanel({ isPopup = false }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div>
             
-            <HexColorPicker style={{ width: '100%', height: '120px' }} color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor} onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
+            <HexColorPicker
+              // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
+              style={{ 
+                width: '100%',
+                height: '120px'
+              }}
+              color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
+              onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
           </div>
         </div>
       </div>

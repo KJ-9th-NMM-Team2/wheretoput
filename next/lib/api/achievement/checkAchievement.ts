@@ -49,7 +49,7 @@ async function countUserHistory(userId: string) {
     };
 }
 
-export async function checkAchievement(userId: string, isFurniture: boolean) {
+export async function checkAchievement(userId: string, isFurniture: boolean = true) { // 집보다 가구일 확률이 높음
     const userHistory = await countUserHistory(userId);
     if (!userHistory) {
         return { error: 'User not found' };

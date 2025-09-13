@@ -1,21 +1,49 @@
-// 수정 필요
 /**
  * @swagger
- * /api/chat/token:
+ * /api/backend:
  *   get:
  *     tags:
- *       - chat token
- *     summary: 토큰 교환 + 소켓 준비
- *     description: 토큰 교환 + 소켓 준비
+ *       - User
+ *     summary: 사용자 검색
+ *     description: 이름을 기준으로 사용자를 검색합니다.
+ *     parameters:
+ *       - name: q
+ *         in: query
+ *         required: false
+ *         description: 검색할 사용자 이름(부분 일치 검색, 대소문자 무시)
+ *         schema:
+ *           type: string
+ *           example: "john"
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         description: 검색 결과 제한 개수 (기본값 10)
+ *         schema:
+ *           type: integer
+ *           example: 5
  *     responses:
  *       200:
- *         description: Successful response
+ *         description: 사용자 목록 조회 성공
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: "clx123abc456"
+ *                   name:
+ *                     type: string
+ *                     example: "John Doe"
+ *                   email:
+ *                     type: string
+ *                     example: "john@example.com"
+ *       404:
+ *         description: 사용자를 찾을 수 없음
+ *       500:
+ *         description: 서버 내부 오류
  */
 
 import { prisma } from "@/lib/prisma";

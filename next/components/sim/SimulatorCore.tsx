@@ -375,7 +375,7 @@ export function SimulatorCore({
         {/* 벽 도구 드롭다운 */}
         {!viewOnly && <WallTools isDropdown={true} />}
 
-        <SelectedModelEditModal />
+        {!viewOnly && <SelectedModelEditModal />}
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}

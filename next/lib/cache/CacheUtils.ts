@@ -94,6 +94,19 @@ class CacheUtils {
         }
     }
 
+    compressLocalGLB = async (filePath: string) => {
+        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+        await fetch(`${baseUrl}/api/compress-glb`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                filePath: filePath
+            })
+        });
+    }
+
     private cacheFileAccess = async (filename: string) => {
         try {
             await cacheManager.increaseFileAccess(filename);

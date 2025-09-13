@@ -225,10 +225,11 @@ const SideItems: React.FC<SideItemsProps> = ({
                 updateModelUrl(modelId, result.model_url);
               }
               // 이미 URL이 있었던 경우 - 빠른 토스트를 이미 띄웠으면 중복 방지
-              if (!shouldShowQuickToast) {
+              if (!shouldShowQuickToast && loadingToastId) {
                 toast.success(`${item.name} 모델 로딩 완료`, {
-            position: 'bottom-center'
-          });
+                  id: loadingToastId,
+                  position: 'bottom-center'
+                });
               }
             }
           } else {
