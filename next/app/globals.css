@@ -78,13 +78,27 @@ html.dark .following-button {
   box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.15);
 }
 
-/* 기본 그레이 버튼 스타일 */
+/* [09.13] 기본 그레이 버튼 스타일 */
 .tool-btn-gray {
-  @apply flex items-center justify-center cursor-pointer overflow-hidden 
-         rounded-xl py-2 px-3 bg-gray-200 text-gray-600 font-semibold 
-         text-sm tracking-wide transition-all duration-300 
-         shadow-md border-none gap-2 hover:bg-gray-300 hover:-translate-y-0.5 
+  @apply flex items-center justify-center cursor-pointer overflow-hidden
+         rounded-xl py-2 px-3 bg-gray-200 text-gray-600 font-semibold
+         text-sm tracking-wide transition-all duration-300
+         shadow-md border-none gap-2 hover:bg-gray-300 hover:-translate-y-0.5
          hover:shadow-lg transform;
+}
+
+/* [09.13] 기본 삭제 버튼 스타일 */
+.tool-btn-red {
+  @apply flex items-center justify-center cursor-pointer overflow-hidden
+         rounded-xl py-2 px-3 bg-red-100 text-red-600 font-semibold
+         text-sm tracking-wide transition-all duration-300
+         shadow-md border-none gap-2 hover:bg-red-200 hover:-translate-y-0.5
+         hover:shadow-lg transform;
+}
+
+/* 다크모드 지원 */
+html.dark .tool-btn-red {
+  @apply bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-200;
 }
 
 .tool-btn:active {

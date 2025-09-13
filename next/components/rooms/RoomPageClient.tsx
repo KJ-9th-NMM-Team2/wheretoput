@@ -250,7 +250,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="px-3 py-1.5 text-base text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-200 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-md transition-all duration-200 shadow-sm hover:shadow-md hover:scale-102"
+                    className="tool-btn-red"
                   >
                     삭제
                   </button>
