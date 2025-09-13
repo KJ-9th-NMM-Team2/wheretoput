@@ -141,7 +141,23 @@ export function Wall({
         </mesh>
       )}
 
-      {(snappedWallInfo?.wall.id === id || snappedWallInfo?.wall2?.id === id) && (
+      {/* 스냅 하이라이트 - 병합된 벽과 일반 벽 모두 지원 */}
+      {(() => {
+        // 일반 벽인 경우: 직접 ID 매칭
+        if (!isMerged) {
+          return (snappedWallInfo?.wall.id === id || snappedWallInfo?.wall2?.id === id);
+        }
+
+        // 병합된 벽인 경우: 원본 벽들 중 하나라도 매칭되면 표시
+        if (isMerged && originalWalls) {
+          return originalWalls.some(originalWall =>
+            snappedWallInfo?.wall.id === originalWall.id ||
+            snappedWallInfo?.wall2?.id === originalWall.id
+          );
+        }
+
+        return false;
+      })() && (
         <mesh>
           <boxGeometry args={[width * 1.05, height * 1.05, depth * 1.05]} />
           <meshBasicMaterial
