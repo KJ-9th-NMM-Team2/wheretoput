@@ -4,10 +4,11 @@ interface EditPopupButtonsProps {
     handleSave: () => void;
     handleOutofRoomClick: () => void;
     isOwnUserRoom: boolean;
+    showHomeButton?: boolean;
 }
 
 export const EditPopupButtons = ({
-    onClose, onDelete, handleSave, handleOutofRoomClick, isOwnUserRoom
+    onClose, onDelete, handleSave, handleOutofRoomClick, isOwnUserRoom, showHomeButton = true
 }: EditPopupButtonsProps) => {
     return <>
         {/* 버튼들 */}
@@ -24,12 +25,14 @@ export const EditPopupButtons = ({
                 </>
             )}
 
-            <button
-                onClick={handleOutofRoomClick}
-                className="tool-btn tool-btn-inactive"
-            >
-                홈으로 돌아가기
-            </button>
+            {showHomeButton && (
+                <button
+                    onClick={handleOutofRoomClick}
+                    className="tool-btn tool-btn-inactive"
+                >
+                    홈으로 돌아가기
+                </button>
+            )}
         </div>
     </>
 }

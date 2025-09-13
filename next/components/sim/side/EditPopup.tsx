@@ -12,6 +12,7 @@ interface EditPopupProps {
   onDelete: () => void;
   onClose: () => void;
   handleOutofRoomClick: () => void;
+  showHomeButton?: boolean;
 }
 
 // initialTitle - 초기 집 이름 값
@@ -28,6 +29,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
   onDelete,
   onClose,
   handleOutofRoomClick,
+  showHomeButton = true,
 }) => {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
@@ -66,6 +68,7 @@ const EditPopup: React.FC<EditPopupProps> = ({
           handleSave={handleSave}
           handleOutofRoomClick={handleOutofRoomClick}
           isOwnUserRoom={isOwnUserRoom}
+          showHomeButton={showHomeButton}
         />
       </div>
     </div>
