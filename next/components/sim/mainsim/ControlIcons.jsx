@@ -450,7 +450,7 @@ export function ControlIcons({ controlsRef }) {
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            className="relative bg-black/90 rounded-lg p-8 w-[400px] max-w-[90vw] max-h-[90vh] overflow-hidden"
+            className="relative bg-black/90 rounded-lg p-8 w-[500px] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button

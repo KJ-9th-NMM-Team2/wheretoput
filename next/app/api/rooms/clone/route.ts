@@ -3,6 +3,57 @@ import { auth } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
 
+/**
+ * @swagger
+ * /api/rooms/clone:
+ *   post:
+ *     tags:
+ *       - Rooms
+ *     summary: 기존 방 복제
+ *     description: 
+ *       주어진 `room_id`를 기반으로 기존 방을 복제하여 새로운 방을 생성합니다.  
+ *       새 방은 비공개(`is_public: false`)로 생성되며, 원본 방의 `title`, `description`, `room_data`, `thumbnail_url` 등을 복사합니다.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - room_id
+ *             properties:
+ *               room_id:
+ *                 type: string
+ *                 description: 복제할 방의 ID
+ *                 example: "room_123"
+ *     responses:
+ *       201:
+ *         description: 방 복제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 room_id:
+ *                   type: string
+ *                   example: "room_456"
+ *                 message:
+ *                   type: string
+ *                   example: "Room cloned successfully"
+ *       400:
+ *         description: 필수 파라미터 누락 (`room_id` 없음)
+ *       401:
+ *         description: 인증 실패 (로그인 필요)
+ *       404:
+ *         description: 원본 방을 찾을 수 없음
+ *       500:
+ *         description: 서버 내부 오류
+ */
 export async function POST(req: NextRequest) {
   try {
     // 인증 확인
