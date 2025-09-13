@@ -277,7 +277,7 @@ export default function CommentsList({
           className={`cursor-pointer rounded-2xl px-4 py-2 text-sm font-bold text-white flex items-center gap-2 min-w-[80px] justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${isLoading
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-            }`}
+            }` }
           disabled={isLoading}
         >
           {isLoading && (

@@ -2,6 +2,67 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
+/**
+ * @swagger
+ * /api/users/{id}/follow:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: 사용자를 팔로우합니다.
+ *     description: |
+ *       로그인된 사용자가 `id`에 해당하는 사용자를 팔로우합니다.
+ *       이미 팔로우 중이면 400 에러를 반환합니다.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: 팔로우할 사용자의 ID
+ *         schema:
+ *           type: string
+ *           example: "user123"
+ *     responses:
+ *       200:
+ *         description: 팔로우 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: 이미 팔로우 중인 사용자이거나 자기 자신을 팔로우하는 경우
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Already following this user"
+ *       401:
+ *         description: 인증되지 않은 사용자
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       500:
+ *         description: 서버 내부 오류
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Internal server error"
+ */
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

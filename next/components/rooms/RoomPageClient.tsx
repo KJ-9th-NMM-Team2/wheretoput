@@ -8,6 +8,10 @@ import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/likes";
 import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
+import EditPopup from "@/components/sim/side/EditPopup";
+import { useRouter } from "next/navigation";
+import { deleteRoom } from "@/lib/roomService";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 interface RoomPageClientProps {
   room: any;
@@ -15,10 +19,13 @@ interface RoomPageClientProps {
 
 export default function RoomPageClient({ room }: RoomPageClientProps) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // 조회수 1 증가
   useEffect(() => {
@@ -85,6 +92,43 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
       setFollowLoading(false);
     }
   };
+
+  const handleSave = async (title: string, description: string, isPublic: boolean) => {
+    try {
+      const response = await fetch(`/api/rooms/${room.room_id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          is_public: isPublic,
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditPopup(false);
+        router.refresh();
+      } else {
+        console.error("Failed to update room");
+      }
+    } catch (error) {
+      console.error("Error updating room:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const success = await deleteRoom(room.room_id);
+    if (success) {
+      router.push("/");
+    } else {
+      alert("방 삭제에 실패했습니다.");
+    }
+    setShowDeleteModal(false);
+  };
+
+  const isOwnRoom = session?.user?.id === room.user.id;
 
 
   // 동일 가구 포함 x
@@ -182,17 +226,37 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               )}
             </div>
 
-            {/* 댓글/조회수 통계 */}
-            <div className="px-4 py-2 flex items-center gap-4 text-gray-500 dark:text-gray-400 text-sm ml-auto">
-              <span>조회 {room.view_count} ｜ </span>
-
-              <span className="-ml-2">
-                {new Date(room.updated_at).toLocaleDateString('ko-KR', {
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </span>
-
+            {/* 조회수 , 댓글 , 날짜 통계 */}
+            <div className="px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+                <span>조회 {room.view_count}</span>
+                <span>｜</span>
+                <span>댓글 {room.num_comments}</span>
+                <span>｜</span>
+                <span>
+                  {new Date(room.updated_at).toLocaleDateString('ko-KR', {
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              
+              {isOwnRoom && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowEditPopup(true)}
+                    className="tool-btn-gray"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="tool-btn-red"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
@@ -216,6 +280,26 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
           </div>
         </div>
       </div>
+
+      {showEditPopup && (
+        <EditPopup
+          initialTitle={room.title}
+          initialDescription={room.description}
+          initialIsPublic={room.is_public}
+          isOwnUserRoom={isOwnRoom}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onClose={() => setShowEditPopup(false)}
+          handleOutofRoomClick={() => {}}
+          showHomeButton={false}
+        />
+      )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </>
   );
 }
