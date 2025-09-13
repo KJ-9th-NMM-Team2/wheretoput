@@ -166,9 +166,9 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               {room.root_room_id && room.rooms ? (
                 <Link
                   href={`/rooms/${room.root_room_id}`}
-                  className="px-4 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400"
+                  className="inline-block px-4 py-2 mx-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words"
                 >
-                  {room.rooms.user.name}님의 {room.rooms.title}에서 복제된
+                  {room.rooms.user.name}님의 "<span className="text-amber-900 dark:text-amber-200">{room.rooms.title}</span>"에서 복제된
                   방입니다.
                 </Link>
               ) : (
