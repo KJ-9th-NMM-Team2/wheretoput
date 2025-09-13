@@ -123,6 +123,8 @@ jobs:
             docker system prune -f
             set -e
             cd ${{ secrets.EC2_DEPLOY_PATH }}/next
+
+            mkdir -p ./cache/models && chmod 755 ./cache/models
             
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
