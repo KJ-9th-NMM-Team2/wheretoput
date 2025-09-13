@@ -132,6 +132,11 @@ jobs:
             export IMAGE_TAG=${{ github.sha }}
             export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             export ECR_REPO_NEXT=${{ secrets.ECR_REPO_NEXT }}
+
+            # 임시 컨테이너로 기존 모델 파일들 복사
+            docker run --rm -v $(pwd)/cache/models:/host_models \
+            ${{ env.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:${{ github.sha }} \
+            sh -c "if [ -d /app/public/cache/models ]; then cp -r /app/public/cache/models/* /host_models/ || true; fi"
             
             docker-compose -f docker-compose.next.yml --env-file .env.production pull
             docker-compose -f docker-compose.next.yml --env-file .env.production up -d --remove-orphans
