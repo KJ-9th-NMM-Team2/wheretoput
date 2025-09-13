@@ -131,7 +131,7 @@ async function uploadToS3(fileData, s3Key) {
     };
     
     await s3Client.send(new PutObjectCommand(uploadParams));
-    return `https://wheretoput-bucket.s3.ap-northeast-2.amazonaws.com/${s3Key}`;
+    return `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${s3Key}`;
 }
 
 // 기존 furniture 업데이트 함수
