@@ -207,58 +207,67 @@ export async function GET(
     }
 
     // 4. 시뮬레이터에서 사용할 형태로 데이터 변환
-    const objects = await Promise.all(roomObjects.map(async (obj) => {
-      // position JSON에서 값 추출
-      const pos = obj.position as any;
-      const rot = obj.rotation as any;
-      const scale = obj.scale as any;
+    const objects = await Promise.all(
+      roomObjects.map(async (obj) => {
+        // position JSON에서 값 추출
+        const pos = obj.position as any;
+        const rot = obj.rotation as any;
+        const scale = obj.scale as any;
 
-      // furniture_id가 null인 경우 (직접 업로드된 모델) 처리
-      const hasFurniture = obj.furnitures && obj.furniture_id;
-      // cached_model_url과 실제 파일 존재 여부 모두 체크
-      let useCachedUrl = false;
+        // furniture_id가 null인 경우 (직접 업로드된 모델) 처리
+        const hasFurniture = obj.furnitures && obj.furniture_id;
+        // cached_model_url과 실제 파일 존재 여부 모두 체크
+        let useCachedUrl = false;
 
-      const filePath = path.join('public', obj.furnitures.cached_model_url || "");
-      if (filePath.includes('/cache/models/')) {
-        await fs.access(filePath);
-        useCachedUrl = true;
-        console.log(`🎃 Using cached file: ${filePath}`);
-      }
+        const filePath = path.join(
+          "public",
+          obj.furnitures.cached_model_url || ""
+        );
+        if (filePath.includes("/cache/models/")) {
+          try {
+            await fs.access(filePath);
+            useCachedUrl = true;
+            console.log(`🎃 Using cached file: ${filePath}`);
+          } catch {
+            console.log(`Cache miss: ${filePath}`);
+          }
+        }
 
-      return {
-        id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
-        object_id: obj.object_id, // DB의 객체 ID
-        furniture_id: obj.furniture_id,
-        name: hasFurniture ? obj.furnitures.name : "Custom Object", // InfoPanel에서 사용하는 name 속성
-        position: [pos?.x || 0, pos?.y || 0, pos?.z || 0],
-        rotation: [rot?.x || 0, rot?.y || 0, rot?.z || 0],
-        length: [
-          Number(obj.furnitures?.length_x),
-          Number(obj.furnitures?.length_y),
-          Number(obj.furnitures?.length_z),
-        ],
-        scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
-        // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
-        url:
-          hasFurniture && useCachedUrl
-            ? obj.furnitures.cached_model_url
-            : obj.furnitures.model_url 
+        return {
+          id: `object-${obj.object_id}`, // Three.js에서 사용할 고유 ID
+          object_id: obj.object_id, // DB의 객체 ID
+          furniture_id: obj.furniture_id,
+          name: hasFurniture ? obj.furnitures.name : "Custom Object", // InfoPanel에서 사용하는 name 속성
+          position: [pos?.x || 0, pos?.y || 0, pos?.z || 0],
+          rotation: [rot?.x || 0, rot?.y || 0, rot?.z || 0],
+          length: [
+            Number(obj.furnitures?.length_x),
+            Number(obj.furnitures?.length_y),
+            Number(obj.furnitures?.length_z),
+          ],
+          scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
+          // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
+          url:
+            hasFurniture && useCachedUrl
+              ? obj.furnitures.cached_model_url
+              : obj.furnitures.model_url
               ? obj.furnitures.model_url
               : "/legacy_mesh (1).glb",
-        isCityKit: hasFurniture
-          ? obj.furnitures.model_url?.includes("citykit") || false
-          : false,
-        texturePath: null, // texture_url 필드가 스키마에 없음
-        type: hasFurniture
-          ? obj.furnitures.model_url?.endsWith(".glb")
-            ? "glb"
-            : "building"
-          : "custom",
-        // 추가 메타데이터
-        furnitureName: hasFurniture ? obj.furnitures.name : "Custom Object",
-        categoryId: hasFurniture ? obj.furnitures.category_id : null,
-      };
-    }));
+          isCityKit: hasFurniture
+            ? obj.furnitures.model_url?.includes("citykit") || false
+            : false,
+          texturePath: null, // texture_url 필드가 스키마에 없음
+          type: hasFurniture
+            ? obj.furnitures.model_url?.endsWith(".glb")
+              ? "glb"
+              : "building"
+            : "custom",
+          // 추가 메타데이터
+          furnitureName: hasFurniture ? obj.furnitures.name : "Custom Object",
+          categoryId: hasFurniture ? obj.furnitures.category_id : null,
+        };
+      })
+    );
 
     // 5. 벽 정보를 시뮬레이터 형태로 변환 (room_walls 또는 legacy data 사용)
     const wallsToProcess = roomWalls.length > 0 ? roomWalls : legacyWallsData;
