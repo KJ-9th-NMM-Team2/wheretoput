@@ -65,10 +65,6 @@ export const useRoomManagement = ({ userRooms, setUserRooms }: UseRoomManagement
   const handleBulkDelete = async () => {
     if (selectedRooms.size === 0) return;
 
-    if (!confirm(`선택한 ${selectedRooms.size}개의 방을 정말 삭제할까요?`)) {
-      return;
-    }
-
     const deletedRooms = new Set<string>();
     for (const roomId of selectedRooms) {
       const success = await deleteRoom(roomId);

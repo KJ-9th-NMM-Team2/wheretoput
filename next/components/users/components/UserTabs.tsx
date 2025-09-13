@@ -4,6 +4,8 @@ import { HomeCard } from "@/components/main/HomeCardList";
 import AchievementList from "./AchievementList";
 import { DeleteRoom } from "./DeleteRoom";
 import { FaTrashCan } from "react-icons/fa6";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
+
 
 interface UserTabsProps {
   user: any;
@@ -13,7 +15,7 @@ interface UserTabsProps {
   selectedRooms: Set<string>;
   handleToggleDeleteMode: () => void;
   handleBulkDelete: () => void;
-  setSelectedRooms: (rooms: Set<string>) => void;
+  setSelectedRooms: React.Dispatch<React.SetStateAction<Set<string>>>;
   setEditingRoom: (room: any) => void;
 }
 
@@ -29,9 +31,10 @@ export default function UserTabs({
   setEditingRoom,
 }: UserTabsProps) {
   const [isAchievement, setIsAchievement] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   const handleRoomSelect = (roomId: string) => {
-    setSelectedRooms((prev) => {
+    setSelectedRooms((prev: Set<string>) => {
       const newSelected = new Set(prev);
       if (newSelected.has(roomId)) {
         newSelected.delete(roomId);
@@ -40,6 +43,11 @@ export default function UserTabs({
       }
       return newSelected;
     });
+  };
+
+  const handleConfirmBulkDelete = () => {
+    handleBulkDelete();
+    setShowBulkDeleteModal(false);
   };
 
   return (
@@ -79,11 +87,11 @@ export default function UserTabs({
           <div className="flex items-center gap-3">
             {isDeleteMode && (
               <button
-                onClick={handleBulkDelete}
+                onClick={() => setShowBulkDeleteModal(true)}
                 disabled={selectedRooms.size === 0}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${selectedRooms.size === 0
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-red-300 text-red-700 hover:bg-red-400  cursor-pointer"
+                  ? "tool-btn-gray !cursor-not-allowed"
+                  : "tool-btn-red text-red-700"
                   }`}
               >
                 선택한 방 삭제 ({selectedRooms.size})
@@ -120,7 +128,6 @@ export default function UserTabs({
                   isDeleteMode={isDeleteMode}
                   selectedRooms={selectedRooms}
                   handleRoomSelect={handleRoomSelect}
-                  setEditingRoom={setEditingRoom}
                 />
               </div>
             ))}
@@ -133,6 +140,14 @@ export default function UserTabs({
           </div>
         )
       )}
+
+      <DeleteConfirmModal
+        isOpen={showBulkDeleteModal}
+        title="선택한 방들을 삭제하시겠습니까?"
+        message={`${selectedRooms.size}개의 방이 영구적으로 삭제됩니다.`}
+        onConfirm={handleConfirmBulkDelete}
+        onCancel={() => setShowBulkDeleteModal(false)}
+      />
     </>
   );
 }

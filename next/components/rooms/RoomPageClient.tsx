@@ -11,6 +11,7 @@ import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
 import EditPopup from "@/components/sim/side/EditPopup";
 import { useRouter } from "next/navigation";
 import { deleteRoom } from "@/lib/roomService";
+import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 
 interface RoomPageClientProps {
   room: any;
@@ -24,6 +25,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // 조회수 1 증가
   useEffect(() => {
@@ -117,14 +119,13 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm("정말로 이 방을 삭제하시겠습니까?")) return;
-
     const success = await deleteRoom(room.room_id);
     if (success) {
       router.push("/");
     } else {
       alert("방 삭제에 실패했습니다.");
     }
+    setShowDeleteModal(false);
   };
 
   const isOwnRoom = session?.user?.id === room.user.id;
@@ -249,7 +250,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                     수정
                   </button>
                   <button
-                    onClick={handleDelete}
+                    onClick={() => setShowDeleteModal(true)}
                     className="tool-btn-red"
                   >
                     삭제
@@ -293,6 +294,12 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
           showHomeButton={false}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </>
   );
 }
