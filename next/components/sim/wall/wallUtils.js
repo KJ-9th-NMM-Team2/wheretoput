@@ -143,7 +143,7 @@ export const findWallIntersection = (wall1, wall2) => {
     line1.start[1] + t * (line1.end[1] - line1.start[1]),
   ];
 
-  console.log(`📊 교차 계산 결과: t=${t}, u=${u}`, intersection);
+  //console.log(`📊 교차 계산 결과: t=${t}, u=${u}`, intersection);
 
   // 조건을 더 완화: 벽의 연장선상에서도 교차 허용
   const tolerance = 0.5;
@@ -153,11 +153,11 @@ export const findWallIntersection = (wall1, wall2) => {
     u >= -tolerance &&
     u <= 1 + tolerance
   ) {
-    console.log("✅ 교차점 발견!", intersection);
+    //console.log("✅ 교차점 발견!", intersection);
     return intersection;
   }
 
-  console.log("❌ 교차점 범위 밖");
+  //console.log("❌ 교차점 범위 밖");
   return null; // 교차점 없음
 };
 
