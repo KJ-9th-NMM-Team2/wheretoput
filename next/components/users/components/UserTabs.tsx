@@ -57,11 +57,10 @@ export default function UserTabs({
           <button
             onClick={() => setIsAchievement(false)}
             className={`
-              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl
               ${!isAchievement
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                ? 'tool-btn'
+                : 'tool-btn-gray'
               }
             `}
           >
@@ -71,11 +70,10 @@ export default function UserTabs({
           <button
             onClick={() => setIsAchievement(true)}
             className={`
-              text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              text-md font-medium leading-normal px-3 py-2 rounded-2xl
               ${isAchievement
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                ? 'tool-btn'
+                : 'tool-btn-gray'
               }
             `}
           >
