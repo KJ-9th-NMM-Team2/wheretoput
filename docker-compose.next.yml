@@ -28,4 +28,8 @@ services:
       - IMAGE_TAG=latest
     restart: unless-stopped
     volumes:
-      - ./cache/models:/app/public/cache/models
+        - cache_data:/app/public/cache
+
+        
+volumes:
+  cache_data:
