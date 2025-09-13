@@ -14,7 +14,7 @@ export function FurnitureCard({ furniture }: { furniture: any }) {
           src={furniture.image_url}
           alt={furniture.name}
           width={100}
-          height={100}
+          className="w-full h-auto aspect-square object-cover rounded-xl  transition-transform duration-200 hover:scale-125  cursor-pointer"
           className="w-full h-auto aspect-square object-cover rounded-xl  transition-transform duration-200 hover:scale-120  cursor-pointer"
           onClick={() => setShowModal(true)}
         />
