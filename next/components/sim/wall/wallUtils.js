@@ -105,21 +105,32 @@ export const findWallIntersection = (wall1, wall2) => {
     const halfWidth = dimensions.width / 2;
     const cos = Math.cos(rotation[1]);
     const sin = Math.sin(rotation[1]);
-    
+
     return {
       start: [
         position[0] - halfWidth * cos,
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin  // sin 부호 변경
       ],
       end: [
         position[0] + halfWidth * cos,
-        position[2] + halfWidth * sin
+        position[2] - halfWidth * sin  // sin 부호 변경
       ]
     };
   };
 
   const line1 = getWallEndpoints(wall1);
   const line2 = getWallEndpoints(wall2);
+
+  console.log(`🔍 교점 계산: ${wall1.id} vs ${wall2.id}`, {
+    line1,
+    line2,
+    wall1Position: wall1.position,
+    wall1Rotation: wall1.rotation,
+    wall1Dimensions: wall1.dimensions,
+    wall2Position: wall2.position,
+    wall2Rotation: wall2.rotation,
+    wall2Dimensions: wall2.dimensions
+  });
 
   // 선분 교차 알고리즘
   const denominator = 
@@ -140,13 +151,22 @@ export const findWallIntersection = (wall1, wall2) => {
       (line1.start[1] - line1.end[1]) * (line1.start[0] - line2.start[0])) / 
     denominator;
 
-  if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
-    return [
-      line1.start[0] + t * (line1.end[0] - line1.start[0]),
-      line1.start[1] + t * (line1.end[1] - line1.start[1])
-    ];
+  // 교차점 계산 (선분 범위 확장)
+  const intersection = [
+    line1.start[0] + t * (line1.end[0] - line1.start[0]),
+    line1.start[1] + t * (line1.end[1] - line1.start[1])
+  ];
+
+  console.log(`📊 교차 계산 결과: t=${t}, u=${u}`, intersection);
+
+  // 조건을 더 완화: 벽의 연장선상에서도 교차 허용
+  const tolerance = 0.5;
+  if (t >= -tolerance && t <= 1 + tolerance && u >= -tolerance && u <= 1 + tolerance) {
+    console.log('✅ 교차점 발견!', intersection);
+    return intersection;
   }
 
+  console.log('❌ 교차점 범위 밖');
   return null; // 교차점 없음
 };
 
@@ -222,12 +242,12 @@ export const snapToWallEndpoints = (point, existingWalls, snapDistance = 0.5) =>
       [
         position[0] - halfWidth * cos,
         position[1],
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin  // sin 부호 변경
       ],
       [
         position[0] + halfWidth * cos,
         position[1],
-        position[2] + halfWidth * sin
+        position[2] - halfWidth * sin  // sin 부호 변경
       ]
     ];
 
@@ -282,12 +302,12 @@ export const autoSnapToNearestWallEndpoint = (clickPoint, existingWalls, snapDis
       [
         position[0] - halfWidth * cos,
         0, // Y좌표는 항상 0으로
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin  // sin 부호 변경
       ],
       [
         position[0] + halfWidth * cos,
         0, // Y좌표는 항상 0으로
-        position[2] + halfWidth * sin
+        position[2] - halfWidth * sin  // sin 부호 변경
       ]
     ];
 
@@ -313,15 +333,16 @@ export const getWallEndpoints = (wall) => {
   const halfWidth = dimensions.width / 2;
   const cos = Math.cos(rotation[1]);
   const sin = Math.sin(rotation[1]);
-  
+
+  // wallSlice.js의 rotationY = Math.atan2(-dz, dx) 로직과 일치하도록 수정
   return {
     start: [
       position[0] - halfWidth * cos,
-      position[2] - halfWidth * sin
+      position[2] + halfWidth * sin  // sin 부호 변경
     ],
     end: [
       position[0] + halfWidth * cos,
-      position[2] + halfWidth * sin
+      position[2] - halfWidth * sin  // sin 부호 변경
     ]
   };
 };

@@ -733,31 +733,37 @@
       "createdAt": "2025. 9. 12. 오후 10:48:46"
     },
     "9ef5de60-0544-4a3d-a91f-f3c55b7374cb.glb": {
-      "lastAccessed": "2025. 9. 12. 오후 11:19:33",
-      "accessCount": 1,
+      "lastAccessed": "2025. 9. 13. 오후 1:28:01",
+      "accessCount": 2,
       "fileSize": 1095800,
       "createdAt": "2025. 9. 12. 오후 11:19:33"
     },
     "63773895-b924-4534-9a8e-406965b943f8.glb": {
-      "lastAccessed": "2025. 9. 12. 오후 11:19:54",
-      "accessCount": 1,
+      "lastAccessed": "2025. 9. 13. 오후 1:46:34",
+      "accessCount": 3,
       "fileSize": 1121916,
       "createdAt": "2025. 9. 12. 오후 11:19:54"
     },
     "331240c0-e10f-4cae-947f-9b81a68f6ab4.glb": {
-      "lastAccessed": "2025. 9. 13. 오전 12:58:13",
-      "accessCount": 2,
+      "lastAccessed": "2025. 9. 13. 오후 2:05:56",
+      "accessCount": 7,
       "fileSize": 1320304,
       "createdAt": "2025. 9. 12. 오후 11:22:09"
     },
     "cfd4ece3-e5f6-4ce5-bde1-2dcd3ce30d24.glb": {
-      "lastAccessed": "2025. 9. 13. 오전 12:58:19",
-      "accessCount": 1,
+      "lastAccessed": "2025. 9. 13. 오후 1:46:24",
+      "accessCount": 7,
       "fileSize": 1456488,
       "createdAt": "2025. 9. 13. 오전 12:58:19"
+    },
+    "4b5431e2-b0e9-4678-a831-2a6361fc667c.glb": {
+      "lastAccessed": "2025. 9. 13. 오후 1:36:29",
+      "accessCount": 1,
+      "fileSize": 1366788,
+      "createdAt": "2025. 9. 13. 오후 1:36:29"
     }
   },
-  "totalSize": 175592992,
+  "totalSize": 176959780,
   "maxSize": 314572800,
   "lastCleanup": "2025. 9. 12. 오후 3:21:16"
 }
