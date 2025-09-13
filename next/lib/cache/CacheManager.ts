@@ -274,7 +274,7 @@ class CacheManager {
 }
 
 // 싱글톤 인스턴스 생성
-const CACHE_DIR = path.join(process.cwd());
+const CACHE_DIR = process.cwd(); // PROJECT ROOT 배포 시 에러 발생해서 이렇게 수정
 const cacheManager = new CacheManager(CACHE_DIR);
 
 export default cacheManager;
