@@ -62,6 +62,7 @@ class CacheUtils {
     try {
       const arrayBuffer = await response.arrayBuffer();
       await fs.writeFile(localPath, Buffer.from(arrayBuffer));
+      await fs.chmod(localPath, 0o755);
       await cacheManager.recordFileAccess(fileName);
 
       const result = NextResponse.json({
