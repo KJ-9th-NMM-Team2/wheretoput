@@ -34,6 +34,8 @@ import { PreviewManager } from "./preview/PreviewManager";
 import WallTools from "./side/WallTools";
 import { WallMeasurements } from "./measurements/WallMeasurements";
 import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
+import { CaptureModal } from "./mainsim/CaptureModal";
+import { CaptureHandler } from "./mainsim/CaptureHandler";
 
 type position = [number, number, number];
 
@@ -420,6 +422,9 @@ export function SimulatorCore({
 
         {!viewOnly && <SelectedModelEditModal />}
 
+        {/* 캡처 모달 */}
+        <CaptureModal />
+
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
@@ -631,6 +636,7 @@ export function SimulatorCore({
           {canvasChildren}
 
           <CanvasImageLogger />
+          <CaptureHandler />
         </Canvas>
       </div>
     </div>
