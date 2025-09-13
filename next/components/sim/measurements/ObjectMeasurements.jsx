@@ -48,6 +48,24 @@ export function ObjectMeasurements() {
         Math.sin(rotationY) * halfWidth,
       ];
 
+      // 텍스트 회전 각도 계산 (HTML 태그는 반대 방향)
+      let widthTextRotation = -rotationY;
+      let depthTextRotation = -(rotationY + Math.PI / 2);
+
+      // 각도를 -π에서 π 범위로 정규화
+      while (widthTextRotation > Math.PI) widthTextRotation -= 2 * Math.PI;
+      while (widthTextRotation < -Math.PI) widthTextRotation += 2 * Math.PI;
+      while (depthTextRotation > Math.PI) depthTextRotation -= 2 * Math.PI;
+      while (depthTextRotation < -Math.PI) depthTextRotation += 2 * Math.PI;
+
+      // 텍스트가 거꾸로 보이지 않도록 조정 (90도보다 크면 180도 회전)
+      if (Math.abs(widthTextRotation) > Math.PI / 2) {
+        widthTextRotation = widthTextRotation + Math.PI;
+      }
+      if (Math.abs(depthTextRotation) > Math.PI / 2) {
+        depthTextRotation = depthTextRotation + Math.PI;
+      }
+
       return {
         position,
         rotation: rotationY,
@@ -56,6 +74,8 @@ export function ObjectMeasurements() {
         depth,
         halfWidth,
         halfDepth,
+        widthTextRotation,
+        depthTextRotation,
       };
     } catch (error) {
       console.error("ObjectMeasurements calculation error:", error);
@@ -65,14 +85,14 @@ export function ObjectMeasurements() {
 
   if (!showMeasurements || !objectMeasurements) return null;
 
-  const { position, rotation, width, height, depth, halfWidth, halfDepth } =
+  const { position, rotation, width, height, depth, halfWidth, halfDepth, widthTextRotation, depthTextRotation } =
     objectMeasurements;
 
   try {
     return (
       <group position={position} rotation={[0, rotation, 0]}>
         {/* Width 표시 - 물체의 Width 방향 (X축) */}
-        <group position={[0, height / 1000, -halfDepth]} rotation={[0, 0, 0]}>
+        <group position={[0, height / 1000, -halfDepth]}>
           <Html
             center
             distanceFactor={12}
@@ -85,10 +105,11 @@ export function ObjectMeasurements() {
             }}
           >
             <div
-              className="bg-green-600 font-bold px-1 text-white rounded border border-green-800 shadow-lg"
+              className="opacity-60 bg-green-600 font-bold px-1 text-white rounded border border-green-800 shadow-lg"
               style={{
                 fontSize: "12px",
                 textAlign: "center",
+                transform: `rotate(${widthTextRotation}rad)`,
               }}
             >
               {width}
@@ -113,10 +134,11 @@ export function ObjectMeasurements() {
             }}
           >
             <div
-              className="bg-green-600 font-bold px-1 text-white rounded border border-green-800 shadow-lg"
+              className="opacity-60 bg-green-600 font-bold px-1 text-white rounded border border-green-800 shadow-lg"
               style={{
                 fontSize: "12px",
                 textAlign: "center",
+                transform: `rotate(${depthTextRotation}rad)`,
               }}
             >
               {depth}

@@ -168,7 +168,7 @@ export function WallMeasurements() {
                 opacity
               >
                 <div
-                  className="bg-blue-600 font-bold text-white rounded border px-2 border-blue-800 shadow-lg"
+                  className="opacity-60 bg-blue-600 font-bold text-white rounded border px-2 border-blue-800 shadow-lg"
                   style={{
                     fontSize: "12px",
                     textAlign: "center",
