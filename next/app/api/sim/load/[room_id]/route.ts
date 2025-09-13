@@ -3,6 +3,26 @@ import fs from "fs/promises";
 import type { NextRequest } from "next/server";
 import path from "path";
 
+// URL 접근 가능 여부 확인 함수
+async function isUrlAccessible(url: string): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+
+    const response = await fetch(url, {
+      method: "HEAD",
+      signal: controller.signal,
+      cache: "no-cache",
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    console.log(`URL not accessible: ${url}`, error.message);
+    return false;
+  }
+}
+
 /**
  * @swagger
  * /api/sim/load/{room_id}:
@@ -214,23 +234,14 @@ export async function GET(
         const rot = obj.rotation as any;
         const scale = obj.scale as any;
 
-        // furniture_id가 null인 경우 (직접 업로드된 모델) 처리
+        // cached_model_url이 있으면 API 경로 사용, 없으면 원본 URL 사용
+        const hasCachedModel = obj.furnitures?.cached_model_url?.includes("/cache/models/");
         const hasFurniture = obj.furnitures && obj.furniture_id;
-        // cached_model_url과 실제 파일 존재 여부 모두 체크
-        let useCachedUrl = false;
 
-        const filePath = path.join(
-          "public",
-          obj.furnitures.cached_model_url || ""
-        );
-        if (filePath.includes("/cache/models/")) {
-          try {
-            await fs.access(filePath);
-            useCachedUrl = true;
-            console.log(`🎃 Using cached file: ${filePath}`);
-          } catch {
-            console.log(`Cache miss: ${filePath}`);
-          }
+        if (hasCachedModel) {
+          console.log(
+            `🎃 Using cached file via API: ${obj.furnitures.cached_model_url}`
+          );
         }
 
         return {
@@ -248,11 +259,12 @@ export async function GET(
           scale: [scale?.x || 1, scale?.y || 1, scale?.z || 1],
           // furniture 테이블의 정보 활용 (furniture_id가 있는 경우만)
           url:
-            hasFurniture && useCachedUrl
-              ? obj.furnitures.cached_model_url
-              : obj.furnitures.model_url
-              ? obj.furnitures.model_url
-              : "/legacy_mesh (1).glb",
+            hasFurniture && hasCachedModel
+              ? `/api/models/cache/${obj.furnitures.cached_model_url?.replace(
+                  "/cache/models/",
+                  ""
+                )}`
+              : obj.furnitures?.model_url || "/legacy_mesh (1).glb",
           isCityKit: hasFurniture
             ? obj.furnitures.model_url?.includes("citykit") || false
             : false,
