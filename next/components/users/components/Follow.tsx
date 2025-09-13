@@ -75,9 +75,9 @@ export function Follow({
                         <button
                             onClick={handleFollowToggle}
                             disabled={followLoading}
-                            className={`px-6 py-2 rounded-lg font-medium transition-colors ${isFollowing
-                                ? "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                                : "bg-amber-600 dark:bg-blue-500 text-white hover:bg-amber-700 dark:hover:bg-blue-700"
+                            className={`${isFollowing
+                                ? "tool-btn-gray"
+                                : "tool-btn"
                                 } ${followLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}

@@ -156,10 +156,9 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
         <div className="px-40 flex flex-1 justify-center">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap gap-2 p-4">
-              <span className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal"></span>
             </div>
             <div className="px-4 py-6">
-              <h1 className="text-[#181411] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
+              <h1 className="text-[#2F3438] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
                 {room?.title}
               </h1>
             </div>
@@ -167,9 +166,9 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               {room.root_room_id && room.rooms ? (
                 <Link
                   href={`/rooms/${room.root_room_id}`}
-                  className="px-4 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400"
+                  className="inline-block px-4 py-2 mx-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words"
                 >
-                  {room.rooms.user.name}님의 {room.rooms.title}에서 복제된
+                  {room.rooms.user.name}님의 "<span className="text-amber-900 dark:text-amber-200">{room.rooms.title}</span>"에서 복제된
                   방입니다.
                 </Link>
               ) : (
@@ -265,12 +264,12 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 {room.description}
               </p>
             </div>
-            <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+            <h2 className="text-gray-800 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               가구 프리뷰
             </h2>
             <FurnituresList room_objects={uniqueFurnituresByRoom} />
 
-            <h2 className="text-[#181411] dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+            <h2 className="text-gray-800 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
               댓글 ({room.num_comments})
             </h2>
             <CommentsList

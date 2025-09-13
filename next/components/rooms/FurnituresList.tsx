@@ -16,7 +16,7 @@ export function FurnitureCard({ furniture }: { furniture: any }) {
           alt={furniture.name}
           className="w-full h-auto aspect-square object-cover rounded-xl transition-opacity duration-200 hover:opacity-90"
         />
-        <p className="text-[#181411] dark:text-gray-100 text-base font-medium leading-normal">
+        <p className="text-gray-800 dark:text-gray-100 text-base font-medium leading-normal">
           {furniture.name}
         </p>
       </div>
@@ -51,7 +51,7 @@ export function FurnitureModal({
         <h2 className="text-xl font-bold mb-4 text-[#181411] dark:text-gray-100 pr-10">
           {furniture.name}
         </h2>
-        <h3>
+        <h3 className="text-gray-800 dark:text-gray-100 font-bold mb-4">
           {furniture.brand} / {furniture.price ?? 0}원
         </h3>
         <img
@@ -59,13 +59,17 @@ export function FurnitureModal({
           alt={furniture.name}
           className="w-full h-auto mb-4 rounded-lg max-w-[180px] mx-auto"
         />
-        <p className="text-[#181411] dark:text-gray-100 mb-4">
-          {furniture.description || "설명이 없습니다."}
-        </p>
+        <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 mb-4">
+          <p className="text-gray-700 dark:text-gray-300">
+            {furniture.description || "설명이 없습니다."}
+          </p>
+        </div>
 
-        {/*오픈마켓 링크: 아이콘,폰트사이즈 크게 */}
+        {/*오픈마켓 링크  */}
         <div className="flex justify-center">
-          <ShoppingLink furnitureName={furniture.name} iconSize={20} textSize="text-base" />
+          <div className="">
+            <ShoppingLink furnitureName={furniture.name} iconSize={20} textSize="text-base" />
+          </div>
         </div>
       </div>
     </div>
