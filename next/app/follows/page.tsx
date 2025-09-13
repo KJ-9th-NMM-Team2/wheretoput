@@ -127,14 +127,14 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
         {isFollowing ? (
           <button
             onClick={() => handleUnfollow(user.id)}
-            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
+            className="tool-btn-red !px-3 !py-1"
           >
             언팔로우
           </button>
         ) : (
           <button
             onClick={() => handleRemoveFollower(user.id)}
-            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors cursor-pointer"
+            className="tool-btn-red !px-3 !py-1"
           >
             삭제
           </button>
