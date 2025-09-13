@@ -14,9 +14,6 @@ const handleSave = async () => {
   try {
     await saveSimulatorState();
 
-    // 저장 완료 후 캔버스 캡처 트리거
-    setShouldCapture(true);
-
     setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`);
     setTimeout(() => setSaveMessage(""), 3000);
   } catch (error) {
@@ -113,9 +110,6 @@ export function ControlPanel({ isPopup = false }) {
 
     try {
       await saveSimulatorState();
-
-      // 저장 완료 후 캔버스 캡처 트리거
-      setShouldCapture(true);
 
       setSaveMessage(`저장 완료! (${loadedModels.length}개 가구)`);
       setTimeout(() => setSaveMessage(""), 3000);
@@ -231,9 +225,9 @@ export function ControlPanel({ isPopup = false }) {
                 : "tool-btn-green-active"
               : "tool-btn-inactive"
           }`}
-          style={{ transform: 'none' }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+          style={{ transform: "none" }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "none")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
         >
           {isCloning ? "복제 중..." : `우리집에 적용해보기`}
         </button>
@@ -243,9 +237,9 @@ export function ControlPanel({ isPopup = false }) {
       <button
         onClick={clearAllModels}
         className="tool-btn tool-btn-red-active w-full px-4 py-2.5 !text-base my-4 !rounded"
-        style={{ transform: 'none' }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'none'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+        style={{ transform: "none" }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "none")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "none")}
       >
         모든 가구 제거
       </button>
