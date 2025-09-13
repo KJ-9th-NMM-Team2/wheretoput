@@ -244,7 +244,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowEditPopup(true)}
-                    className="px-3 py-1.5 text-base text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 bg-gray-300 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-all duration-200 shadow-sm hover:shadow-md hover:scale-102"
+                    className="tool-btn-gray"
                   >
                     수정
                   </button>

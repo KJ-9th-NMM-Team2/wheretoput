@@ -30,63 +30,24 @@ body {
 
 /* Follow Button Styles */
 .follow-button {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-  background-color: rgb(59, 130, 246);
-  color: white;
-  font-weight: 700;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
-  border: none;
-}
-
-.follow-button:hover {
-  background-color: rgb(37, 99, 235);
-}
-
-.follow-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply text-sm px-4 py-2 bg-blue-500 text-white font-bold rounded-lg
+         cursor-pointer border-none transition-colors duration-150
+         hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .following-button {
-  font-size: 0.875rem;
-  padding: 0.5rem 1rem;
-  background-color: rgb(229, 231, 235);
-  color: rgb(55, 65, 81);
-  font-weight: 700;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease-in-out;
-  border: none;
-}
-
-.following-button:hover {
-  background-color: rgb(209, 213, 219);
-}
-
-.following-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  @apply text-sm px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg
+         cursor-pointer border-none transition-colors duration-150
+         hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Dark mode support */
 html.dark .follow-button {
-  background-color: rgb(59, 130, 246);
-}
-
-html.dark .follow-button:hover {
-  background-color: rgb(29, 78, 216);
+  @apply bg-blue-500 hover:bg-blue-700;
 }
 
 html.dark .following-button {
-  background-color: rgb(55, 65, 81);
-  color: rgb(209, 213, 219);
-}
-
-html.dark .following-button:hover {
-  background-color: rgb(75, 85, 99);
+  @apply bg-gray-700 text-gray-300 hover:bg-gray-600;
 }
 
 /* Tool Button Styles */
@@ -115,6 +76,15 @@ html.dark .following-button:hover {
   background: linear-gradient(to right, rgb(37, 99, 235), rgb(8, 145, 178));
   transform: translateY(-1px);
   box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+}
+
+/* 기본 그레이 버튼 스타일 */
+.tool-btn-gray {
+  @apply flex items-center justify-center cursor-pointer overflow-hidden 
+         rounded-xl py-2 px-3 bg-gray-200 text-gray-600 font-semibold 
+         text-sm tracking-wide transition-all duration-300 
+         shadow-md border-none gap-2 hover:bg-gray-300 hover:-translate-y-0.5 
+         hover:shadow-lg transform;
 }
 
 .tool-btn:active {
@@ -183,62 +153,45 @@ html.dark .tool-btn-inactive:hover {
   background: rgb(75, 85, 99);
 }
 
-/* Sky blue slider styles */
+/*=========== 슬라이더 스타일 ==========*/
 .slider {
-  -webkit-appearance: none;
-  appearance: none;
+  @apply appearance-none outline-none h-1;
   background: linear-gradient(to right, #6aeeff 0%, #ADB6FF 100%);
-  outline: none;
-  height: 4px;
 }
 
 /* 슬라이더 버튼 - 크롬 , 사파리*/
 .slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  cursor: pointer;
+  @apply appearance-none w-5 h-5 rounded-full bg-white cursor-pointer shadow-sm;
   border: 2px solid #87CEEB;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 슬라이더 트랙 - 크롬 , 사파리*/
 .slider::-webkit-slider-track {
+  @apply h-1 rounded;
   background: linear-gradient(to right, #87CEEB 0%, #ADB6FF 100%);
-  height: 4px;
-  border-radius: 5px;
 }
 
-/* Control Panel용 작은 슬라이더 스타일 */
+/* 오른쪽 위 Control Panel 전용 작은 슬라이더 스타일 */
 .slider-small {
-  -webkit-appearance: none;
-  appearance: none;
+  @apply appearance-none outline-none;
   background: linear-gradient(to right, #6aeeff 0%, #ADB6FF 100%);
-  outline: none;
   height: 3px;
 }
 
 /* 작은 슬라이더 버튼 - 크롬, 사파리 */
 .slider-small::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
+  @apply appearance-none rounded-full bg-white cursor-pointer;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  cursor: pointer;
   border: 1.5px solid #87CEEB;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 작은 슬라이더 트랙 - 크롬, 사파리 */
 .slider-small::-webkit-slider-track {
+  @apply rounded;
   background: linear-gradient(to right, #87CEEB 0%, #ADB6FF 100%);
   height: 3px;
-  border-radius: 3px;
 }
 
 

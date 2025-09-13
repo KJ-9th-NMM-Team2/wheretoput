@@ -28,7 +28,7 @@ export const EditPopupButtons = ({
             {showHomeButton && (
                 <button
                     onClick={handleOutofRoomClick}
-                    className="tool-btn tool-btn-inactive"
+                    className="tool-btn-gray"
                 >
                     홈으로 돌아가기
                 </button>
