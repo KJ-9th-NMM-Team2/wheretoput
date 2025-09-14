@@ -229,7 +229,7 @@ export function SimulatorCore({
 
   // 상태 기반 속도 측정
   useEffect(() => {
-    if (!loadedModels.legnth && !startTime) {
+    if (!loadedModels.length && !startTime) {
       setStartTime(performance.now());
     }
   }, []);
