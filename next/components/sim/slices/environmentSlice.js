@@ -32,13 +32,14 @@ export const environmentSlice = (set, get) => ({
   floorColor: "#D2B48C",
   backgroundColor: "#87CEEB",
 
+////////////////////////////////////
   // [09.15] 바닥재 텍스처 관련 상태
   // "color" | "vinyl" | "wood" | "tile"
   floorTexture: "color",
   floorTexturePresets: {
     color: { name: "단색", type: "color" },
 
-    vinyl: {
+    tile: {
       name: "타일",
       type: "texture",
       texture: "/textures/tile_01.png",
@@ -50,14 +51,15 @@ export const environmentSlice = (set, get) => ({
       texture: "/textures/vintage_wood.jpg",
     },
 
-    tile: {
+    marble: {
       name: "대리석",
       type: "texture",
       texture: "/textures/marble_01.png",
     },
   },
-
-  // 벽지 텍스처 관련 상태
+/////////////////////////////////////
+  // [09.15] 벽지 텍스처 관련 상태
+  // 스트라이프 , 대리석 , 패브릭
   wallTexture: "color",
   wallTexturePresets: {
     color: { name: "단색", type: "color" },
@@ -65,7 +67,7 @@ export const environmentSlice = (set, get) => ({
     stripe: {
       name: "스트라이프",
       type: "texture",
-      texture: "/textures/wall_stripe.jpg",
+      texture: "/textures/wall_stripe.webp",
     },
 
     marble: {
@@ -77,7 +79,7 @@ export const environmentSlice = (set, get) => ({
     fabric: {
       name: "패브릭",
       type: "texture",
-      texture: "/textures/wall_fabric.jpg",
+      texture: "/textures/wall_fabric_gray.jpg",
     },
   },
 

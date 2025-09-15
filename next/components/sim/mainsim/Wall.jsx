@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
 import { useHistory, ActionType } from "@/components/sim/history";
+import { WallMaterial } from "@/components/sim/SimulatorCore";
 
 export function Wall({
   width,
@@ -110,12 +111,7 @@ export function Wall({
       style={{ cursor: wallToolMode ? 'pointer' : 'default' }}
     >
       <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial
-        color={wallMaterialColor}
-        transparent
-        roughness={0.8}
-        metalness={0.1}
-      />
+      <WallMaterial wallMaterialColor={wallMaterialColor} transparent={true} />
       
       {/* 벽 편집 모드에서 선택된 벽 하이라이트 */}
       {isSelected && wallToolMode === 'edit' && (

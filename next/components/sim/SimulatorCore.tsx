@@ -54,17 +54,16 @@ function FloorMaterial() {
   // Hook 규칙 준수: 항상 텍스처 로드 (fallback 경로 제공)
   const texture = useTexture(currentPreset?.texture || "/textures/vintage_wood.jpg") as THREE.Texture;
 
-  // 텍스처 설정 (항상 실행 - Hooks 규칙 준수)
+  // 텍스처 설정 (한 번만 실행)
   React.useEffect(() => {
     if (texture && texture.image && texture.image.complete) {
-      console.log("텍스처 설정 적용:", texture);
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(6, 6);
       texture.minFilter = THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
       texture.needsUpdate = true;
     }
-  }, [texture]);
+  }, [texture.uuid]);
 
   // 단색 모드
   if (currentPreset.type === "color") {
@@ -79,13 +78,6 @@ function FloorMaterial() {
 
   // 텍스처 모드
   if (currentPreset.type === "texture") {
-    console.log(`${currentPreset.name} 텍스처 적용 중:`, {
-      textureReady: texture.image && texture.image.complete,
-      imageWidth: texture.image?.width,
-      imageHeight: texture.image?.height,
-      imageSrc: texture.image?.src
-    });
-
     return (
       <meshBasicMaterial
         map={texture}
@@ -99,6 +91,58 @@ function FloorMaterial() {
       color={floorColor}
       roughness={0.7}
       metalness={0.0}
+    />
+  );
+}
+
+// 벽지 재질 컴포넌트
+export function WallMaterial({ wallMaterialColor, transparent = true }) {
+  const { wallColor, wallTexture, wallTexturePresets } = useStore();
+  const currentPreset = wallTexturePresets[wallTexture];
+
+  // 단색 모드일 때는 텍스처를 아예 로드하지 않도록 분기
+  if (currentPreset.type === "color") {
+    return (
+      <meshStandardMaterial
+        color={wallMaterialColor || wallColor}
+        transparent={transparent}
+        roughness={0.8}
+        metalness={0.1}
+      />
+    );
+  }
+
+  // 텍스처 모드일 때만 WallTextureComponent 렌더링
+  return (
+    <WallTextureComponent
+      currentPreset={currentPreset}
+      wallMaterialColor={wallMaterialColor}
+      wallColor={wallColor}
+      transparent={transparent}
+    />
+  );
+}
+
+// 텍스처 전용 컴포넌트 (단색 모드와 완전히 분리)
+function WallTextureComponent({ currentPreset, wallMaterialColor, wallColor, transparent }) {
+  // 텍스처 모드에서만 로드
+  const texture = useTexture(currentPreset.texture) as THREE.Texture;
+
+  // 텍스처 설정 (한 번만 실행)
+  React.useEffect(() => {
+    if (texture && texture.image && texture.image.complete) {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(4, 4);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
+    }
+  }, [texture.uuid]); // texture 객체 대신 uuid로 의존성 관리
+
+  return (
+    <meshBasicMaterial
+      map={texture}
+      transparent={transparent}
     />
   );
 }

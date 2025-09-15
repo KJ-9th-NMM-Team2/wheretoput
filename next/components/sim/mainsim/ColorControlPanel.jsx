@@ -90,7 +90,7 @@ export function ColorControlPanel({ isPopup = false }) {
               <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>벽지 타입</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
 
-                {/* 동적으로 여러개의 벽지 UI 생성 */}
+                {/* [09.15] 동적으로 여러개의 벽지 UI 생성 */}
                 {Object.entries(wallTexturePresets).map(([key, preset]) => (
                   <button
                     key={key}
@@ -129,7 +129,7 @@ export function ColorControlPanel({ isPopup = false }) {
               <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
 
-                {/* 동적으로 여러개의 바닥재 UI 생성 */}
+                {/*[09.15] 동적으로 여러개의 바닥재 UI 생성 */}
                 {Object.entries(floorTexturePresets).map(([key, preset]) => (
                   <button
                     key={key}
