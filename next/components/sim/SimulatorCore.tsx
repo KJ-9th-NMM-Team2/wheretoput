@@ -4,7 +4,14 @@ import React, { useRef, Suspense, useState, useEffect, useMemo, useCallback } fr
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useTexture, Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import * as THREE from "three";
+import {
+  fetchRoomInfo,
+  updateRoomInfo,
+  deleteRoom,
+  type RoomInfo,
+} from "@/lib/roomService";
 
 // Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
@@ -25,6 +32,7 @@ import { CaptureHandler } from "@/components/sim/mainsim/CaptureHandler";
 // UI and feature components
 import SimSideView from "@/components/sim/SimSideView";
 import WallTools from "./side/WallTools";
+import EditPopup from "./side/EditPopup";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
@@ -274,6 +282,87 @@ export function SimulatorCore({
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
   const [preloadedUrls, setPreloadedUrls] = useState(new Set<string>());
 
+  // EditPopup 관련 상태
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
+    title: "",
+    description: "",
+    is_public: false,
+  });
+  const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
+
+  const router = useRouter();
+
+  // 방 정보 로딩
+  useEffect(() => {
+    const loadRoomInfo = async () => {
+      if (!roomId || roomId.startsWith("temp_")) return;
+
+      try {
+        const info = await fetchRoomInfo(roomId);
+        if (info) {
+          setRoomInfo(info);
+        }
+      } catch (error) {
+        console.error("방 정보 로드 실패:", error);
+      }
+    };
+
+    loadRoomInfo();
+  }, [roomId]);
+
+  // 방 소유권 확인
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!session?.user?.id || !roomId || roomId.startsWith("temp_")) {
+        setIsOwnUserRoom(false);
+        return;
+      }
+
+      try {
+        const isOwn = await checkUserRoom(roomId, session.user.id);
+        setIsOwnUserRoom(isOwn);
+      } catch (error) {
+        console.error("방 소유권 확인 실패:", error);
+        setIsOwnUserRoom(false);
+      }
+    };
+
+    checkOwnership();
+  }, [session?.user?.id, roomId, checkUserRoom]);
+
+  // EditPopup 관련 함수들
+  const handleEditClick = () => {
+    setShowEditPopup(true);
+  };
+
+  const handleSave = async (
+    title: string,
+    description: string,
+    isPublic: boolean
+  ) => {
+    const newRoomInfo = { title, description, is_public: isPublic };
+    const success = await updateRoomInfo(roomId, newRoomInfo);
+
+    if (success) {
+      setRoomInfo(newRoomInfo);
+    }
+
+    setShowEditPopup(false);
+  };
+
+  const handleDelete = async () => {
+    await deleteRoom(roomId);
+    setShowEditPopup(false);
+    router.push("/");
+  };
+
+  const handleOutofRoomClick = () => {
+    setShowEditPopup(false);
+    router.push("/");
+  };
+
+
   // 상태 기반 속도 측정
   useEffect(() => {
     if (!loadedModels.length && !startTime) {
@@ -448,7 +537,7 @@ export function SimulatorCore({
     >
       {/* 조건부 사이드바 표시 */}
       {showSidebar && !viewOnly && (
-        <SimSideView roomId={roomId} accessType={accessType} />
+        <SimSideView roomId={roomId} accessType={accessType} onEditClick={handleEditClick} />
       )}
 
       <div className="flex-1 relative">
@@ -517,6 +606,20 @@ export function SimulatorCore({
 
         {/* 캡처 모달 */}
         <CaptureModal />
+
+        {/* EditPopup 모달 */}
+        {showEditPopup && (
+          <EditPopup
+            initialTitle={roomInfo.title}
+            initialDescription={roomInfo.description}
+            initialIsPublic={roomInfo.is_public}
+            isOwnUserRoom={isOwnUserRoom}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onClose={() => setShowEditPopup(false)}
+            handleOutofRoomClick={handleOutofRoomClick}
+          />
+        )}
 
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}

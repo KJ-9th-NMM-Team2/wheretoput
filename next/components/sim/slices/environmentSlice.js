@@ -57,6 +57,30 @@ export const environmentSlice = (set, get) => ({
     },
   },
 
+  // 벽지 텍스처 관련 상태
+  wallTexture: "color",
+  wallTexturePresets: {
+    color: { name: "단색", type: "color" },
+
+    stripe: {
+      name: "스트라이프",
+      type: "texture",
+      texture: "/textures/wall_stripe.jpg",
+    },
+
+    marble: {
+      name: "대리석",
+      type: "texture",
+      texture: "/textures/wall_marble.jpg",
+    },
+
+    fabric: {
+      name: "패브릭",
+      type: "texture",
+      texture: "/textures/wall_fabric.jpg",
+    },
+  },
+
   setEnvironmentPreset: (preset, shouldBroadcast = true) => {
     set({ environmentPreset: preset });
     if (shouldBroadcast) {
@@ -118,6 +142,13 @@ export const environmentSlice = (set, get) => ({
     set({ floorTexture: texture });
     if (shouldBroadcast) {
       get().collaborationCallbacks.broadcastFloorTextureChange?.(texture);
+    }
+  },
+
+  setWallTexture: (texture, shouldBroadcast = true) => {
+    set({ wallTexture: texture });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastWallTextureChange?.(texture);
     }
   },
 });
