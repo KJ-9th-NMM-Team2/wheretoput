@@ -20,7 +20,7 @@ export function HistoryControls(
         <button
           onClick={undo}
           disabled={!canUndo}
-          className={`w-6 h-6 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors flex items-center justify-center ${canUndo ? 'cursor-pointer' : ''}`}
+          className={`w-6 h-6 tool-btn ${canUndo ? 'tool-btn-active' : 'tool-btn-inactive'} disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center hover:!transform-none hover:!shadow-md`}
           title="실행 취소 (Ctrl+Z)"
         >
           <svg
@@ -50,7 +50,7 @@ export function HistoryControls(
         <button
           onClick={redo}
           disabled={!canRedo}
-          className={`w-6 h-6 bg-green-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-600 transition-colors flex items-center justify-center ${canRedo ? 'cursor-pointer' : ''}`}
+          className={`w-6 h-6 tool-btn ${canRedo ? 'tool-btn-green-active' : 'tool-btn-inactive'} disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center hover:!transform-none hover:!shadow-md`}
           title="다시 실행 (Ctrl+Y)"
         >
           <svg
@@ -87,7 +87,7 @@ export function HistoryControls(
         <button
           onClick={undo}
           disabled={!canUndo}
-          className={`px-3 py-1.5 bg-blue-500 text-white rounded text-sm disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors flex items-center gap-1 ${canUndo ? 'cursor-pointer' : ''}`}
+          className={`px-3 py-1.5 tool-btn ${canUndo ? 'tool-btn-active' : 'tool-btn-inactive'} text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1 hover:!transform-none hover:!shadow-md`}
           title="실행 취소 (Ctrl+Z)"
         >
           <svg
@@ -118,7 +118,7 @@ export function HistoryControls(
         <button
           onClick={redo}
           disabled={!canRedo}
-          className={`px-3 py-1.5 bg-green-500 text-white rounded text-sm disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-600 transition-colors flex items-center gap-1 ${canRedo ? 'cursor-pointer' : ''}`}
+          className={`px-3 py-1.5 tool-btn ${canRedo ? 'tool-btn-green-active' : 'tool-btn-inactive'} text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1 hover:!transform-none hover:!shadow-md`}
           title="다시 실행 (Ctrl+Y)"
         >
           <svg

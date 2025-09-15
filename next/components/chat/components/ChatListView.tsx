@@ -304,7 +304,7 @@ export default function ChatListView({
             }}
             className={`
               text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              active:scale-95 shadow-md hover:shadow-lg cursor-pointer
               ${select === "전체"
                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                 : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
@@ -323,7 +323,7 @@ export default function ChatListView({
             }}
             className={`
               text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-              hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
+              active:scale-95 shadow-md hover:shadow-lg cursor-pointer
               ${select === "읽지 않음"
                 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
                 : 'text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
@@ -469,8 +469,8 @@ export default function ChatListView({
                     className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
                       }`}
                   >
-                    <div className="flex-1">
-                      <div className="font-semibold">{chat.name}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold truncate">{chat.name}</div>
                       <div className="text-sm text-gray-500 truncate w-40">
                         {chat.lastMessage}
                       </div>
@@ -503,8 +503,8 @@ export default function ChatListView({
                   className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
                     }`}
                 >
-                  <div className="flex-1">
-                    <div className="font-semibold">{chat.name}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">{chat.name}</div>
                     <div className="text-sm text-gray-500 truncate w-40">
                       {chat.lastMessage}
                     </div>

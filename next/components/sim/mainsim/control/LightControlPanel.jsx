@@ -33,7 +33,8 @@ export function LightControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px'}}> Lighting</h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px'}}
+      className="m-0 mb-2.5 text-xl font-semibold"> Lighting</h3>
 
       <div
         style={{

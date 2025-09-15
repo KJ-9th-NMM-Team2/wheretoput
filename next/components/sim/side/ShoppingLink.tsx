@@ -31,9 +31,9 @@ const ShoppingLink: React.FC<ShoppingLinkProps> = ({
     <button
       onClick={handleShoppingClick}
       className={`
-        inline-flex items-center gap-1 px-2 py-1 
-        text-xs bg-blue-500 hover:bg-blue-600 
-        text-white rounded transition-colors 
+        inline-flex items-center gap-1
+        text-xs tool-btn tool-btn-active
+        !px-2 !py-1 hover:!transform-none hover:!shadow-md
         
         ${className} cursor-pointer
       `}

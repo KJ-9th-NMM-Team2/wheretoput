@@ -10,7 +10,13 @@ export function ColorControlPanel({ isPopup = false }) {
     backgroundColor,
     setWallColor,
     setFloorColor,
-    setBackgroundColor
+    setBackgroundColor,
+    floorTexture,
+    floorTexturePresets,
+    setFloorTexture,
+    wallTexture,
+    wallTexturePresets,
+    setWallTexture
   } = useStore();
   const [colorTarget, setColorTarget] = React.useState('wall'); // 'wall' | 'floor' | 'background'
 
@@ -34,7 +40,7 @@ export function ColorControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}> Colors </h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}className="m-0 mb-2.5 text-xl font-semibold"> Colors </h3>
 
       <div
         style={{
@@ -78,17 +84,129 @@ export function ColorControlPanel({ isPopup = false }) {
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div>
+          {/* 벽 옵션 클릭시 벽지 옵션 표시 */}
+          {colorTarget === 'wall' && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>벽지 타입</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+
+                {/* [09.15] 동적으로 여러개의 벽지 UI 생성 */}
+                {Object.entries(wallTexturePresets).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '4px',
+                      background: wallTexture === key ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => setWallTexture(key)}
+                    onMouseEnter={(e) => {
+                      if (wallTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.2)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (wallTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.1)';
+                      }
+                    }}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 바닥 옵션 클릭시  바닥재 옵션 표시 */}
+          {colorTarget === 'floor' && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+
+                {/*[09.15] 동적으로 여러개의 바닥재 UI 생성 */}
+                {Object.entries(floorTexturePresets).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '4px',
+                      background: floorTexture === key ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => setFloorTexture(key)}
+                    onMouseEnter={(e) => {
+                      if (floorTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.2)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (floorTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.1)';
+                      }
+                    }}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 색상 선택 - 단색 모드에서만 표시 */}
+          {(colorTarget === 'background' || (colorTarget === 'wall' && wallTexture === 'color') || (colorTarget === 'floor' && floorTexture === 'color')) && (
+            <div>
+              <HexColorPicker
+                // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
+                style={{
+                  width: '100%',
+                  height: '120px'
+                }}
+                color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
+                onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
+            </div>
+          )}
+
+          {/* 벽지 텍스처 모드에서 색상 픽커 대신 안내 메시지 */}
+          {colorTarget === 'wall' && wallTexture !== 'color' && (
+            <div style={{
+              padding: '20px',
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
+                {wallTexturePresets[wallTexture].name} 벽지 적용중
+              </div>
             
-            <HexColorPicker
-              // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
-              style={{ 
-                width: '100%',
-                height: '120px'
-              }}
-              color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
-              onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
-          </div>
+            </div>
+          )}
+
+          {/* 바닥재 텍스처 모드에서 색상 픽커 대신 안내 메시지 */}
+          {colorTarget === 'floor' && floorTexture !== 'color' && (
+            <div style={{
+              padding: '20px',
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
+                {floorTexturePresets[floorTexture].name} 바닥 적용중
+              </div>
+              
+            </div>
+          )}
         </div>
       </div>
 

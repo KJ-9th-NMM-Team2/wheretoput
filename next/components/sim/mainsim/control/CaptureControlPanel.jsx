@@ -24,7 +24,7 @@ export function CaptureControlPanel({ isPopup = false }) {
     `}
     >
       <h3 style={{ margin: "0 0 10px 0", fontSize: "20px" }}>
-        <span> Screen Capture </span>
+        <span className="m-0 mb-2.5 text-xl font-semibold"> Screen Capture </span>
       </h3>
 
       <div className="cursor-default">

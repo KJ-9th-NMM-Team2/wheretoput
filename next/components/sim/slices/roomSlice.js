@@ -1,3 +1,5 @@
+import { generateSaveValues, parseLoadedValues } from "@/lib/textureUtils";
+
 export const roomSlice = (set, get) => ({
   currentRoomId: null,
   isSaving: false,
@@ -168,6 +170,9 @@ export const roomSlice = (set, get) => ({
         }
       }
 
+      // 텍스처 상태를 고려한 저장값 생성
+      const { wallValue, floorValue } = generateSaveValues(currentState);
+
       const furnResponse = await fetch("/api/sim/save", {
         method: "POST",
         headers: {
@@ -176,8 +181,8 @@ export const roomSlice = (set, get) => ({
         body: JSON.stringify({
           room_id: clonedId,
           objects: objects,
-          wallColor: currentState.wallColor,
-          floorColor: currentState.floorColor,
+          wallColor: wallValue,
+          floorColor: floorValue,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
         }),
@@ -282,6 +287,11 @@ export const roomSlice = (set, get) => ({
         }
       }
       const currentState = get();
+
+      // 텍스처 상태를 고려한 저장값 생성
+      const { wallValue, floorValue } = generateSaveValues(currentState);
+
+
       if (currentState.wallsData.length > 0) {
         try {
           const scaledWalls = currentState.wallsData.map((wall) => ({
@@ -338,8 +348,8 @@ export const roomSlice = (set, get) => ({
         body: JSON.stringify({
           room_id: currentState.currentRoomId,
           objects: objects,
-          wallColor: currentState.wallColor,
-          floorColor: currentState.floorColor,
+          wallColor: wallValue,
+          floorColor: floorValue,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
         }),
@@ -431,6 +441,32 @@ export const roomSlice = (set, get) => ({
         }));
       }
 
+      // 현재 상태에서 텍스처 프리셋 가져오기
+      const currentState = get();
+
+      // environmentSlice에서 텍스처 프리셋 가져오기 (없으면 기본값 사용)
+      const wallTexturePresets = currentState.wallTexturePresets || {
+        color: { name: "단색", type: "color" },
+        stripe: { name: "스트라이프", type: "texture", texture: "/textures/wall_stripe.webp" },
+        marble: { name: "대리석", type: "texture", texture: "/textures/wall_marble.jpg" },
+        fabric: { name: "패브릭", type: "texture", texture: "/textures/wall_fabric_black.jpg" }
+      };
+
+      const floorTexturePresets = currentState.floorTexturePresets || {
+        color: { name: "단색", type: "color" },
+        tile: { name: "타일", type: "texture", texture: "/textures/tile_01.png" },
+        wood: { name: "마루", type: "texture", texture: "/textures/vintage_wood.jpg" },
+        marble: { name: "대리석", type: "texture", texture: "/textures/marble_01.png" }
+      };
+
+      // 로드된 값을 파싱하여 색상/텍스처 설정
+      const parsedEnvironment = parseLoadedValues(
+        result.wall_color || "#FFFFFF",
+        result.floor_color || "#D2B48C",
+        wallTexturePresets,
+        floorTexturePresets
+      );
+
       set({
         loadedModels: loadedModels,
         wallsData: wallsData,
@@ -441,8 +477,10 @@ export const roomSlice = (set, get) => ({
           description: result.room_info?.description || "",
           is_public: result.room_info?.is_public || false,
         },
-        wallColor: result.wall_color || "#FFFFFF",
-        floorColor: result.floor_color || "#D2B48C",
+        wallColor: parsedEnvironment.wallColor,
+        floorColor: parsedEnvironment.floorColor,
+        wallTexture: parsedEnvironment.wallTexture,
+        floorTexture: parsedEnvironment.floorTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
       });

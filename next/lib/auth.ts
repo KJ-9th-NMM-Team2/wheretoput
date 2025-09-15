@@ -26,6 +26,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login"
   },
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // 로그인 후 메인페이지로 리다이렉트
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "github") {
         await prisma.User.upsert({

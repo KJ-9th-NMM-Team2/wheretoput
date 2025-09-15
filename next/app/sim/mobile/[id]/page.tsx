@@ -53,7 +53,7 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
       showModeControls={false}
       showEditControls={false}
       loadingMessage="방 데이터 로딩 중..."
-      loadingIcon="🏠"
+      loadingIcon=""
       keyboardControlsDisabled={true}
       isMobile={true}
     />
