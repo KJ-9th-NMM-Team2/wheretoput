@@ -261,7 +261,7 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
-  // HDR 환경 맵 prefetch
+  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
   useEffect(() => {
     const hdrPresets = {
       "apartment": "lebombo_1k",
@@ -276,13 +276,14 @@ export function SimulatorCore({
       "studio": "studio_small_03_1k"
     };
 
-    Object.values(hdrPresets).forEach(filename => {
+    const currentPresetFilename = hdrPresets[environmentPreset];
+    if (currentPresetFilename) {
       const link = document.createElement('link');
       link.rel = 'prefetch';
-      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${filename}.hdr`;
+      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
       document.head.appendChild(link);
-    });
-  }, []);
+    }
+  }, [environmentPreset]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
