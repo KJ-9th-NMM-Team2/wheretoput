@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 import type { NextRequest } from "next/server";
 
 /**
@@ -78,7 +79,7 @@ export async function GET(
     });
 
     if (!user) {
-      return new Response("User not found", { status: 404 });
+      return HttpResponse.notFound("User not Found");
     }
 
     return Response.json({
@@ -91,6 +92,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching user:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return HttpResponse.internalError();
   }
 }

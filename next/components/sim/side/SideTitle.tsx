@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import EditPopup from "./EditPopup";
 import { useStore } from "@/components/sim/useStore.js";
 import {
   fetchRoomInfo,
@@ -18,13 +17,12 @@ import ExitConfirmModal from "./ExitConfirmModal";
 interface SideTitleProps {
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
-  accessType: number, // 1: normal, 2: collaboration
+  accessType: number; // 1: normal, 2: collaboration
+  onEditClick: () => void; // EditPopup 열기 콜백 추가
 }
 
 
-const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
-  // 팝업창 뜨기 여부
-  const [showPopup, setShowPopup] = useState(false);
+const SideTitle = ({ collapsed, setCollapsed, accessType, onEditClick }: SideTitleProps) => {
   // 나가기 확인 모달 상태
   const [showExitModal, setShowExitModal] = useState(false);
   // 현재 방 정보
@@ -39,26 +37,13 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
   // Zustand store에서 현재 방 ID 가져오기
   const {
     currentRoomId,
-    checkUserRoom, 
   } = useStore();
 
   // 뒤로 가기 버튼
-  const router = useRouter()
-  const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
+  const router = useRouter();
 
   const { data: session } = useSession();
 
-  // 방 입장 시 유저 방인지 아닌지 확인하는 코드
-  useEffect(() => {
-    const fetchIsUserRoom = async () => {
-      // 세션이 로드되고 userId가 있는 경우에만 실행
-      if (!session?.user?.id || !currentRoomId) return;
-      
-      const check = await checkUserRoom(currentRoomId, session.user.id);
-      setIsOwnUserRoom(check);
-    }
-    fetchIsUserRoom();
-  }, [session, currentRoomId]); // session과 currentRoomId 의존성 추가
 
   // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
   useEffect(() => {
@@ -77,31 +62,9 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
     loadRoomInfo();
   }, [currentRoomId]);
 
-  // 설정 버튼 클릭 시 바로 팝업 열기
+  // 설정 버튼 클릭 시 부모 컴포넌트의 EditPopup 열기
   const handleSettingsClick = () => {
-    setShowPopup(true);
-  };
-
-  // 방 정보 저장
-  const handleSave = async (
-    title: string,
-    description: string,
-    isPublic: boolean
-  ) => {
-    const newRoomInfo = { title, description, is_public: isPublic };
-    const success = await updateRoomInfo(currentRoomId || "", newRoomInfo);
-
-    if (success) {
-      setRoomInfo(newRoomInfo);
-    }
-
-    setShowPopup(false);
-  };
-
-  // 방 삭제
-  const handleDelete = async () => {
-    await deleteRoom(currentRoomId || "");
-    setShowPopup(false);
+    onEditClick();
   };
 
   // 방 나가기 경고창
@@ -153,19 +116,6 @@ const SideTitle = ({ collapsed, setCollapsed, accessType }: SideTitleProps) => {
         </div>
       </div>
 
-      {/* 팝업 모달 */}
-      {showPopup && (
-        <EditPopup
-          initialTitle={roomInfo.title}
-          initialDescription={roomInfo.description}
-          initialIsPublic={roomInfo.is_public}
-          isOwnUserRoom={isOwnUserRoom}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onClose={() => setShowPopup(false)}
-          handleOutofRoomClick={handleOutofRoomClick}
-        />
-      )}
 
       {/* 나가기 확인 모달 */}
       <ExitConfirmModal

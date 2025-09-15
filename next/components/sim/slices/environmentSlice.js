@@ -32,12 +32,61 @@ export const environmentSlice = (set, get) => ({
   floorColor: "#D2B48C",
   backgroundColor: "#87CEEB",
 
+////////////////////////////////////
+  // [09.15] 바닥재 텍스처 관련 상태
+  // "color" | "vinyl" | "wood" | "tile"
+  floorTexture: "color",
+  floorTexturePresets: {
+    color: { name: "단색", type: "color" },
+
+    tile: {
+      name: "타일",
+      type: "texture",
+      texture: "/textures/tile_01.png",
+    },
+
+    wood: {
+      name: "마루",
+      type: "texture",
+      texture: "/textures/vintage_wood.jpg",
+    },
+
+    marble: {
+      name: "대리석",
+      type: "texture",
+      texture: "/textures/marble_01.png",
+    },
+  },
+/////////////////////////////////////
+  // [09.15] 벽지 텍스처 관련 상태
+  // 스트라이프 , 대리석 , 패브릭
+  wallTexture: "color",
+  wallTexturePresets: {
+    color: { name: "단색", type: "color" },
+
+    stripe: {
+      name: "스트라이프",
+      type: "texture",
+      texture: "/textures/wall_stripe.webp",
+    },
+
+    marble: {
+      name: "대리석",
+      type: "texture",
+      texture: "/textures/wall_marble.jpg",
+    },
+
+    fabric: {
+      name: "패브릭",
+      type: "texture",
+      texture: "/textures/wall_fabric_black.jpg",
+    },
+  },
+
   setEnvironmentPreset: (preset, shouldBroadcast = true) => {
     set({ environmentPreset: preset });
     if (shouldBroadcast) {
-      get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(
-        preset
-      );
+      get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(preset);
     }
   },
 
@@ -87,6 +136,21 @@ export const environmentSlice = (set, get) => ({
     set({ backgroundColor: color });
     if (shouldBroadcast) {
       get().collaborationCallbacks.broadcastBackgroundColorChange?.(color);
+    }
+  },
+
+  // texture = {key}
+  setFloorTexture: (texture, shouldBroadcast = true) => {
+    set({ floorTexture: texture });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastFloorTextureChange?.(texture);
+    }
+  },
+
+  setWallTexture: (texture, shouldBroadcast = true) => {
+    set({ wallTexture: texture });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastWallTextureChange?.(texture);
     }
   },
 });

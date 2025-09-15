@@ -8,11 +8,24 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, useTexture, Environment } from "@react-three/drei";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import {
+  fetchRoomInfo,
+  updateRoomInfo,
+  deleteRoom,
+  type RoomInfo,
+} from "@/lib/roomService";
 
+// Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
+import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
+import { determineValueType, generateSaveValues, parseLoadedValues } from "@/lib/textureUtils.js";
+
+// Main simulation components
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
 import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
@@ -21,38 +34,214 @@ import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
-import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
+import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
+import { CaptureHandler } from "@/components/sim/mainsim/CaptureHandler";
+
+// UI and feature components
 import SimSideView from "@/components/sim/SimSideView";
-import CanvasImageLogger from "@/components/sim/CanvasCapture";
-import AutoSave from "@/components/sim/AutoSave";
-import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
-import { Environment } from "@react-three/drei";
-import { useSession } from "next-auth/react";
+import WallTools from "./side/WallTools";
+import EditPopup from "./side/EditPopup";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
-import WallTools from "./side/WallTools";
 import { WallMeasurements } from "./measurements/WallMeasurements";
 import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
-import { CaptureModal } from "./mainsim/CaptureModal";
-import { CaptureHandler } from "./mainsim/CaptureHandler";
+
+// System components
+import CanvasImageLogger from "@/components/sim/CanvasCapture";
+import AutoSave from "@/components/sim/AutoSave";
+import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 
 type position = [number, number, number];
 
+// 바닥 재질 컴포넌트 (textureUtils 사용)
+function FloorMaterial() {
+  const { floorColor, floorTexture, floorTexturePresets } = useStore();
+
+  // textureUtils로 현재 값 타입 확인
+  const { saveValues } = React.useMemo(() => {
+    const envState = {
+      floorTexture,
+      floorColor,
+      floorTexturePresets,
+      wallTexture: 'color',
+      wallColor: '#FFFFFF',
+      wallTexturePresets: {}
+    };
+    return {
+      saveValues: generateSaveValues(envState)
+    };
+  }, [floorTexture, floorColor, floorTexturePresets]);
+
+  const valueType = determineValueType(saveValues.floorValue);
+  const currentPreset = floorTexturePresets[floorTexture];
+
+  // 텍스처 로드 (로딩 상태 관리)
+  const [texture, setTexture] = React.useState(null);
+  const [isTextureLoading, setIsTextureLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!valueType.isTexture || currentPreset?.type !== "texture") {
+      setTexture(null);
+      setIsTextureLoading(false);
+      return;
+    }
+
+    setIsTextureLoading(true);
+    const loader = new THREE.TextureLoader();
+
+    loader.load(
+      currentPreset.texture,
+      (loadedTexture) => {
+        loadedTexture.wrapS = loadedTexture.wrapT = THREE.RepeatWrapping;
+        loadedTexture.repeat.set(6, 6);
+        loadedTexture.minFilter = THREE.LinearFilter;
+        loadedTexture.magFilter = THREE.LinearFilter;
+        setTexture(loadedTexture);
+        setIsTextureLoading(false);
+      },
+      undefined,
+      (error) => {
+        console.error('Floor texture loading failed:', error);
+        setTexture(null);
+        setIsTextureLoading(false);
+      }
+    );
+  }, [valueType.isTexture, currentPreset?.texture, floorTexture]);
+
+  // 단일 material 생성 (조건에 따라 속성만 변경)
+  const material = React.useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial();
+
+    // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
+    if (valueType.isColor || currentPreset?.type === "color" ||
+        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+      mat.color.set(floorColor);
+      mat.map = null;
+      mat.roughness = 0.9;
+      mat.metalness = 0.0;
+    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+      mat.map = texture;
+      mat.color.set(floorColor);
+      mat.roughness = 0.9;
+      mat.metalness = 0.0;
+    } else {
+      // 안전한 fallback
+      mat.color.set(floorColor);
+      mat.map = null;
+      mat.roughness = 0.7;
+      mat.metalness = 0.0;
+    }
+
+    mat.needsUpdate = true;
+    return mat;
+  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, floorColor, texture, floorTexture, isTextureLoading]);
+
+  return <primitive object={material} />;
+}
+
+// 벽지 재질 컴포넌트 (textureUtils 사용)
+export function WallMaterial({ wallMaterialColor, transparent = true }) {
+  const { wallColor, wallTexture, wallTexturePresets } = useStore();
+
+  // textureUtils로 현재 값 타입 확인
+  const { saveValues } = React.useMemo(() => {
+    const envState = {
+      wallTexture,
+      wallColor,
+      wallTexturePresets,
+      floorTexture: 'color',
+      floorColor: '#D2B48C',
+      floorTexturePresets: {}
+    };
+    return {
+      saveValues: generateSaveValues(envState)
+    };
+  }, [wallTexture, wallColor, wallTexturePresets]);
+
+  const valueType = determineValueType(saveValues.wallValue);
+  const currentPreset = wallTexturePresets[wallTexture];
+
+  // 텍스처 로드 (로딩 상태 관리)
+  const [texture, setTexture] = React.useState(null);
+  const [isTextureLoading, setIsTextureLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!valueType.isTexture || currentPreset?.type !== "texture") {
+      setTexture(null);
+      setIsTextureLoading(false);
+      return;
+    }
+
+    setIsTextureLoading(true);
+    const loader = new THREE.TextureLoader();
+
+    loader.load(
+      currentPreset.texture,
+      (loadedTexture) => {
+        // 벽지는 꽉채우기 모드
+        loadedTexture.wrapS = loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+        loadedTexture.repeat.set(1, 1);
+        loadedTexture.minFilter = THREE.LinearFilter;
+        loadedTexture.magFilter = THREE.LinearFilter;
+        setTexture(loadedTexture);
+        setIsTextureLoading(false);
+      },
+      undefined,
+      (error) => {
+        console.error('Wall texture loading failed:', error);
+        setTexture(null);
+        setIsTextureLoading(false);
+      }
+    );
+  }, [valueType.isTexture, currentPreset?.texture, wallTexture]);
+
+  const finalColor = wallMaterialColor || wallColor;
+
+  // 단일 material 생성 (조건에 따라 속성만 변경)
+  const material = React.useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial();
+
+    // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
+    if (valueType.isColor || currentPreset?.type === "color" ||
+        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+      mat.color.set(finalColor);
+      mat.map = null;
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+      mat.map = texture;
+      mat.color.set(finalColor);
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    } else {
+      // 안전한 fallback
+      mat.color.set(finalColor);
+      mat.map = null;
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    }
+
+    mat.needsUpdate = true;
+    return mat;
+  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, finalColor, texture, wallTexture, transparent, isTextureLoading]);
+
+  return <primitive object={material} />;
+}
+
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
-  const { floorColor } = useStore();
+  const { floorTexture, floorColor } = useStore();
 
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial
-          color={floorColor}
-          roughness={0.9}
-          metalness={0.0}
-        />
+        <FloorMaterial />
       </mesh>
     );
   }
@@ -100,11 +289,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
       receiveShadow
     >
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial
-        color={floorColor}
-        roughness={0.9}
-        metalness={0.0}
-      />
+      <FloorMaterial />
     </mesh>
   );
 }
@@ -188,7 +373,7 @@ export function SimulatorCore({
   canvasChildren,
   additionalUI,
   loadingMessage = "방 데이터 로딩 중...",
-  loadingIcon = "🏠",
+  loadingIcon = "",
   keyboardControlsDisabled = false,
   isMobile = false,
   accessType = 1,
@@ -227,6 +412,86 @@ export function SimulatorCore({
   const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
 
+  // EditPopup 관련 상태
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
+    title: "",
+    description: "",
+    is_public: false,
+  });
+  const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
+
+  const router = useRouter();
+
+  // 방 정보 로딩
+  useEffect(() => {
+    const loadRoomInfo = async () => {
+      if (!roomId || roomId.startsWith("temp_")) return;
+
+      try {
+        const info = await fetchRoomInfo(roomId);
+        if (info) {
+          setRoomInfo(info);
+        }
+      } catch (error) {
+        console.error("방 정보 로드 실패:", error);
+      }
+    };
+
+    loadRoomInfo();
+  }, [roomId]);
+
+  // 방 소유권 확인
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!session?.user?.id || !roomId || roomId.startsWith("temp_")) {
+        setIsOwnUserRoom(false);
+        return;
+      }
+
+      try {
+        const isOwn = await checkUserRoom(roomId, session.user.id);
+        setIsOwnUserRoom(isOwn);
+      } catch (error) {
+        console.error("방 소유권 확인 실패:", error);
+        setIsOwnUserRoom(false);
+      }
+    };
+
+    checkOwnership();
+  }, [session?.user?.id, roomId, checkUserRoom]);
+
+  // EditPopup 관련 함수들
+  const handleEditClick = () => {
+    setShowEditPopup(true);
+  };
+
+  const handleSave = async (
+    title: string,
+    description: string,
+    isPublic: boolean
+  ) => {
+    const newRoomInfo = { title, description, is_public: isPublic };
+    const success = await updateRoomInfo(roomId, newRoomInfo);
+
+    if (success) {
+      setRoomInfo(newRoomInfo);
+    }
+
+    setShowEditPopup(false);
+  };
+
+  const handleDelete = async () => {
+    await deleteRoom(roomId);
+    setShowEditPopup(false);
+    router.push("/");
+  };
+
+  const handleOutofRoomClick = () => {
+    setShowEditPopup(false);
+    router.push("/");
+  };
+
   // 상태 기반 속도 측정
   useEffect(() => {
     if (!loadedModels.length && !startTime) {
@@ -261,29 +526,29 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
-  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
-  useEffect(() => {
-    const hdrPresets = {
-      "apartment": "lebombo_1k",
-      "city": "potsdamer_platz_1k",
-      "warehouse": "empty_warehouse_01_1k",
-      "dawn": "kiara_1_dawn_1k",
-      "sunset": "venice_sunset_1k",
-      "forest": "forest_slope_1k",
-      "lobby": "st_fagans_interior_1k",
-      "night": "dikhololo_night_1k",
-      "park": "rooitou_park_1k",
-      "studio": "studio_small_03_1k"
-    };
+  // //HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
+  // useEffect(() => {
+  //   const hdrPresets = {
+  //     apartment: "lebombo_1k",
+  //     city: "potsdamer_platz_1k",
+  //     warehouse: "empty_warehouse_01_1k",
+  //     dawn: "kiara_1_dawn_1k",
+  //     sunset: "venice_sunset_1k",
+  //     forest: "forest_slope_1k",
+  //     lobby: "st_fagans_interior_1k",
+  //     night: "dikhololo_night_1k",
+  //     park: "rooitou_park_1k",
+  //     studio: "studio_small_03_1k",
+  //   };
 
-    const currentPresetFilename = hdrPresets[environmentPreset];
-    if (currentPresetFilename) {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
-      document.head.appendChild(link);
-    }
-  }, [environmentPreset]);
+  //   const currentPresetFilename = hdrPresets[environmentPreset];
+  //   if (currentPresetFilename) {
+  //     const link = document.createElement("link");
+  //     link.rel = "prefetch";
+  //     link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
+  //     document.head.appendChild(link);
+  //   }
+  // }, [environmentPreset]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -377,7 +642,11 @@ export function SimulatorCore({
     >
       {/* 조건부 사이드바 표시 */}
       {showSidebar && !viewOnly && (
-        <SimSideView roomId={roomId} accessType={accessType} />
+        <SimSideView
+          roomId={roomId}
+          accessType={accessType}
+          onEditClick={handleEditClick}
+        />
       )}
 
       <div className="flex-1 relative">
@@ -447,6 +716,20 @@ export function SimulatorCore({
         {/* 캡처 모달 */}
         <CaptureModal />
 
+        {/* EditPopup 모달 */}
+        {showEditPopup && (
+          <EditPopup
+            initialTitle={roomInfo.title}
+            initialDescription={roomInfo.description}
+            initialIsPublic={roomInfo.is_public}
+            isOwnUserRoom={isOwnUserRoom}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onClose={() => setShowEditPopup(false)}
+            handleOutofRoomClick={handleOutofRoomClick}
+          />
+        )}
+
         <Canvas
           camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
@@ -457,10 +740,12 @@ export function SimulatorCore({
           }}
           frameloop="demand"
         >
-          <Environment preset={environmentPreset} background={false} />
+          {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
           <color attach="background" args={[backgroundColor]} />
+
+          {/* 메인 햇빛 조명 */}
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}
@@ -474,6 +759,68 @@ export function SimulatorCore({
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
           />
+
+          {/* 가구 색상 표현을 위한 강력한 조명 */}
+          <ambientLight intensity={1.8} color="#ffffff" />
+
+          {/* 색상 표현을 위한 강한 방향성 조명 */}
+          <directionalLight
+            position={[15, 15, 15]}
+            intensity={1.5}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[-15, 15, -15]}
+            intensity={1.5}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[0, 15, 15]}
+            intensity={1.2}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[0, 15, -15]}
+            intensity={1.2}
+            color="#ffffff"
+          />
+
+          {/* 가구 디테일용 강력한 포인트 조명 */}
+          <pointLight
+            position={[0, 18, 0]}
+            intensity={2.5}
+            distance={50}
+            decay={0.8}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[-12, 12, -12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[12, 12, 12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[12, 12, -12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[-12, 12, 12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
           <Floor wallsData={wallsData} />
 
           {/* 벽 렌더링 - 자동 병합 적용 */}
@@ -482,24 +829,28 @@ export function SimulatorCore({
           ) : (
             <>
               <Wall
+                id="default-wall-north"
                 width={20}
                 height={5}
                 position={[0, 2.5, -10]}
                 rotation={[0, 0, 0]}
               />
               <Wall
+                id="default-wall-west"
                 width={20}
                 height={5}
                 position={[-10, 2.5, 0]}
                 rotation={[0, Math.PI / 2, 0]}
               />
               <Wall
+                id="default-wall-east"
                 width={20}
                 height={5}
                 position={[10, 2.5, 0]}
                 rotation={[0, -Math.PI / 2, 0]}
               />
               <Wall
+                id="default-wall-south"
                 width={20}
                 height={5}
                 position={[0, 2.5, 10]}

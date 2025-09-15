@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/lib/auth";
+import { HttpResponse } from "@/utils/httpResponse";
 
 
 /**
@@ -159,9 +160,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(roomsWithReadStatus);
   } catch (error) {
     console.error("Error fetching chat rooms:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch chat rooms" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("Failed to fetch chat rooms");
   }
 }

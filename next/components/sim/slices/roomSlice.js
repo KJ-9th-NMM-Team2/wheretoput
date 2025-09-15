@@ -180,6 +180,8 @@ export const roomSlice = (set, get) => ({
           floorColor: currentState.floorColor,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
+          wallType: currentState.wallTexture,
+          floorType: currentState.floorTexture,
         }),
       });
 
@@ -282,6 +284,7 @@ export const roomSlice = (set, get) => ({
         }
       }
       const currentState = get();
+
       if (currentState.wallsData.length > 0) {
         try {
           const scaledWalls = currentState.wallsData.map((wall) => ({
@@ -342,6 +345,8 @@ export const roomSlice = (set, get) => ({
           floorColor: currentState.floorColor,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
+          wallType: currentState.wallTexture,
+          floorType: currentState.floorTexture,
         }),
       });
 
@@ -431,6 +436,12 @@ export const roomSlice = (set, get) => ({
         }));
       }
 
+      // 직접 색상과 텍스처 정보 추출
+      const wallColor = result.wall_color || "#FFFFFF";
+      const floorColor = result.floor_color || "#D2B48C";
+      const wallTexture = result.wall_type || "color";
+      const floorTexture = result.floor_type || "color";
+
       set({
         loadedModels: loadedModels,
         wallsData: wallsData,
@@ -441,8 +452,10 @@ export const roomSlice = (set, get) => ({
           description: result.room_info?.description || "",
           is_public: result.room_info?.is_public || false,
         },
-        wallColor: result.wall_color || "#FFFFFF",
-        floorColor: result.floor_color || "#D2B48C",
+        wallColor: wallColor,
+        floorColor: floorColor,
+        wallTexture: wallTexture,
+        floorTexture: floorTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
       });

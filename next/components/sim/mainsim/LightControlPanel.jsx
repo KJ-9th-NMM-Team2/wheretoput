@@ -1,5 +1,5 @@
-import React from 'react'
-import { useStore } from '@/components/sim/useStore'
+import React from "react";
+import { useStore } from "@/components/sim/useStore";
 
 export function LightControlPanel({ isPopup = false }) {
   const {
@@ -10,47 +10,60 @@ export function LightControlPanel({ isPopup = false }) {
     setEnvironmentPreset,
     setDirectionalLightAzimuth,
     setDirectionalLightElevation,
-    setDirectionalLightIntensity
-  } = useStore()
+    setDirectionalLightIntensity,
+  } = useStore();
 
   const baseStyle = {
-    background: 'rgba(0,0,0,0.7)',
-    padding: '15px',
-    borderRadius: '5px',
-    color: 'white',
-    fontSize: '13px',
-    width: '250px',
-    maxHeight: '400px',
-    overflowY: 'auto'
+    background: "rgba(0,0,0,0.7)",
+    padding: "15px",
+    borderRadius: "5px",
+    color: "white",
+    fontSize: "13px",
+    width: "250px",
+    maxHeight: "400px",
+    overflowY: "auto",
   };
 
-  const positionStyle = isPopup ? 
-    { position: 'static' } : 
-    { position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: '10px', zIndex: 100 };
+  const positionStyle = isPopup
+    ? { position: "static" }
+    : {
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+        left: "10px",
+        zIndex: 100,
+      };
 
   return (
-    <div style={{
-      ...baseStyle,
-      ...positionStyle
-    }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px'}}> Lighting</h3>
+    <div
+      style={{
+        ...baseStyle,
+        ...positionStyle,
+      }}
+    >
+      <h3
+        style={{ margin: "0 0 10px 0", fontSize: "20px" }}
+        className="m-0 mb-2.5 text-xl font-semibold"
+      >
+        {" "}
+        Lighting
+      </h3>
 
       <div
         style={{
-          background: 'rgba(255,255,255,0.1)',
-          margin: '5px 0',
-          padding: '8px',
-          borderRadius: '3px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          cursor: 'default'
+          background: "rgba(255,255,255,0.1)",
+          margin: "5px 0",
+          padding: "8px",
+          borderRadius: "3px",
+          border: "1px solid rgba(255,255,255,0.2)",
+          cursor: "default",
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-
-          <LightPresetDropdown
+        <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          {/* <LightPresetDropdown
             value={environmentPreset}
             onChange={setEnvironmentPreset}
-          />
+          /> */}
           <ControlSlider
             label="방위각"
             value={directionalLightAzimuth}
@@ -81,7 +94,7 @@ export function LightControlPanel({ isPopup = false }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ControlSlider({
@@ -94,16 +107,20 @@ function ControlSlider({
   displayValue,
 }) {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-       gap: '3px'
-    }}>
-      <span style={{
-        minWidth: '50px',
-        fontSize: '13px',
-        whiteSpace: 'nowrap'
-      }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "3px",
+      }}
+    >
+      <span
+        style={{
+          minWidth: "50px",
+          fontSize: "13px",
+          whiteSpace: "nowrap",
+        }}
+      >
         {label}
       </span>
       <input
@@ -116,37 +133,37 @@ function ControlSlider({
         className="slider-small"
         style={{ flex: 1 }}
       />
-      <span style={{
-        color: '#ffffffff',
-        minWidth: '20px',
-        fontSize: '11px',
-        textAlign: 'right'
-      }}>
+      <span
+        style={{
+          color: "#ffffffff",
+          minWidth: "20px",
+          fontSize: "11px",
+          textAlign: "right",
+        }}
+      >
         {displayValue}
       </span>
     </div>
-  )
+  );
 }
 
 function LightPresetDropdown({ value, onChange }) {
   const presets = {
-    "아파트": "apartment",
-    "도시": "city",
-    "창고": "warehouse",
-    "일출": "dawn",
-    "일몰": "sunset",
-    "숲": "forest",
-    "로비": "lobby",
-    "밤": "night",
-    "공원": "park",
-    "스튜디오": "studio",
-  }
+    아파트: "apartment",
+    도시: "city",
+    창고: "warehouse",
+    일출: "dawn",
+    일몰: "sunset",
+    숲: "forest",
+    로비: "lobby",
+    밤: "night",
+    공원: "park",
+    스튜디오: "studio",
+  };
 
   return (
     <div className="mb-3">
-      <label className="block text-sm text-white mt-1 mb-2">
-        조명 프리셋
-      </label>
+      <label className="block text-sm text-white mt-1 mb-2">조명 프리셋</label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -159,5 +176,5 @@ function LightPresetDropdown({ value, onChange }) {
         ))}
       </select>
     </div>
-  )
+  );
 }

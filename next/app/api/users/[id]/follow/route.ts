@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -70,10 +71,7 @@ export async function POST(
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return HttpResponse.unAuthorized();
     }
 
     const { id: targetUserId } = await params;
@@ -81,10 +79,7 @@ export async function POST(
 
     // 자기 자신을 팔로우하는 것 방지
     if (followerId === targetUserId) {
-      return NextResponse.json(
-        { error: "Cannot follow yourself" },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("Cannot follow yourself");
     }
 
     // 이미 팔로우 중인지 확인
@@ -98,10 +93,7 @@ export async function POST(
     });
 
     if (existingFollow) {
-      return NextResponse.json(
-        { error: "Already following this user" },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("Already following this user");
     }
 
     // 팔로우 추가
@@ -115,10 +107,7 @@ export async function POST(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error following user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError();
   }
 }
 
@@ -129,10 +118,7 @@ export async function DELETE(
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return HttpResponse.unAuthorized();
     }
 
     const { id: targetUserId } = await params;
@@ -147,18 +133,12 @@ export async function DELETE(
     });
 
     if (deletedFollow.count === 0) {
-      return NextResponse.json(
-        { error: "Follow relationship not found" },
-        { status: 404 }
-      );
+      return HttpResponse.notFound("Follow relationship not found");
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error unfollowing user:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError();
   }
 }
