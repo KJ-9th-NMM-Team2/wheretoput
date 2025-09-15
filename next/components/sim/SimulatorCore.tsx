@@ -11,7 +11,7 @@ import {
   updateRoomInfo,
   deleteRoom,
   type RoomInfo,
-} from "@/lib/roomService";
+} from "@/lib/services/roomService";
 
 // Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
@@ -27,8 +27,7 @@ import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSi
 import { KeyboardControls } from "@/components/sim/mainsim/control/KeyboardControls.jsx";
 import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
 
-import { Environment } from "@react-three/drei";
-import { useSession } from "next-auth/react";
+// import { Environment } from "@react-three/drei";
 import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
 import { CaptureHandler } from "@/components/sim/mainsim/CaptureHandler";
 
