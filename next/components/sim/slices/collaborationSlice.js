@@ -28,6 +28,8 @@ export const collaborationSlice = (set, get) => ({
     broadcastFloorColorChange: null,
     broadcastBackgroundColorChange: null,
     broadcastEnvironmentPresetChange: null,
+    broadcastWallTextureChange: null,
+    broadcastFloorTextureChange: null,
   },
 
   // 쓰로틀링 관리 객체
@@ -105,8 +107,11 @@ export const collaborationSlice = (set, get) => ({
         } else if (eventType.includes("WallRemove")) {
           // 벽 제거의 경우 wallId만 전달
           currentState.collaborationCallbacks[eventType](modelId);
+        } else if (eventType.includes("TextureChange") || eventType.includes("ColorChange") || eventType.includes("EnvironmentPreset")) {
+          // 색상/텍스처/환경 변경의 경우 data만 전달
+          currentState.collaborationCallbacks[eventType](data);
         } else {
-          // 이동, 회전, 스케일, 색상 변경의 경우 modelId와 data 전달
+          // 이동, 회전, 스케일의 경우 modelId와 data 전달
           currentState.collaborationCallbacks[eventType](modelId, data);
         }
       }
