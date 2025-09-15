@@ -41,28 +41,26 @@ export const environmentSlice = (set, get) => ({
       type: "texture",
       diffuse: "/textures/floor/vinyl_diffuse.jpg",
       normal: "/textures/floor/vinyl_normal.jpg",
-      roughness: "/textures/floor/vinyl_roughness.jpg"
+      roughness: "/textures/floor/vinyl_roughness.jpg",
     },
     wood: {
       name: "마루",
       type: "texture",
-      diffuse: "/asset/wood1.jpg"
+      diffuse: "/asset/textures/vintage_wood.jpg",
     },
     tile: {
       name: "타일",
       type: "texture",
       diffuse: "/textures/floor/tile_diffuse.jpg",
       normal: "/textures/floor/tile_normal.jpg",
-      roughness: "/textures/floor/tile_roughness.jpg"
-    }
+      roughness: "/textures/floor/tile_roughness.jpg",
+    },
   },
 
   setEnvironmentPreset: (preset, shouldBroadcast = true) => {
     set({ environmentPreset: preset });
     if (shouldBroadcast) {
-      get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(
-        preset
-      );
+      get().collaborationCallbacks.broadcastEnvironmentPresetChange?.(preset);
     }
   },
 

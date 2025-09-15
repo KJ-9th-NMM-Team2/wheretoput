@@ -44,7 +44,7 @@ function FloorMaterial() {
   const { floorColor, floorTexture, floorTexturePresets } = useStore();
 
   // 모든 텍스처를 미리 로드 (Hooks 규칙 준수)
-  const woodTexture = useTexture("/asset/wood1.jpg");
+  const woodTexture = useTexture("/textures/vintage_wood.jpg");
 
   // 텍스처 설정 (항상 실행 - Hooks 규칙 준수)
   React.useEffect(() => {
