@@ -183,9 +183,9 @@ export async function POST(req: NextRequest) {
           user_id: session.user.id,
           title,
           description,
-          room_data: room_data
-            ? { pixelToMmRatio: room_data.pixelToMmRatio }
-            : null,
+          // room_data: room_data
+          //   ? { pixelToMmRatio: room_data.pixelToMmRatio }
+          //   : null,
           is_public,
           view_count: 0,
         },

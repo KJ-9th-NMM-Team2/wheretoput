@@ -167,7 +167,6 @@ model rooms {
   user_id             String
   title               String          @db.VarChar(100)
   description         String?
-  room_data           Json?
   thumbnail_url       String?
   is_public           Boolean?        @default(true)
   view_count          Int?            @default(0)

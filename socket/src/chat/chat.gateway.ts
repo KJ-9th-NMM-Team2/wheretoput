@@ -21,7 +21,7 @@ type JoinPayload = { roomId: string };
 type LeavePayload = { roomId: string };
 type SendPayload = { roomId: string; content: string; tempId?: string };
 
-// @UseGuards(JwtAuthGuard) // 임시 비활성화
+@UseGuards(JwtAuthGuard) // 임시 비활성화
 @WebSocketGateway({
   cors: {
     origin: [/^http:\/\/localhost:\d+$/, 'https://wheretoput.store'],
