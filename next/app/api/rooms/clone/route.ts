@@ -10,9 +10,9 @@ import { Prisma } from "@prisma/client";
  *     tags:
  *       - Rooms
  *     summary: 기존 방 복제
- *     description: 
- *       주어진 `room_id`를 기반으로 기존 방을 복제하여 새로운 방을 생성합니다.  
- *       새 방은 비공개(`is_public: false`)로 생성되며, 원본 방의 `title`, `description`, `room_data`, `thumbnail_url` 등을 복사합니다.
+ *     description: |
+ *       주어진 room_id를 기반으로 기존 방을 복제하여 새로운 방을 생성합니다.
+ *       새 방은 비공개(is_public: false)로 생성되며, 원본 방의 title, description, room_data, thumbnail_url 등을 복사합니다.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -46,7 +46,7 @@ import { Prisma } from "@prisma/client";
  *                   type: string
  *                   example: "Room cloned successfully"
  *       400:
- *         description: 필수 파라미터 누락 (`room_id` 없음)
+ *         description: "필수 파라미터 누락 (room_id 없음)"
  *       401:
  *         description: 인증 실패 (로그인 필요)
  *       404:
@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
           user_id: session?.user?.id,
           title: `${original_room?.title}의 복제본`,
           description: original_room?.description,
-          room_data: original_room?.room_data
-            ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
-            : null,
+              // room_data: original_room?.room_data
+          //   ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
+          //   : null,
           thumbnail_url: original_room?.thumbnail_url,
           is_public: false,
           view_count: 0,

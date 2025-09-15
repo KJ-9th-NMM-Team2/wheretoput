@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { WallDetector } from "@/app/wallDetection.js";
+import { WallDetector } from "@/lib/wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CreateRoomModal from "@/components/CreateRoomModal";

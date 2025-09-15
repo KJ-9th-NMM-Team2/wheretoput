@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import getFileUrl from "./getFileUrl";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * AWS S3 클라이언트 인스턴스
@@ -83,10 +84,7 @@ export async function POST(request: NextRequest) {
     const { fileName, fileType } = await request.json();
 
     if (!fileName || !fileType) {
-      return Response.json(
-        { error: "fileName이나 fileType이 없음" },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("fileName이나 fileType이 없음");
     }
 
     const key = `uploads/${fileName}`;
@@ -107,6 +105,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("presigned URL 생성 실패:", error);
-    return Response.json({ error: "presigned URL 생성 실패" }, { status: 500 });
+    return HttpResponse.internalError("presigned URL 생성 실패");
   }
 }

@@ -67,6 +67,7 @@ import { prisma } from "@/lib/prisma";
 import type { furnitures as Furniture } from "@prisma/client";
 import { calculatePagination } from "@/lib/paginagtion";
 import { searchFurnitures } from "@/lib/api/furSearch";
+import { HttpResponse } from "@/utils/httpResponse";
 
 export async function GET(request: Request) {
   try {
@@ -161,16 +162,9 @@ export async function GET(request: Request) {
     return Response.json(response);
   } catch (error) {
     console.error("API Error:", error);
-    return Response.json(
-      {
-        error: "Internal Server Error",
-        message: error.message,
-        details:
-          process.env.NODE_ENV === "development"
-            ? error.stack
-            : "Server error occurred",
-      },
-      { status: 500 }
-    );
+    const details = process.env.NODE_ENV === "development"
+      ? error.stack
+      : "Server error occurred";
+    return HttpResponse.internalError(error.message, details);
   }
 }

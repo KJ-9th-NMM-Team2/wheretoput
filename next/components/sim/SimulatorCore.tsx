@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useRef, Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, useTexture, Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import {
   fetchRoomInfo,
@@ -352,7 +352,6 @@ export function SimulatorCore({
 
   const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
-  const [preloadedUrls, setPreloadedUrls] = useState(new Set<string>());
 
   // EditPopup 관련 상태
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -469,53 +468,29 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
-  // GLB 파일 병렬 preload (중복 방지)
-  // useEffect(() => {
-  //   if (loadedModels.length > 0) {
-  //     // 유효한 GLB URL들만 필터링
-  //     const validUrls = loadedModels
-  //       .map((model) => model.url)
-  //       .filter(
-  //         (url) =>
-  //           url &&
-  //           typeof url === "string" &&
-  //           !url.includes("/legacy_mesh") &&
-  //           !preloadedUrls.has(url) // 이미 preload한 URL 제외
-  //       );
+  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
+  useEffect(() => {
+    const hdrPresets = {
+      "apartment": "lebombo_1k",
+      "city": "potsdamer_platz_1k",
+      "warehouse": "empty_warehouse_01_1k",
+      "dawn": "kiara_1_dawn_1k",
+      "sunset": "venice_sunset_1k",
+      "forest": "forest_slope_1k",
+      "lobby": "st_fagans_interior_1k",
+      "night": "dikhololo_night_1k",
+      "park": "rooitou_park_1k",
+      "studio": "studio_small_03_1k"
+    };
 
-  //     if (validUrls.length === 0) {
-  //       return; // 새로운 URL이 없으면 종료
-  //     }
-
-  //     console.log(
-  //       `🚀 Starting parallel preload for ${validUrls.length} new models`
-  //     );
-
-  //     // 6개씩 배치로 병렬 다운로드 시작
-  //     const MAX_CONCURRENT = 6;
-  //     const batches = [];
-
-  //     for (let i = 0; i < validUrls.length; i += MAX_CONCURRENT) {
-  //       batches.push(validUrls.slice(i, i + MAX_CONCURRENT));
-  //     }
-
-  //     batches.forEach((batch, batchIndex) => {
-  //       setTimeout(() => {
-  //         batch.forEach((url) => {
-  //           try {
-  //             useGLTF.preload(url);
-  //             // preload 완료된 URL 추가
-  //             setPreloadedUrls((prev) => new Set([...prev, url]));
-  //           } catch (error) {
-  //             console.warn(`Failed to preload: ${url}`, error);
-  //           }
-  //         });
-  //       }, batchIndex * 100); // 100ms 간격으로 배치 시작
-  //     });
-
-  //     console.log(`📊 Started ${batches.length} batches of parallel downloads`);
-  //   }
-  // }, [loadedModels, preloadedUrls]);
+    const currentPresetFilename = hdrPresets[environmentPreset];
+    if (currentPresetFilename) {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
+      document.head.appendChild(link);
+    }
+  }, [environmentPreset]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {

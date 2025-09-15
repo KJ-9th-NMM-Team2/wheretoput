@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 import type { NextRequest } from "next/server";
 
 interface LikeParams {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     console.log(room_id, user_id);
 
     if (!user_id) {
-      return Response.json({ error: "user_id가 요구됩니다" }, { status: 400 });
+      return HttpResponse.badRequest("user_id가 요구됩니다");
     }
 
     const whereClause = {
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Error handling like:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return HttpResponse.internalError();
   }
 }
 
