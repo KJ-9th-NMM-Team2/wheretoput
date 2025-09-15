@@ -79,7 +79,7 @@ export const environmentSlice = (set, get) => ({
     fabric: {
       name: "패브릭",
       type: "texture",
-      texture: "/textures/wall_fabric_gray.jpg",
+      texture: "/textures/wall_fabric_black.jpg",
     },
   },
 

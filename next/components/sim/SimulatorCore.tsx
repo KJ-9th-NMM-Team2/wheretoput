@@ -46,16 +46,28 @@ import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 
 type position = [number, number, number];
 
-// 바닥 재질 컴포넌트
+// 바닥 재질 컴포넌트 (깜빡임 방지 개선)
 function FloorMaterial() {
   const { floorColor, floorTexture, floorTexturePresets } = useStore();
   const currentPreset = floorTexturePresets[floorTexture];
 
-  // Hook 규칙 준수: 항상 텍스처 로드 (fallback 경로 제공)
-  const texture = useTexture(currentPreset?.texture || "/textures/vintage_wood.jpg") as THREE.Texture;
+  // 모든 바닥재 텍스처를 미리 로드 (깜빡임 방지)
+  const allTextures = React.useMemo(() => {
+    const textureEntries = Object.entries(floorTexturePresets).filter(
+      ([_, preset]) => preset.type === "texture"
+    );
+    return textureEntries.map(([key, preset]) => preset.texture);
+  }, [floorTexturePresets]);
 
-  // 텍스처 설정 (한 번만 실행)
-  React.useEffect(() => {
+  const preloadedTextures = useTexture(allTextures) as THREE.Texture[];
+
+  // 현재 선택된 텍스처 찾기
+  const currentTexture = React.useMemo(() => {
+    if (currentPreset.type !== "texture") return null;
+
+    const textureIndex = allTextures.indexOf(currentPreset.texture);
+    const texture = preloadedTextures[textureIndex];
+
     if (texture && texture.image && texture.image.complete) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(6, 6);
@@ -63,7 +75,9 @@ function FloorMaterial() {
       texture.magFilter = THREE.LinearFilter;
       texture.needsUpdate = true;
     }
-  }, [texture.uuid]);
+
+    return texture;
+  }, [currentPreset, allTextures, preloadedTextures]);
 
   // 단색 모드
   if (currentPreset.type === "color") {
@@ -76,16 +90,16 @@ function FloorMaterial() {
     );
   }
 
-  // 텍스처 모드
-  if (currentPreset.type === "texture") {
+  // 텍스처 모드 (프리로드된 텍스처 사용)
+  if (currentPreset.type === "texture" && currentTexture) {
     return (
       <meshBasicMaterial
-        map={texture}
+        map={currentTexture}
       />
     );
   }
 
-  // 텍스처 로딩 중 또는 fallback
+  // 로딩 중 fallback (이전 색상 유지)
   return (
     <meshStandardMaterial
       color={floorColor}
@@ -95,12 +109,40 @@ function FloorMaterial() {
   );
 }
 
-// 벽지 재질 컴포넌트
+// 벽지 재질 컴포넌트 (깜빡임 방지 개선)
 export function WallMaterial({ wallMaterialColor, transparent = true }) {
   const { wallColor, wallTexture, wallTexturePresets } = useStore();
   const currentPreset = wallTexturePresets[wallTexture];
 
-  // 단색 모드일 때는 텍스처를 아예 로드하지 않도록 분기
+  // 모든 텍스처를 미리 로드 (깜빡임 방지)
+  const allTextures = React.useMemo(() => {
+    const textureEntries = Object.entries(wallTexturePresets).filter(
+      ([_, preset]) => preset.type === "texture"
+    );
+    return textureEntries.map(([key, preset]) => preset.texture);
+  }, [wallTexturePresets]);
+
+  const preloadedTextures = useTexture(allTextures) as THREE.Texture[];
+
+  // 현재 선택된 텍스처 찾기
+  const currentTexture = React.useMemo(() => {
+    if (currentPreset.type !== "texture") return null;
+
+    const textureIndex = allTextures.indexOf(currentPreset.texture);
+    const texture = preloadedTextures[textureIndex];
+
+    if (texture && texture.image && texture.image.complete) {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(4, 4);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
+    }
+
+    return texture;
+  }, [currentPreset, allTextures, preloadedTextures]);
+
+  // 단색 모드
   if (currentPreset.type === "color") {
     return (
       <meshStandardMaterial
@@ -112,37 +154,23 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
     );
   }
 
-  // 텍스처 모드일 때만 WallTextureComponent 렌더링
+  // 텍스처 모드 (프리로드된 텍스처 사용)
+  if (currentPreset.type === "texture" && currentTexture) {
+    return (
+      <meshBasicMaterial
+        map={currentTexture}
+        transparent={transparent}
+      />
+    );
+  }
+
+  // 로딩 중 fallback (이전 색상 유지)
   return (
-    <WallTextureComponent
-      currentPreset={currentPreset}
-      wallMaterialColor={wallMaterialColor}
-      wallColor={wallColor}
+    <meshStandardMaterial
+      color={wallMaterialColor || wallColor}
       transparent={transparent}
-    />
-  );
-}
-
-// 텍스처 전용 컴포넌트 (단색 모드와 완전히 분리)
-function WallTextureComponent({ currentPreset, wallMaterialColor, wallColor, transparent }) {
-  // 텍스처 모드에서만 로드
-  const texture = useTexture(currentPreset.texture) as THREE.Texture;
-
-  // 텍스처 설정 (한 번만 실행)
-  React.useEffect(() => {
-    if (texture && texture.image && texture.image.complete) {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(4, 4);
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
-    }
-  }, [texture.uuid]); // texture 객체 대신 uuid로 의존성 관리
-
-  return (
-    <meshBasicMaterial
-      map={texture}
-      transparent={transparent}
+      roughness={0.8}
+      metalness={0.1}
     />
   );
 }
