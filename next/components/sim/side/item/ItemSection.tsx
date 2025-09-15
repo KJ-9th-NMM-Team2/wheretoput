@@ -23,7 +23,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
     selectedItems?.length > 0 ? selectedItems : filteredItems;
   const isSelectedCategory = selectedItems?.length > 0;
   const { data: session } = useSession();
-  const { setAchievements } = useStore();
+  const { setAchievements, wallToolMode } = useStore();
 
   return (
     <>
@@ -46,6 +46,10 @@ const ItemSection: React.FC<ItemSectionProps> = ({
               <div
                 key={item.furniture_id}
                 onClick={() => {
+                  // 벽 추가 모드가 활성화된 경우 가구 클릭 방지
+                  if (wallToolMode) {
+                    return;
+                  }
                   useSaveFurniture(
                     item,
                     roomId,
@@ -56,7 +60,11 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                     ? handleItemClick(item)
                     : handleSelectModel && handleSelectModel(item);
                 }}
-                className="bg-white border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all overflow-hidden cursor-pointer"
+                className={`bg-white border border-gray-200 rounded-lg transition-all overflow-hidden ${
+                  wallToolMode
+                    ? 'cursor-not-allowed opacity-50'
+                    : 'hover:border-gray-300 hover:shadow-md cursor-pointer'
+                }`}
               >
                 <div className="flex">
                   {/* 이미지 영역 */}

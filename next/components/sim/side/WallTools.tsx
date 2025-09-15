@@ -56,7 +56,13 @@ const WallTools: React.FC<WallToolsProps> = ({
       <div className="absolute bottom-4 left-4 z-50 select-none">
         {/* 메인 버튼 */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            // 드롭다운이 열려있고 벽 추가 기능이 활성화된 상태에서 닫을 때
+            if (isOpen && wallToolMode) {
+              setWallToolMode(null); // 벽 추가 기능 비활성화
+            }
+            setIsOpen(!isOpen);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer ${
             wallToolMode
               ? "bg-blue-500 text-white"
