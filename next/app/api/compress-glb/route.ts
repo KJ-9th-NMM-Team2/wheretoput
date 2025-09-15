@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error("GLB 압축 오류:", error);
     return Response.json(
-      { error: "압축 처리 중 오류가 발생했습니다.", details: error.message },
+      { error: "압축 처리 중 오류가 발생했습니다." },
       { status: 500 }
     );
   }
