@@ -132,8 +132,8 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
     const texture = preloadedTextures[textureIndex];
 
     if (texture && texture.image && texture.image.complete) {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(4, 4);
+      texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.repeat.set(1, 1);
       texture.minFilter = THREE.LinearFilter;
       texture.magFilter = THREE.LinearFilter;
       texture.needsUpdate = true;
