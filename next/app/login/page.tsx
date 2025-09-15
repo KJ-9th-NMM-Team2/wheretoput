@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { signIn, auth, providerMap } from "@/lib/auth";
 import { AuthError } from "next-auth";
+import { VscGithubInverted } from "react-icons/vsc";
+import { FcGoogle } from "react-icons/fc";
+import Image from "next/image";
+
 
 const SIGNIN_ERROR_URL = "/error";
 
@@ -8,11 +12,13 @@ export default async function SignInPage(props: {
   searchParams: { callbackUrl: string | undefined };
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-md w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-br from-[#f48225] to-orange-400 rounded-full mx-auto mb-4 flex items-center justify-center">
+
+              {/* [09.15] 추후 메인아이콘 자리 */}
               <svg
                 className="w-8 h-8 text-white"
                 fill="none"
@@ -33,9 +39,9 @@ export default async function SignInPage(props: {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            {/* <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               로그인
-            </h1>
+            </h1> */}
           </div>
 
           <div className="space-y-4">
@@ -62,9 +68,15 @@ export default async function SignInPage(props: {
               >
                 <button
                   type="submit"
-                  className="flex w-full justify-center items-center gap-3 rounded-xl py-3 px-6 bg-[#f48225] dark:bg-orange-600 text-white text-base font-semibold hover:bg-orange-400 dark:hover:bg-orange-500 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 shadow-lg hover:shadow-xl"
+                  className="flex w-full justify-center items-center gap-3 rounded-lg py-3 px-6 bg-black text-white font-bold hover:bg-gray-800 transition-colors tracking-wider focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 cursor-pointer"
                 >
-                  <span>{provider.name}로 로그인</span>
+                  {provider.id === 'github' && (
+                    <VscGithubInverted className="w-5 h-5" />
+                  )}
+                  {provider.id === 'google' && (
+                    <FcGoogle className="w-5 h-5" />
+                  )}
+                  <span>{provider.name}로 시작하기</span>
                 </button>
               </form>
             ))}
