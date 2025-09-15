@@ -12,8 +12,8 @@ export default function AchievementList() {
       await fetch(`/api/users/${session?.user?.id}/achievements`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setAchievements(data);
+        if (Array.isArray(data.data)) {
+          setAchievements(data.data);
         } else {
           console.error('Invalid achievements data:', data);
           setAchievements([]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TotalPrice } from './price/TotalPrice';
-import { CategoryProps } from '@/lib/furnitureTypes';
+import { CategoryProps } from '@/types/furnitureTypes';
 import { useStore } from '../useStore';
 
 interface SideCategoriesProps {

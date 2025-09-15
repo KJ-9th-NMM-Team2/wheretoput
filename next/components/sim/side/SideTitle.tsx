@@ -9,7 +9,7 @@ import {
   updateRoomInfo,
   deleteRoom,
   type RoomInfo,
-} from "@/lib/roomService";
+} from "@/lib/services/roomService";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import ExitConfirmModal from "./ExitConfirmModal";

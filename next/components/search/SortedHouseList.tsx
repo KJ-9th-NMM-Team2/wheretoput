@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HomeCard } from "@/components/main/HomeCardList";
-import { fetchRooms } from "@/lib/api/rooms";
+import { fetchRooms } from "@/lib/api/room/rooms";
 import SearchBar from "@/components/search/SearchBar";
 import { PaginationControls } from "@/components/ui/Pagination";
 

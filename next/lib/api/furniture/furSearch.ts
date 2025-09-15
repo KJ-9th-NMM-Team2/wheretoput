@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { calculatePagination } from '../paginagtion';
+import { calculatePagination } from '@/lib/paginagtion';
 
 export async function searchFurnitures(query: string, selectedCategory: string, page: number, limit: number) {
     try {

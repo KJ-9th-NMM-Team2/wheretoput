@@ -111,7 +111,7 @@ export async function GET(request: NextRequest, { params } : { params : Promise<
     }
 
     // Trellis API로 3D 모델 생성 요청
-    const { generateTrellisModel } = await import("@/app/trellis_api.js");
+    const { generateTrellisModel } = await import("@/lib/trellis_api.js");
     const result = await generateTrellisModel(
       furniture.furniture_id,
       furniture.image_url

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { ControlPanel } from "@/components/sim/mainsim/ControlPanel";
-import { LightControlPanel } from "@/components/sim/mainsim/LightControlPanel";
-import { CameraControlPanel } from "@/components/sim/mainsim/CameraControlPanel";
-import { ColorControlPanel } from "@/components/sim/mainsim/ColorControlPanel";
-import { CaptureControlPanel } from "@/components/sim/mainsim/CaptureControlPanel";
+import { ControlPanel } from "@/components/sim/mainsim/control/ControlPanel";
+import { LightControlPanel } from "@/components/sim/mainsim/control/LightControlPanel";
+import { CameraControlPanel } from "@/components/sim/mainsim/control/CameraControlPanel";
+import { ColorControlPanel } from "@/components/sim/mainsim/control/ColorControlPanel";
+import { CaptureControlPanel } from "@/components/sim/mainsim/control/CaptureControlPanel";
 import { HelpPopup } from "@/components/sim/mainsim/HelpPopup";
 import { useStore } from "@/components/sim/useStore.js";
 

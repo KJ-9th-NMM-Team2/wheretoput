@@ -13,19 +13,19 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
-import { Wall } from "@/components/sim/mainsim/Wall.jsx";
-import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
-import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
-import { WallSnapPoints } from "@/components/sim/mainsim/WallSnapPoints.jsx";
+import { Wall } from "@/components/sim/mainsim/wall/Wall.jsx";
+import { MergedWalls } from "@/components/sim/mainsim/wall/MergedWalls.jsx";
+import { WallPreview } from "@/components/sim/mainsim/wall/WallPreview.jsx";
+import { WallSnapPoints } from "@/components/sim/mainsim/wall/WallSnapPoints.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
-import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
+import { ControlIcons } from "@/components/sim/mainsim/control/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
-import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
+import { KeyboardControls } from "@/components/sim/mainsim/control/KeyboardControls.jsx";
 import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
 import SimSideView from "@/components/sim/SimSideView";
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
-import AutoSave from "@/components/sim/AutoSave";
-import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
+import AutoSave from "@/components/sim/save/AutoSave";
+import AutoSaveIndicator from "@/components/sim/save/AutoSaveIndicator";
 import { Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { ArchievementToast } from "./achievement/ArchievementToast";
@@ -261,6 +261,30 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
+  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
+  // useEffect(() => {
+  //   const hdrPresets = {
+  //     "apartment": "lebombo_1k",
+  //     "city": "potsdamer_platz_1k",
+  //     "warehouse": "empty_warehouse_01_1k",
+  //     "dawn": "kiara_1_dawn_1k",
+  //     "sunset": "venice_sunset_1k",
+  //     "forest": "forest_slope_1k",
+  //     "lobby": "st_fagans_interior_1k",
+  //     "night": "dikhololo_night_1k",
+  //     "park": "rooitou_park_1k",
+  //     "studio": "studio_small_03_1k"
+  //   };
+
+  //   const currentPresetFilename = hdrPresets[environmentPreset];
+  //   if (currentPresetFilename) {
+  //     const link = document.createElement('link');
+  //     link.rel = 'prefetch';
+  //     link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
+  //     document.head.appendChild(link);
+  //   }
+  // }, [environmentPreset]);
+
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
     const initializeSimulator = async () => {
@@ -433,7 +457,7 @@ export function SimulatorCore({
           }}
           frameloop="demand"
         >
-          <Environment preset={environmentPreset} background={false} />
+          {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
           <color attach="background" args={[backgroundColor]} />

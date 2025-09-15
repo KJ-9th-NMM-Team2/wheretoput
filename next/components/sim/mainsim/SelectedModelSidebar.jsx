@@ -2,8 +2,8 @@ import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
-import { useDeleteKey } from "./useDeleteKey";
-import { RotationControl } from "./RotationControl";
+import { useDeleteKey }  from "@/components/sim/mainsim/hooks/useDeleteKey";
+import { RotationControl } from "@/components/sim/mainsim/control/RotationControl";
 import { CollapsibleSidebar } from "./CollapsibleSidebar";
 import { handleStackModel as stackModel } from "@/components/sim/mainsim/utils/stackUtils";
 

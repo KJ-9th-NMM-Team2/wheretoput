@@ -6,11 +6,11 @@ import Link from "next/link";
 import FurnituresList from "@/components/rooms/FurnituresList";
 import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
-import { fetchLike } from "@/lib/api/likes";
+import { fetchLike } from "@/lib/api/room/likes";
 import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
 import EditPopup from "@/components/sim/side/EditPopup";
 import { useRouter } from "next/navigation";
-import { deleteRoom } from "@/lib/roomService";
+import { deleteRoom } from "@/lib/services/roomService";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { useStore } from "@/components/sim/useStore";
 
