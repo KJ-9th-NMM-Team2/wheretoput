@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { v4 as uuidv4 } from 'uuid';
+import { HttpResponse } from '@/utils/httpResponse';
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -84,18 +85,18 @@ export async function POST(request: NextRequest) {
     const file = data.get('image') as File;
 
     if (!file) {
-      return NextResponse.json({ error: '파일이 없습니다' }, { status: 400 });
+      return HttpResponse.badRequest("파일이 없습니다");
     }
 
     // 파일 검증
     if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: '이미지 파일만 업로드 가능합니다' }, { status: 400 });
+      return HttpResponse.badRequest("이미지 파일만 업로드 가능합니다");
     }
 
     // 파일 크기 검증 (10MB 제한)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: '파일 크기는 10MB 이하여야 합니다' }, { status: 400 });
+      return HttpResponse.badRequest("파일 크기는 10MB 이하여야 합니다");
     }
 
     // 파일명 생성
@@ -128,9 +129,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('이미지 업로드 오류:', error);
-    return NextResponse.json(
-      { error: '이미지 업로드에 실패했습니다' },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("이미지 업로드에 실패했습니다");
   }
 }

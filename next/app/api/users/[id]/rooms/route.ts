@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+import { HttpResponse } from "@/utils/httpResponse";
 
 function getSelectFields(fields: string | null) {
   const baseFields = {
@@ -154,6 +155,6 @@ export async function GET(
     return Response.json(roomsWithUser);
   } catch (error) {
     console.error("Error fetching user rooms:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return HttpResponse.internalError();
   }
 }

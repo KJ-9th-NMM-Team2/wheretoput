@@ -1,5 +1,6 @@
 import { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 import fs from "fs/promises";
 
 /**
@@ -80,7 +81,6 @@ async function GET() {
                 const filename = `${detail.name}.glb`;
                 const filePath = `/cache/models/${filename}`;
                 
-
                 return await prisma.furnitures.update({
                     where: {furniture_id: detail.name},
                     data: {cached_model_url: filePath},
@@ -94,6 +94,6 @@ async function GET() {
             details: fileDetails    // 상세 정보
         });
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        return HttpResponse.internalError(error.message);
     }
 }

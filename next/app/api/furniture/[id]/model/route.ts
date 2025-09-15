@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -76,9 +77,9 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // 시뮬레이터용 가구 3D 모델 로드 API
-export async function GET(request, { params }) {
+export async function GET(request: NextRequest, { params } : { params : Promise<{ id: string }>}) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // furniture 정보 조회
     const furniture = await prisma.furnitures.findUnique({
@@ -92,10 +93,7 @@ export async function GET(request, { params }) {
     });
 
     if (!furniture) {
-      return NextResponse.json(
-        { error: "가구를 찾을 수 없습니다." },
-        { status: 404 }
-      );
+      return HttpResponse.notFound("가구를 찾을 수 없습니다.");
     }
 
     // model_url이 존재하면 바로 반환
@@ -109,10 +107,7 @@ export async function GET(request, { params }) {
 
     // model_url이 없으면 Trellis로 생성 필요
     if (!furniture.image_url) {
-      return NextResponse.json(
-        { error: "이미지 URL이 없어서 3D 모델을 생성할 수 없습니다." },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("이미지 URL이 없어서 3D 모델을 생성할 수 없습니다.");
     }
 
     // Trellis API로 3D 모델 생성 요청
@@ -130,9 +125,6 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     console.error("3D 모델 로드 오류:", error);
-    return NextResponse.json(
-      { error: "3D 모델 로드 중 오류가 발생했습니다." },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("3D 모델 로드 중 오류가 발생했습니다.");
   }
 }

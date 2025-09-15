@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { extractRoomInfo } from "@/lib/services/simulator/extractRoomInfo";
 import { objectTransformer } from "@/lib/services/simulator/objectTransformer";
 import { wallsToProcessor } from "@/lib/services/simulator/wallsToProcessor";
+import { HttpResponse } from "@/utils/httpResponse";
 import type { NextRequest } from "next/server";
 
 // URL 접근 가능 여부 확인 함수
@@ -107,10 +108,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ room_id: string }> }
 ) {
+  const { room_id } = await params;
   try {
-    const { room_id } = await params;
-
-    const startTime = Date.now();
     // room_id 유효성 검사
     if (!room_id) {
       return Response.json({ error: "room_id is required" }, { status: 400 });
@@ -163,7 +162,7 @@ export async function GET(
 
     if (!room) {
       console.log(`Room not found: ${room_id}`);
-      return Response.json({ error: "Room not found" }, { status: 404 });
+      return HttpResponse.notFound("Room not found");
     }
 
     console.log(
@@ -190,17 +189,12 @@ export async function GET(
       stack: error.stack,
       roomId: room_id,
     });
-    return Response.json(
-      {
-        error: "Internal Server Error",
-        message: error.message,
-        details:
-          process.env.NODE_ENV === "development"
+    const details =  {
+      stack: process.env.NODE_ENV === "development"
             ? error.stack
             : "Server error occurred",
-        roomId: room_id,
-      },
-      { status: 500 }
-    );
+      roomId: room_id,
+    };
+    return HttpResponse.internalError(error.message, details);
   }
 }

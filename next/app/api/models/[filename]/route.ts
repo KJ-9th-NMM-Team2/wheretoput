@@ -1,6 +1,7 @@
 import { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import { NextRequest } from "next/server";
 import fs from "fs/promises";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -51,6 +52,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    return new Response("File not found", { status: 404 });
+    return HttpResponse.notFound();
   }
 }

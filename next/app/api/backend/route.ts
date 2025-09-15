@@ -47,6 +47,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 
 export async function GET(req: Request) {
     try {
@@ -64,11 +65,11 @@ export async function GET(req: Request) {
         })
 
         if (!users) {
-            return Response.json({ error: "사용자를 찾을 수 없습니다." }, { status: 404 })
+            return HttpResponse.notFound("사용자를 찾을 수 없습니다.");
         }
         return Response.json(users);
     } catch (error) {
         console.error("Error backend route.ts :", error);
-    return new Response("Internal Server Error", { status: 500 });
+        return HttpResponse.internalError();
     }
 }
