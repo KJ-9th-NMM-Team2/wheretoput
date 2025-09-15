@@ -200,9 +200,9 @@ export const convertDBWallsToSimulator = (dbWalls, scaleFactor = 1.0) => {
   return dbWalls.map((wall, index) => ({
     id: wall.id || `wall_${index}`,
     dimensions: {
-      width: wall.length * scaleFactor,
-      height: wall.height * scaleFactor,
-      depth: 0.2 * scaleFactor,
+      width: wall.length,
+      height: 2.5,
+      depth: 0.1,
     },
     position: [
       (wall.start.x + wall.end.x) / 2,
