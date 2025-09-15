@@ -21,6 +21,8 @@ export default async function RootLayout({
     <html lang="kr">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://raw.githubusercontent.com" />
+        <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
       </head>
       <body>
         <SessionProvider session={session}>

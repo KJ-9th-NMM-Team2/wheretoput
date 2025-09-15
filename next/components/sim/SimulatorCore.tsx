@@ -261,6 +261,30 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
+  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
+  useEffect(() => {
+    const hdrPresets = {
+      "apartment": "lebombo_1k",
+      "city": "potsdamer_platz_1k",
+      "warehouse": "empty_warehouse_01_1k",
+      "dawn": "kiara_1_dawn_1k",
+      "sunset": "venice_sunset_1k",
+      "forest": "forest_slope_1k",
+      "lobby": "st_fagans_interior_1k",
+      "night": "dikhololo_night_1k",
+      "park": "rooitou_park_1k",
+      "studio": "studio_small_03_1k"
+    };
+
+    const currentPresetFilename = hdrPresets[environmentPreset];
+    if (currentPresetFilename) {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
+      document.head.appendChild(link);
+    }
+  }, [environmentPreset]);
+
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
     const initializeSimulator = async () => {
@@ -592,17 +616,26 @@ export function SimulatorCore({
             enableZoom={true}
             enableRotate={!showMeasurements}
             enablePan={true}
-            enableDamping={!showMeasurements}
-            dampingFactor={showMeasurements ? 0 : 0.05}
+            enableDamping={false}
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
             zoomSpeed={isMobile ? 0.8 : 1.0}
             minDistance={isMobile ? 1 : 8}
             maxDistance={50}
             maxPolarAngle={
-              showMeasurements ? Math.PI * 18/180 : isMobile ? Math.PI * 0.95 : Math.PI
+              showMeasurements
+                ? (Math.PI * 18) / 180
+                : isMobile
+                ? Math.PI * 0.95
+                : Math.PI
             }
-            minPolarAngle={showMeasurements ? Math.PI * 18/180 : isMobile ? Math.PI * 0.05 : 0}
+            minPolarAngle={
+              showMeasurements
+                ? (Math.PI * 18) / 180
+                : isMobile
+                ? Math.PI * 0.05
+                : 0
+            }
             mouseButtons={{
               LEFT: showMeasurements ? 2 : 0, // 측정 모드에서는 왼쪽 클릭으로 패닝
               MIDDLE: 1, // 휠 클릭으로 줌
