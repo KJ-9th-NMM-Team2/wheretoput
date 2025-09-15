@@ -1239,7 +1239,9 @@ const FloorPlanEditor = () => {
                 href="/"
                 className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
               >
-                🏠
+                {/* [09.15] 메인아이콘 자리 */}
+              <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12" />
+
               </Link>
               <h1 className="text-base lg:text-lg font-black text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">
                 어따놀래
