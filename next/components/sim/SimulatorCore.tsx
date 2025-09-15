@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
@@ -39,20 +39,83 @@ import { CaptureHandler } from "./mainsim/CaptureHandler";
 
 type position = [number, number, number];
 
+// 바닥 재질 컴포넌트
+function FloorMaterial() {
+  const { floorColor, floorTexture, floorTexturePresets } = useStore();
+
+  // 모든 텍스처를 미리 로드 (Hooks 규칙 준수)
+  const woodTexture = useTexture("/asset/wood1.jpg");
+
+  // 텍스처 설정 (항상 실행 - Hooks 규칙 준수)
+  React.useEffect(() => {
+    if (woodTexture && woodTexture.image && woodTexture.image.complete) {
+      console.log("텍스처 설정 적용:", woodTexture);
+      woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
+      woodTexture.repeat.set(6, 6);
+      woodTexture.minFilter = THREE.LinearFilter;
+      woodTexture.magFilter = THREE.LinearFilter;
+      woodTexture.needsUpdate = true;
+    }
+  }, [woodTexture]);
+
+  const currentPreset = floorTexturePresets[floorTexture];
+
+  // 단색 모드
+  if (currentPreset.type === "color") {
+    return (
+      <meshStandardMaterial
+        color={floorColor}
+        roughness={0.9}
+        metalness={0.0}
+      />
+    );
+  }
+
+  // 마루 텍스처 모드
+  if (floorTexture === "wood" && woodTexture) {
+    console.log("마루 적용 중:", {
+      textureReady: woodTexture.image && woodTexture.image.complete,
+      imageWidth: woodTexture.image?.width,
+      imageHeight: woodTexture.image?.height,
+      imageSrc: woodTexture.image?.src
+    });
+
+    return (
+      <meshBasicMaterial
+        map={woodTexture}
+      />
+    );
+  }
+
+  // 텍스처 로딩 중
+  if (floorTexture === "wood") {
+    return (
+      <meshStandardMaterial
+        color="#8B4513"
+        roughness={0.9}
+        metalness={0.0}
+      />
+    );
+  }
+
+  // fallback
+  return (
+    <meshStandardMaterial
+      color={floorColor}
+      roughness={0.7}
+      metalness={0.0}
+    />
+  );
+}
+
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
-  const { floorColor } = useStore();
-
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial
-          color={floorColor}
-          roughness={0.9}
-          metalness={0.0}
-        />
+        <FloorMaterial />
       </mesh>
     );
   }
@@ -100,11 +163,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
       receiveShadow
     >
       <planeGeometry args={[width, height]} />
-      <meshStandardMaterial
-        color={floorColor}
-        roughness={0.9}
-        metalness={0.0}
-      />
+      <FloorMaterial />
     </mesh>
   );
 }

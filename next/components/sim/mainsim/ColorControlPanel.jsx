@@ -10,7 +10,10 @@ export function ColorControlPanel({ isPopup = false }) {
     backgroundColor,
     setWallColor,
     setFloorColor,
-    setBackgroundColor
+    setBackgroundColor,
+    floorTexture,
+    floorTexturePresets,
+    setFloorTexture
   } = useStore();
   const [colorTarget, setColorTarget] = React.useState('wall'); // 'wall' | 'floor' | 'background'
 
@@ -78,17 +81,74 @@ export function ColorControlPanel({ isPopup = false }) {
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          <div>
-            
-            <HexColorPicker
-              // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
-              style={{ 
-                width: '100%',
-                height: '120px'
-              }}
-              color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
-              onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
-          </div>
+          {/* 바닥재가 선택된 경우 텍스처 옵션 표시 */}
+          {colorTarget === 'floor' && (
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                {Object.entries(floorTexturePresets).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      borderRadius: '4px',
+                      background: floorTexture === key ? 'rgba(59, 130, 246, 0.8)' : 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onClick={() => setFloorTexture(key)}
+                    onMouseEnter={(e) => {
+                      if (floorTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.2)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (floorTexture !== key) {
+                        e.target.style.background = 'rgba(255,255,255,0.1)';
+                      }
+                    }}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 색상 선택 - 단색 모드에서만 표시 */}
+          {(colorTarget !== 'floor' || floorTexture === 'color') && (
+            <div>
+              <HexColorPicker
+                // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
+                style={{
+                  width: '100%',
+                  height: '120px'
+                }}
+                color={colorTarget === 'wall' ? wallColor : colorTarget === 'floor' ? floorColor : backgroundColor}
+                onChange={colorTarget === 'wall' ? setWallColor : colorTarget === 'floor' ? setFloorColor : setBackgroundColor} />
+            </div>
+          )}
+
+          {/* 텍스처 모드에서 색상 픽커 대신 안내 메시지 */}
+          {colorTarget === 'floor' && floorTexture !== 'color' && (
+            <div style={{
+              padding: '20px',
+              textAlign: 'center',
+              background: 'rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.2)'
+            }}>
+              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
+                {floorTexturePresets[floorTexture].name} 텍스처가 적용됩니다
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '5px' }}>
+                실제 텍스처 파일을 추가하면 더 현실적인 효과를 볼 수 있습니다
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

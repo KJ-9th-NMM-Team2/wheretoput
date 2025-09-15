@@ -32,6 +32,31 @@ export const environmentSlice = (set, get) => ({
   floorColor: "#D2B48C",
   backgroundColor: "#87CEEB",
 
+  // 바닥재 텍스처 관련 상태
+  floorTexture: "color", // "color" | "vinyl" | "wood" | "tile"
+  floorTexturePresets: {
+    color: { name: "단색", type: "color" },
+    vinyl: {
+      name: "장판",
+      type: "texture",
+      diffuse: "/textures/floor/vinyl_diffuse.jpg",
+      normal: "/textures/floor/vinyl_normal.jpg",
+      roughness: "/textures/floor/vinyl_roughness.jpg"
+    },
+    wood: {
+      name: "마루",
+      type: "texture",
+      diffuse: "/asset/wood1.jpg"
+    },
+    tile: {
+      name: "타일",
+      type: "texture",
+      diffuse: "/textures/floor/tile_diffuse.jpg",
+      normal: "/textures/floor/tile_normal.jpg",
+      roughness: "/textures/floor/tile_roughness.jpg"
+    }
+  },
+
   setEnvironmentPreset: (preset, shouldBroadcast = true) => {
     set({ environmentPreset: preset });
     if (shouldBroadcast) {
@@ -87,6 +112,13 @@ export const environmentSlice = (set, get) => ({
     set({ backgroundColor: color });
     if (shouldBroadcast) {
       get().collaborationCallbacks.broadcastBackgroundColorChange?.(color);
+    }
+  },
+
+  setFloorTexture: (texture, shouldBroadcast = true) => {
+    set({ floorTexture: texture });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastFloorTextureChange?.(texture);
     }
   },
 });
