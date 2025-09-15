@@ -186,11 +186,9 @@ export function ColorControlPanel({ isPopup = false }) {
               border: '1px solid rgba(255,255,255,0.2)'
             }}>
               <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                {wallTexturePresets[wallTexture].name} 벽지가 적용됩니다
+                {wallTexturePresets[wallTexture].name} 벽지 적용중
               </div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '5px' }}>
-                실제 벽지 파일을 추가하면 더 현실적인 효과를 볼 수 있습니다
-              </div>
+            
             </div>
           )}
 
@@ -204,11 +202,9 @@ export function ColorControlPanel({ isPopup = false }) {
               border: '1px solid rgba(255,255,255,0.2)'
             }}>
               <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                {floorTexturePresets[floorTexture].name} 텍스처가 적용됩니다
+                {floorTexturePresets[floorTexture].name} 바닥 적용중
               </div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '5px' }}>
-                실제 텍스처 파일을 추가하면 더 현실적인 효과를 볼 수 있습니다
-              </div>
+              
             </div>
           )}
         </div>
