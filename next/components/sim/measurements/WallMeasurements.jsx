@@ -158,7 +158,7 @@ export function WallMeasurements() {
             <group position={measurement.position}>
               <Html
                 center
-                distanceFactor={15}
+                distanceFactor={12}
                 transform={false}
                 zIndexRange={[10, 20]}
                 style={{

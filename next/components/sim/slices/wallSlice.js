@@ -192,7 +192,7 @@ export const wallSlice = (set, get) => ({
         dimensions: {
           width: wallLength, // 계산된 길이 사용
           height: 2.5, // 기존 벽 높이 사용
-          depth: 0.1,
+          depth: 0.15,
         },
       };
 

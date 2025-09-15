@@ -202,7 +202,7 @@ export const convertDBWallsToSimulator = (dbWalls, scaleFactor = 1.0) => {
     dimensions: {
       width: wall.length,
       height: 2.5,
-      depth: 0.1,
+      depth: 0.15,
     },
     position: [
       (wall.start.x + wall.end.x) / 2,

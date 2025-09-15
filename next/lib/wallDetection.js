@@ -418,7 +418,7 @@ export async function createWallsFromFloorPlan(roomId = null) {
         dimensions: {
           width: length,
           height: 2.5, // 기본 벽 높이 2.5m
-          depth: 0.1   // 벽 두께 10cm
+          depth: 0.15   // 벽 두께 15cm
         },
         material: 'wall',
         original2D: wall

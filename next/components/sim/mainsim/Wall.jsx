@@ -8,7 +8,7 @@ import { useHistory, ActionType } from "@/components/sim/history";
 export function Wall({
   width,
   height,
-  depth = 0.1,
+  depth = 0.15,
   position,
   rotation = [0, 0, 0],
   id,
