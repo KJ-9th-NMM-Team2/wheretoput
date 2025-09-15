@@ -314,7 +314,7 @@ export function SimulatorCore({
   canvasChildren,
   additionalUI,
   loadingMessage = "방 데이터 로딩 중...",
-  loadingIcon = "🏠",
+  loadingIcon = "",
   keyboardControlsDisabled = false,
   isMobile = false,
   accessType = 1,
