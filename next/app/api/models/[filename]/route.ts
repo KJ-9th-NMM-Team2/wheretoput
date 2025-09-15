@@ -5,19 +5,19 @@ import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
- * /api/modles/{filename}:
+ * /api/models/{filename}:
  *   get:
  *     tags:
  *       - Files
  *     summary: 로컬에 파일 서빙
- *     description: 
- *       캐시 디렉토리(`CACHE_DIR`)에 저장된 `.glb` (glTF binary) 파일을 반환합니다.  
+ *     description: |
+ *       캐시 디렉토리(CACHE_DIR)에 저장된 .glb (glTF binary) 파일을 반환합니다.
  *       파일이 존재하지 않으면 404 에러를 반환합니다.
  *     parameters:
  *       - name: filename
  *         in: path
  *         required: true
- *         description: 다운로드할 파일 이름 (예: `model.glb`)
+ *         description: "다운로드할 파일 이름 (예: model.glb)"
  *         schema:
  *           type: string
  *           example: "example_model.glb"
