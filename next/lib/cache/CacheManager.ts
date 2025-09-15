@@ -24,7 +24,7 @@ class CacheManager {
 
     constructor(cacheDir: string, maxSizeInMB: number = 300) {
         this.CACHE_DIR = path.join(cacheDir, 'public', 'cache', 'models');
-        this.CACHE_META_DIR = path.join(cacheDir, 'cache-medata.json');
+        this.CACHE_META_DIR = path.join(this.CACHE_DIR, 'cache-medata.json');
         this.MAX_SIZE = 1024 * 1024 * maxSizeInMB;
     }
 

@@ -29,3 +29,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./public/draco:/app/public/draco:ro
+      - cache_data:/app/public/cache
+        
+volumes:
+  cache_data:
+
