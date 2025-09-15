@@ -47,6 +47,8 @@ export type SimualtorModel = {
     floor_color: string,
     background_color: string,
     environment_preset: string,
+    wall_type: string,
+    floor_type: string,
 }
 
 export type RoomObjectTransformer = Prisma.room_objectsGetPayload<{
@@ -76,5 +78,7 @@ export type RoomForLoadSim = Prisma.roomsGetPayload<{
         floor_color: true,
         background_color: true,
         environment_preset: true,
+        wall_type: true,
+        floor_type: true,
     }
 }>

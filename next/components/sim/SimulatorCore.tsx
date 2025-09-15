@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useRef, Suspense, useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  Suspense,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { OrbitControls, useTexture, Environment } from "@react-three/drei";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -16,6 +23,7 @@ import {
 // Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
 import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
+import { determineValueType, generateSaveValues, parseLoadedValues } from "@/lib/textureUtils.js";
 
 // Main simulation components
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
@@ -46,137 +54,188 @@ import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 
 type position = [number, number, number];
 
-// 바닥 재질 컴포넌트 (깜빡임 방지 개선)
+// 바닥 재질 컴포넌트 (textureUtils 사용)
 function FloorMaterial() {
   const { floorColor, floorTexture, floorTexturePresets } = useStore();
+
+  // textureUtils로 현재 값 타입 확인
+  const { saveValues } = React.useMemo(() => {
+    const envState = {
+      floorTexture,
+      floorColor,
+      floorTexturePresets,
+      wallTexture: 'color',
+      wallColor: '#FFFFFF',
+      wallTexturePresets: {}
+    };
+    return {
+      saveValues: generateSaveValues(envState)
+    };
+  }, [floorTexture, floorColor, floorTexturePresets]);
+
+  const valueType = determineValueType(saveValues.floorValue);
   const currentPreset = floorTexturePresets[floorTexture];
 
-  // 모든 바닥재 텍스처를 미리 로드 (깜빡임 방지)
-  const allTextures = React.useMemo(() => {
-    const textureEntries = Object.entries(floorTexturePresets).filter(
-      ([_, preset]) => preset.type === "texture"
-    );
-    return textureEntries.map(([key, preset]) => preset.texture);
-  }, [floorTexturePresets]);
+  // 텍스처 로드 (로딩 상태 관리)
+  const [texture, setTexture] = React.useState(null);
+  const [isTextureLoading, setIsTextureLoading] = React.useState(false);
 
-  const preloadedTextures = useTexture(allTextures) as THREE.Texture[];
-
-  // 현재 선택된 텍스처 찾기
-  const currentTexture = React.useMemo(() => {
-    if (currentPreset.type !== "texture") return null;
-
-    const textureIndex = allTextures.indexOf(currentPreset.texture);
-    const texture = preloadedTextures[textureIndex];
-
-    if (texture && texture.image && texture.image.complete) {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(6, 6);
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
+  React.useEffect(() => {
+    if (!valueType.isTexture || currentPreset?.type !== "texture") {
+      setTexture(null);
+      setIsTextureLoading(false);
+      return;
     }
 
-    return texture;
-  }, [currentPreset, allTextures, preloadedTextures]);
+    setIsTextureLoading(true);
+    const loader = new THREE.TextureLoader();
 
-  // 단색 모드
-  if (currentPreset.type === "color") {
-    return (
-      <meshStandardMaterial
-        color={floorColor}
-        roughness={0.9}
-        metalness={0.0}
-      />
+    loader.load(
+      currentPreset.texture,
+      (loadedTexture) => {
+        loadedTexture.wrapS = loadedTexture.wrapT = THREE.RepeatWrapping;
+        loadedTexture.repeat.set(6, 6);
+        loadedTexture.minFilter = THREE.LinearFilter;
+        loadedTexture.magFilter = THREE.LinearFilter;
+        setTexture(loadedTexture);
+        setIsTextureLoading(false);
+      },
+      undefined,
+      (error) => {
+        console.error('Floor texture loading failed:', error);
+        setTexture(null);
+        setIsTextureLoading(false);
+      }
     );
-  }
+  }, [valueType.isTexture, currentPreset?.texture, floorTexture]);
 
-  // 텍스처 모드 (프리로드된 텍스처 사용)
-  if (currentPreset.type === "texture" && currentTexture) {
-    return (
-      <meshBasicMaterial
-        map={currentTexture}
-      />
-    );
-  }
+  // 단일 material 생성 (조건에 따라 속성만 변경)
+  const material = React.useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial();
 
-  // 로딩 중 fallback (이전 색상 유지)
-  return (
-    <meshStandardMaterial
-      color={floorColor}
-      roughness={0.7}
-      metalness={0.0}
-    />
-  );
+    // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
+    if (valueType.isColor || currentPreset?.type === "color" ||
+        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+      mat.color.set(floorColor);
+      mat.map = null;
+      mat.roughness = 0.9;
+      mat.metalness = 0.0;
+    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+      mat.map = texture;
+      mat.color.set(floorColor);
+      mat.roughness = 0.9;
+      mat.metalness = 0.0;
+    } else {
+      // 안전한 fallback
+      mat.color.set(floorColor);
+      mat.map = null;
+      mat.roughness = 0.7;
+      mat.metalness = 0.0;
+    }
+
+    mat.needsUpdate = true;
+    return mat;
+  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, floorColor, texture, floorTexture, isTextureLoading]);
+
+  return <primitive object={material} />;
 }
 
-// 벽지 재질 컴포넌트 (깜빡임 방지 개선)
+// 벽지 재질 컴포넌트 (textureUtils 사용)
 export function WallMaterial({ wallMaterialColor, transparent = true }) {
   const { wallColor, wallTexture, wallTexturePresets } = useStore();
+
+  // textureUtils로 현재 값 타입 확인
+  const { saveValues } = React.useMemo(() => {
+    const envState = {
+      wallTexture,
+      wallColor,
+      wallTexturePresets,
+      floorTexture: 'color',
+      floorColor: '#D2B48C',
+      floorTexturePresets: {}
+    };
+    return {
+      saveValues: generateSaveValues(envState)
+    };
+  }, [wallTexture, wallColor, wallTexturePresets]);
+
+  const valueType = determineValueType(saveValues.wallValue);
   const currentPreset = wallTexturePresets[wallTexture];
 
-  // 모든 텍스처를 미리 로드 (깜빡임 방지)
-  const allTextures = React.useMemo(() => {
-    const textureEntries = Object.entries(wallTexturePresets).filter(
-      ([_, preset]) => preset.type === "texture"
-    );
-    return textureEntries.map(([key, preset]) => preset.texture);
-  }, [wallTexturePresets]);
+  // 텍스처 로드 (로딩 상태 관리)
+  const [texture, setTexture] = React.useState(null);
+  const [isTextureLoading, setIsTextureLoading] = React.useState(false);
 
-  const preloadedTextures = useTexture(allTextures) as THREE.Texture[];
-
-  // 현재 선택된 텍스처 찾기
-  const currentTexture = React.useMemo(() => {
-    if (currentPreset.type !== "texture") return null;
-
-    const textureIndex = allTextures.indexOf(currentPreset.texture);
-    const texture = preloadedTextures[textureIndex];
-
-    if (texture && texture.image && texture.image.complete) {
-      texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
-      texture.repeat.set(1, 1);
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.needsUpdate = true;
+  React.useEffect(() => {
+    if (!valueType.isTexture || currentPreset?.type !== "texture") {
+      setTexture(null);
+      setIsTextureLoading(false);
+      return;
     }
 
-    return texture;
-  }, [currentPreset, allTextures, preloadedTextures]);
+    setIsTextureLoading(true);
+    const loader = new THREE.TextureLoader();
 
-  // 단색 모드
-  if (currentPreset.type === "color") {
-    return (
-      <meshStandardMaterial
-        color={wallMaterialColor || wallColor}
-        transparent={transparent}
-        roughness={0.8}
-        metalness={0.1}
-      />
+    loader.load(
+      currentPreset.texture,
+      (loadedTexture) => {
+        // 벽지는 꽉채우기 모드
+        loadedTexture.wrapS = loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+        loadedTexture.repeat.set(1, 1);
+        loadedTexture.minFilter = THREE.LinearFilter;
+        loadedTexture.magFilter = THREE.LinearFilter;
+        setTexture(loadedTexture);
+        setIsTextureLoading(false);
+      },
+      undefined,
+      (error) => {
+        console.error('Wall texture loading failed:', error);
+        setTexture(null);
+        setIsTextureLoading(false);
+      }
     );
-  }
+  }, [valueType.isTexture, currentPreset?.texture, wallTexture]);
 
-  // 텍스처 모드 (프리로드된 텍스처 사용)
-  if (currentPreset.type === "texture" && currentTexture) {
-    return (
-      <meshBasicMaterial
-        map={currentTexture}
-        transparent={transparent}
-      />
-    );
-  }
+  const finalColor = wallMaterialColor || wallColor;
 
-  // 로딩 중 fallback (이전 색상 유지)
-  return (
-    <meshStandardMaterial
-      color={wallMaterialColor || wallColor}
-      transparent={transparent}
-      roughness={0.8}
-      metalness={0.1}
-    />
-  );
+  // 단일 material 생성 (조건에 따라 속성만 변경)
+  const material = React.useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial();
+
+    // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
+    if (valueType.isColor || currentPreset?.type === "color" ||
+        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+      mat.color.set(finalColor);
+      mat.map = null;
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+      mat.map = texture;
+      mat.color.set(finalColor);
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    } else {
+      // 안전한 fallback
+      mat.color.set(finalColor);
+      mat.map = null;
+      mat.transparent = transparent;
+      mat.roughness = 0.8;
+      mat.metalness = 0.1;
+    }
+
+    mat.needsUpdate = true;
+    return mat;
+  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, finalColor, texture, wallTexture, transparent, isTextureLoading]);
+
+  return <primitive object={material} />;
 }
 
 // 동적 바닥 - 벽 데이터에 따라 내부 영역에만 바닥 렌더링
 function Floor({ wallsData }: { wallsData: any[] }) {
+  const { floorTexture, floorColor } = useStore();
+
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
@@ -433,7 +492,6 @@ export function SimulatorCore({
     router.push("/");
   };
 
-
   // 상태 기반 속도 측정
   useEffect(() => {
     if (!loadedModels.length && !startTime) {
@@ -468,29 +526,29 @@ export function SimulatorCore({
   //   }
   // }, [loadedModels]);
 
-  // HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
-  useEffect(() => {
-    const hdrPresets = {
-      "apartment": "lebombo_1k",
-      "city": "potsdamer_platz_1k",
-      "warehouse": "empty_warehouse_01_1k",
-      "dawn": "kiara_1_dawn_1k",
-      "sunset": "venice_sunset_1k",
-      "forest": "forest_slope_1k",
-      "lobby": "st_fagans_interior_1k",
-      "night": "dikhololo_night_1k",
-      "park": "rooitou_park_1k",
-      "studio": "studio_small_03_1k"
-    };
+  // //HDR 환경 맵 prefetch - 현재 environmentPreset에 따라
+  // useEffect(() => {
+  //   const hdrPresets = {
+  //     apartment: "lebombo_1k",
+  //     city: "potsdamer_platz_1k",
+  //     warehouse: "empty_warehouse_01_1k",
+  //     dawn: "kiara_1_dawn_1k",
+  //     sunset: "venice_sunset_1k",
+  //     forest: "forest_slope_1k",
+  //     lobby: "st_fagans_interior_1k",
+  //     night: "dikhololo_night_1k",
+  //     park: "rooitou_park_1k",
+  //     studio: "studio_small_03_1k",
+  //   };
 
-    const currentPresetFilename = hdrPresets[environmentPreset];
-    if (currentPresetFilename) {
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
-      document.head.appendChild(link);
-    }
-  }, [environmentPreset]);
+  //   const currentPresetFilename = hdrPresets[environmentPreset];
+  //   if (currentPresetFilename) {
+  //     const link = document.createElement("link");
+  //     link.rel = "prefetch";
+  //     link.href = `https://raw.githubusercontent.com/pmndrs/drei-assets/main/hdri/${currentPresetFilename}.hdr`;
+  //     document.head.appendChild(link);
+  //   }
+  // }, [environmentPreset]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -584,7 +642,11 @@ export function SimulatorCore({
     >
       {/* 조건부 사이드바 표시 */}
       {showSidebar && !viewOnly && (
-        <SimSideView roomId={roomId} accessType={accessType} onEditClick={handleEditClick} />
+        <SimSideView
+          roomId={roomId}
+          accessType={accessType}
+          onEditClick={handleEditClick}
+        />
       )}
 
       <div className="flex-1 relative">
@@ -678,10 +740,12 @@ export function SimulatorCore({
           }}
           frameloop="demand"
         >
-          <Environment preset={environmentPreset} background={false} />
+          {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
           <color attach="background" args={[backgroundColor]} />
+
+          {/* 메인 햇빛 조명 */}
           <directionalLight
             position={directionalLightPosition}
             intensity={directionalLightIntensity}
@@ -694,6 +758,68 @@ export function SimulatorCore({
             shadow-camera-bottom={-15}
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
+          />
+
+          {/* 가구 색상 표현을 위한 강력한 조명 */}
+          <ambientLight intensity={1.8} color="#ffffff" />
+
+          {/* 색상 표현을 위한 강한 방향성 조명 */}
+          <directionalLight
+            position={[15, 15, 15]}
+            intensity={1.5}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[-15, 15, -15]}
+            intensity={1.5}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[0, 15, 15]}
+            intensity={1.2}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[0, 15, -15]}
+            intensity={1.2}
+            color="#ffffff"
+          />
+
+          {/* 가구 디테일용 강력한 포인트 조명 */}
+          <pointLight
+            position={[0, 18, 0]}
+            intensity={2.5}
+            distance={50}
+            decay={0.8}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[-12, 12, -12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[12, 12, 12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[12, 12, -12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
+          />
+          <pointLight
+            position={[-12, 12, 12]}
+            intensity={1.8}
+            distance={40}
+            decay={1.0}
+            color="#ffffff"
           />
           <Floor wallsData={wallsData} />
 

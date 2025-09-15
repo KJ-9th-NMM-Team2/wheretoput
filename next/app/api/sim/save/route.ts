@@ -102,6 +102,8 @@ export async function POST(req: NextRequest) {
       floorColor,
       backgroundColor,
       environmentPreset,
+      wallType,
+      floorType,
     } = body;
 
     // 필수 파라미터 확인
@@ -175,6 +177,8 @@ export async function POST(req: NextRequest) {
             floor_color: floorColor,
             background_color: backgroundColor,
             environment_preset: environmentPreset,
+            wall_type: wallType || "color",
+            floor_type: floorType || "color",
           },
         });
       } catch (roomUpdateError) {
