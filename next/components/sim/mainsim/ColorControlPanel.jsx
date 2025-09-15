@@ -40,7 +40,7 @@ export function ColorControlPanel({ isPopup = false }) {
       ...baseStyle,
       ...positionStyle
     }}>
-      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }}className="m-0 mb-2.5 text-xl font-semibold"> Colors </h3>
+      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px' }} className="m-0 mb-2.5 text-xl font-semibold"> Colors </h3>
 
       <div
         style={{
