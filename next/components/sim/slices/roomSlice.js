@@ -281,9 +281,7 @@ export const roomSlice = (set, get) => ({
           }
         }
       }
-
       const currentState = get();
-
       if (currentState.wallsData.length > 0) {
         try {
           const scaledWalls = currentState.wallsData.map((wall) => ({
@@ -350,7 +348,6 @@ export const roomSlice = (set, get) => ({
       if (!response.ok) {
         throw new Error(`저장 실패: ${response.statusText}`);
       }
-
       const result = await response.json();
       set({ lastSavedAt: new Date() });
       return result;
@@ -360,6 +357,7 @@ export const roomSlice = (set, get) => ({
     } finally {
       set({ isSaving: false });
     }
+
   },
 
   loadSimulatorState: async (roomId, options = {}) => {
@@ -368,6 +366,9 @@ export const roomSlice = (set, get) => ({
 
     try {
       const start_time = performance.now();
+
+      
+      let loadedModels = [];
       const response = await fetch(`/api/sim/load/${roomId}`);
 
       if (!response.ok) {
@@ -375,9 +376,6 @@ export const roomSlice = (set, get) => ({
       }
 
       const result = await response.json();
-
-      let loadedModels = [];
-
       if (!wallsOnly) {
         const currentState = get();
         currentState.loadedModels.forEach((model) => {
@@ -393,7 +391,6 @@ export const roomSlice = (set, get) => ({
           } else {
             scale = 1;
           }
-
           return {
             id: obj.id,
             object_id: obj.object_id,
