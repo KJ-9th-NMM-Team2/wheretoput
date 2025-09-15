@@ -41,8 +41,9 @@ const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ room
     <div className="flex">
       <div
         className={`${
+          // 사이드바 크기 조정 : 원본 w-80 -> w72
           collapsed ? "w-10" : "w-80"
-        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 select-none`}
+        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 select-none shadow-2xl drop-shadow-xl backdrop-blur-sm`}
       >
         <SideTitle
           collapsed={collapsed}

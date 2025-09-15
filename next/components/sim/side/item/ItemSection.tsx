@@ -121,14 +121,8 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                         </span>
                         {/* 가구 카운트 */}
                         {selectedCategory === "-1" && (
-                          <span className="text-xs font-semibold text-gray-700 mr-8">
+                          <span className="text-xs font-semibold text-gray-700 ml-4">
                             {Number(item.count).toLocaleString()} 개
-                          </span>
-                        )}
-                        {/* 모델이 있는 것들만 표시 시현 때 딜레이 방지 */}
-                        {item.model_url && (
-                          <span className="text-xs font-semibold text-gray-700">
-                            ．
                           </span>
                         )}
                       </div>
@@ -136,7 +130,15 @@ const ItemSection: React.FC<ItemSectionProps> = ({
 
                     {/* 배치한 가구 목록에서만 쇼핑 링크 표시 */}
                     {isSelectedCategory && (
-                      <div className="flex justify-end mt-2">
+                      <div className="flex justify-between items-center mt-2">
+                        {/* 모델이 있는 것들만 표시 시현 때 딜레이 방지 */}
+                        {item.model_url ? (
+                          <span className="text-xs font-semibold text-gray-700">
+                            ．
+                          </span>
+                        ) : (
+                          <span></span>
+                        )}
                         <ShoppingLink
                           furnitureName={item.name}
                           className="text-xs"
