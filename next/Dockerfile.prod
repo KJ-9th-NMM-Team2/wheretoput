@@ -54,6 +54,9 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Next.js 빌드 결과물 복사
 COPY --from=builder /app/public ./public
 
+# draco wasm 파일들 명시적 복사 (standalone 모드에서 누락될 수 있음)
+COPY --from=builder /app/public/draco/*.wasm ./public/draco/
+
 # Next.js 실행에 필요한 캐시/모델 디렉토리 생성 및 권한 설정
 RUN mkdir -p /app/.next/cache \
     && mkdir -p /app/public/cache/models \
