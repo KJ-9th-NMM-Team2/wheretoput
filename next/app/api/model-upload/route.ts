@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { generateTrellisModel } from '../../trellis_api.js';
 import cacheUtils, { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import path from 'path';
-import { HttpResponse } from '@/utils/httpResponse.js';
+import { HttpResponse } from "@/utils/httpResponse";
 
 
 /**
