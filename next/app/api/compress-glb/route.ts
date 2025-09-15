@@ -119,12 +119,16 @@ async function compressWithDraco(
 
   try {
     // 배포 환경 호환을 위한 Draco 모듈 설정
-    const decoderWasmPath = fs.existsSync(path.join(process.cwd(), "public/draco/draco_decoder.wasm"))
-      ? path.join(process.cwd(), "public/draco/draco_decoder.wasm")
+    const decoderWasmCandidate = path.join(process.cwd(), "public/draco/draco_decoder.wasm");
+    const decoderWasmExists = await fs.pathExists(decoderWasmCandidate);
+    const decoderWasmPath = decoderWasmExists
+      ? decoderWasmCandidate
       : path.join(process.cwd(), "node_modules/draco3d/draco_decoder.wasm");
 
-    const encoderWasmPath = fs.existsSync(path.join(process.cwd(), "public/draco/draco_encoder.wasm"))
-      ? path.join(process.cwd(), "public/draco/draco_encoder.wasm")
+    const encoderWasmCandidate = path.join(process.cwd(), "public/draco/draco_encoder.wasm");
+    const encoderWasmExists = await fs.pathExists(encoderWasmCandidate);
+    const encoderWasmPath = encoderWasmExists
+      ? encoderWasmCandidate
       : path.join(process.cwd(), "node_modules/draco3d/draco_encoder.wasm");
 
     await io.registerDependencies({
