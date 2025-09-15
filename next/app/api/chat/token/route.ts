@@ -47,6 +47,7 @@
 
 import { getToken } from "next-auth/jwt";
 import jwt from "jsonwebtoken";
+import { HttpResponse } from "@/utils/httpResponse";
 
 // 토큰이 유효한지 체크하는 API
 export async function GET(req: Request) {
@@ -62,7 +63,7 @@ export async function GET(req: Request) {
   });
 
   if (!token) {
-    return Response.json({ error: "No token" }, { status: 401 });
+    return HttpResponse.unAuthorized("No token");
   }
 
   const jwtToken = jwt.sign(

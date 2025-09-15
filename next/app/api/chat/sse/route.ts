@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 
 // 타입 정의 (중앙 집중화된 타입 사용)
 import { ChatSSEMessage } from '@/components/chat/types/chat-types';
+import { HttpResponse } from "@/utils/httpResponse";
 
 // 채팅 SSE 연결 관리 (userId별로 여러 연결 허용)
 // Hot Reload 대응을 위해 global 객체 사용
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    return new Response("Internal Server Error", { status: 500 });
+    return HttpResponse.internalError();
   }
 }
 

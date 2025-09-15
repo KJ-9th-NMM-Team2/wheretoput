@@ -35,6 +35,7 @@
  *         description: 서버 오류
  */
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 import type { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -43,9 +44,7 @@ export async function POST(req: NextRequest) {
     console.log(room_id, user_id, content);
 
     if (!user_id || !content) {
-      return new Response("Bad Request: Missing user_id or content", {
-        status: 400,
-      });
+      return HttpResponse.badRequest("Missing user_id or content");
     }
 
     const newComment = await prisma.room_comments.create({
@@ -59,6 +58,6 @@ export async function POST(req: NextRequest) {
     return Response.json(newComment, { status: 201 });
   } catch (error) {
     console.error("Error creating comment:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return HttpResponse.internalError();
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 
 // MIME 타입 설정 함수
 function getMimeType(filePath: string): string {
@@ -24,7 +25,7 @@ export async function GET(
     const { path: filePath } = await params;
 
     if (!filePath || filePath.length === 0) {
-      return Response.json({ error: "File path is required" }, { status: 400 });
+      return HttpResponse.badRequest("File path is required");
     }
 
     // 보안: path traversal 방지
@@ -36,7 +37,7 @@ export async function GET(
     );
 
     if (sanitizedPath.length !== filePath.length) {
-      return Response.json({ error: "Invalid file path" }, { status: 400 });
+      return HttpResponse.badRequest("Invalid file path");
     }
 
     // public/cache/models 디렉토리 내의 파일만 접근 허용
@@ -48,7 +49,7 @@ export async function GET(
     const resolvedCacheDir = path.resolve(cacheModelsDir);
 
     if (!resolvedPath.startsWith(resolvedCacheDir)) {
-      return Response.json({ error: "Access denied" }, { status: 403 });
+      return HttpResponse.forbidden();
     }
 
     // 파일 존재 여부 확인 및 fallback 처리
@@ -72,7 +73,7 @@ export async function GET(
 
         if (!furniture || !furniture.model_url) {
           console.log(`No original URL found for cached file: ${cachedPath}`);
-          return Response.json({ error: "File not found" }, { status: 404 });
+          return HttpResponse.notFound();
         }
 
         console.log(`Found original URL: ${furniture.model_url} for ${furniture.name}`);
@@ -82,7 +83,7 @@ export async function GET(
 
         if (!response.ok) {
           console.log(`Failed to fetch original file: ${furniture.model_url}`);
-          return Response.json({ error: "Original file not accessible" }, { status: 404 });
+          return HttpResponse.notFound("Original file not accessible");
         }
 
         const fileBuffer = await response.arrayBuffer();
@@ -101,7 +102,7 @@ export async function GET(
 
       } catch (error) {
         console.log(`Error handling cache miss: ${error.message}`);
-        return Response.json({ error: "Internal server error" }, { status: 500 });
+        return HttpResponse.internalError();
       }
     }
 
@@ -120,12 +121,6 @@ export async function GET(
 
   } catch (error) {
     console.error("Error serving cached model file:", error);
-    return Response.json(
-      {
-        error: "Internal Server Error",
-        message: error.message
-      },
-      { status: 500 }
-    );
+    return HttpResponse.internalError(error.message);
   }
 }

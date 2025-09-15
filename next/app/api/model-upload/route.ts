@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { generateTrellisModel } from '../../trellis_api.js';
 import cacheUtils, { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import path from 'path';
+import { HttpResponse } from '@/utils/httpResponse.js';
 
 
 /**
@@ -95,10 +96,7 @@ export async function POST(request: NextRequest) {
     const { furniture_id } = await request.json();
     
     if (!furniture_id) {
-      return NextResponse.json(
-        { error: 'furniture_id가 필요합니다.' },
-        { status: 400 }
-      )
+      return HttpResponse.badRequest("furniture_id가 필요합니다.");
     }
 
     // 1. DB에서 가구 정보 조회
@@ -112,10 +110,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!furniture) {
-      return NextResponse.json(
-        { error: '가구를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
+      return HttpResponse.notFound("가구를 찾을 수 없습니다.");
     }
 
     // 이미 model_url이 있는 경우 기존 URL 사용 (S3 또는 로컬)
@@ -159,10 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!furniture.image_url) {
-      return NextResponse.json(
-        { error: '이미지 URL이 없습니다.' },
-        { status: 400 }
-      )
+      return HttpResponse.badRequest("이미지 URL이 없습니다.");
     }
 
     console.log('가구 정보:', furniture.name, furniture.image_url)
@@ -197,9 +189,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('3D 모델 생성/업로드 오류:', error)
-    return NextResponse.json(
-      { error: 'S3에 3D 모델 업로드에 실패했습니다: ' + error.message },
-      { status: 500 }
-    )
+    return HttpResponse.internalError("S3에 3D 모델 업로드에 실패했습니다:", error.message);
   }
 }

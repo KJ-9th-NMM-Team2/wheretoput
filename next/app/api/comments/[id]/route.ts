@@ -34,6 +34,7 @@
  *         description: 서버 오류
  */
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 import type { NextRequest } from "next/server";
 
 export async function PUT(
@@ -45,9 +46,7 @@ export async function PUT(
     const { content } = await req.json();
 
     if (!content) {
-      return new Response("Bad Request: Missing content", {
-        status: 400,
-      });
+      return HttpResponse.badRequest("Missing content");
     }
 
     const newComment = await prisma.room_comments.update({
@@ -63,7 +62,7 @@ export async function PUT(
     return Response.json(newComment, { status: 200 });
   } catch (error) {
     console.error("Error updating comment:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    return HttpResponse.internalError();
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendToRoomParticipants, broadcastToChatUsers, debugChatConnections } from '../route';
 import { ChatSSEMessage } from '@/components/chat/types/chat-types';
+import { HttpResponse } from '@/utils/httpResponse';
 
 /**
  * @swagger
@@ -163,6 +164,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('❌ SSE 알림 처리 실패:', error);
-    return NextResponse.json({ error: 'Failed to process SSE notification' }, { status: 500 });
+    return HttpResponse.internalError("Failed to process SSE notification");
   }
 }

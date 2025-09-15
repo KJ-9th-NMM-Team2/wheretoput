@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -94,9 +95,6 @@ export async function GET(
     return NextResponse.json(followersData);
   } catch (error) {
     console.error("Error fetching followers:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError();
   }
 }

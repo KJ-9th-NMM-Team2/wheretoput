@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { HttpResponse } from '@/utils/httpResponse';
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION!,
@@ -76,7 +77,7 @@ export async function GET(
     console.log('요청된 S3 키:', s3Key);
 
     if (!s3Key) {
-      return NextResponse.json({ error: 'S3 키가 필요합니다' }, { status: 400 });
+      return HttpResponse.unAuthorized("S3 키가 필요합니다");
     }
 
     // S3에서 이미지 가져오기
@@ -88,7 +89,7 @@ export async function GET(
     const response = await s3Client.send(command);
     
     if (!response.Body) {
-      return NextResponse.json({ error: '이미지를 찾을 수 없습니다' }, { status: 404 });
+      return HttpResponse.notFound("이미지를 찾을 수 없습니다");
     }
 
     // Stream을 Buffer로 변환
@@ -114,9 +115,6 @@ export async function GET(
 
   } catch (error) {
     console.error('이미지 표시 오류:', error);
-    return NextResponse.json(
-      { error: '이미지를 불러올 수 없습니다' },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("이미지를 불러올 수 없습니다");
   }
 }

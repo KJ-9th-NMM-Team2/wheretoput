@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import type { NextRequest } from "next/server";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -82,10 +83,7 @@ export async function POST(req: NextRequest) {
     // 인증 확인
     const session = await auth();
     if (!session?.user?.id) {
-      return Response.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
+      return HttpResponse.unAuthorized("Authentication required");
     }
 
     let body;
@@ -94,10 +92,7 @@ export async function POST(req: NextRequest) {
       // console.log("body:", body);
     } catch (error) {
       console.error("JSON parsing error:", error);
-      return Response.json(
-        { error: "Invalid JSON in request body" },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("Invalid JSON in request body");
     }
 
     const {
@@ -111,10 +106,7 @@ export async function POST(req: NextRequest) {
 
     // 필수 파라미터 확인
     if (!room_id || !objects || !Array.isArray(objects)) {
-      return Response.json(
-        { error: "room_id and objects array are required" },
-        { status: 400 }
-      );
+      return HttpResponse.badRequest("room_id and objects array are required");
     }
 
     console.log(`Saving ${objects.length} objects for room ${room_id}`);
@@ -209,17 +201,10 @@ export async function POST(req: NextRequest) {
       skipped_count: skippedCount,
     });
   } catch (error) {
+    const details = process.env.NODE_ENV === "development"
+      ? error.stack
+      : "Server error occurred";
     console.error("Error saving simulator state:", error);
-    return Response.json(
-      {
-        error: "Internal Server Error",
-        message: error.message,
-        details:
-          process.env.NODE_ENV === "development"
-            ? error.stack
-            : "Server error occurred",
-      },
-      { status: 500 }
-    );
+    return HttpResponse.internalError(error.message, details);
   }
 }
