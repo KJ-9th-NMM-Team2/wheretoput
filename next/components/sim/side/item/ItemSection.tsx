@@ -73,14 +73,14 @@ const ItemSection: React.FC<ItemSectionProps> = ({
                       isSelectedCategory ? "w-24 h-24" : "w-20 h-20"
                     } bg-gray-100 flex-shrink-0`}
                   >
-                    {item.image_url && !imageErrors.has(item.id) ? (
+                    {item.image_url && !imageErrors.has(item.furniture_id) ? (
                       <Image
                         src={item.image_url}
                         alt={item.name}
                         width={200}
                         height={200}
                         className="object-cover object-center"
-                        onError={() => handleImageError(item.id)}
+                        onError={() => handleImageError(item.furniture_id)}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -115,30 +115,40 @@ const ItemSection: React.FC<ItemSectionProps> = ({
 
                     {/* 가격 정보 */}
                     {item.price && (
+                      
                       <div className="flex justify-between items-center">
                         <span className="text-xs font-semibold text-gray-700">
-                          ₩{Number(item.price).toLocaleString()}
+                          ₩{Number(item.price).toLocaleString()} 
                         </span>
+
+                      {selectedCategory != "-1" &&
+                      (
+                        <span>.</span>)
+                      }
+
                         {/* 가구 카운트 */}
-                        {selectedCategory === "-1" && (
+                        {selectedCategory === "-1" && 'count' in item && (
+                          
                           <span className="text-xs font-semibold text-gray-700 ml-4">
                             {Number(item.count).toLocaleString()} 개
                           </span>
+                          
                         )}
                       </div>
+                      
                     )}
 
                     {/* 배치한 가구 목록에서만 쇼핑 링크 표시 */}
                     {isSelectedCategory && (
                       <div className="flex justify-between items-center mt-2">
                         {/* 모델이 있는 것들만 표시 시현 때 딜레이 방지 */}
-                        {item.model_url ? (
+                        {/* {item.model_url ? (
                           <span className="text-xs font-semibold text-gray-700">
                             ．
                           </span>
                         ) : (
                           <span></span>
-                        )}
+                        )} */}
                         <ShoppingLink
                           furnitureName={item.name}
                           className="text-xs"

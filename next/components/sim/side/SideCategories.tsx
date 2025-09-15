@@ -76,15 +76,15 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 ${
+                  className={`py-2 px-3 text-sm tool-btn transition whitespace-nowrap flex-shrink-0 ${
                     wallToolMode
-                      ? 'cursor-not-allowed opacity-50 bg-gray-100 text-gray-400'
+                      ? 'cursor-not-allowed opacity-50 tool-btn-inactive'
                       : 'cursor-pointer'
                   } ${selectedCategory === cat.id && !wallToolMode
-                      ? 'bg-blue-500 text-white'
+                      ? 'tool-btn-active'
                       : !wallToolMode
-                        ? 'bg-white text-gray-800 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 border border-gray-200'
-                        : 'bg-gray-100 text-gray-400 border border-gray-200'
+                        ? 'tool-btn-inactive'
+                        : 'tool-btn-inactive'
                     }`}
                   onClick={() => handleCategoryClick(cat)}
                   disabled={wallToolMode}
