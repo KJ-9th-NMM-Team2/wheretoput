@@ -33,21 +33,24 @@ export async function fetchFurnitures({
         const params = new URLSearchParams({
             page: page.toString(),
             limit: itemsPerPage.toString(),
+            ...(category && { category }),
+            ...(sort && { sort }),
+            ...(query && { query }),
         });
 
         // 카테고리가 선택되었다면 파라미터에 추가
-        if (category) {
-            params.append('category', category);
-        }
+        // if (category) {
+        //     params.append('category', category);
+        // }
 
-        // 정렬 옵션 추가
-        if (sort) {
-            params.append('sort', sort);
-        }
+        // // 정렬 옵션 추가
+        // if (sort) {
+        //     params.append('sort', sort);
+        // }
 
-        if (query) {
-            params.append("query", query);
-        }
+        // if (query) {
+        //     params.append("query", query);
+        // }
 
         const response = await fetch(`/api/sim/furnitures?${params}`, {
             method: 'GET',

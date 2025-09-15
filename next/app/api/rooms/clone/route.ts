@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
           user_id: session?.user?.id,
           title: `${original_room?.title}의 복제본`,
           description: original_room?.description,
-          room_data: original_room?.room_data
-            ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
-            : null,
+              // room_data: original_room?.room_data
+          //   ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
+          //   : null,
           thumbnail_url: original_room?.thumbnail_url,
           is_public: false,
           view_count: 0,

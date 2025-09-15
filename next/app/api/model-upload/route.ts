@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 // Trellis API 사용으로 변경
 import { generateTrellisModel } from '../../trellis_api.js';
@@ -85,14 +85,14 @@ import path from 'path';
  * type: string
  * example: "S3에 3D 모델 업로드에 실패했습니다: S3 연결 오류"
  */
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     // 캐시 디렉토리 생성
     await cacheUtils.ensureCacheDir(CACHE_DIR);
 
     console.log('3D 모델 생성 API 호출됨')
     
-    const { furniture_id } = await request.json()
+    const { furniture_id } = await request.json();
     
     if (!furniture_id) {
       return NextResponse.json(
@@ -103,7 +103,12 @@ export async function POST(request) {
 
     // 1. DB에서 가구 정보 조회
     const furniture = await prisma.furnitures.findUnique({
-      where: { furniture_id: furniture_id }
+      where: { furniture_id: furniture_id },
+      select: {
+        model_url: true,
+        image_url: true,
+        name: true,
+      }
     })
 
     if (!furniture) {
