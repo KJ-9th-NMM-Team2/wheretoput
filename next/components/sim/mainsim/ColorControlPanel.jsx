@@ -81,11 +81,13 @@ export function ColorControlPanel({ isPopup = false }) {
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          {/* 바닥재가 선택된 경우 텍스처 옵션 표시 */}
+          {/* 바닥 옵션 클릭시  바닥재 옵션 표시 */}
           {colorTarget === 'floor' && (
             <div style={{ marginBottom: '10px' }}>
               <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+
+                {/* 동적으로 여러개의 바닥재 UI 생성 */}
                 {Object.entries(floorTexturePresets).map(([key, preset]) => (
                   <button
                     key={key}

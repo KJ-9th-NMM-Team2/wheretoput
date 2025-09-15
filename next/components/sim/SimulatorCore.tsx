@@ -1,18 +1,16 @@
 "use client";
 
-import React, {
-  useRef,
-  Suspense,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-} from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
+import React, { useRef, Suspense, useState, useEffect, useMemo, useCallback } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import { OrbitControls, useTexture, Environment } from "@react-three/drei";
+import { useSession } from "next-auth/react";
 import * as THREE from "three";
 
+// Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
+import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
+
+// Main simulation components
 import { Wall } from "@/components/sim/mainsim/Wall.jsx";
 import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
 import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
@@ -21,44 +19,44 @@ import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
 import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
-import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
+import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
+import { CaptureHandler } from "@/components/sim/mainsim/CaptureHandler";
+
+// UI and feature components
 import SimSideView from "@/components/sim/SimSideView";
-import CanvasImageLogger from "@/components/sim/CanvasCapture";
-import AutoSave from "@/components/sim/AutoSave";
-import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
-import { Environment } from "@react-three/drei";
-import { useSession } from "next-auth/react";
+import WallTools from "./side/WallTools";
 import { ArchievementToast } from "./achievement/ArchievementToast";
 import { MobileHeader } from "./mobile/MobileHeader";
 import { PreviewManager } from "./preview/PreviewManager";
-import WallTools from "./side/WallTools";
 import { WallMeasurements } from "./measurements/WallMeasurements";
 import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
-import { CaptureModal } from "./mainsim/CaptureModal";
-import { CaptureHandler } from "./mainsim/CaptureHandler";
+
+// System components
+import CanvasImageLogger from "@/components/sim/CanvasCapture";
+import AutoSave from "@/components/sim/AutoSave";
+import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
 
 type position = [number, number, number];
 
 // 바닥 재질 컴포넌트
 function FloorMaterial() {
   const { floorColor, floorTexture, floorTexturePresets } = useStore();
+  const currentPreset = floorTexturePresets[floorTexture];
 
-  // 모든 텍스처를 미리 로드 (Hooks 규칙 준수)
-  const woodTexture = useTexture("/textures/vintage_wood.jpg");
+  // Hook 규칙 준수: 항상 텍스처 로드 (fallback 경로 제공)
+  const texture = useTexture(currentPreset?.texture || "/textures/vintage_wood.jpg") as THREE.Texture;
 
   // 텍스처 설정 (항상 실행 - Hooks 규칙 준수)
   React.useEffect(() => {
-    if (woodTexture && woodTexture.image && woodTexture.image.complete) {
-      console.log("텍스처 설정 적용:", woodTexture);
-      woodTexture.wrapS = woodTexture.wrapT = THREE.RepeatWrapping;
-      woodTexture.repeat.set(6, 6);
-      woodTexture.minFilter = THREE.LinearFilter;
-      woodTexture.magFilter = THREE.LinearFilter;
-      woodTexture.needsUpdate = true;
+    if (texture && texture.image && texture.image.complete) {
+      console.log("텍스처 설정 적용:", texture);
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(6, 6);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.needsUpdate = true;
     }
-  }, [woodTexture]);
-
-  const currentPreset = floorTexturePresets[floorTexture];
+  }, [texture]);
 
   // 단색 모드
   if (currentPreset.type === "color") {
@@ -71,34 +69,23 @@ function FloorMaterial() {
     );
   }
 
-  // 마루 텍스처 모드
-  if (floorTexture === "wood" && woodTexture) {
-    console.log("마루 적용 중:", {
-      textureReady: woodTexture.image && woodTexture.image.complete,
-      imageWidth: woodTexture.image?.width,
-      imageHeight: woodTexture.image?.height,
-      imageSrc: woodTexture.image?.src
+  // 텍스처 모드
+  if (currentPreset.type === "texture") {
+    console.log(`${currentPreset.name} 텍스처 적용 중:`, {
+      textureReady: texture.image && texture.image.complete,
+      imageWidth: texture.image?.width,
+      imageHeight: texture.image?.height,
+      imageSrc: texture.image?.src
     });
 
     return (
       <meshBasicMaterial
-        map={woodTexture}
+        map={texture}
       />
     );
   }
 
-  // 텍스처 로딩 중
-  if (floorTexture === "wood") {
-    return (
-      <meshStandardMaterial
-        color="#8B4513"
-        roughness={0.9}
-        metalness={0.0}
-      />
-    );
-  }
-
-  // fallback
+  // 텍스처 로딩 중 또는 fallback
   return (
     <meshStandardMaterial
       color={floorColor}
@@ -566,24 +553,28 @@ export function SimulatorCore({
           ) : (
             <>
               <Wall
+                id="default-wall-north"
                 width={20}
                 height={5}
                 position={[0, 2.5, -10]}
                 rotation={[0, 0, 0]}
               />
               <Wall
+                id="default-wall-west"
                 width={20}
                 height={5}
                 position={[-10, 2.5, 0]}
                 rotation={[0, Math.PI / 2, 0]}
               />
               <Wall
+                id="default-wall-east"
                 width={20}
                 height={5}
                 position={[10, 2.5, 0]}
                 rotation={[0, -Math.PI / 2, 0]}
               />
               <Wall
+                id="default-wall-south"
                 width={20}
                 height={5}
                 position={[0, 2.5, 10]}
