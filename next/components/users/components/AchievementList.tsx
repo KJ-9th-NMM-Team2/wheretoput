@@ -27,7 +27,7 @@ export default function AchievementList() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400 text-lg">로딩중...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg"> Loading...</p>
       </div>
     );
   }
