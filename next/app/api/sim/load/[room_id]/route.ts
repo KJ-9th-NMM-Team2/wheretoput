@@ -130,6 +130,8 @@ export async function GET(
           floor_color: true,
           background_color: true,
           environment_preset: true,
+          wall_type: true,
+          floor_type: true,
         }
       }),
       prisma.room_objects.findMany({ 

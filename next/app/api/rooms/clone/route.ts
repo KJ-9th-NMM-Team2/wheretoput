@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     // 기존 방 정보를 복제하여 새로운 방을 생성
     const result = await prisma.$transaction(async (tx) => {
-      // 새 방 생성
+      // 새 방 생성 (색상/질감 정보 포함)
       const newRoom = await tx.rooms.create({
         data: {
           user_id: session?.user?.id,
@@ -100,6 +100,12 @@ export async function POST(req: NextRequest) {
           is_public: false,
           view_count: 0,
           root_room_id: original_room?.root_room_id || original_room.room_id,
+          wall_color: original_room?.wall_color || "#FFFFFF",
+          floor_color: original_room?.floor_color || "#D2B48C",
+          background_color: original_room?.background_color || "#87CEEB",
+          environment_preset: original_room?.environment_preset || "apartment",
+          wall_type: original_room?.wall_type || "color",
+          floor_type: original_room?.floor_type || "color",
         },
       });
 

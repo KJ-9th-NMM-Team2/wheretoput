@@ -162,9 +162,14 @@ export function ColorControlPanel({ isPopup = false }) {
             </div>
           )}
 
-          {/* 색상 선택 - 단색 모드에서만 표시 */}
-          {(colorTarget === 'background' || (colorTarget === 'wall' && wallTexture === 'color') || (colorTarget === 'floor' && floorTexture === 'color')) && (
+          {/* 색상 선택 - 배경은 항상, 벽과 바닥은 텍스처와 함께 조합 가능 */}
+          {(colorTarget === 'background' || colorTarget === 'wall' || colorTarget === 'floor') && (
             <div>
+              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>
+                {colorTarget === 'background' ? '배경색' :
+                 colorTarget === 'wall' ? (wallTexture === 'color' ? '벽 색상' : '벽 색상 (텍스처와 조합)') :
+                 (floorTexture === 'color' ? '바닥 색상' : '바닥 색상 (텍스처와 조합)')}
+              </div>
               <HexColorPicker
                 // className="border-5 rounded-2xl" // 보더 필요 여부에 따라 수정
                 style={{
@@ -176,37 +181,6 @@ export function ColorControlPanel({ isPopup = false }) {
             </div>
           )}
 
-          {/* 벽지 텍스처 모드에서 색상 픽커 대신 안내 메시지 */}
-          {colorTarget === 'wall' && wallTexture !== 'color' && (
-            <div style={{
-              padding: '20px',
-              textAlign: 'center',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                {wallTexturePresets[wallTexture].name} 벽지 적용중
-              </div>
-            
-            </div>
-          )}
-
-          {/* 바닥재 텍스처 모드에서 색상 픽커 대신 안내 메시지 */}
-          {colorTarget === 'floor' && floorTexture !== 'color' && (
-            <div style={{
-              padding: '20px',
-              textAlign: 'center',
-              background: 'rgba(255,255,255,0.1)',
-              borderRadius: '8px',
-              border: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)' }}>
-                {floorTexturePresets[floorTexture].name} 바닥 적용중
-              </div>
-              
-            </div>
-          )}
         </div>
       </div>
 
