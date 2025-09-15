@@ -45,7 +45,8 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
         ...positionStyle,
       }}
     >
-      <h3 style={{ margin: "0 0 10px 0", fontSize: "20px" }}>
+      <h3 style={{ margin: "0 0 10px 0", fontSize: "20px" }}
+      className="m-0 mb-2.5 text-xl font-semibold">
         Display
       </h3>
 
