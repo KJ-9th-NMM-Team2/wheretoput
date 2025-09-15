@@ -1,3 +1,4 @@
+import cacheUtils from "@/lib/cache/CacheUtils";
 import { prisma } from "@/lib/prisma";
 import fs from "fs/promises";
 import type { NextRequest } from "next/server";
@@ -242,6 +243,9 @@ export async function GET(
           console.log(
             `🎃 Using cached file via API: ${obj.furnitures.cached_model_url}`
           );
+        } 
+        else {
+          await processCacheMissing(obj);
         }
 
         return {
@@ -349,5 +353,28 @@ export async function GET(
       },
       { status: 500 }
     );
+  }
+}
+
+
+const processCacheMissing = async (obj: any) => {
+  console.log(`👿 Cache missing: ${obj.furnitures.name}`);
+  try {
+    const filename = `${obj.furnitures.furniture_id}.glb`;
+    const localPath = `public/cache/models/${filename}`;
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+    await fetch(`${baseUrl}/api/cache/miss`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", },
+      body: JSON.stringify({
+        furniture_id: obj.furnitures.furniture_id, 
+        localPath,
+      })
+    });
+    
+    await cacheUtils.downloadFileFromS3ToLocal(obj.furnitures, localPath, filename, obj.furnitures.furniture_id);
+  } catch (error) {
+    console.log("Cache missing 로컬 파일 캐싱 실패 😨:", error);
   }
 }
