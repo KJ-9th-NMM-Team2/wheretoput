@@ -9,7 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useStore } from "@/components/sim/useStore.js";
@@ -226,7 +226,6 @@ export function SimulatorCore({
 
   const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
-  const [preloadedUrls, setPreloadedUrls] = useState(new Set<string>());
 
   // 상태 기반 속도 측정
   useEffect(() => {
@@ -261,54 +260,6 @@ export function SimulatorCore({
   //     console.log(`모든 모델 로드 완료: ${endTime - startTime}ms`);
   //   }
   // }, [loadedModels]);
-
-  // GLB 파일 병렬 preload (중복 방지)
-  // useEffect(() => {
-  //   if (loadedModels.length > 0) {
-  //     // 유효한 GLB URL들만 필터링
-  //     const validUrls = loadedModels
-  //       .map((model) => model.url)
-  //       .filter(
-  //         (url) =>
-  //           url &&
-  //           typeof url === "string" &&
-  //           !url.includes("/legacy_mesh") &&
-  //           !preloadedUrls.has(url) // 이미 preload한 URL 제외
-  //       );
-
-  //     if (validUrls.length === 0) {
-  //       return; // 새로운 URL이 없으면 종료
-  //     }
-
-  //     console.log(
-  //       `🚀 Starting parallel preload for ${validUrls.length} new models`
-  //     );
-
-  //     // 6개씩 배치로 병렬 다운로드 시작
-  //     const MAX_CONCURRENT = 6;
-  //     const batches = [];
-
-  //     for (let i = 0; i < validUrls.length; i += MAX_CONCURRENT) {
-  //       batches.push(validUrls.slice(i, i + MAX_CONCURRENT));
-  //     }
-
-  //     batches.forEach((batch, batchIndex) => {
-  //       setTimeout(() => {
-  //         batch.forEach((url) => {
-  //           try {
-  //             useGLTF.preload(url);
-  //             // preload 완료된 URL 추가
-  //             setPreloadedUrls((prev) => new Set([...prev, url]));
-  //           } catch (error) {
-  //             console.warn(`Failed to preload: ${url}`, error);
-  //           }
-  //         });
-  //       }, batchIndex * 100); // 100ms 간격으로 배치 시작
-  //     });
-
-  //     console.log(`📊 Started ${batches.length} batches of parallel downloads`);
-  //   }
-  // }, [loadedModels, preloadedUrls]);
 
   // URL 파라미터 초기화 및 데이터 로드
   useEffect(() => {
@@ -641,26 +592,17 @@ export function SimulatorCore({
             enableZoom={true}
             enableRotate={!showMeasurements}
             enablePan={true}
-            enableDamping={false}
+            enableDamping={!showMeasurements}
+            dampingFactor={showMeasurements ? 0 : 0.05}
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
             zoomSpeed={isMobile ? 0.8 : 1.0}
             minDistance={isMobile ? 1 : 8}
             maxDistance={50}
             maxPolarAngle={
-              showMeasurements
-                ? (Math.PI * 18) / 180
-                : isMobile
-                ? Math.PI * 0.95
-                : Math.PI
+              showMeasurements ? Math.PI * 18/180 : isMobile ? Math.PI * 0.95 : Math.PI
             }
-            minPolarAngle={
-              showMeasurements
-                ? (Math.PI * 18) / 180
-                : isMobile
-                ? Math.PI * 0.05
-                : 0
-            }
+            minPolarAngle={showMeasurements ? Math.PI * 18/180 : isMobile ? Math.PI * 0.05 : 0}
             mouseButtons={{
               LEFT: showMeasurements ? 2 : 0, // 측정 모드에서는 왼쪽 클릭으로 패닝
               MIDDLE: 1, // 휠 클릭으로 줌

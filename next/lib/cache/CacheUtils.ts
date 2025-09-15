@@ -68,7 +68,6 @@ class CacheUtils {
       const result = NextResponse.json({
         success: true,
         furniture_id: furniture_id,
-        model_url: `/api/models/${fileName}`, // 로컬 서빙 URL
         message: "S3에서 다운로드 및 캐싱을 했습니다.",
         cached: false,
         downloaded: true,
