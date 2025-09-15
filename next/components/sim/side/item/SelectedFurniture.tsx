@@ -1,4 +1,4 @@
-import { CategoryProps } from "@/lib/furnitureTypes";
+import { CategoryProps } from "@/types/furnitureTypes";
 import { useStore } from "../../useStore";
 
 interface SelectedFurnituresProps {

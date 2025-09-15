@@ -5,10 +5,9 @@ import ItemSection from "./item/ItemSection";
 import { useStore } from "@/components/sim/useStore";
 import { createNewModel } from "@/utils/createNewModel";
 import { handlePageChange } from "@/utils/handlePage";
-import { fetchFurnitures } from "@/lib/api/fetchFurnitures";
-import { fetchSelectedFurnitures } from "@/lib/api/fetchSelectedFurnitures";
-import { useHistory } from "@/components/sim/history";
-import { ActionType } from "@/components/sim/history/types";
+import { fetchFurnitures } from "@/lib/api/furniture/fetchFurnitures";
+import { fetchSelectedFurnitures } from "@/lib/api/furniture/fetchSelectedFurnitures";
+import { useHistory, ActionType } from "@/components/sim/history";
 import toast from "react-hot-toast";
 
 interface SideItemsProps {

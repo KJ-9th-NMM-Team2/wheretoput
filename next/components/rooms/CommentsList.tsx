@@ -3,7 +3,7 @@ import {
   fetchPostComment,
   fetchEditComment,
   fetchDeleteComment,
-} from "@/lib/api/comments";
+} from "@/lib/api/room/comments";
 import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
