@@ -10,7 +10,7 @@ import { HistoryControls, useHistoryKeyboard } from "@/components/sim/history";
 import type { furnitures as Furniture } from "@prisma/client";
 
 
-const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ roomId, accessType }) => {
+const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick: () => void }> = ({ roomId, accessType, onEditClick }) => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -41,13 +41,15 @@ const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ room
     <div className="flex">
       <div
         className={`${
+          // 사이드바 크기 조정 : 원본 w-80 -> w72
           collapsed ? "w-10" : "w-80"
-        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 select-none`}
+        } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 select-none shadow-2xl drop-shadow-xl backdrop-blur-sm`}
       >
         <SideTitle
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           accessType={accessType}
+          onEditClick={onEditClick}
         />
 
 
@@ -111,15 +113,16 @@ const SideViewContent: React.FC<{roomId: string, accessType: number }> = ({ room
   );
 };
 
-const SimSideView: React.FC<{ roomId: string | null; accessType: number }> = ({
+const SimSideView: React.FC<{ roomId: string | null; accessType: number; onEditClick: () => void }> = ({
   roomId,
   accessType,
+  onEditClick,
 }) => {
   if (!roomId) {
     return null; // roomId가 없으면 아무것도 렌더링하지 않음
   }
 
-  return <SideViewContent roomId={roomId} accessType={accessType} />;
+  return <SideViewContent roomId={roomId} accessType={accessType} onEditClick={onEditClick} />;
 };
 
 export default SimSideView;

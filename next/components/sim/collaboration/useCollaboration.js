@@ -41,6 +41,8 @@ export function useCollaboration(roomId) {
     setFloorColor,
     setBackgroundColor,
     setEnvironmentPreset,
+    setWallTexture,
+    setFloorTexture,
   } = useStore();
 
   const router = useRouter();
@@ -286,6 +288,18 @@ export function useCollaboration(roomId) {
       }
     });
 
+    socket.current.on("wall-texture-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setWallTexture(data.texture, false);
+      }
+    });
+
+    socket.current.on("floor-texture-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setFloorTexture(data.texture, false);
+      }
+    });
+
     socket.current.on("wall-added", (data) => {
       if (data.userId !== currentUser.id) {
         console.log("wall-added 데이터 수신:", data);
@@ -389,6 +403,8 @@ export function useCollaboration(roomId) {
         broadcastFloorColorChange,
         broadcastBackgroundColorChange,
         broadcastEnvironmentPresetChange,
+        broadcastWallTextureChange,
+        broadcastFloorTextureChange,
       });
     } else {
       setCollaborationCallbacks({
@@ -407,6 +423,8 @@ export function useCollaboration(roomId) {
         broadcastFloorColorChange: null,
         broadcastBackgroundColorChange: null,
         broadcastEnvironmentPresetChange: null,
+        broadcastWallTextureChange: null,
+        broadcastFloorTextureChange: null,
       });
     }
   }, [collaborationMode]);
@@ -515,6 +533,20 @@ export function useCollaboration(roomId) {
     emitEvent("environment-preset-changed", {
       userId: currentUser.id,
       preset,
+    });
+  };
+
+  const broadcastWallTextureChange = (texture) => {
+    emitEvent("wall-texture-changed", {
+      userId: currentUser.id,
+      texture,
+    });
+  };
+
+  const broadcastFloorTextureChange = (texture) => {
+    emitEvent("floor-texture-changed", {
+      userId: currentUser.id,
+      texture,
     });
   };
 

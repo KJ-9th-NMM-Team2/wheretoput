@@ -33,7 +33,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
     { id: 10, name: "침구류" }, 
 
   ];
-  const { selectedCategory, setSelectedCategory } = useStore();
+  const { selectedCategory, setSelectedCategory, wallToolMode } = useStore();
 
   // 컴포넌트 마운트 시 기본 카테고리 선택
   useEffect(() => {
@@ -43,6 +43,10 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
 
 
   const handleCategoryClick = (category: CategoryProps) => {
+    // 벽 추가 모드가 활성화된 경우 카테고리 선택 방지
+    if (wallToolMode) {
+      return;
+    }
     setSelectedCategory(category.id);
     onCategorySelect(category.id.toString());
   };
@@ -72,11 +76,18 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  className={`py-2 px-3 text-sm rounded transition whitespace-nowrap flex-shrink-0 cursor-pointer ${selectedCategory === cat.id
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 border border-gray-200'
+                  className={`py-2 px-3 text-sm tool-btn transition whitespace-nowrap flex-shrink-0 ${
+                    wallToolMode
+                      ? 'cursor-not-allowed opacity-50 tool-btn-inactive'
+                      : 'cursor-pointer'
+                  } ${selectedCategory === cat.id && !wallToolMode
+                      ? 'tool-btn-active'
+                      : !wallToolMode
+                        ? 'tool-btn-inactive'
+                        : 'tool-btn-inactive'
                     }`}
                   onClick={() => handleCategoryClick(cat)}
+                  disabled={wallToolMode}
                 >
                   {cat.name}
                 </button>

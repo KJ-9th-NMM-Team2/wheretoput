@@ -25,7 +25,7 @@ export function CollapsibleSidebar({
       <div className="fixed top-1/2 right-4 -translate-y-1/2 z-[200] ">
         <button
           onClick={toggleCollapse}
-          className="bg-white text-black border border-gray-200 shadow-2xl rounded-xl p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+          className="bg-white text-black border border-gray-200 shadow-2xl rounded-xl p-1 hover:bg-gray-50 transition-colors cursor-pointer"
           title="가구 편집 패널 펼치기"
         >
           <svg
@@ -52,7 +52,7 @@ export function CollapsibleSidebar({
       {/* 접기 버튼 */}
       <button
         onClick={toggleCollapse}
-        className="bg-white text-black border border-gray-200 shadow-2xl rounded-xl p-2 hover:bg-gray-50 transition-colors cursor-pointer"
+        className="bg-white text-black border border-gray-200 shadow-2xl rounded-xl p-1 hover:bg-gray-50 transition-colors cursor-pointer"
         title="패널 접기"
       >
         <svg
@@ -71,8 +71,9 @@ export function CollapsibleSidebar({
       </button>
 
       {/* 가구 편집 사이드바 */}
-      <div className="w-80 max-h-[80vh] select-none">
-        <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl rounded-xl overflow-hidden">
+      {/* [09.15] 사이드바 크기 조정 : 원본 w-80 -> w72 */}
+      <div className="w-72 max-h-[80vh] select-none">
+        <div className="bg-white text-black flex flex-col border border-gray-200 shadow-2xl drop-shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm">
           {/* 헤더 */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
             <span className="text-lg font-bold text-gray-800">{title}</span>

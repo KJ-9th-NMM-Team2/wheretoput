@@ -9,7 +9,7 @@ export function FurnitureCard({ furniture }: { furniture: any }) {
   const [showModal, setShowModal] = useState(false);
   return (
     <>
-      <div className="flex flex-col gap-2 pb-3 w-[158px] ">
+      <div className="flex flex-col gap-2 pb-3 w-full max-w-[158px]">
         <Image
           src={furniture.image_url}
           alt={furniture.name}
@@ -127,7 +127,7 @@ export default function FurnituresList({
       <div className="mb-4 text-sm text-gray-600">전체 {totalItems}개 가구</div>
 
       {/* 가구 그리드 */}
-      <div className="grid grid-cols-5  justify-items-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
         {paginatedItems.map((r) => (
           <FurnitureCard key={r.furniture_id} furniture={r.furnitures} />
         ))}
