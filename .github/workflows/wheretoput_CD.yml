@@ -109,7 +109,7 @@ jobs:
           host: ${{ secrets.EC2_SSH_HOST_NEXT }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY_NEXT }}
-          source: "docker-compose.next.yml,.env.production"
+          source: "docker-compose.next.yml,.env.production, next/public/draco"
           target: ${{ secrets.EC2_DEPLOY_PATH }}/next/
           timeout: 60s
 
