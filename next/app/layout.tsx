@@ -8,7 +8,7 @@ import { Toaster } from "react-hot-toast";
 import localFont from "next/font/local";
 
 const myFont = localFont({
-  src: "../public/fonts/PretendardVariable.woff2",
+  src: "./fonts/PretendardVariable.woff2",
   fallback: [
     "-apple-system",
     "BlinkMacSystemFont",
