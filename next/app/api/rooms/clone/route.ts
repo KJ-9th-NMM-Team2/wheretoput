@@ -93,15 +93,15 @@ export async function POST(req: NextRequest) {
           user_id: session?.user?.id,
           title: `${original_room?.title}의 복제본`,
           description: original_room?.description,
-              // room_data: original_room?.room_data
+          // room_data: original_room?.room_data
           //   ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
           //   : null,
           thumbnail_url: original_room?.thumbnail_url,
           is_public: false,
           view_count: 0,
           root_room_id: original_room?.root_room_id || original_room.room_id,
-          wall_color: original_room?.wall_color || "#FFFFFF",
-          floor_color: original_room?.floor_color || "#D2B48C",
+          wall_color: original_room?.wall_color || "#969593",
+          floor_color: original_room?.floor_color || "#875F32",
           background_color: original_room?.background_color || "#87CEEB",
           environment_preset: original_room?.environment_preset || "apartment",
           wall_type: original_room?.wall_type || "color",
