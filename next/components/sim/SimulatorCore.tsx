@@ -71,7 +71,7 @@ function FloorMaterial() {
       floorColor,
       floorTexturePresets,
       wallTexture: "color",
-      wallColor: "#FFFFFF",
+      wallColor: "#969593",
       wallTexturePresets: {},
     };
     return {
@@ -175,7 +175,7 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
       wallColor,
       wallTexturePresets,
       floorTexture: "color",
-      floorColor: "#D2B48C",
+      floorColor: "#875f32",
       floorTexturePresets: {},
     };
     return {

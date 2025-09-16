@@ -174,8 +174,8 @@ model rooms {
   updated_at          DateTime?       @default(now()) @db.Timestamp(6)
   root_room_id        String?         @db.Uuid
   collab_on           Boolean?        @default(false)
-  wall_color          String          @default("#FFFFFF")
-  floor_color         String          @default("#D2B48C")
+  wall_color          String          @default("#969593")
+  floor_color         String          @default("#875F32")
   background_color    String          @default("#87CEEB")
   environment_preset  String          @default("apartment")
   collab_chat_room_id String?         @db.Uuid
