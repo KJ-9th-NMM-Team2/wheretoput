@@ -1026,6 +1026,8 @@ const FloorPlanEditor = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    setCachedBackgroundImage(null); // 캐시초기화
+    setUploadedImage(null);
     const imageUrl = URL.createObjectURL(file);
     setIsProcessing(true);
 
@@ -1105,6 +1107,9 @@ const FloorPlanEditor = () => {
       alert("벽 검출에 실패했습니다.");
     } finally {
       setIsProcessing(false);
+
+      //[09.16] onchange 이벤트 발생 위해 값 초기화
+      event.target.value='';
     }
   };
 
@@ -1414,6 +1419,7 @@ const FloorPlanEditor = () => {
             </button>
           </div>
 
+          {/* input의 onchange 는 파일을 선택하고 열기했을때발생 */}
           <input
             ref={fileInputRef}
             type="file"
