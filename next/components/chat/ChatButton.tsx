@@ -38,29 +38,29 @@ export default function ChatButton({
     // 읽지 않은 메시지 뱃지 표시
     setHasUnreadMessages(true);
 
-    // 브라우저 알림 권한 확인 후 알림 표시
-    if (Notification.permission === "granted") {
-      new Notification(`${room.name}에서 새 메시지`, {
-        body:
-          room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
-        icon: "/favicon.ico", // 앱 아이콘
-        tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
-      });
-    } else if (Notification.permission === "default") {
-      // 알림 권한 요청
-      Notification.requestPermission().then((permission) => {
-        if (permission === "granted") {
-          new Notification(`${room.name}에서 새 메시지`, {
-            body:
-              room.lastMessage === "사진"
-                ? "사진을 보냈습니다"
-                : room.lastMessage,
-            icon: "/favicon.ico",
-            tag: roomId,
-          });
-        }
-      });
-    }
+    // // 브라우저 알림 권한 확인 후 알림 표시
+    // if (Notification.permission === "granted") {
+    //   new Notification(`${room.name}에서 새 메시지`, {
+    //     body:
+    //       room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+    //     icon: "/favicon.ico", // 앱 아이콘
+    //     tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
+    //   });
+    // } else if (Notification.permission === "default") {
+    //   // 알림 권한 요청
+    //   Notification.requestPermission().then((permission) => {
+    //     if (permission === "granted") {
+    //       new Notification(`${room.name}에서 새 메시지`, {
+    //         body:
+    //           room.lastMessage === "사진"
+    //             ? "사진을 보냈습니다"
+    //             : room.lastMessage,
+    //         icon: "/favicon.ico",
+    //         tag: roomId,
+    //       });
+    //     }
+    //   });
+    // }
   };
 
   const {
