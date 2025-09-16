@@ -11,7 +11,7 @@ const WallTools: React.FC<WallToolsProps> = ({
   collapsed = false,
   isDropdown = false,
 }) => {
-  const { wallToolMode, setWallToolMode } = useStore();
+  const { wallToolMode, setWallToolMode, showMeasurements, setShowMeasurements } = useStore();
   const [isOpen, setIsOpen] = useState(false);
 
   const wallTools = [
@@ -56,7 +56,13 @@ const WallTools: React.FC<WallToolsProps> = ({
       <div className="absolute bottom-4 left-4 z-50 select-none">
         {/* 메인 버튼 */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => {
+            // 드롭다운이 열려있고 벽 추가 기능이 활성화된 상태에서 닫을 때
+            if (isOpen && wallToolMode) {
+              setWallToolMode(null); // 벽 추가 기능 비활성화
+            }
+            setIsOpen(!isOpen);
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer ${
             wallToolMode
               ? "bg-blue-500 text-white"
@@ -116,6 +122,30 @@ const WallTools: React.FC<WallToolsProps> = ({
                 </div>
               </button>
             ))}
+            
+            {/* 측정 기능 토글 (드롭다운에서) */}
+            <div className="p-3 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-sm text-gray-800">측정 표시</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    벽과 물체 크기 표시
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowMeasurements(!showMeasurements)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                    showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      showMeasurements ? 'translate-x-5' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -163,6 +193,30 @@ const WallTools: React.FC<WallToolsProps> = ({
               </div>
             </button>
           ))}
+        </div>
+
+        {/* 측정 기능 토글 */}
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-sm text-gray-800">측정 표시</div>
+              <div className="text-xs text-gray-500 mt-1">
+                벽의 길이와 물체 크기를 표시합니다
+              </div>
+            </div>
+            <button
+              onClick={() => setShowMeasurements(!showMeasurements)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  showMeasurements ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         </div>
 
         {wallToolMode && (

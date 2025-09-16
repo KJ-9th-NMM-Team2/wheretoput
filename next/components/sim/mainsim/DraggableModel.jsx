@@ -1,14 +1,12 @@
 import React, { useRef, useEffect, useMemo } from "react";
-import {
-  useTexture,
-  useGLTF
-} from "@react-three/drei";
+import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
+import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
+import { convertS3ToCdnUrl } from "@/lib/api/api-url";
 
 export function DraggableModel({
   modelId,
@@ -23,7 +21,7 @@ export function DraggableModel({
   onModelLoaded,
 }) {
   // console.log("url check cache or s3?", url);
-  
+
   // scale 값을 안전하게 처리
   const safeScale = (() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
@@ -55,7 +53,7 @@ export function DraggableModel({
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   const { scene, animations } = hasValidUrl
-    ? useGLTF(url)
+    ? useGLTF(convertS3ToCdnUrl(url))
     : { scene: null, animations: null };
 
   useEffect(() => {

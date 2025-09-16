@@ -56,6 +56,13 @@ export default function Header() {
     >
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-4">
+          
+            {/* [09.15] 메인아이콘 자리 */}
+              <Link href="/">
+                <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity" />
+              </Link>
+          
+          
           <Link href="/">
             <h2 className="text-xl font-black leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
               어따놀래

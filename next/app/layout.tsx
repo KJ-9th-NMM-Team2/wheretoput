@@ -9,6 +9,10 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "어따놀래",
   description: "3D 인테리어 시뮬레이터",
+  icons: {
+    icon: [{ url: "/asset/wheretoput.png", sizes: "16x16", type: "image/png" }],
+    shortcut: "/asset/wheretoput.png",
+  },
 };
 
 export default async function RootLayout({
@@ -20,7 +24,14 @@ export default async function RootLayout({
   return (
     <html lang="kr">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/asset/wheretoput.png" type="image/png" />
+        <link
+          rel="shortcut icon"
+          href="/asset/wheretoput.png"
+          type="image/png"
+        />
+        <link rel="preconnect" href="https://raw.githubusercontent.com" />
+        <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
       </head>
       <body>
         <SessionProvider session={session}>

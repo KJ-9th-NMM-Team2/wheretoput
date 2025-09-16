@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAchievementsData, getUserAchievementsWithStatus } from "@/lib/api/achievement/achievements";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -84,17 +85,14 @@ export async function POST(request: NextRequest) {
   try {
     const datas = await request.json();
     if (await createAchievementsData(datas)) {
-      return NextResponse.json({message: "sccuesfully created", status:201});
+      return HttpResponse.created(null, "sccuesfully created");
     }
 
-    return NextResponse.json("Create fail", {status: 500});
+    return HttpResponse.internalError("Create fail");
     
   } catch (error) {
     console.error("Error creating achievements:", error);
-    return NextResponse.json(
-      { error: "Failed to create achievements", details: error.message },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("Failed to create achievements");
   }
 }
 
@@ -105,13 +103,10 @@ export async function GET(
   try {
     const { id } = await params;
     const achievements = await getUserAchievementsWithStatus(id);
-    return NextResponse.json(achievements);
+    return HttpResponse.success(achievements);
   } catch (error) {
     console.error("Error fetching achievements:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch achievements" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("Failed to fetch achievements");
   }
 }
 

@@ -107,3 +107,18 @@ export const downloadFileFromS3 = async (key: string) => {
 
   return response.json();
 };
+
+// S3 URL을 CDN URL로 변환하는 함수
+export const convertS3ToCdnUrl = (s3Url: string): string => {
+  if (!s3Url) return s3Url;
+
+  const s3Pattern = /https:\/\/wheretoput-bucket\.s3\.ap-northeast-2\.amazonaws\.com\/(.*)/;
+  const match = s3Url.match(s3Pattern);
+
+  if (match) {
+    const path = match[1];
+    return `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${path}`;
+  }
+
+  return s3Url;
+};

@@ -10,9 +10,9 @@
  */
 export const calculateDistance = (point1, point2) => {
   return Math.sqrt(
-    Math.pow(point2[0] - point1[0], 2) + 
-    Math.pow(point2[1] - point1[1], 2) + 
-    Math.pow(point2[2] - point1[2], 2)
+    Math.pow(point2[0] - point1[0], 2) +
+      Math.pow(point2[1] - point1[1], 2) +
+      Math.pow(point2[2] - point1[2], 2)
   );
 };
 
@@ -24,8 +24,7 @@ export const calculateDistance = (point1, point2) => {
  */
 export const calculate2DDistance = (point1, point2) => {
   return Math.sqrt(
-    Math.pow(point2[0] - point1[0], 2) + 
-    Math.pow(point2[2] - point1[2], 2)
+    Math.pow(point2[0] - point1[0], 2) + Math.pow(point2[2] - point1[2], 2)
   );
 };
 
@@ -36,10 +35,7 @@ export const calculate2DDistance = (point1, point2) => {
  * @returns {number} Y축 회전각 (라디안)
  */
 export const calculateWallRotation = (startPoint, endPoint) => {
-  return Math.atan2(
-    endPoint[2] - startPoint[2], 
-    endPoint[0] - startPoint[0]
-  );
+  return Math.atan2(endPoint[2] - startPoint[2], endPoint[0] - startPoint[0]);
 };
 
 /**
@@ -81,14 +77,14 @@ export const isValidWall = (wall) => {
   }
 
   const { width, height, depth } = wall.dimensions;
-  
+
   return (
-    width > 0 && 
-    height > 0 && 
+    width > 0 &&
+    height > 0 &&
     depth > 0 &&
     width >= 0.1 && // 최소 너비
     height >= 0.1 && // 최소 높이
-    depth >= 0.01   // 최소 깊이
+    depth >= 0.01 // 최소 깊이
   );
 };
 
@@ -105,16 +101,16 @@ export const findWallIntersection = (wall1, wall2) => {
     const halfWidth = dimensions.width / 2;
     const cos = Math.cos(rotation[1]);
     const sin = Math.sin(rotation[1]);
-    
+
     return {
       start: [
         position[0] - halfWidth * cos,
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin, // sin 부호 변경
       ],
       end: [
         position[0] + halfWidth * cos,
-        position[2] + halfWidth * sin
-      ]
+        position[2] - halfWidth * sin, // sin 부호 변경
+      ],
     };
   };
 
@@ -122,7 +118,7 @@ export const findWallIntersection = (wall1, wall2) => {
   const line2 = getWallEndpoints(wall2);
 
   // 선분 교차 알고리즘
-  const denominator = 
+  const denominator =
     (line1.start[0] - line1.end[0]) * (line2.start[1] - line2.end[1]) -
     (line1.start[1] - line1.end[1]) * (line2.start[0] - line2.end[0]);
 
@@ -130,23 +126,38 @@ export const findWallIntersection = (wall1, wall2) => {
     return null; // 평행선
   }
 
-  const t = 
+  const t =
     ((line1.start[0] - line2.start[0]) * (line2.start[1] - line2.end[1]) -
-     (line1.start[1] - line2.start[1]) * (line2.start[0] - line2.end[0])) / 
+      (line1.start[1] - line2.start[1]) * (line2.start[0] - line2.end[0])) /
     denominator;
 
-  const u = 
-    -((line1.start[0] - line1.end[0]) * (line1.start[1] - line2.start[1]) -
-      (line1.start[1] - line1.end[1]) * (line1.start[0] - line2.start[0])) / 
-    denominator;
+  const u =
+    -(
+      (line1.start[0] - line1.end[0]) * (line1.start[1] - line2.start[1]) -
+      (line1.start[1] - line1.end[1]) * (line1.start[0] - line2.start[0])
+    ) / denominator;
 
-  if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
-    return [
-      line1.start[0] + t * (line1.end[0] - line1.start[0]),
-      line1.start[1] + t * (line1.end[1] - line1.start[1])
-    ];
+  // 교차점 계산 (선분 범위 확장)
+  const intersection = [
+    line1.start[0] + t * (line1.end[0] - line1.start[0]),
+    line1.start[1] + t * (line1.end[1] - line1.start[1]),
+  ];
+
+  //console.log(`📊 교차 계산 결과: t=${t}, u=${u}`, intersection);
+
+  // 조건을 더 완화: 벽의 연장선상에서도 교차 허용
+  const tolerance = 0.5;
+  if (
+    t >= -tolerance &&
+    t <= 1 + tolerance &&
+    u >= -tolerance &&
+    u <= 1 + tolerance
+  ) {
+    //console.log("✅ 교차점 발견!", intersection);
+    return intersection;
   }
 
+  //console.log("❌ 교차점 범위 밖");
   return null; // 교차점 없음
 };
 
@@ -159,12 +170,20 @@ export const findWallIntersection = (wall1, wall2) => {
 export const convertWallsToDBFormat = (wallsData, scaleFactor = 1.0) => {
   return wallsData.map((wall) => ({
     start: {
-      x: wall.position[0] - (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
-      y: wall.position[2] - (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
+      x:
+        wall.position[0] -
+        (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+      y:
+        wall.position[2] -
+        (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
     },
     end: {
-      x: wall.position[0] + (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
-      y: wall.position[2] + (wall.dimensions.width / 2) * Math.sin(wall.rotation[1])
+      x:
+        wall.position[0] +
+        (wall.dimensions.width / 2) * Math.cos(wall.rotation[1]),
+      y:
+        wall.position[2] +
+        (wall.dimensions.width / 2) * Math.sin(wall.rotation[1]),
     },
     length: wall.dimensions.width / scaleFactor,
     height: wall.dimensions.height / scaleFactor,
@@ -181,9 +200,9 @@ export const convertDBWallsToSimulator = (dbWalls, scaleFactor = 1.0) => {
   return dbWalls.map((wall, index) => ({
     id: wall.id || `wall_${index}`,
     dimensions: {
-      width: wall.length * scaleFactor,
-      height: wall.height * scaleFactor,
-      depth: 0.2 * scaleFactor,
+      width: wall.length,
+      height: 2.5,
+      depth: 0.15,
     },
     position: [
       (wall.start.x + wall.end.x) / 2,
@@ -205,33 +224,37 @@ export const convertDBWallsToSimulator = (dbWalls, scaleFactor = 1.0) => {
  * @param {number} snapDistance - 스냅 거리 (기본값: 0.5)
  * @returns {Array|null} 스냅된 점 [x, y, z] 또는 null
  */
-export const snapToWallEndpoints = (point, existingWalls, snapDistance = 0.5) => {
+export const snapToWallEndpoints = (
+  point,
+  existingWalls,
+  snapDistance = 0.5
+) => {
   if (!existingWalls || existingWalls.length === 0) return null;
 
   let closestPoint = null;
   let minDistance = snapDistance;
 
-  existingWalls.forEach(wall => {
+  existingWalls.forEach((wall) => {
     const { position, rotation, dimensions } = wall;
     const halfWidth = dimensions.width / 2;
     const cos = Math.cos(rotation[1]);
     const sin = Math.sin(rotation[1]);
-    
+
     // 벽의 양 끝점 계산
     const endpoints = [
       [
         position[0] - halfWidth * cos,
         position[1],
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin, // sin 부호 변경
       ],
       [
         position[0] + halfWidth * cos,
         position[1],
-        position[2] + halfWidth * sin
-      ]
+        position[2] - halfWidth * sin, // sin 부호 변경
+      ],
     ];
 
-    endpoints.forEach(endpoint => {
+    endpoints.forEach((endpoint) => {
       const distance = calculate2DDistance(point, endpoint);
       if (distance < minDistance) {
         minDistance = distance;
@@ -251,10 +274,17 @@ export const snapToWallEndpoints = (point, existingWalls, snapDistance = 0.5) =>
  * @param {number} snapDistance - 스냅 거리
  * @returns {Object} { snappedStart, snappedEnd }
  */
-export const snapWallToWalls = (startPoint, endPoint, existingWalls, snapDistance = 0.5) => {
-  const snappedStart = snapToWallEndpoints(startPoint, existingWalls, snapDistance) || startPoint;
-  const snappedEnd = snapToWallEndpoints(endPoint, existingWalls, snapDistance) || endPoint;
-  
+export const snapWallToWalls = (
+  startPoint,
+  endPoint,
+  existingWalls,
+  snapDistance = 0.5
+) => {
+  const snappedStart =
+    snapToWallEndpoints(startPoint, existingWalls, snapDistance) || startPoint;
+  const snappedEnd =
+    snapToWallEndpoints(endPoint, existingWalls, snapDistance) || endPoint;
+
   return { snappedStart, snappedEnd };
 };
 
@@ -265,33 +295,37 @@ export const snapWallToWalls = (startPoint, endPoint, existingWalls, snapDistanc
  * @param {number} snapDistance - 스냅 거리 (기본값: 1.0)
  * @returns {Array} 스냅된 점 또는 원래 점 [x, y, z]
  */
-export const autoSnapToNearestWallEndpoint = (clickPoint, existingWalls, snapDistance = 1.0) => {
+export const autoSnapToNearestWallEndpoint = (
+  clickPoint,
+  existingWalls,
+  snapDistance = 1.0
+) => {
   if (!existingWalls || existingWalls.length === 0) return clickPoint;
 
   let closestPoint = null;
   let minDistance = snapDistance;
 
-  existingWalls.forEach(wall => {
+  existingWalls.forEach((wall) => {
     const { position, rotation, dimensions } = wall;
     const halfWidth = dimensions.width / 2;
     const cos = Math.cos(rotation[1]);
     const sin = Math.sin(rotation[1]);
-    
+
     // 벽의 양 끝점 계산
     const endpoints = [
       [
         position[0] - halfWidth * cos,
         0, // Y좌표는 항상 0으로
-        position[2] - halfWidth * sin
+        position[2] + halfWidth * sin, // sin 부호 변경
       ],
       [
         position[0] + halfWidth * cos,
         0, // Y좌표는 항상 0으로
-        position[2] + halfWidth * sin
-      ]
+        position[2] - halfWidth * sin, // sin 부호 변경
+      ],
     ];
 
-    endpoints.forEach(endpoint => {
+    endpoints.forEach((endpoint) => {
       const distance = calculate2DDistance(clickPoint, endpoint);
       if (distance < minDistance) {
         minDistance = distance;
@@ -313,16 +347,17 @@ export const getWallEndpoints = (wall) => {
   const halfWidth = dimensions.width / 2;
   const cos = Math.cos(rotation[1]);
   const sin = Math.sin(rotation[1]);
-  
+
+  // wallSlice.js의 rotationY = Math.atan2(-dz, dx) 로직과 일치하도록 수정
   return {
     start: [
       position[0] - halfWidth * cos,
-      position[2] - halfWidth * sin
+      position[2] + halfWidth * sin, // sin 부호 변경
     ],
     end: [
       position[0] + halfWidth * cos,
-      position[2] + halfWidth * sin
-    ]
+      position[2] - halfWidth * sin, // sin 부호 변경
+    ],
   };
 };
 
@@ -338,22 +373,35 @@ export const areWallsConnectedInLine = (wall1, wall2, tolerance = 0.1) => {
   const angle1 = wall1.rotation[1];
   const angle2 = wall2.rotation[1];
   const angleDiff = Math.abs(angle1 - angle2);
-  const isParallel = angleDiff < tolerance || Math.abs(angleDiff - Math.PI) < tolerance;
-  
+  const isParallel =
+    angleDiff < tolerance || Math.abs(angleDiff - Math.PI) < tolerance;
+
   if (!isParallel) return false;
-  
+
   const endpoints1 = getWallEndpoints(wall1);
   const endpoints2 = getWallEndpoints(wall2);
-  
+
   // 벽의 끝점들이 연결되어 있는지 확인
   const connections = [
-    calculate2DDistance([endpoints1.start[0], 0, endpoints1.start[1]], [endpoints2.start[0], 0, endpoints2.start[1]]),
-    calculate2DDistance([endpoints1.start[0], 0, endpoints1.start[1]], [endpoints2.end[0], 0, endpoints2.end[1]]),
-    calculate2DDistance([endpoints1.end[0], 0, endpoints1.end[1]], [endpoints2.start[0], 0, endpoints2.start[1]]),
-    calculate2DDistance([endpoints1.end[0], 0, endpoints1.end[1]], [endpoints2.end[0], 0, endpoints2.end[1]])
+    calculate2DDistance(
+      [endpoints1.start[0], 0, endpoints1.start[1]],
+      [endpoints2.start[0], 0, endpoints2.start[1]]
+    ),
+    calculate2DDistance(
+      [endpoints1.start[0], 0, endpoints1.start[1]],
+      [endpoints2.end[0], 0, endpoints2.end[1]]
+    ),
+    calculate2DDistance(
+      [endpoints1.end[0], 0, endpoints1.end[1]],
+      [endpoints2.start[0], 0, endpoints2.start[1]]
+    ),
+    calculate2DDistance(
+      [endpoints1.end[0], 0, endpoints1.end[1]],
+      [endpoints2.end[0], 0, endpoints2.end[1]]
+    ),
   ];
-  
-  return connections.some(distance => distance < tolerance);
+
+  return connections.some((distance) => distance < tolerance);
 };
 
 /**
@@ -363,36 +411,36 @@ export const areWallsConnectedInLine = (wall1, wall2, tolerance = 0.1) => {
  */
 export const findConnectedWallGroups = (walls) => {
   if (!walls || walls.length === 0) return [];
-  
+
   const visited = new Set();
   const groups = [];
-  
+
   const findConnectedWalls = (startWall, currentGroup) => {
     if (visited.has(startWall.id)) return;
-    
+
     visited.add(startWall.id);
     currentGroup.push(startWall);
-    
+
     // 다른 벽들과 연결 확인
-    walls.forEach(wall => {
+    walls.forEach((wall) => {
       if (!visited.has(wall.id) && areWallsConnectedInLine(startWall, wall)) {
         findConnectedWalls(wall, currentGroup);
       }
     });
   };
-  
-  walls.forEach(wall => {
+
+  walls.forEach((wall) => {
     if (!visited.has(wall.id)) {
       const group = [];
       findConnectedWalls(wall, group);
-      
+
       // 2개 이상의 벽이 연결된 경우만 그룹으로 처리
       if (group.length > 1) {
         groups.push(group);
       }
     }
   });
-  
+
   return groups;
 };
 
@@ -404,24 +452,24 @@ export const findConnectedWallGroups = (walls) => {
 export const mergeWallGroup = (wallGroup) => {
   if (!wallGroup || wallGroup.length === 0) return null;
   if (wallGroup.length === 1) return wallGroup[0];
-  
+
   // 모든 벽의 끝점들을 수집
   const allEndpoints = [];
-  wallGroup.forEach(wall => {
+  wallGroup.forEach((wall) => {
     const endpoints = getWallEndpoints(wall);
     allEndpoints.push([endpoints.start[0], endpoints.start[1]]);
     allEndpoints.push([endpoints.end[0], endpoints.end[1]]);
   });
-  
+
   // 가장 멀리 떨어진 두 점 찾기 (병합된 벽의 시작점과 끝점)
   let maxDistance = 0;
   let mergedStart = null;
   let mergedEnd = null;
-  
+
   for (let i = 0; i < allEndpoints.length; i++) {
     for (let j = i + 1; j < allEndpoints.length; j++) {
       const distance = calculate2DDistance(
-        [allEndpoints[i][0], 0, allEndpoints[i][1]], 
+        [allEndpoints[i][0], 0, allEndpoints[i][1]],
         [allEndpoints[j][0], 0, allEndpoints[j][1]]
       );
       if (distance > maxDistance) {
@@ -431,24 +479,27 @@ export const mergeWallGroup = (wallGroup) => {
       }
     }
   }
-  
+
   // 병합된 벽의 중점과 회전 계산
   const centerX = (mergedStart[0] + mergedEnd[0]) / 2;
   const centerZ = (mergedStart[1] + mergedEnd[1]) / 2;
-  const rotation = Math.atan2(mergedEnd[1] - mergedStart[1], mergedEnd[0] - mergedStart[0]);
-  
+  const rotation = Math.atan2(
+    mergedEnd[1] - mergedStart[1],
+    mergedEnd[0] - mergedStart[0]
+  );
+
   // 첫 번째 벽의 속성을 기본으로 사용
   const firstWall = wallGroup[0];
-  
+
   return {
-    id: `merged_${wallGroup.map(w => w.id).join('_')}_${Date.now()}`,
+    id: `merged_${wallGroup.map((w) => w.id).join("_")}_${Date.now()}`,
     position: [centerX, firstWall.position[1], centerZ],
     rotation: [0, rotation, 0],
     dimensions: {
       width: maxDistance,
       height: firstWall.dimensions.height,
-      depth: firstWall.dimensions.depth
+      depth: firstWall.dimensions.depth,
     },
-    originalWalls: wallGroup // 원본 벽들 참조
+    originalWalls: wallGroup, // 원본 벽들 참조
   };
 };

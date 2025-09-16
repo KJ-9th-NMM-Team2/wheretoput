@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
-import { WallDetector } from "@/app/wallDetection.js";
+import { WallDetector } from "@/lib/wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CreateRoomModal from "@/components/CreateRoomModal";
@@ -1230,7 +1230,7 @@ const FloorPlanEditor = () => {
   return (
     <div className="w-full h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* 툴바 */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-300 px-4 lg:px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg sticky top-0 z-50">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-amber-100 px-4 lg:px-6 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg sticky top-0 z-50">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           {/* 첫 번째 행: 로고, 제목, 완료 버튼 */}
           <div className="flex items-center justify-between">
@@ -1239,7 +1239,9 @@ const FloorPlanEditor = () => {
                 href="/"
                 className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
               >
-                🏠
+                {/* [09.15] 메인아이콘 자리 */}
+              <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12" />
+
               </Link>
               <h1 className="text-base lg:text-lg font-black text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">
                 어따놀래
@@ -1426,7 +1428,7 @@ const FloorPlanEditor = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* 캔버스 영역 */}
         <div className="flex-1 p-0 overflow-hidden flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-lg border border-amber-100 overflow-hidden">
             <div
               ref={containerRef}
               className="relative"

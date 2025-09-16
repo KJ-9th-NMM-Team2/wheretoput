@@ -1,4 +1,5 @@
-import { searchFurnitures } from '@/lib/api/furSearch';
+import { searchFurnitures } from '@/lib/api/furniture/furSearch';
+import { HttpResponse } from '@/utils/httpResponse';
 
 /**
  * @swagger
@@ -27,14 +28,18 @@ import { searchFurnitures } from '@/lib/api/furSearch';
  */
 
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query') || '';
-    const selectedCategory = searchParams.get('category') || '';
-    const page = parseInt(searchParams.get('page') || "1");
-    const limit = parseInt(searchParams.get('limit') || "8");
-    const response = await searchFurnitures(query, selectedCategory, page, limit);
-    
-    // Response 객체에서 JSON 데이터 추출
-    const results = await response.json();
-    return Response.json(results);
+    try {
+        const { searchParams } = new URL(request.url);
+        const query = searchParams.get('query') || '';
+        const selectedCategory = searchParams.get('category') || '';
+        const page = parseInt(searchParams.get('page') || "1");
+        const limit = parseInt(searchParams.get('limit') || "8");
+        const response = await searchFurnitures(query, selectedCategory, page, limit);
+        
+        // Response 객체에서 JSON 데이터 추출
+        const results = await response.json();
+        return Response.json(results);
+    } catch(error) {
+        return HttpResponse.internalError(error.message);
+    }
 }

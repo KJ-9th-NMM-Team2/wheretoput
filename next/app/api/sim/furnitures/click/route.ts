@@ -3,6 +3,7 @@ import { sendSSEToUser } from "@/lib/api/achievement/utils/sse";
 import { NextRequest } from "next/server";
 import { getFurniture } from "@/lib/api/furniture/getFurnitures";
 import { checkUserOwnRoom } from "@/lib/api/achievement/checkUserOwnRoom";
+import { HttpResponse } from "@/utils/httpResponse";
 
 
 /**
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
         const result = await checkUserOwnRoom(roomId, userId);
         if (!result) {
-            return Response.json("유저의 방이 아니기 떄문에 업적 달성이 불가능합니다.", {status: 403});
+            return HttpResponse.forbidden("유저의 방이 아니기 떄문에 업적 달성이 불가능합니다.");
         }
         
         const furnitures = await getFurniture(roomId);
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         if (newFurnitures) {
             const achievementResult = await checkAchievement(userId, isFurniture);
             if (!achievementResult) {
-                return new Response("Can not find achievements at all", {status: 404});
+                return HttpResponse.notFound("Can not find achievements");
             }
             
             // 새로 달성한 업적이 있으면 SSE로 알림
@@ -119,6 +120,6 @@ export async function POST(request: NextRequest) {
         return Response.json("Can not save furniture", {status: 404});
     } catch (error) {
         console.log("Error in next/app/sim/furnitures/click :", error);
-        return Response.json("Internal Server Error", {status: 500});
+        return HttpResponse.internalError();
     }
 }

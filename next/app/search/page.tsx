@@ -1,5 +1,5 @@
 import SortedHouseList from "@/components/search/SortedHouseList";
-import { fetchRooms } from "@/lib/api/rooms";
+import { fetchRooms } from "@/lib/api/room/rooms";
 
 export default async function SearchPage({
   searchParams,

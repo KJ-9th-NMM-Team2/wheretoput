@@ -180,6 +180,8 @@ export const roomSlice = (set, get) => ({
           floorColor: currentState.floorColor,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
+          wallType: currentState.wallTexture,
+          floorType: currentState.floorTexture,
         }),
       });
 
@@ -281,7 +283,6 @@ export const roomSlice = (set, get) => ({
           }
         }
       }
-
       const currentState = get();
 
       if (currentState.wallsData.length > 0) {
@@ -344,13 +345,14 @@ export const roomSlice = (set, get) => ({
           floorColor: currentState.floorColor,
           backgroundColor: currentState.backgroundColor,
           environmentPreset: currentState.environmentPreset,
+          wallType: currentState.wallTexture,
+          floorType: currentState.floorTexture,
         }),
       });
 
       if (!response.ok) {
         throw new Error(`저장 실패: ${response.statusText}`);
       }
-
       const result = await response.json();
       set({ lastSavedAt: new Date() });
       return result;
@@ -360,6 +362,7 @@ export const roomSlice = (set, get) => ({
     } finally {
       set({ isSaving: false });
     }
+
   },
 
   loadSimulatorState: async (roomId, options = {}) => {
@@ -368,6 +371,9 @@ export const roomSlice = (set, get) => ({
 
     try {
       const start_time = performance.now();
+
+      
+      let loadedModels = [];
       const response = await fetch(`/api/sim/load/${roomId}`);
 
       if (!response.ok) {
@@ -375,9 +381,6 @@ export const roomSlice = (set, get) => ({
       }
 
       const result = await response.json();
-
-      let loadedModels = [];
-
       if (!wallsOnly) {
         const currentState = get();
         currentState.loadedModels.forEach((model) => {
@@ -393,7 +396,6 @@ export const roomSlice = (set, get) => ({
           } else {
             scale = 1;
           }
-
           return {
             id: obj.id,
             object_id: obj.object_id,
@@ -434,6 +436,12 @@ export const roomSlice = (set, get) => ({
         }));
       }
 
+      // 직접 색상과 텍스처 정보 추출
+      const wallColor = result.wall_color || "#FFFFFF";
+      const floorColor = result.floor_color || "#D2B48C";
+      const wallTexture = result.wall_type || "color";
+      const floorTexture = result.floor_type || "color";
+
       set({
         loadedModels: loadedModels,
         wallsData: wallsData,
@@ -444,8 +452,10 @@ export const roomSlice = (set, get) => ({
           description: result.room_info?.description || "",
           is_public: result.room_info?.is_public || false,
         },
-        wallColor: result.wall_color || "#FFFFFF",
-        floorColor: result.floor_color || "#D2B48C",
+        wallColor: wallColor,
+        floorColor: floorColor,
+        wallTexture: wallTexture,
+        floorTexture: floorTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
       });

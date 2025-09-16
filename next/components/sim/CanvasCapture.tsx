@@ -3,6 +3,43 @@ import { useEffect, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { postThumbnailImage } from "@/lib/api/thumbnailImage";
 
+// 캔버스 캡쳐 핵심 로직을 별도 함수로 분리
+export const captureCanvas = (gl: any, scene: any, camera: any): string => {
+  // 현재 프레임을 강제 렌더링
+  gl.render(scene, camera);
+
+  // 캔버스에서 이미지 데이터 추출
+  const dataURL = gl.domElement.toDataURL("image/png", 1.0);
+
+  if (!dataURL || dataURL === "data:,") {
+    throw new Error("캡쳐 실패");
+  }
+
+  return dataURL;
+};
+
+// 이미지 다운로드 로직
+export const downloadImage = (dataURL: string, filename: string): void => {
+  const link = document.createElement("a");
+  link.download = filename;
+  link.href = dataURL;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+// 이미지 업로드 로직
+export const uploadImage = async (dataURL: string, fileName: string, roomId: string) => {
+  const result = await postThumbnailImage(dataURL, fileName, roomId);
+
+  if (result.success) {
+    console.log("이미지 업로드 성공✅");
+    return { success: true };
+  } else {
+    throw new Error(result.error || "업로드 실패");
+  }
+};
+
 export default function CanvasImageLogger() {
   const { gl, scene, camera } = useThree();
   const {
@@ -15,27 +52,10 @@ export default function CanvasImageLogger() {
 
   const captureAndUpload = useCallback(async () => {
     try {
-      // 현재 프레임을 강제 렌더링
-      gl.render(scene, camera);
-
-      // 캔버스에서 이미지 데이터 추출
-      const dataURL = gl.domElement.toDataURL("image/png", 1.0);
-
-      if (!dataURL || dataURL === "data:,") {
-        throw new Error("캡쳐 실패");
-      }
-
-      // 파일명에 방 ID와 타임스탬프 포함
-      const fileName = `room-${currentRoomId}.png`;
-
-      //console.log(`캔버스 이미지 업로드 중: ${fileName}`);
-      const result = await postThumbnailImage(dataURL, fileName, currentRoomId);
-
-      if (result.success) {
-        console.log("이미지 업로드 성공✅");
-      } else {
-        throw new Error(result.error || "업로드 실패");
-      }
+      const dataURL = captureCanvas(gl, scene, camera);
+      const fileName = `room-${currentRoomId}-${Date.now()}.png`;
+      
+      await uploadImage(dataURL, fileName, currentRoomId);
     } catch (error) {
       console.error("❌ Error during canvas capture and upload:", error);
     } finally {
@@ -48,23 +68,10 @@ export default function CanvasImageLogger() {
     try {
       console.log("캡쳐 및 다운로드 시작.");
 
-      // 현재 프레임을 강제 렌더링
-      gl.render(scene, camera);
-
-      // 캔버스에서 이미지 데이터 추출
-      const dataURL = gl.domElement.toDataURL("image/png", 1.0);
-
-      if (!dataURL || dataURL === "data:,") {
-        throw new Error("캡쳐 실패");
-      }
-
-      // 다운로드 링크 생성 및 클릭
-      const link = document.createElement("a");
-      link.download = `room-${currentRoomId}-${Date.now()}.png`;
-      link.href = dataURL;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const dataURL = captureCanvas(gl, scene, camera);
+      const filename = `room-${currentRoomId}-${Date.now()}.png`;
+      
+      downloadImage(dataURL, filename);
 
       console.log("이미지 다운로드 성공✅");
     } catch (error) {

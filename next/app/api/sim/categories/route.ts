@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { HttpResponse } from "@/utils/httpResponse";
 
 /**
  * @swagger
@@ -56,9 +57,6 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Categories API Error:", error);
-    return Response.json(
-      { error: "Failed to fetch categories" },
-      { status: 500 }
-    );
+    return HttpResponse.internalError("Failed to fetch categories");
   }
 }

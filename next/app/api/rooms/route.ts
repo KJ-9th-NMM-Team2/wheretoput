@@ -183,9 +183,9 @@ export async function POST(req: NextRequest) {
           user_id: session.user.id,
           title,
           description,
-          room_data: room_data
-            ? { pixelToMmRatio: room_data.pixelToMmRatio }
-            : null,
+          // room_data: room_data
+          //   ? { pixelToMmRatio: room_data.pixelToMmRatio }
+          //   : null,
           is_public,
           view_count: 0,
         },
@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
             end_y: endY,
             length: length,
             height: 2.5, // 기본 높이 2.5m (그대로 유지)
-            depth: 0.2, // 기본 두께 20cm (두껍게)
+            depth: 0.15, // 기본 두께 15cm
             position_x: positionX,
             position_y: 1.25, // 벽 높이의 중점
             position_z: positionZ,

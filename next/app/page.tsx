@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HomeCardList } from "@/components/main/HomeCardList";
 import { FollowingFeed } from "@/components/main/FollowingFeed";
-import { fetchRooms } from "@/lib/api/rooms";
+import { fetchRooms } from "@/lib/api/room/rooms";
 import SearchBar from "@/components/main/SearchBar";
 
 export default async function Page() {
@@ -51,6 +51,11 @@ export default async function Page() {
                   </button>
                 </Link>
                
+              </div>
+
+               {/* [09.15] 메인아이콘 자리 */}
+              <div className="absolute bottom-4 right-4">
+                <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12 opacity-100" />
               </div>
             </div>
           </div>

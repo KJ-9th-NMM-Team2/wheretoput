@@ -10,9 +10,9 @@ import { Prisma } from "@prisma/client";
  *     tags:
  *       - Rooms
  *     summary: 기존 방 복제
- *     description: 
- *       주어진 `room_id`를 기반으로 기존 방을 복제하여 새로운 방을 생성합니다.  
- *       새 방은 비공개(`is_public: false`)로 생성되며, 원본 방의 `title`, `description`, `room_data`, `thumbnail_url` 등을 복사합니다.
+ *     description: |
+ *       주어진 room_id를 기반으로 기존 방을 복제하여 새로운 방을 생성합니다.
+ *       새 방은 비공개(is_public: false)로 생성되며, 원본 방의 title, description, room_data, thumbnail_url 등을 복사합니다.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -46,7 +46,7 @@ import { Prisma } from "@prisma/client";
  *                   type: string
  *                   example: "Room cloned successfully"
  *       400:
- *         description: 필수 파라미터 누락 (`room_id` 없음)
+ *         description: "필수 파라미터 누락 (room_id 없음)"
  *       401:
  *         description: 인증 실패 (로그인 필요)
  *       404:
@@ -87,19 +87,25 @@ export async function POST(req: NextRequest) {
 
     // 기존 방 정보를 복제하여 새로운 방을 생성
     const result = await prisma.$transaction(async (tx) => {
-      // 새 방 생성
+      // 새 방 생성 (색상/질감 정보 포함)
       const newRoom = await tx.rooms.create({
         data: {
           user_id: session?.user?.id,
           title: `${original_room?.title}의 복제본`,
           description: original_room?.description,
-          room_data: original_room?.room_data
-            ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
-            : null,
+              // room_data: original_room?.room_data
+          //   ? { pixelToMmRatio: original_room?.room_data.pixelToMmRatio }
+          //   : null,
           thumbnail_url: original_room?.thumbnail_url,
           is_public: false,
           view_count: 0,
           root_room_id: original_room?.root_room_id || original_room.room_id,
+          wall_color: original_room?.wall_color || "#FFFFFF",
+          floor_color: original_room?.floor_color || "#D2B48C",
+          background_color: original_room?.background_color || "#87CEEB",
+          environment_preset: original_room?.environment_preset || "apartment",
+          wall_type: original_room?.wall_type || "color",
+          floor_type: original_room?.floor_type || "color",
         },
       });
 

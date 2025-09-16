@@ -123,23 +123,25 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
         </div>
       </div>
 
-      <div className="flex gap-2">
-        {isFollowing ? (
-          <button
-            onClick={() => handleUnfollow(user.id)}
-            className="tool-btn-red !px-3 !py-1"
-          >
-            언팔로우
-          </button>
-        ) : (
-          <button
-            onClick={() => handleRemoveFollower(user.id)}
-            className="tool-btn-red !px-3 !py-1"
-          >
-            삭제
-          </button>
-        )}
-      </div>
+      {session?.user?.id === (userId || session?.user?.id) && (
+        <div className="flex gap-2">
+          {isFollowing ? (
+            <button
+              onClick={() => handleUnfollow(user.id)}
+              className="tool-btn-red !px-3 !py-1"
+            >
+              언팔로우
+            </button>
+          ) : (
+            <button
+              onClick={() => handleRemoveFollower(user.id)}
+              className="tool-btn-red !px-3 !py-1"
+            >
+              삭제
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 

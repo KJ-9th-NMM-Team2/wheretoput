@@ -24,7 +24,7 @@ class CacheManager {
 
     constructor(cacheDir: string, maxSizeInMB: number = 300) {
         this.CACHE_DIR = path.join(cacheDir, 'public', 'cache', 'models');
-        this.CACHE_META_DIR = path.join(cacheDir, 'cache-medata.json');
+        this.CACHE_META_DIR = path.join(this.CACHE_DIR, 'cache-medata.json');
         this.MAX_SIZE = 1024 * 1024 * maxSizeInMB;
     }
 
@@ -113,10 +113,10 @@ class CacheManager {
                 metadata.totalSize += fileSize;
 
                 metadata.files[filename].fileSize = fileSize;
-                console.log("새 파일 추가 filename", filename);
+                console.log("💾 기존 파일 업데이트 filename", filename);
             } else {
                 // 새 파일 추가
-                console.log("새 파일 추가 filename", filename);
+                console.log("💾 새 파일 추가 filename", filename);
                 metadata.files[filename] = {
                     lastAccessed: currentTime,
                     accessCount: 1,
@@ -132,7 +132,6 @@ class CacheManager {
                 // LRU 정책 실행
                 await this.cleanUpFiles();
             }
-            console.log("마지막~~~~", filename);
         } catch (error) {
             console.log("file record 중 에러 발생: ", error);
         } finally {

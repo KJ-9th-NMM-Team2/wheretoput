@@ -1,12 +1,13 @@
-import { CategoryProps } from "@/lib/furnitureTypes";
+import { CategoryProps } from "@/types/furnitureTypes";
 import { useStore } from "../../useStore";
 
 interface SelectedFurnituresProps {
     onCategorySelect: (category: string) => void;
 }
 
+// 장바구니 , 배치한 가구 목록 , 나의 가구
 const SelectedFurnitures = ({ onCategorySelect }: SelectedFurnituresProps) => {
-    const category = { id: -1, name: "배치한 가구 목록" };
+    const category = { id: -1, name: "나의 가구" };
     const { selectedCategory, setSelectedCategory } = useStore();
 
     const handleCategoryClick = (category: CategoryProps) => {
@@ -18,9 +19,9 @@ const SelectedFurnitures = ({ onCategorySelect }: SelectedFurnituresProps) => {
         <div className="flex items-center">
             <button
                 key={category.id}
-                className={`py-2 px-3 text-sm rounded transition whitespace-nowrap cursor-pointer ${selectedCategory === category.id
-                    ? 'bg-green-500 text-white'
-                    : 'bg-white text-gray-800 hover:bg-green-50 hover:text-green-600 hover:border-green-200 border border-gray-200'
+                className={`py-2 px-3 text-sm tool-btn transition whitespace-nowrap cursor-pointer ${selectedCategory === category.id
+                    ? 'tool-btn-green-active'
+                    : 'tool-btn-inactive'
 
                     }`}
                 onClick={() => handleCategoryClick(category)}

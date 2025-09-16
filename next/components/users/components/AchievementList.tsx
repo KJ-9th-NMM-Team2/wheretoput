@@ -12,8 +12,8 @@ export default function AchievementList() {
       await fetch(`/api/users/${session?.user?.id}/achievements`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setAchievements(data);
+        if (Array.isArray(data.data)) {
+          setAchievements(data.data);
         } else {
           console.error('Invalid achievements data:', data);
           setAchievements([]);
@@ -27,7 +27,7 @@ export default function AchievementList() {
   if (loading) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400 text-lg">로딩중...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg"> Loading...</p>
       </div>
     );
   }

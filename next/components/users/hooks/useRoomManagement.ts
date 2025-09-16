@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { updateRoomInfo, deleteRoom } from "@/lib/roomService";
+import { updateRoomInfo, deleteRoom } from "@/lib/services/roomService";
 
 interface UseRoomManagementProps {
   userRooms: any[];

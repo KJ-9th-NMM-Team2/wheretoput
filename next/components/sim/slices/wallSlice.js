@@ -33,21 +33,21 @@ export const wallSlice = (set, get) => ({
   // 히스토리 복원용: 기존 ID를 유지하면서 벽 추가 (히스토리 액션 추가 안함)
   addWallWithId: (wallData, shouldBroadcast = true) =>
     set((state) => {
-      console.log('🔧 addWallWithId 호출:', {
+      console.log("🔧 addWallWithId 호출:", {
         wallId: wallData.id,
         currentWallCount: state.wallsData.length,
-        existingWallIds: state.wallsData.map(w => w.id),
-        shouldBroadcast
+        existingWallIds: state.wallsData.map((w) => w.id),
+        shouldBroadcast,
       });
-      
+
       // 같은 ID의 기존 벽 제거 (중복 방지)
       const filteredWalls = state.wallsData.filter(
         (wall) => wall.id !== wallData.id
       );
-      
-      console.log('🔧 필터링 후:', {
+
+      console.log("🔧 필터링 후:", {
         removedCount: state.wallsData.length - filteredWalls.length,
-        remainingWalls: filteredWalls.length
+        remainingWalls: filteredWalls.length,
       });
 
       // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
@@ -61,9 +61,9 @@ export const wallSlice = (set, get) => ({
       }
 
       const newWallsData = [...filteredWalls, wallData];
-      console.log('🔧 최종 결과:', {
+      console.log("🔧 최종 결과:", {
         finalWallCount: newWallsData.length,
-        addedWallId: wallData.id
+        addedWallId: wallData.id,
       });
 
       return {
@@ -96,12 +96,12 @@ export const wallSlice = (set, get) => ({
             [
               position[0] - halfWidth * cos,
               position[1],
-              position[2] - halfWidth * sin,
+              position[2] + halfWidth * sin, // sin 부호 변경
             ],
             [
               position[0] + halfWidth * cos,
               position[1],
-              position[2] + halfWidth * sin,
+              position[2] - halfWidth * sin, // sin 부호 변경
             ],
           ];
 
@@ -135,12 +135,12 @@ export const wallSlice = (set, get) => ({
             [
               position[0] - halfWidth * cos,
               position[1],
-              position[2] - halfWidth * sin,
+              position[2] + halfWidth * sin, // sin 부호 변경
             ],
             [
               position[0] + halfWidth * cos,
               position[1],
-              position[2] + halfWidth * sin,
+              position[2] - halfWidth * sin, // sin 부호 변경
             ],
           ];
 
@@ -191,8 +191,8 @@ export const wallSlice = (set, get) => ({
         ],
         dimensions: {
           width: wallLength, // 계산된 길이 사용
-          height: state.wallsData[0]?.dimensions?.height || 5, // 기존 벽 높이 사용
-          depth: state.wallsData[0]?.dimensions?.depth || 0.2, // 기존 벽 두께 사용
+          height: 2.5, // 기존 벽 높이 사용
+          depth: 0.15,
         },
       };
 
@@ -216,12 +216,7 @@ export const wallSlice = (set, get) => ({
 
       // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
       if (shouldBroadcast) {
-        get().broadcastWithThrottle(
-          "broadcastWallAdd",
-          newWall.id,
-          newWall,
-          0
-        );
+        get().broadcastWithThrottle("broadcastWallAdd", newWall.id, newWall, 0);
       }
 
       return {
@@ -235,9 +230,7 @@ export const wallSlice = (set, get) => ({
     set((state) => {
       console.log("삭제할 벽의 id:", wallId);
       console.log("현재 벽들의 id:", state.wallsData);
-      const wallToRemove = state.wallsData.find(
-        (wall) => wall.id === wallId
-      );
+      const wallToRemove = state.wallsData.find((wall) => wall.id === wallId);
 
       if (wallToRemove) {
         // 히스토리 액션 추가 (사용자 액션이고 shouldAddHistory가 true인 경우에만)
@@ -258,12 +251,7 @@ export const wallSlice = (set, get) => ({
 
         // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
         if (shouldBroadcast) {
-          get().broadcastWithThrottle(
-            "broadcastWallRemove",
-            wallId,
-            null,
-            0
-          );
+          get().broadcastWithThrottle("broadcastWallRemove", wallId, null, 0);
         }
       }
 
@@ -278,12 +266,7 @@ export const wallSlice = (set, get) => ({
     set((state) => {
       // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
       if (shouldBroadcast) {
-        get().broadcastWithThrottle(
-          "broadcastWallUpdate",
-          wallId,
-          updates,
-          30
-        );
+        get().broadcastWithThrottle("broadcastWallUpdate", wallId, updates, 30);
       }
 
       return {
