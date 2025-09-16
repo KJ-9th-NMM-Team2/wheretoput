@@ -1,6 +1,8 @@
 import React from "react";
 import { useStore } from "@/components/sim/useStore";
 import { RotateCcw } from "lucide-react";
+import { calculateWallsCenter, calculateOptimalCameraPosition, getCameraTarget } from "@/utils/cameraUtils";
+import * as THREE from "three";
 
 
 export function CameraControlPanel({ isPopup = false, controlsRef }) {
@@ -15,6 +17,7 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
     setCameraFov,
     setCameraZoom,
     setCameraMode,
+    wallsData,
   } = useStore();
 
   const baseStyle = {
@@ -78,7 +81,7 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
             onChange={setCameraFov}
             displayValue={cameraFov}
           />
-          <CameraResetButton controlsRef={controlsRef} />
+          <CameraResetButton controlsRef={controlsRef} wallsData={wallsData} />
         </div>
 
         {/* <button onClick={() => setCameraMode(cameraMode === "perspective" ? "orthographic" : "perspective")}>
@@ -181,14 +184,30 @@ function WallMagnetToggle({ enabled, onToggle }) {
   );
 }
 
-function CameraResetButton({ controlsRef }) {
+function CameraResetButton({ controlsRef, wallsData }) {
+  const handleReset = () => {
+    if (controlsRef.current) {
+      const controls = controlsRef.current;
+      
+      // Calculate centered position based on current walls
+      const wallsCenter = calculateWallsCenter(wallsData);
+      const optimalPosition = calculateOptimalCameraPosition(wallsCenter, wallsData);
+      const target = getCameraTarget(wallsCenter);
+      
+      // Reset camera to centered position
+      controls.object.position.set(...optimalPosition);
+      controls.target.set(...target);
+      controls.update();
+    }
+  };
+
   return (
     <div style={{
       display: "flex",
       justifyContent: "center",
     }}>
       <button
-        onClick={() => controlsRef.current.reset()}
+        onClick={handleReset}
         className="tool-btn tool-btn-red-active mt-2"
       >
         <span className="flex items-center gap-2">

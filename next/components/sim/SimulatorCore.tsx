@@ -38,6 +38,11 @@ import {
   generateSaveValues,
   parseLoadedValues,
 } from "@/lib/textureUtils.js";
+import { 
+  calculateWallsCenter, 
+  calculateOptimalCameraPosition, 
+  getCameraTarget 
+} from "@/utils/cameraUtils";
 
 // import { Environment } from "@react-three/drei";
 import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
@@ -340,13 +345,38 @@ function Floor({ wallsData }: { wallsData: any[] }) {
 function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
   const fov = useStore((state) => state.cameraFov);
   const showMeasurements = useStore((state) => state.showMeasurements);
+  const wallsData = useStore((state) => state.wallsData);
   const { camera } = useThree();
   const perspectiveCamera = camera as THREE.PerspectiveCamera;
+
+  // Calculate centered camera position based on walls
+  const { cameraPosition, cameraTarget } = useMemo(() => {
+    const wallsCenter = calculateWallsCenter(wallsData);
+    const position = calculateOptimalCameraPosition(wallsCenter, wallsData);
+    const target = getCameraTarget(wallsCenter);
+    
+    return {
+      cameraPosition: position,
+      cameraTarget: target
+    };
+  }, [wallsData]);
 
   useEffect(() => {
     perspectiveCamera.fov = fov;
     perspectiveCamera.updateProjectionMatrix();
   }, [fov, perspectiveCamera]);
+
+  // Update camera position when walls change
+  useEffect(() => {
+    if (controlsRef.current && wallsData.length > 0) {
+      const controls = controlsRef.current;
+      
+      // Set camera position and target based on walls
+      controls.object.position.set(...cameraPosition);
+      controls.target.set(...cameraTarget);
+      controls.update();
+    }
+  }, [cameraPosition, cameraTarget, controlsRef, wallsData]);
 
   // 치수 모드 시 탑뷰로 자동 전환
   useEffect(() => {
@@ -363,17 +393,17 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
         controls.object.lookAt(target);
         controls.update();
       } else {
-        // 측정 모드 꺼짐: 카메라 제한 해제하고 기본 위치로 복귀
+        // 측정 모드 꺼짐: 카메라 제한 해제하고 계산된 위치로 복귀
         const target = controls.target;
-        const defaultPosition = new THREE.Vector3(target.x, 20, target.z + 30);
+        const defaultPosition = new THREE.Vector3(...cameraPosition);
 
-        // 기본 위치로 부드럽게 이동
+        // 계산된 위치로 부드럽게 이동
         controls.object.position.copy(defaultPosition);
         controls.object.lookAt(target);
         controls.update();
       }
     }
-  }, [showMeasurements, controlsRef]);
+  }, [showMeasurements, controlsRef, cameraPosition]);
 
   return null;
 }
@@ -677,6 +707,12 @@ export function SimulatorCore({
     };
   }, [addModelWithId, removeModel]);
 
+  // Calculate initial camera position based on walls
+  const initialCameraPosition = useMemo(() => {
+    const wallsCenter = calculateWallsCenter(wallsData);
+    return calculateOptimalCameraPosition(wallsCenter, wallsData);
+  }, [wallsData]);
+
   return (
     <div
       className={`flex h-screen overflow-hidden ${
@@ -775,7 +811,7 @@ export function SimulatorCore({
         )}
 
         <Canvas
-          camera={{ position: [0, 20, 30], fov: 60 }}
+          camera={{ position: initialCameraPosition, fov: 60 }}
           shadows
           style={{
             width: "100%",
