@@ -53,7 +53,7 @@ export default function CanvasImageLogger() {
   const captureAndUpload = useCallback(async () => {
     try {
       const dataURL = captureCanvas(gl, scene, camera);
-      const fileName = `room-${currentRoomId}.png`;
+      const fileName = `room-${currentRoomId}-${Date.now()}.png`;
       
       await uploadImage(dataURL, fileName, currentRoomId);
     } catch (error) {

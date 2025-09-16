@@ -31,7 +31,7 @@ export function CaptureModal() {
     if (capturedImageData && currentRoomId) {
       const uploadPromise = uploadImage(
         capturedImageData,
-        `room-${currentRoomId}.png`,
+        `room-${currentRoomId}-${Date.now()}.png`,
         currentRoomId
       );
 
