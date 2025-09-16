@@ -46,7 +46,7 @@
  *         description: 서버 내부 오류
  */
 
-import { prisma } from "@/lib/prisma";
+import { readOnlyPrisma } from "@/lib/prisma";
 import { HttpResponse } from "@/utils/httpResponse";
 
 export async function GET(req: Request) {
@@ -54,12 +54,17 @@ export async function GET(req: Request) {
         const searchParams = new URL(req.url).searchParams;
         const query = searchParams.get('q') || '';
         const limit = parseInt(searchParams.get('limit') || "10");
-        const users = await prisma.user.findMany({
+        const users = await readOnlyPrisma.user.findMany({
             where: {
                 name: {
                     contains: query,
                     mode: "insensitive",
                 }
+            },
+            select: {
+                id: true,
+                name: true,
+                image: true,
             },
             take: limit,
         })
@@ -67,7 +72,7 @@ export async function GET(req: Request) {
         if (!users) {
             return HttpResponse.notFound("사용자를 찾을 수 없습니다.");
         }
-        return Response.json(users);
+        return HttpResponse.success(users);
     } catch (error) {
         console.error("Error backend route.ts :", error);
         return HttpResponse.internalError();

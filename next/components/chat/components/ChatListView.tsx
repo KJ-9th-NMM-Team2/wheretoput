@@ -67,7 +67,7 @@ export default function ChatListView({
       const { data } = await api.get("api/backend", {
         params: { limit: 100 }, // 모든 유저 가져오기
       });
-      const users = data ?? [];
+      const users = data.data ?? [];
       const rows: UserLite[] = (users ?? []).map((u: any) => ({
         id: String(u.id),
         name: u.name ?? "이름 없음",
