@@ -1,3 +1,5 @@
+import { calculateRoomCenter, getInitialCameraPosition } from "../wall/wallUtils.js";
+
 export const roomSlice = (set, get) => ({
   currentRoomId: null,
   isSaving: false,
@@ -12,6 +14,10 @@ export const roomSlice = (set, get) => ({
 
   // 현재 방의 협업 모드 활성화 상태
   isCollabModeActive: false,
+
+  // 방의 중앙 좌표와 카메라 초기 위치
+  roomCenter: [0, 0, 0],
+  initialCameraPosition: [0, 20, 30],
 
   setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
   setSaving: (saving) => set({ isSaving: saving }),
@@ -440,6 +446,15 @@ export const roomSlice = (set, get) => ({
       const wallTexture = result.wall_type || "color";
       const floorTexture = result.floor_type || "color";
 
+      // wallUtils를 사용하여 방 중앙과 카메라 초기 위치 계산
+      let roomCenter = [0, 0, 0];
+      let initialCameraPosition = [0, 20, 30];
+
+      if (wallsData.length > 0) {
+        roomCenter = calculateRoomCenter(wallsData);
+        initialCameraPosition = getInitialCameraPosition(wallsData);
+      }
+
       set({
         loadedModels: loadedModels,
         wallsData: wallsData,
@@ -456,6 +471,8 @@ export const roomSlice = (set, get) => ({
         floorTexture: floorTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
+        roomCenter: roomCenter,
+        initialCameraPosition: initialCameraPosition,
       });
 
       const end_time = performance.now();
