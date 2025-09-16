@@ -162,6 +162,7 @@ export async function GET(
           select: {
             room_id: true,
             title: true,
+            collab_on: true,
             user: {
               select: {
                 name: true,
