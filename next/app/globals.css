@@ -24,7 +24,6 @@ html.dark {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -67,7 +66,8 @@ html.dark .following-button {
   letter-spacing: 0.015em;
   transition: all 0.3s ease;
   transform: scale(1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border: none;
   gap: 0.5rem;
 }
@@ -114,7 +114,8 @@ html.dark .tool-btn-red {
 .tool-btn:disabled:hover {
   transform: scale(1);
   background: linear-gradient(to right, rgb(59, 130, 246), rgb(6, 182, 212));
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Tool Button Variants */
@@ -162,25 +163,25 @@ html.dark .tool-btn-inactive:hover {
 /*=========== 슬라이더 스타일 ==========*/
 .slider {
   @apply appearance-none outline-none h-1;
-  background: linear-gradient(to right, #6aeeff 0%, #ADB6FF 100%);
+  background: linear-gradient(to right, #6aeeff 0%, #adb6ff 100%);
 }
 
 /* 슬라이더 버튼 - 크롬 , 사파리*/
 .slider::-webkit-slider-thumb {
   @apply appearance-none w-5 h-5 rounded-full bg-white cursor-pointer shadow-sm;
-  border: 2px solid #87CEEB;
+  border: 2px solid #87ceeb;
 }
 
 /* 슬라이더 트랙 - 크롬 , 사파리*/
 .slider::-webkit-slider-track {
   @apply h-1 rounded;
-  background: linear-gradient(to right, #87CEEB 0%, #ADB6FF 100%);
+  background: linear-gradient(to right, #87ceeb 0%, #adb6ff 100%);
 }
 
 /* 오른쪽 위 Control Panel 전용 작은 슬라이더 스타일 */
 .slider-small {
   @apply appearance-none outline-none;
-  background: linear-gradient(to right, #6aeeff 0%, #ADB6FF 100%);
+  background: linear-gradient(to right, #6aeeff 0%, #adb6ff 100%);
   height: 3px;
 }
 
@@ -189,15 +190,13 @@ html.dark .tool-btn-inactive:hover {
   @apply appearance-none rounded-full bg-white cursor-pointer;
   width: 14px;
   height: 14px;
-  border: 1.5px solid #87CEEB;
+  border: 1.5px solid #87ceeb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 작은 슬라이더 트랙 - 크롬, 사파리 */
 .slider-small::-webkit-slider-track {
   @apply rounded;
-  background: linear-gradient(to right, #87CEEB 0%, #ADB6FF 100%);
+  background: linear-gradient(to right, #87ceeb 0%, #adb6ff 100%);
   height: 3px;
 }
-
-
