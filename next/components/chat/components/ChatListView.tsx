@@ -25,6 +25,7 @@ interface ChatListViewProps {
   onChatSelect: (chatId: string) => void;
   currentUserId: string | null;
   onChatFocus?: (isFocused: boolean) => void;
+  onStartDirect?: (userId: string, userName?: string) => Promise<void>;
 }
 
 export default function ChatListView({
@@ -40,6 +41,7 @@ export default function ChatListView({
   onChatSelect,
   currentUserId,
   onChatFocus,
+  onStartDirect,
 }: ChatListViewProps) {
   const [showUserList, setShowUserList] = useState(false);
   const [allUsers, setAllUsers] = useState<UserLite[]>([]);
@@ -428,7 +430,14 @@ export default function ChatListView({
               peopleHits.map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                  onClick={async () => {
+                    console.log("🔍 User clicked:", u.name, u.id);
+                    console.log("🔍 onStartDirect:", onStartDirect);
+                    if (onStartDirect) {
+                      await onStartDirect(u.id, u.name);
+                    }
+                  }}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200">
