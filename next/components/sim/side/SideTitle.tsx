@@ -15,6 +15,7 @@ import ExitConfirmModal from "./ExitConfirmModal";
 
 // React 컴포넌트는 반드시 props 객체 하나만 받아야 하기 때문에 interface로 정의
 interface SideTitleProps {
+  newRoomInfo: RoomInfo;
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   accessType: number; // 1: normal, 2: collaboration
@@ -22,15 +23,11 @@ interface SideTitleProps {
 }
 
 
-const SideTitle = ({ collapsed, setCollapsed, accessType, onEditClick }: SideTitleProps) => {
+const SideTitle = ({ newRoomInfo, collapsed, setCollapsed, accessType, onEditClick }: SideTitleProps) => {
   // 나가기 확인 모달 상태
   const [showExitModal, setShowExitModal] = useState(false);
   // 현재 방 정보
-  const [roomInfo, setRoomInfo] = useState<RoomInfo>({
-    title: "",
-    description: "",
-    is_public: false,
-  });
+  const [roomInfo, setRoomInfo] = useState<RoomInfo>(newRoomInfo);
   // 로딩 상태
   const [loading, setLoading] = useState(false);
 
@@ -42,25 +39,10 @@ const SideTitle = ({ collapsed, setCollapsed, accessType, onEditClick }: SideTit
   // 뒤로 가기 버튼
   const router = useRouter();
 
-  const { data: session } = useSession();
-
-
-  // 컴포넌트 마운트 시 또는 roomId 변경 시 방 정보 가져오기
+  // newRoomInfo 변경 시 방 정보 가져오기
   useEffect(() => {
-    const loadRoomInfo = async () => {
-      if (!currentRoomId) return;
-
-      setLoading(true);
-      try {
-        const info = await fetchRoomInfo(currentRoomId);
-        setRoomInfo(info);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadRoomInfo();
-  }, [currentRoomId]);
+    setRoomInfo(newRoomInfo);
+  }, [newRoomInfo])
 
   // 설정 버튼 클릭 시 부모 컴포넌트의 EditPopup 열기
   const handleSettingsClick = () => {
