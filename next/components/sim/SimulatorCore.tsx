@@ -33,7 +33,11 @@ import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSi
 
 import { KeyboardControls } from "@/components/sim/mainsim/control/KeyboardControls.jsx";
 import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
-import { determineValueType, generateSaveValues, parseLoadedValues } from "@/lib/textureUtils.js";
+import {
+  determineValueType,
+  generateSaveValues,
+  parseLoadedValues,
+} from "@/lib/textureUtils.js";
 
 // import { Environment } from "@react-three/drei";
 import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
@@ -66,12 +70,12 @@ function FloorMaterial() {
       floorTexture,
       floorColor,
       floorTexturePresets,
-      wallTexture: 'color',
-      wallColor: '#FFFFFF',
-      wallTexturePresets: {}
+      wallTexture: "color",
+      wallColor: "#FFFFFF",
+      wallTexturePresets: {},
     };
     return {
-      saveValues: generateSaveValues(envState)
+      saveValues: generateSaveValues(envState),
     };
   }, [floorTexture, floorColor, floorTexturePresets]);
 
@@ -104,7 +108,7 @@ function FloorMaterial() {
       },
       undefined,
       (error) => {
-        console.error('Floor texture loading failed:', error);
+        console.error("Floor texture loading failed:", error);
         setTexture(null);
         setIsTextureLoading(false);
       }
@@ -116,13 +120,23 @@ function FloorMaterial() {
     const mat = new THREE.MeshStandardMaterial();
 
     // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
-    if (valueType.isColor || currentPreset?.type === "color" ||
-        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+    if (
+      valueType.isColor ||
+      currentPreset?.type === "color" ||
+      (valueType.isTexture &&
+        currentPreset?.type === "texture" &&
+        (!texture || isTextureLoading))
+    ) {
       mat.color.set(floorColor);
       mat.map = null;
       mat.roughness = 0.9;
       mat.metalness = 0.0;
-    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+    } else if (
+      valueType.isTexture &&
+      texture &&
+      currentPreset?.type === "texture" &&
+      !isTextureLoading
+    ) {
       mat.map = texture;
       mat.color.set(floorColor);
       mat.roughness = 0.9;
@@ -137,7 +151,15 @@ function FloorMaterial() {
 
     mat.needsUpdate = true;
     return mat;
-  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, floorColor, texture, floorTexture, isTextureLoading]);
+  }, [
+    valueType.isColor,
+    valueType.isTexture,
+    currentPreset?.type,
+    floorColor,
+    texture,
+    floorTexture,
+    isTextureLoading,
+  ]);
 
   return <primitive object={material} />;
 }
@@ -152,12 +174,12 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
       wallTexture,
       wallColor,
       wallTexturePresets,
-      floorTexture: 'color',
-      floorColor: '#D2B48C',
-      floorTexturePresets: {}
+      floorTexture: "color",
+      floorColor: "#D2B48C",
+      floorTexturePresets: {},
     };
     return {
-      saveValues: generateSaveValues(envState)
+      saveValues: generateSaveValues(envState),
     };
   }, [wallTexture, wallColor, wallTexturePresets]);
 
@@ -191,7 +213,7 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
       },
       undefined,
       (error) => {
-        console.error('Wall texture loading failed:', error);
+        console.error("Wall texture loading failed:", error);
         setTexture(null);
         setIsTextureLoading(false);
       }
@@ -205,14 +227,24 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
     const mat = new THREE.MeshStandardMaterial();
 
     // 텍스처 모드인데 아직 로딩중이거나 실패한 경우 색상 모드로 fallback
-    if (valueType.isColor || currentPreset?.type === "color" ||
-        (valueType.isTexture && currentPreset?.type === "texture" && (!texture || isTextureLoading))) {
+    if (
+      valueType.isColor ||
+      currentPreset?.type === "color" ||
+      (valueType.isTexture &&
+        currentPreset?.type === "texture" &&
+        (!texture || isTextureLoading))
+    ) {
       mat.color.set(finalColor);
       mat.map = null;
       mat.transparent = transparent;
       mat.roughness = 0.8;
       mat.metalness = 0.1;
-    } else if (valueType.isTexture && texture && currentPreset?.type === "texture" && !isTextureLoading) {
+    } else if (
+      valueType.isTexture &&
+      texture &&
+      currentPreset?.type === "texture" &&
+      !isTextureLoading
+    ) {
       mat.map = texture;
       mat.color.set(finalColor);
       mat.transparent = transparent;
@@ -229,7 +261,16 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
 
     mat.needsUpdate = true;
     return mat;
-  }, [valueType.isColor, valueType.isTexture, currentPreset?.type, finalColor, texture, wallTexture, transparent, isTextureLoading]);
+  }, [
+    valueType.isColor,
+    valueType.isTexture,
+    currentPreset?.type,
+    finalColor,
+    texture,
+    wallTexture,
+    transparent,
+    isTextureLoading,
+  ]);
 
   return <primitive object={material} />;
 }
@@ -748,9 +789,10 @@ export function SimulatorCore({
           <color attach="background" args={[backgroundColor]} />
 
           {/* 메인 햇빛 조명 */}
+          {/* 메인 햇빛 조명 - 강도 대폭 증가 */}
           <directionalLight
             position={directionalLightPosition}
-            intensity={directionalLightIntensity}
+            intensity={directionalLightIntensity * 2} // 기존 강도의 2배
             castShadow
             shadow-camera-near={0.1}
             shadow-camera-far={50}
@@ -762,65 +804,79 @@ export function SimulatorCore({
             shadow-mapSize-height={2048}
           />
 
-          {/* 가구 색상 표현을 위한 강력한 조명 */}
-          <ambientLight intensity={1.8} color="#ffffff" />
+          {/* GLB 파일용 매우 강한 앰비언트 조명 */}
+          <ambientLight intensity={4.5} color="#ffffff" />
 
-          {/* 색상 표현을 위한 강한 방향성 조명 */}
+          {/* 사방에서 비추는 강력한 방향성 조명 */}
           <directionalLight
             position={[15, 15, 15]}
-            intensity={1.5}
+            intensity={3.5} // 기존 1.5 → 3.5
             color="#ffffff"
           />
           <directionalLight
             position={[-15, 15, -15]}
-            intensity={1.5}
+            intensity={3.5}
             color="#ffffff"
           />
           <directionalLight
             position={[0, 15, 15]}
-            intensity={1.2}
+            intensity={3.0} // 기존 1.2 → 3.0
             color="#ffffff"
           />
           <directionalLight
             position={[0, 15, -15]}
-            intensity={1.2}
+            intensity={3.0}
             color="#ffffff"
           />
 
-          {/* 가구 디테일용 강력한 포인트 조명 */}
+          {/* 가구 디테일용 매우 강력한 포인트 조명 */}
           <pointLight
             position={[0, 18, 0]}
-            intensity={2.5}
+            intensity={6.0} // 기존 2.5 → 6.0
+            distance={60}
+            decay={0.5} // decay 낮춤 (더 멀리 퍼짐)
+            color="#ffffff"
+          />
+          <pointLight
+            position={[-12, 12, -12]}
+            intensity={4.5} // 기존 1.8 → 4.5
             distance={50}
             decay={0.8}
             color="#ffffff"
           />
           <pointLight
-            position={[-12, 12, -12]}
-            intensity={1.8}
-            distance={40}
-            decay={1.0}
-            color="#ffffff"
-          />
-          <pointLight
             position={[12, 12, 12]}
-            intensity={1.8}
-            distance={40}
-            decay={1.0}
+            intensity={4.5}
+            distance={50}
+            decay={0.8}
             color="#ffffff"
           />
           <pointLight
             position={[12, 12, -12]}
-            intensity={1.8}
-            distance={40}
-            decay={1.0}
+            intensity={4.5}
+            distance={50}
+            decay={0.8}
             color="#ffffff"
           />
           <pointLight
             position={[-12, 12, 12]}
-            intensity={1.8}
+            intensity={4.5}
+            distance={50}
+            decay={0.8}
+            color="#ffffff"
+          />
+
+          {/* 추가 보조 조명 - GLB 파일 전체를 밝게 */}
+          <pointLight
+            position={[0, -5, 0]} // 아래에서 올려 비추기
+            intensity={3.0}
             distance={40}
-            decay={1.0}
+            decay={1.2}
+            color="#ffffff"
+          />
+          <directionalLight
+            position={[0, -10, 0]} // 바닥에서 위로
+            intensity={2.0}
             color="#ffffff"
           />
           <Floor wallsData={wallsData} />

@@ -245,7 +245,6 @@ model rooms {
   user_id             String
   title               String          @db.VarChar(100)
   description         String?
-  room_data           Json?
   thumbnail_url       String?
   is_public           Boolean?        @default(true)
   view_count          Int?            @default(0)
@@ -258,6 +257,8 @@ model rooms {
   background_color    String          @default("#87CEEB")
   environment_preset  String          @default("apartment")
   collab_chat_room_id String?         @db.Uuid
+  wall_type           String?         @default("color")
+  floor_type          String?         @default("color")
   room_comments       room_comments[]
   room_likes          room_likes[]
   room_objects        room_objects[]
