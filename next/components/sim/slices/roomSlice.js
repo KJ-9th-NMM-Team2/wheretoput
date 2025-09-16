@@ -1,5 +1,3 @@
-import { calculateRoomCenter, getInitialCameraPosition } from "../wall/wallUtils.js";
-
 export const roomSlice = (set, get) => ({
   currentRoomId: null,
   isSaving: false,
@@ -14,10 +12,6 @@ export const roomSlice = (set, get) => ({
 
   // 현재 방의 협업 모드 활성화 상태
   isCollabModeActive: false,
-
-  // 방의 중앙 좌표와 카메라 초기 위치
-  roomCenter: [0, 0, 0],
-  initialCameraPosition: [0, 20, 30],
 
   setCurrentRoomId: (roomId) => set({ currentRoomId: roomId }),
   setSaving: (saving) => set({ isSaving: saving }),
@@ -368,6 +362,7 @@ export const roomSlice = (set, get) => ({
     } finally {
       set({ isSaving: false });
     }
+
   },
 
   loadSimulatorState: async (roomId, options = {}) => {
@@ -377,6 +372,7 @@ export const roomSlice = (set, get) => ({
     try {
       const start_time = performance.now();
 
+      
       let loadedModels = [];
       const response = await fetch(`/api/sim/load/${roomId}`);
 
@@ -441,19 +437,10 @@ export const roomSlice = (set, get) => ({
       }
 
       // 직접 색상과 텍스처 정보 추출
-      const wallColor = result.wall_color || "#969593";
-      const floorColor = result.floor_color || "#875f32";
+      const wallColor = result.wall_color || "#FFFFFF";
+      const floorColor = result.floor_color || "#D2B48C";
       const wallTexture = result.wall_type || "color";
       const floorTexture = result.floor_type || "color";
-
-      // wallUtils를 사용하여 방 중앙과 카메라 초기 위치 계산
-      let roomCenter = [0, 0, 0];
-      let initialCameraPosition = [0, 20, 30];
-
-      if (wallsData.length > 0) {
-        roomCenter = calculateRoomCenter(wallsData);
-        initialCameraPosition = getInitialCameraPosition(wallsData);
-      }
 
       set({
         loadedModels: loadedModels,
@@ -471,8 +458,6 @@ export const roomSlice = (set, get) => ({
         floorTexture: floorTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
-        roomCenter: roomCenter,
-        initialCameraPosition: initialCameraPosition,
       });
 
       const end_time = performance.now();

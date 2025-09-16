@@ -38,29 +38,29 @@ export default function ChatButton({
     // 읽지 않은 메시지 뱃지 표시
     setHasUnreadMessages(true);
 
-    // // 브라우저 알림 권한 확인 후 알림 표시
-    // if (Notification.permission === "granted") {
-    //   new Notification(`${room.name}에서 새 메시지`, {
-    //     body:
-    //       room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
-    //     icon: "/favicon.ico", // 앱 아이콘
-    //     tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
-    //   });
-    // } else if (Notification.permission === "default") {
-    //   // 알림 권한 요청
-    //   Notification.requestPermission().then((permission) => {
-    //     if (permission === "granted") {
-    //       new Notification(`${room.name}에서 새 메시지`, {
-    //         body:
-    //           room.lastMessage === "사진"
-    //             ? "사진을 보냈습니다"
-    //             : room.lastMessage,
-    //         icon: "/favicon.ico",
-    //         tag: roomId,
-    //       });
-    //     }
-    //   });
-    // }
+    // 브라우저 알림 권한 확인 후 알림 표시
+    if (Notification.permission === "granted") {
+      new Notification(`${room.name}에서 새 메시지`, {
+        body:
+          room.lastMessage === "사진" ? "사진을 보냈습니다" : room.lastMessage,
+        icon: "/favicon.ico", // 앱 아이콘
+        tag: roomId, // 같은 채팅방의 알림은 덮어쓰기
+      });
+    } else if (Notification.permission === "default") {
+      // 알림 권한 요청
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(`${room.name}에서 새 메시지`, {
+            body:
+              room.lastMessage === "사진"
+                ? "사진을 보냈습니다"
+                : room.lastMessage,
+            icon: "/favicon.ico",
+            tag: roomId,
+          });
+        }
+      });
+    }
   };
 
   const {
@@ -70,7 +70,6 @@ export default function ChatButton({
     setBaseChats,
     updateChatRoom,
     deleteChatRoom,
-    onStartDirect,
     sseConnection,
   } = useChatRooms(
     open,
@@ -205,27 +204,16 @@ export default function ChatButton({
     otherUserId: string,
     otherUserName?: string
   ) => {
-    console.log("🔍 handleStartDirect called:", otherUserId, otherUserName);
+    // 필터 초기화
+    setQuery("");
+    setSelect("전체");
 
-    try {
-      // 필터 초기화
-      setQuery("");
-      setSelect("전체");
-
-      const roomId = await onStartDirect(otherUserId, otherUserName);
-      console.log("🔍 roomId received:", roomId);
-
-      if (roomId && roomId !== 'undefined' && roomId !== 'null') {
-        // baseChats 상태 업데이트 완료를 위해 약간의 지연
-        setTimeout(() => {
-          console.log("🔍 Setting selectedChatId to:", roomId);
-          setselectedChatId(roomId);
-        }, 100);
-      } else {
-        console.error("🔍 Invalid roomId received:", roomId);
-      }
-    } catch (error) {
-      console.error("🔍 Error in handleStartDirect:", error);
+    const roomId = await onStartDirect(otherUserId, otherUserName);
+    if (roomId) {
+      // baseChats 상태 업데이트 완료를 위해 약간의 지연
+      setTimeout(() => {
+        setselectedChatId(roomId);
+      }, 100);
     }
   };
 
@@ -282,7 +270,6 @@ export default function ChatButton({
             }}
             currentUserId={currentUserId}
             listRef={listRef}
-            onStartDirect={handleStartDirect}
           />
         )}
       </AnimatePresence>
