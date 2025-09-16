@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { useObjectControls } from "@/components/sim/mainsim/useObjectControls";
+import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";

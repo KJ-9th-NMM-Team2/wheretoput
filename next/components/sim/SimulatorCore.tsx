@@ -18,10 +18,20 @@ import {
   updateRoomInfo,
   deleteRoom,
   type RoomInfo,
-} from "@/lib/roomService";
+} from "@/lib/services/roomService";
 
 // Store and utilities
 import { useStore } from "@/components/sim/useStore.js";
+// Main simulation components
+import { Wall } from "@/components/sim/mainsim/wall/Wall.jsx";
+import { MergedWalls } from "@/components/sim/mainsim/wall/MergedWalls.jsx";
+import { WallPreview } from "@/components/sim/mainsim/wall/WallPreview.jsx";
+import { WallSnapPoints } from "@/components/sim/mainsim/wall/WallSnapPoints.jsx";
+import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
+import { ControlIcons } from "@/components/sim/mainsim/control/ControlIcons.jsx";
+import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
+
+import { KeyboardControls } from "@/components/sim/mainsim/control/KeyboardControls.jsx";
 import { autoSnapToNearestWallEndpoint } from "@/components/sim/wall/wallUtils.js";
 import {
   determineValueType,
@@ -29,15 +39,7 @@ import {
   parseLoadedValues,
 } from "@/lib/textureUtils.js";
 
-// Main simulation components
-import { Wall } from "@/components/sim/mainsim/Wall.jsx";
-import { MergedWalls } from "@/components/sim/mainsim/MergedWalls.jsx";
-import { WallPreview } from "@/components/sim/mainsim/WallPreview.jsx";
-import { WallSnapPoints } from "@/components/sim/mainsim/WallSnapPoints.jsx";
-import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
-import { ControlIcons } from "@/components/sim/mainsim/ControlIcons.jsx";
-import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
-import { KeyboardControls } from "@/components/sim/mainsim/KeyboardControls.jsx";
+// import { Environment } from "@react-three/drei";
 import { CaptureModal } from "@/components/sim/mainsim/CaptureModal";
 import { CaptureHandler } from "@/components/sim/mainsim/CaptureHandler";
 
@@ -53,8 +55,8 @@ import { ObjectMeasurements } from "./measurements/ObjectMeasurements";
 
 // System components
 import CanvasImageLogger from "@/components/sim/CanvasCapture";
-import AutoSave from "@/components/sim/AutoSave";
-import AutoSaveIndicator from "@/components/sim/AutoSaveIndicator";
+import AutoSave from "@/components/sim/save/AutoSave";
+import AutoSaveIndicator from "@/components/sim/save/AutoSaveIndicator";
 
 type position = [number, number, number];
 

@@ -1,4 +1,4 @@
-import { searchFurnitures } from '@/lib/api/furSearch';
+import { searchFurnitures } from '@/lib/api/furniture/furSearch';
 import { HttpResponse } from '@/utils/httpResponse';
 
 /**

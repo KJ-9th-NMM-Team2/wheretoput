@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useStore } from '../useStore';
+import { useStore } from '@/components/sim/useStore';
 import { useThree, useFrame } from '@react-three/fiber';
-import { useHistory, ActionType } from '../history';
+import { useHistory, ActionType } from '@/components/sim/history';
 
 /**
  * 벽의 바닥 끝점에 스냅 포인트를 시각적으로 표시하는 컴포넌트

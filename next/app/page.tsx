@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HomeCardList } from "@/components/main/HomeCardList";
 import { FollowingFeed } from "@/components/main/FollowingFeed";
-import { fetchRooms } from "@/lib/api/rooms";
+import { fetchRooms } from "@/lib/api/room/rooms";
 import SearchBar from "@/components/main/SearchBar";
 
 export default async function Page() {

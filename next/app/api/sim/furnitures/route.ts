@@ -66,7 +66,7 @@
 import { prisma } from "@/lib/prisma";
 import type { furnitures as Furniture } from "@prisma/client";
 import { calculatePagination } from "@/lib/paginagtion";
-import { searchFurnitures } from "@/lib/api/furSearch";
+import { searchFurnitures } from "@/lib/api/furniture/furSearch";
 import { HttpResponse } from "@/utils/httpResponse";
 
 export async function GET(request: Request) {

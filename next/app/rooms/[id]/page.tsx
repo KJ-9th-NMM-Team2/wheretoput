@@ -1,4 +1,4 @@
-import { fetchRoomById } from "@/lib/api/rooms";
+import { fetchRoomById } from "@/lib/api/room/rooms";
 
 import RoomPageClient from "@/components/rooms/RoomPageClient";
 
