@@ -71,7 +71,7 @@ function FloorMaterial() {
       floorColor,
       floorTexturePresets,
       wallTexture: "color",
-      wallColor: "#969593",
+      wallColor: "#FFFFFF",
       wallTexturePresets: {},
     };
     return {
@@ -175,7 +175,7 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
       wallColor,
       wallTexturePresets,
       floorTexture: "color",
-      floorColor: "#875f32",
+      floorColor: "#D2B48C",
       floorTexturePresets: {},
     };
     return {
@@ -340,42 +340,13 @@ function Floor({ wallsData }: { wallsData: any[] }) {
 function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
   const fov = useStore((state) => state.cameraFov);
   const showMeasurements = useStore((state) => state.showMeasurements);
-  const roomCenter = useStore((state) => state.roomCenter);
-  const initialCameraPosition = useStore((state) => state.initialCameraPosition);
-  const currentRoomId = useStore((state) => state.currentRoomId);
-  const isLoading = useStore((state) => state.isLoading);
   const { camera } = useThree();
   const perspectiveCamera = camera as THREE.PerspectiveCamera;
-  const [lastRoomId, setLastRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     perspectiveCamera.fov = fov;
     perspectiveCamera.updateProjectionMatrix();
   }, [fov, perspectiveCamera]);
-
-  // 방이 바뀌거나 로드 완료 후 카메라 위치와 타겟 설정
-  useEffect(() => {
-    if (
-      !isLoading &&
-      controlsRef.current &&
-      currentRoomId &&
-      currentRoomId !== lastRoomId &&
-      roomCenter &&
-      roomCenter.length &&
-      initialCameraPosition &&
-      initialCameraPosition.length
-    ) {
-      console.log("🎬 카메라 위치 및 타겟 설정:", initialCameraPosition, roomCenter);
-
-      perspectiveCamera.position.set(...initialCameraPosition);
-
-      const controls = controlsRef.current;
-      controls.target.set(...roomCenter);
-      controls.update();
-
-      setLastRoomId(currentRoomId);
-    }
-  }, [isLoading, currentRoomId, lastRoomId, roomCenter, initialCameraPosition]);
 
   // 치수 모드 시 탑뷰로 자동 전환
   useEffect(() => {
@@ -479,7 +450,6 @@ export function SimulatorCore({
     setSelectedWallId,
     isChatFocused,
     showMeasurements,
-    initialCameraPosition,
   } = useStore();
 
   const [startTime, setStartTime] = useState<number>(0);
@@ -805,10 +775,7 @@ export function SimulatorCore({
         )}
 
         <Canvas
-          camera={{
-            position: initialCameraPosition.length ? initialCameraPosition : [0, 20, 30],
-            fov: 60
-          }}
+          camera={{ position: [0, 20, 30], fov: 60 }}
           shadows
           style={{
             width: "100%",

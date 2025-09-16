@@ -312,7 +312,6 @@ export const useChatRooms = (
     setBaseChats,
     updateChatRoom,
     deleteChatRoom,
-    onStartDirect,
     refreshRooms: () => {}, // 폴링 비활성화로 인해 빈 함수 반환
     sseConnection, // SSE 연결 상태 정보
   };
