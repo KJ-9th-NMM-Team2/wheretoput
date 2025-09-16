@@ -368,15 +368,15 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
 
   // Update camera position when walls change
   useEffect(() => {
-    if (controlsRef.current && wallsData.length > 0) {
+    if (controlsRef.current) {
       const controls = controlsRef.current;
       
-      // Set camera position and target based on walls
+      // Set camera position and target based on walls (or fallback for empty walls)
       controls.object.position.set(...cameraPosition);
       controls.target.set(...cameraTarget);
       controls.update();
     }
-  }, [cameraPosition, cameraTarget, controlsRef, wallsData]);
+  }, [cameraPosition, cameraTarget, controlsRef]);
 
   // 치수 모드 시 탑뷰로 자동 전환
   useEffect(() => {
