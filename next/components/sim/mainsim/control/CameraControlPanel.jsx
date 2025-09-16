@@ -60,7 +60,7 @@ export function CameraControlPanel({ isPopup = false, controlsRef }) {
           cursor: "default",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           <WallTransparencyToggle
             enabled={enableWallTransparency}
             onToggle={setEnableWallTransparency}
@@ -111,6 +111,7 @@ function ControlSlider({
         style={{
           minWidth: "50px",
           fontSize: "13px",
+          fontWeight: "bold",
           whiteSpace: "nowrap",
         }}
       >
@@ -143,7 +144,7 @@ function ControlSlider({
 function WallTransparencyToggle({ enabled, onToggle }) {
   return (
     <div className="flex items-center justify-between mb-2">
-      <span className="text-s text-white my-1">벽 투명화</span>
+      <span className="text-s text-white font-bold my-1">벽 투명화</span>
       <button
         onClick={() => onToggle(!enabled)}
         className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
@@ -163,7 +164,7 @@ function WallTransparencyToggle({ enabled, onToggle }) {
 function WallMagnetToggle({ enabled, onToggle }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <span className="text- text-white">벽 자석</span>
+      <span className="text-s text-white font-bold">벽 자석</span>
       <button
         onClick={() => onToggle(!enabled)}
         className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ${
