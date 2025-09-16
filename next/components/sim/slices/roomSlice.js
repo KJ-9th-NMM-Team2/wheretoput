@@ -362,7 +362,6 @@ export const roomSlice = (set, get) => ({
     } finally {
       set({ isSaving: false });
     }
-
   },
 
   loadSimulatorState: async (roomId, options = {}) => {
@@ -372,7 +371,6 @@ export const roomSlice = (set, get) => ({
     try {
       const start_time = performance.now();
 
-      
       let loadedModels = [];
       const response = await fetch(`/api/sim/load/${roomId}`);
 
@@ -437,8 +435,8 @@ export const roomSlice = (set, get) => ({
       }
 
       // 직접 색상과 텍스처 정보 추출
-      const wallColor = result.wall_color || "#FFFFFF";
-      const floorColor = result.floor_color || "#D2B48C";
+      const wallColor = result.wall_color || "#969593";
+      const floorColor = result.floor_color || "#875f32";
       const wallTexture = result.wall_type || "color";
       const floorTexture = result.floor_type || "color";
 

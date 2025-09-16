@@ -28,11 +28,11 @@ export const environmentSlice = (set, get) => ({
   enableWallTransparency: true,
 
   // 색상 관련 상태
-  wallColor: "#FFFFFF",
-  floorColor: "#D2B48C",
+  wallColor: "#969593",
+  floorColor: "#875f32",
   backgroundColor: "#87CEEB",
 
-////////////////////////////////////
+  ////////////////////////////////////
   // [09.15] 바닥재 텍스처 관련 상태
   // "color" | "vinyl" | "wood" | "tile"
   floorTexture: "color",
@@ -57,7 +57,7 @@ export const environmentSlice = (set, get) => ({
       texture: "/textures/marble_01.png",
     },
   },
-/////////////////////////////////////
+  /////////////////////////////////////
   // [09.15] 벽지 텍스처 관련 상태
   // 스트라이프 , 대리석 , 패브릭
   wallTexture: "color",
