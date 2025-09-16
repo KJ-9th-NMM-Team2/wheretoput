@@ -64,7 +64,7 @@ export default function Header() {
           
           
           <Link href="/">
-            <h2 className="text-xl font-black leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
+            <h2 className="text-xl font-bold leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
               어따놀래
             </h2>
           </Link>

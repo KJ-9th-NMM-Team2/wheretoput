@@ -24,10 +24,10 @@ export default async function Page() {
             >
               {/* 메인 타이틀 */}
               <div className="flex flex-col gap-4 max-w-2xl">
-                <h1 className="text-black text-6xl font-black leading-tight tracking-tight">
+                <h1 className="text-black text-6xl font-bold leading-tight tracking-tight">
                   상상하던 공간,
                 </h1>
-                <h2 className="text-black text-5xl font-black leading-tight tracking-tight">
+                <h2 className="text-black text-5xl font-bold leading-tight tracking-tight">
                   3D로 손쉽게 현실로.
                 </h2>
                 
