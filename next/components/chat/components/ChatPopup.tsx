@@ -30,6 +30,7 @@ interface ChatPopupProps {
   onBack: () => void;
   currentUserId: string | null;
   listRef: React.RefObject<HTMLDivElement>;
+  onStartDirect?: (userId: string, userName?: string) => Promise<void>;
 }
 
 const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
@@ -55,6 +56,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
     onBack,
     currentUserId,
     listRef,
+    onStartDirect,
   }, popupRef) => {
     const { setIsChatFocused } = useStore();
     return (
@@ -92,6 +94,7 @@ const ChatPopup = forwardRef<HTMLDivElement, ChatPopupProps>(
                 onChatSelect={onChatSelect}
                 currentUserId={currentUserId}
                 onChatFocus={setIsChatFocused}
+                onStartDirect={onStartDirect}
               />
             </motion.div>
           ) : (
