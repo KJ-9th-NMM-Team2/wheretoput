@@ -689,6 +689,7 @@ export function SimulatorCore({
           roomId={roomId}
           accessType={accessType}
           onEditClick={handleEditClick}
+          newRoomInfo={roomInfo}
         />
       )}
 
