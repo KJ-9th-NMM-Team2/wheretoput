@@ -70,6 +70,7 @@ export default function ChatButton({
     setBaseChats,
     updateChatRoom,
     deleteChatRoom,
+    onStartDirect,
     sseConnection,
   } = useChatRooms(
     open,
@@ -204,16 +205,27 @@ export default function ChatButton({
     otherUserId: string,
     otherUserName?: string
   ) => {
-    // 필터 초기화
-    setQuery("");
-    setSelect("전체");
+    console.log("🔍 handleStartDirect called:", otherUserId, otherUserName);
 
-    const roomId = await onStartDirect(otherUserId, otherUserName);
-    if (roomId) {
-      // baseChats 상태 업데이트 완료를 위해 약간의 지연
-      setTimeout(() => {
-        setselectedChatId(roomId);
-      }, 100);
+    try {
+      // 필터 초기화
+      setQuery("");
+      setSelect("전체");
+
+      const roomId = await onStartDirect(otherUserId, otherUserName);
+      console.log("🔍 roomId received:", roomId);
+
+      if (roomId && roomId !== 'undefined' && roomId !== 'null') {
+        // baseChats 상태 업데이트 완료를 위해 약간의 지연
+        setTimeout(() => {
+          console.log("🔍 Setting selectedChatId to:", roomId);
+          setselectedChatId(roomId);
+        }, 100);
+      } else {
+        console.error("🔍 Invalid roomId received:", roomId);
+      }
+    } catch (error) {
+      console.error("🔍 Error in handleStartDirect:", error);
     }
   };
 
@@ -270,6 +282,7 @@ export default function ChatButton({
             }}
             currentUserId={currentUserId}
             listRef={listRef}
+            onStartDirect={handleStartDirect}
           />
         )}
       </AnimatePresence>
