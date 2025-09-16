@@ -8,7 +8,7 @@ import { useState } from "react";
 export function HomeCard({
   room,
   isDeleteMode = false,
-  onThumbnailClick
+  onThumbnailClick,
 }: {
   room: any;
   isDeleteMode?: boolean;
@@ -24,7 +24,10 @@ export function HomeCard({
   };
 
   return (
-    <Link href={isDeleteMode ? "#" : `/rooms/${room.room_id}`} className="h-full w-full group">
+    <Link
+      href={isDeleteMode ? "#" : `/rooms/${room.room_id}`}
+      className="h-full w-full group"
+    >
       <div
         className="flex h-full flex-1 flex-col gap-3 rounded-lg max-w-sm w-full transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-xl bg-white dark:bg-gray-800 overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
@@ -38,8 +41,6 @@ export function HomeCard({
             }}
             onClick={handleThumbnailClick}
           >
-
-
             {/* 방 스타일 태그 */}
             {room.style && (
               <div className="absolute top-2 left-2">
@@ -51,7 +52,10 @@ export function HomeCard({
           </div>
         </div>
 
-        <div className="px-4 pb-4 flex flex-col gap-3" onClick={handleThumbnailClick}>
+        <div
+          className="px-4 pb-4 flex flex-col gap-3"
+          onClick={handleThumbnailClick}
+        >
           {/* 방 제목 */}
           <p className="text-[rgb(47,52,56)] dark:text-gray-100 text-base font-bold leading-5 line-clamp-2 mt-[3px] overflow-hidden break-all">
             {room.title}
@@ -77,11 +81,18 @@ export function HomeCard({
                 {room.user?.display_name || room.user?.name || "익명"}
               </span>
             </div>
-            {!room.is_public && (
-              <span className="px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
-                비공개
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              {!room.is_public && (
+                <span className="px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                  비공개
+                </span>
+              )}
+              {room.collab_on && (
+                <span className="px-2 py-1 rounded bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-yellow-200 text-xs font-semibold">
+                  협업 중
+                </span>
+              )}
+            </div>
           </div>
 
           {/* 댓글,조회수 */}
@@ -95,22 +106,23 @@ export function HomeCard({
                 <FaCommentDots className="w-4 h-4" />
                 <span className="font-medium">{room.num_comments || 0}</span>
               </div>
-
             </div>
 
             {/* 생성일 */}
             {room.created_at && (
               <span className="text-xs text-gray-400">
-                {new Date(room.created_at).toLocaleDateString('ko-KR', {
-                  month: 'short',
-                  day: 'numeric'
+                {new Date(room.created_at).toLocaleDateString("ko-KR", {
+                  month: "short",
+                  day: "numeric",
                 })}
               </span>
             )}
           </div>
 
           <div className="flex items-center gap-1">
-            <span className="text-xs text-gray-400">조회 {room.view_count || 0}</span>
+            <span className="text-xs text-gray-400">
+              조회 {room.view_count || 0}
+            </span>
           </div>
         </div>
       </div>

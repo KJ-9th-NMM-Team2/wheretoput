@@ -14,6 +14,7 @@ function getSelectFields(fields: string | null) {
     created_at: true,
     updated_at: true,
     is_public: true,
+    collab_on: true,
     _count: {
       select: {
         room_comments: true,

@@ -28,7 +28,8 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const { cloneSimulatorState, setCurrentRoomId, loadSimulatorState } = useStore();
+  const { cloneSimulatorState, setCurrentRoomId, loadSimulatorState } =
+    useStore();
 
   // 조회수 1 증가
   useEffect(() => {
@@ -62,7 +63,10 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
     const checkFollow = async () => {
       if (session?.user?.id && room.user.id !== session.user.id) {
         try {
-          const followStatus = await checkFollowStatus(session.user.id, room.user.id);
+          const followStatus = await checkFollowStatus(
+            session.user.id,
+            room.user.id
+          );
           setIsFollowing(followStatus);
         } catch (error) {
           console.error("Failed to check follow status:", error);
@@ -96,7 +100,11 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
     }
   };
 
-  const handleSave = async (title: string, description: string, isPublic: boolean) => {
+  const handleSave = async (
+    title: string,
+    description: string,
+    isPublic: boolean
+  ) => {
     try {
       const response = await fetch(`/api/rooms/${room.room_id}`, {
         method: "PUT",
@@ -153,7 +161,6 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
 
   const isOwnRoom = session?.user?.id === room.user.id;
 
-
   // 동일 가구 포함 x
   const uniqueFurnituresByRoom = Array.from(
     new Map(room.room_objects.map((o: any) => [o.furniture_id, o])).values()
@@ -166,9 +173,10 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
         {/* 썸네일 섹션 - 75% 너비 */}
         <div className="w-3/4 mx-auto aspect-[4/3] max-h-[500px] overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-lg">
           <img
-            src={room?.thumbnail_url
-              ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}`
-              : "/placeholder_1.jpg"
+            src={
+              room?.thumbnail_url
+                ? `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${room.thumbnail_url}`
+                : "/placeholder_1.jpg"
             }
             alt={room?.title || "Room thumbnail"}
             className="w-full h-full object-cover"
@@ -178,8 +186,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
 
         <div className="px-40 flex flex-1 justify-center">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-            <div className="flex flex-wrap gap-2 p-4">
-            </div>
+            <div className="flex flex-wrap gap-2 p-4"></div>
             <div className="px-4 py-6">
               <h1 className="text-[#2F3438] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
                 {room?.title}
@@ -191,8 +198,11 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   href={`/rooms/${room.root_room_id}`}
                   className="inline-block px-4 py-2 mx-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words"
                 >
-                  {room.rooms.user.name}님의 "<span className="text-amber-900 dark:text-amber-200">{room.rooms.title}</span>"에서 복제된
-                  방입니다.
+                  {room.rooms.user.name}님의 "
+                  <span className="text-amber-900 dark:text-amber-200">
+                    {room.rooms.title}
+                  </span>
+                  "에서 복제된 방입니다.
                 </Link>
               ) : (
                 ""
@@ -242,14 +252,25 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className={`ml-4 ${isFollowing ? "following-button" : "follow-button"}`}
+                  className={`ml-4 ${
+                    isFollowing ? "following-button" : "follow-button"
+                  }`}
                 >
-                  {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
+                  {followLoading
+                    ? "처리 중..."
+                    : isFollowing
+                    ? "팔로잉"
+                    : "팔로우"}
                 </button>
               )}
               {!room.is_public && (
                 <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
+                </span>
+              )}
+              {room.collab_on && (
+                <span className="ml-1 px-2 py-1 rounded bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-yellow-200 text-xs font-semibold">
+                  협업 중
                 </span>
               )}
             </div>
@@ -262,13 +283,13 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 <span>댓글 {room.num_comments}</span>
                 <span>｜</span>
                 <span>
-                  {new Date(room.updated_at).toLocaleDateString('ko-KR', {
-                    month: 'long',
-                    day: 'numeric'
+                  {new Date(room.updated_at).toLocaleDateString("ko-KR", {
+                    month: "long",
+                    day: "numeric",
                   })}
                 </span>
               </div>
-              
+
               {isOwnRoom && (
                 <div className="flex gap-2">
                   <button
@@ -288,7 +309,6 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
             </div>
 
             <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 {room.description}
               </p>
