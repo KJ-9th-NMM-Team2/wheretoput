@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-
+// 업적 생성용 함수
 export default function PostAchievement() {
     const [formData, setFormData] = useState({
         title: '',

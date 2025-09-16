@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchPostLike } from "@/lib/api/likes";
+import { fetchPostLike } from "@/lib/api/room/likes";
 import { useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 

@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useStore } from './useStore.js';
+import { useStore } from '../useStore.js';
 
 interface AutoSaveProps {
   interval?: number; // 자동저장 간격 (밀리초)

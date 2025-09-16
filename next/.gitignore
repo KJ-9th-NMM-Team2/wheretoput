@@ -44,4 +44,3 @@ next-env.d.ts
 
 # cache files
 /public/cache/models/*
-!/public/cache/models/.gitkeep

@@ -8,9 +8,10 @@ import SideSort from "@/components/sim/side/SideSort";
 import SideItems from "@/components/sim/side/SideItems";
 import { HistoryControls, useHistoryKeyboard } from "@/components/sim/history";
 import type { furnitures as Furniture } from "@prisma/client";
+import { RoomInfo } from "@/lib/services/roomService";
 
 
-const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick: () => void }> = ({ roomId, accessType, onEditClick }) => {
+const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick: () => void; newRoomInfo: RoomInfo }> = ({ roomId, accessType, onEditClick, newRoomInfo }) => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -46,6 +47,7 @@ const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick
         } bg-white text-black transition-all duration-300 flex flex-col border-r border-gray-200 select-none shadow-2xl drop-shadow-xl backdrop-blur-sm`}
       >
         <SideTitle
+          newRoomInfo={newRoomInfo}
           collapsed={collapsed}
           setCollapsed={setCollapsed}
           accessType={accessType}
@@ -113,16 +115,17 @@ const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick
   );
 };
 
-const SimSideView: React.FC<{ roomId: string | null; accessType: number; onEditClick: () => void }> = ({
+const SimSideView: React.FC<{ roomId: string | null; accessType: number; onEditClick: () => void; newRoomInfo: RoomInfo }> = ({
   roomId,
   accessType,
   onEditClick,
+  newRoomInfo,
 }) => {
   if (!roomId) {
     return null; // roomId가 없으면 아무것도 렌더링하지 않음
   }
 
-  return <SideViewContent roomId={roomId} accessType={accessType} onEditClick={onEditClick} />;
+  return <SideViewContent roomId={roomId} accessType={accessType} onEditClick={onEditClick} newRoomInfo={newRoomInfo}/>;
 };
 
 export default SimSideView;

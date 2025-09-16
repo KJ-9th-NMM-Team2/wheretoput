@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useStore } from "./useStore.js";
+import { useStore } from "../useStore.js";
 
 interface AutoSaveIndicatorProps {
   position?: "top-right" | "bottom-right" | "top-left" | "bottom-left";

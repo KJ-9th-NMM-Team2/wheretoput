@@ -5,6 +5,21 @@ import ConditionalHeader from "../components/layout/ConditionalHeader";
 import "./globals.css";
 import ChatButton from "@/components/chat/ChatButton";
 import { Toaster } from "react-hot-toast";
+import localFont from "next/font/local";
+
+const myFont = localFont({
+  src: "./fonts/PretendardVariable.woff2",
+  fallback: [
+    "-apple-system",
+    "BlinkMacSystemFont",
+    "Apple SD Gothic Neo",
+    "Segoe UI",
+    "Noto Sans KR",
+    "Malgun Gothic",
+    "맑은 고딕",
+    "sans-serif",
+  ],
+});
 
 export const metadata: Metadata = {
   title: "어따놀래",
@@ -22,7 +37,7 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
   return (
-    <html lang="kr">
+    <html lang="kr" className={myFont.className}>
       <head>
         <link rel="icon" href="/asset/wheretoput.png" type="image/png" />
         <link
