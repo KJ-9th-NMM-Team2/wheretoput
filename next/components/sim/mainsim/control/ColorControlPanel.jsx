@@ -52,8 +52,8 @@ export function ColorControlPanel({ isPopup = false }) {
           cursor: 'default'
         }}
       >
-        <div className="flex items-center justify-center mb-3">
-          <div className="flex justify-center bg-gray-200 rounded-lg overflow-hidden my-2">
+        <div className="flex items-center justify-center mt-1 mb-2">
+          <div className="flex justify-center bg-gray-200 rounded-lg overflow-hidden">
             <button
               className={`px-3 py-1 text-xs transition-colors cursor-pointer ${colorTarget === "wall"
                 ? "bg-blue-500 text-white"
@@ -87,7 +87,7 @@ export function ColorControlPanel({ isPopup = false }) {
           {/* 벽 옵션 클릭시 벽지 옵션 표시 */}
           {colorTarget === 'wall' && (
             <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>벽지 타입</div>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'white' }}>벽지 타입</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
 
                 {/* [09.15] 동적으로 여러개의 벽지 UI 생성 */}
@@ -95,7 +95,7 @@ export function ColorControlPanel({ isPopup = false }) {
                   <button
                     key={key}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       fontSize: '12px',
                       border: '1px solid rgba(255,255,255,0.3)',
                       borderRadius: '4px',
@@ -126,7 +126,7 @@ export function ColorControlPanel({ isPopup = false }) {
           {/* 바닥 옵션 클릭시  바닥재 옵션 표시 */}
           {colorTarget === 'floor' && (
             <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'white' }}>바닥재 타입</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
 
                 {/*[09.15] 동적으로 여러개의 바닥재 UI 생성 */}
@@ -134,7 +134,7 @@ export function ColorControlPanel({ isPopup = false }) {
                   <button
                     key={key}
                     style={{
-                      padding: '6px 12px',
+                      padding: '4px 8px',
                       fontSize: '12px',
                       border: '1px solid rgba(255,255,255,0.3)',
                       borderRadius: '4px',
@@ -165,7 +165,7 @@ export function ColorControlPanel({ isPopup = false }) {
           {/* 색상 선택 - 배경은 항상, 벽과 바닥은 텍스처와 함께 조합 가능 */}
           {(colorTarget === 'background' || colorTarget === 'wall' || colorTarget === 'floor') && (
             <div>
-              <div style={{ fontSize: '14px', marginBottom: '8px', color: 'white' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: 'white' }}>
                 {colorTarget === 'background' ? '배경색' :
                  colorTarget === 'wall' ? (wallTexture === 'color' ? '벽 색상' : '벽 색상 (텍스처와 조합)') :
                  (floorTexture === 'color' ? '바닥 색상' : '바닥 색상 (텍스처와 조합)')}

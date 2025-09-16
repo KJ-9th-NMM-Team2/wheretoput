@@ -110,14 +110,16 @@ function ControlSlider({
     <div
       style={{
         display: "flex",
+        width: "100%",
         alignItems: "center",
         gap: "3px",
       }}
     >
       <span
         style={{
-          minWidth: "50px",
+          minWidth: "60px",
           fontSize: "13px",
+          fontWeight: "bold",
           whiteSpace: "nowrap",
         }}
       >
@@ -130,13 +132,12 @@ function ControlSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="slider-small"
-        style={{ flex: 1 }}
+        className="slider-small w-28"
       />
       <span
         style={{
           color: "#ffffffff",
-          minWidth: "20px",
+          minWidth: "25px",
           fontSize: "11px",
           textAlign: "right",
         }}
