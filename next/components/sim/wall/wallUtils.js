@@ -298,7 +298,7 @@ export const snapWallToWalls = (
 export const autoSnapToNearestWallEndpoint = (
   clickPoint,
   existingWalls,
-  snapDistance = 1.0
+  snapDistance = 0.3
 ) => {
   if (!existingWalls || existingWalls.length === 0) return clickPoint;
 

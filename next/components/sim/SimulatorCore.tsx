@@ -995,7 +995,7 @@ export function SimulatorCore({
                 const snappedPoint = autoSnapToNearestWallEndpoint(
                   clickPoint,
                   wallsData,
-                  1.0
+                  0.5
                 );
 
                 if (!wallDrawingStart) {
