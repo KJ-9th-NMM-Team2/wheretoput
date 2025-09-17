@@ -4,12 +4,16 @@ import { useStore } from "../useStore";
 interface WallToolsProps {
   collapsed?: boolean;
   isDropdown?: boolean;
+  sidebarVisible?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
 // 벽 도구 드롭다운 내용
 const WallTools: React.FC<WallToolsProps> = ({
   collapsed = false,
   isDropdown = false,
+  sidebarVisible = false,
+  sidebarCollapsed = false,
 }) => {
   const { wallToolMode, setWallToolMode, showMeasurements, setShowMeasurements } = useStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +57,9 @@ const WallTools: React.FC<WallToolsProps> = ({
   // 드롭다운 모드
   if (isDropdown) {
     return (
-      <div className="absolute top-4 left-4 z-50 select-none">
+      <div className={`absolute top-0 z-50 select-none ${
+        !sidebarVisible ? 'left-0' : (sidebarCollapsed ? 'left-10' : 'left-80')
+      }`}>
         {/* 메인 버튼 */}
         <button
           onClick={() => {

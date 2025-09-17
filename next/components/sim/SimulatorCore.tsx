@@ -444,6 +444,9 @@ export function SimulatorCore({
   });
   const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
 
+  // Sidebar collapsed 상태
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const router = useRouter();
 
   // 방 정보 로딩
@@ -670,6 +673,8 @@ export function SimulatorCore({
           accessType={accessType}
           onEditClick={handleEditClick}
           newRoomInfo={roomInfo}
+          collapsed={sidebarCollapsed}
+          setCollapsed={setSidebarCollapsed}
         />
       )}
 
@@ -733,7 +738,7 @@ export function SimulatorCore({
         )}
 
         {/* 벽 도구 드롭다운 */}
-        {!viewOnly && <WallTools isDropdown={true} />}
+        {!viewOnly && <WallTools isDropdown={true} sidebarVisible={showSidebar} sidebarCollapsed={sidebarCollapsed} />}
 
         {!viewOnly && <SelectedModelEditModal />}
 
