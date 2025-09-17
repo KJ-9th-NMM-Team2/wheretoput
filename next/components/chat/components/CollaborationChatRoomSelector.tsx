@@ -12,12 +12,14 @@ interface CollaborationChatRoomSelectorProps {
   selectedChatId: string | null;
   onChatSelect: (chatId: string | null) => void;
   currentUserId: string | null;
+  sidebarCollapsed?: boolean;
 }
 
 export default function CollaborationChatRoomSelector({
   selectedChatId,
   onChatSelect,
   currentUserId,
+  sidebarCollapsed = false,
 }: CollaborationChatRoomSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -136,7 +138,9 @@ export default function CollaborationChatRoomSelector({
   }, []);
 
   return (
-    <div className="fixed bottom-4 left-83 z-[1000]">
+    <div className={`fixed bottom-4 z-[1000] ${
+      sidebarCollapsed ? 'left-14' : 'left-85'
+    }`}>
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}

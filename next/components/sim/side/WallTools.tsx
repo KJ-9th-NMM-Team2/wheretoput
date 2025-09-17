@@ -57,9 +57,8 @@ const WallTools: React.FC<WallToolsProps> = ({
   // 드롭다운 모드
   if (isDropdown) {
     return (
-      <div className={`absolute top-0 z-50 select-none ${
-        !sidebarVisible ? 'left-0' : (sidebarCollapsed ? 'left-10' : 'left-80')
-      }`}>
+      <div className={`absolute top-2 z-50 select-none ${!sidebarVisible ? 'left-5' : (sidebarCollapsed ? 'left-14' : 'left-85')
+        }`}>
         {/* 메인 버튼 */}
         <button
           onClick={() => {
@@ -69,20 +68,18 @@ const WallTools: React.FC<WallToolsProps> = ({
             }
             setIsOpen(!isOpen);
           }}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer ${
-            wallToolMode
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg transition-all duration-200 cursor-pointer ${wallToolMode
               ? "bg-blue-500 text-white"
               : "bg-white text-gray-800 hover:bg-gray-50"
-          } border border-gray-200`}
+            } border border-gray-200`}
         >
           <span className="text-lg">{activeTool ? activeTool.icon : ""}</span>
           <span className="font-medium text-sm cursor-pointer">
             {activeTool ? activeTool.name : "벽 도구"}
           </span>
           <svg
-            className={`w-4 h-4 transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+            className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -102,22 +99,20 @@ const WallTools: React.FC<WallToolsProps> = ({
             {wallTools.map((tool) => (
               <button
                 key={tool.id}
-                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors cursor-pointer ${
-                  wallToolMode === tool.id
+                className={`w-full p-3 text-left hover:bg-gray-50 transition-colors cursor-pointer ${wallToolMode === tool.id
                     ? "bg-blue-50 border-l-4 border-blue-500"
                     : ""
-                }`}
+                  }`}
                 onClick={() => handleToolSelect(tool.id)}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{tool.icon}</span>
                   <div className="flex-1">
                     <div
-                      className={`font-medium text-sm ${
-                        wallToolMode === tool.id
+                      className={`font-medium text-sm ${wallToolMode === tool.id
                           ? "text-blue-700"
                           : "text-gray-800"
-                      }`}
+                        }`}
                     >
                       {tool.name}
                     </div>
@@ -128,7 +123,7 @@ const WallTools: React.FC<WallToolsProps> = ({
                 </div>
               </button>
             ))}
-            
+
             {/* 측정 기능 토글 (드롭다운에서) */}
             <div className="p-3 border-t border-gray-100">
               <div className="flex items-center justify-between">
@@ -140,14 +135,12 @@ const WallTools: React.FC<WallToolsProps> = ({
                 </div>
                 <button
                   onClick={() => setShowMeasurements(!showMeasurements)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                    showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
                 >
                   <span
-                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                      showMeasurements ? 'translate-x-5' : 'translate-x-1'
-                    }`}
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showMeasurements ? 'translate-x-5' : 'translate-x-1'
+                      }`}
                   />
                 </button>
               </div>
@@ -175,11 +168,10 @@ const WallTools: React.FC<WallToolsProps> = ({
           {wallTools.map((tool) => (
             <button
               key={tool.id}
-              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 cursor-pointer ${
-                wallToolMode === tool.id
+              className={`w-full p-3 text-left rounded-lg border transition-all duration-200 cursor-pointer ${wallToolMode === tool.id
                   ? "bg-blue-500 text-white border-blue-500 shadow-md"
                   : "bg-white text-gray-800 border-gray-200 hover:bg-orange-50 hover:border-orange-200"
-              }`}
+                }`}
               onClick={() => handleToolSelect(tool.id)}
             >
               <div className="flex items-center gap-3">
@@ -187,11 +179,10 @@ const WallTools: React.FC<WallToolsProps> = ({
                 <div className="flex-1">
                   <div className="font-medium text-sm">{tool.name}</div>
                   <div
-                    className={`text-xs mt-1 ${
-                      wallToolMode === tool.id
+                    className={`text-xs mt-1 ${wallToolMode === tool.id
                         ? "text-blue-100"
                         : "text-gray-500"
-                    }`}
+                      }`}
                   >
                     {tool.description}
                   </div>
@@ -212,14 +203,12 @@ const WallTools: React.FC<WallToolsProps> = ({
             </div>
             <button
               onClick={() => setShowMeasurements(!showMeasurements)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showMeasurements ? 'bg-blue-600' : 'bg-gray-300'
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  showMeasurements ? 'translate-x-6' : 'translate-x-1'
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showMeasurements ? 'translate-x-6' : 'translate-x-1'
+                  }`}
               />
             </button>
           </div>
