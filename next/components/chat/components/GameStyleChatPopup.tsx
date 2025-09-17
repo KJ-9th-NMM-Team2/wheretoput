@@ -42,7 +42,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
     }));
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [isDragEnabled, setIsDragEnabled] = useState(true);
+    const [isDragEnabled, setIsDragEnabled] = useState(false);
 
     // 새 메시지가 추가될 때마다 스크롤을 맨 아래로 (부드럽게)
     useEffect(() => {
