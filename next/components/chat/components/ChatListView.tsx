@@ -475,7 +475,7 @@ export default function ChatListView({
                     onContextMenu={(e) =>
                       handleContextMenu(e, chat.chat_room_id)
                     }
-                    className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
+                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer border-2 border-transparent hover:bg-blue-50 hover:border-blue-200 transition-colors ${isDeleting ? "opacity-50 pointer-events-none" : ""
                       }`}
                   >
                     <div className="flex-1 min-w-0">
@@ -509,7 +509,7 @@ export default function ChatListView({
                   key={chat.chat_room_id}
                   onClick={() => onChatSelect(chat.chat_room_id)}
                   onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
-                  className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded-lg cursor-pointer ${isDeleting ? "opacity-50 pointer-events-none" : ""
+                  className={`flex items-center justify-between p-2 rounded-lg cursor-pointer border-2 border-transparent hover:bg-blue-50 hover:border-blue-200 transition-colors ${isDeleting ? "opacity-50 pointer-events-none" : ""
                     }`}
                 >
                   <div className="flex-1 min-w-0">

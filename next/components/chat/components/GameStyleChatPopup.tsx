@@ -37,7 +37,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       preview: string;
     } | null>(null);
     const [position, setPosition] = useState(() => ({
-      x: typeof window !== 'undefined' ? window.innerWidth - 420 : 0,
+      x: typeof window !== 'undefined' ? 83 * 4 : 0, // left-83는 83 * 0.25rem = 83 * 4px
       y: typeof window !== 'undefined' ? window.innerHeight - 560 : 0
     }));
     const [isDragging, setIsDragging] = useState(false);
@@ -227,7 +227,8 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
         {/* 채팅 메시지 영역 - 고정 높이와 스크롤 */}
         <div className="flex-1 flex flex-col justify-end overflow-hidden">
           <div
-            className="bg-gray-400/30 w-full rounded-lg pointer-events-auto relative"
+            className={`bg-gray-400/30 w-full rounded-lg relative ${isDragEnabled ? 'pointer-events-auto' : 'pointer-events-none'
+              }`}
             style={{
               cursor: isDragEnabled ? (isDragging ? 'grabbing' : 'move') : 'default'
             }}
@@ -239,14 +240,16 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
               onWheel={(e) => e.stopPropagation()}
             >
               {/* 드래그 토글 버튼 */}
-              <div className="absolute top-2 right-2 z-10">
+              <div className="absolute top-2 right-5 z-10 pointer-events-auto">
                 <button
-                  onClick={() => setIsDragEnabled(!isDragEnabled)}
-                  className={`p-1 rounded-full transition-all duration-200 ${
-                    isDragEnabled
-                      ? 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'
-                      : 'bg-gray-500/20 text-gray-600 hover:bg-gray-500/30'
-                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDragEnabled(!isDragEnabled);
+                  }}
+                  className={`p-1 rounded-full transition-all duration-200 ${isDragEnabled
+                    ? 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'
+                    : 'bg-gray-500/20 text-gray-600 hover:bg-gray-500/30'
+                    }`}
                   title={isDragEnabled ? '드래그 비활성화' : '드래그 활성화'}
                 >
                   {isDragEnabled ? <MdDragIndicator size={16} /> : <MdLock size={16} />}
@@ -328,7 +331,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
 
           {/* 이미지 미리보기 */}
           {selectedImage && (
-            <div className="mb-2 p-2 border border-gray-200 rounded-lg bg-gray-50/90 backdrop-blur-sm max-w-md mx-auto">
+            <div className="mb-2 p-2 border border-gray-200 rounded-lg bg-gray-50/90 backdrop-blur-sm max-w-md">
               <div className="flex items-center gap-2">
                 <img
                   src={selectedImage.preview}
@@ -343,7 +346,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
                 </div>
                 <button
                   onClick={removeSelectedImage}
-                  className="p-1 rounded-full hover:bg-gray-200 cursor-pointer transition-transform hover:scale-110"
+                  className="p-1 rounded-full text-blue-500 hover:bg-blue-100 hover:text-blue-600 cursor-pointer transition-all hover:scale-110"
                 >
                   <MdClose size={14} />
                 </button>
@@ -351,7 +354,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
             </div>
           )}
 
-          <div className="flex items-center space-x-2 max-w-md mx-auto">
+          <div className="flex items-center space-x-2 max-w-md">
             <input
               type="text"
               value={text}

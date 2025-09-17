@@ -136,7 +136,7 @@ export default function CollaborationChatRoomSelector({
   }, []);
 
   return (
-    <div className="fixed bottom-4 right-4 z-[1000]">
+    <div className="fixed bottom-4 left-83 z-[1000]">
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
@@ -177,7 +177,7 @@ export default function CollaborationChatRoomSelector({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute bottom-full mb-2 right-0 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-[1001]"
+          className="absolute bottom-full mb-2 left-0 w-64 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-[1001]"
         >
           {chats.length === 0 ? (
             <div className="p-3 text-sm text-gray-500 text-center">
@@ -198,8 +198,8 @@ export default function CollaborationChatRoomSelector({
                 }}
                 onContextMenu={(e) => handleContextMenu(e, chat.chat_room_id)}
                 className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer ${selectedChatId === chat.chat_room_id
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-700"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-700"
                   }`}
               >
                 <div className="flex items-center space-x-3">
