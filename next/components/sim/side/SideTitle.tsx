@@ -34,6 +34,7 @@ const SideTitle = ({ newRoomInfo, collapsed, setCollapsed, accessType, onEditCli
   // Zustand store에서 현재 방 ID 가져오기
   const {
     currentRoomId,
+    wallToolMode,
   } = useStore();
 
   // 뒤로 가기 버튼
@@ -44,8 +45,12 @@ const SideTitle = ({ newRoomInfo, collapsed, setCollapsed, accessType, onEditCli
     setRoomInfo(newRoomInfo);
   }, [newRoomInfo])
 
+  // 벽 모드 활성화 여부 확인
+  const isWallModeActive = wallToolMode === "add" || wallToolMode === "edit" || wallToolMode === "delete";
+
   // 설정 버튼 클릭 시 부모 컴포넌트의 EditPopup 열기
   const handleSettingsClick = () => {
+    if (isWallModeActive) return;
     onEditClick();
   };
 
@@ -81,7 +86,9 @@ const SideTitle = ({ newRoomInfo, collapsed, setCollapsed, accessType, onEditCli
             <button
                 type="button"
                 onClick={handleSettingsClick}
-                className="ml-2 px-2 py-1 rounded-md text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors shadow flex items-center cursor-pointer"
+                className={`ml-2 px-2 py-1 rounded-md text-gray-700 text-sm font-semibold hover:bg-gray-200 transition-colors shadow flex items-center ${
+                  isWallModeActive ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
               {loading ? "로딩 중..." : roomInfo.title || "어따놀래"}
             </button>

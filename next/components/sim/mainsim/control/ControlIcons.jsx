@@ -23,7 +23,7 @@ export function ControlIcons({ controlsRef }) {
   const [showHelpPopup, setShowHelpPopup] = useState(false);
 
   // 공유 링크 (사용자가 설정)
-  const { currentRoomId } = useStore();
+  const { currentRoomId, wallToolMode } = useStore();
   let shareLink;
   if (process.env.NODE_ENV === "development") {
     shareLink = `http://localhost:3000/sim/mobile/${currentRoomId}`;
@@ -41,22 +41,26 @@ export function ControlIcons({ controlsRef }) {
     }
   };
 
+  // 벽 모드 활성화 여부 확인
+  const isWallModeActive = wallToolMode === "add" || wallToolMode === "edit" || wallToolMode === "delete";
+
   const iconStyle = {
     position: "fixed",
     top: "10px",
-    background: "rgba(0, 0, 0, 0.7)",
-    color: "white",
+    background: isWallModeActive ? "rgba(100, 100, 100, 0.4)" : "rgba(0, 0, 0, 0.7)",
+    color: isWallModeActive ? "#888" : "white",
     border: "none",
     borderRadius: "5px",
     width: "40px",
     height: "40px",
-    cursor: "pointer",
+    cursor: isWallModeActive ? "not-allowed" : "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontSize: "18px",
     zIndex: 101,
     transition: "background 0.2s ease",
+    opacity: isWallModeActive ? 0.5 : 1,
   };
 
   const hoverStyle = {
@@ -125,6 +129,7 @@ export function ControlIcons({ controlsRef }) {
           fontSize: "16px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowControlPopup(true);
         }}
@@ -144,6 +149,7 @@ export function ControlIcons({ controlsRef }) {
           right: "90px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowLightPopup(true);
         }}
@@ -165,6 +171,7 @@ export function ControlIcons({ controlsRef }) {
           right: "140px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowCameraPopup(true);
         }}
@@ -186,6 +193,7 @@ export function ControlIcons({ controlsRef }) {
           right: "190px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowColorPopup(true);
         }}
@@ -207,6 +215,7 @@ export function ControlIcons({ controlsRef }) {
           right: "240px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowCapturePopup(true);
         }}
@@ -228,6 +237,7 @@ export function ControlIcons({ controlsRef }) {
           right: "290px",
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowSharePopup(true);
         }}
@@ -248,18 +258,20 @@ export function ControlIcons({ controlsRef }) {
           top: "10px",
           right: "330px",
           background: "rgba(0, 0, 0, 0)",
-          color: "black",
+          color: isWallModeActive ? "#888" : "black",
           border: "none",
           width: "40px",
           height: "40px",
-          cursor: "pointer",
+          cursor: isWallModeActive ? "not-allowed" : "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: "24px",
           zIndex: 101,
+          opacity: isWallModeActive ? 0.5 : 1,
         }}
         onClick={() => {
+          if (isWallModeActive) return;
           setAllPopupFalse();
           setShowHelpPopup(true);
         }}

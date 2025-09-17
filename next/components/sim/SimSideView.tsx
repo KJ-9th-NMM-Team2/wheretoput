@@ -11,9 +11,14 @@ import type { furnitures as Furniture } from "@prisma/client";
 import { RoomInfo } from "@/lib/services/roomService";
 
 
-const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick: () => void; newRoomInfo: RoomInfo }> = ({ roomId, accessType, onEditClick, newRoomInfo }) => {
-
-  const [collapsed, setCollapsed] = useState(false);
+const SideViewContent: React.FC<{
+  roomId: string;
+  accessType: number,
+  onEditClick: () => void;
+  newRoomInfo: RoomInfo;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+}> = ({ roomId, accessType, onEditClick, newRoomInfo, collapsed, setCollapsed }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>();
   const [searchResults, setSearchResults] = useState<Furniture[]>([]);
@@ -53,8 +58,6 @@ const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick
           accessType={accessType}
           onEditClick={onEditClick}
         />
-
-
 
         <SideSearch 
           collapsed={collapsed}
@@ -115,17 +118,26 @@ const SideViewContent: React.FC<{roomId: string, accessType: number, onEditClick
   );
 };
 
-const SimSideView: React.FC<{ roomId: string | null; accessType: number; onEditClick: () => void; newRoomInfo: RoomInfo }> = ({
+const SimSideView: React.FC<{
+  roomId: string | null;
+  accessType: number;
+  onEditClick: () => void;
+  newRoomInfo: RoomInfo;
+  collapsed: boolean;
+  setCollapsed: (collapsed: boolean) => void;
+}> = ({
   roomId,
   accessType,
   onEditClick,
   newRoomInfo,
+  collapsed,
+  setCollapsed,
 }) => {
   if (!roomId) {
     return null; // roomId가 없으면 아무것도 렌더링하지 않음
   }
 
-  return <SideViewContent roomId={roomId} accessType={accessType} onEditClick={onEditClick} newRoomInfo={newRoomInfo}/>;
+  return <SideViewContent roomId={roomId} accessType={accessType} onEditClick={onEditClick} newRoomInfo={newRoomInfo} collapsed={collapsed} setCollapsed={setCollapsed} />;
 };
 
 export default SimSideView;

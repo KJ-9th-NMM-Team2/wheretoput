@@ -7,14 +7,14 @@ import { getColab } from "@/lib/api/toggleColab";
 import { useRouter } from "next/navigation";
 
 // 모드 버튼 컴포넌트
-function ModeButton({ isActive, onClick, label, color }) {
+function ModeButton({ isActive, onClick, label, color, disabled = false }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <button
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => !disabled && setIsHovered(true)}
+      onMouseLeave={() => !disabled && setIsHovered(false)}
       style={{
         background: isActive
           ? `${color}20` // 20% opacity
@@ -27,7 +27,7 @@ function ModeButton({ isActive, onClick, label, color }) {
         borderRadius: "4px",
         fontSize: "14px",
         fontWeight: isActive ? "600" : isHovered ? "500" : "400",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
         transition: "all 0.2s ease",
         display: "flex",
         alignItems: "center",
@@ -61,6 +61,9 @@ export function ModeControlPanel({ roomId }) {
     isOwnUserRoom,
     checkCollabMode,
     isCollabModeActive,
+    setWallToolMode,
+    setWallDrawingStart,
+    wallToolMode,
   } = useStore();
   const { data: session } = useSession();
   const router = useRouter();
@@ -99,6 +102,9 @@ export function ModeControlPanel({ roomId }) {
   }, [isOwnUserRoom, isCollabModeActive, roomId, session]);
 
   // 현재 모드 결정
+  // 벽 모드 활성화 여부 확인
+  const isWallModeActive = wallToolMode === "add" || wallToolMode === "edit" || wallToolMode === "delete";
+
   const getCurrentMode = () => {
     if (viewOnly) return "view";
     return "edit";
@@ -106,6 +112,13 @@ export function ModeControlPanel({ roomId }) {
 
   // 모드 변경 핸들러
   const handleModeChange = (newMode) => {
+    // 벽 모드 활성화 시 클릭 방지
+    if (isWallModeActive) return;
+
+    // 모드 전환 시 벽 도구 모드 초기화
+    setWallToolMode(null);
+    setWallDrawingStart(null);
+
     switch (newMode) {
       case "view":
         setViewOnly(true);
@@ -157,6 +170,7 @@ export function ModeControlPanel({ roomId }) {
             onClick={() => handleModeChange("view")}
             label="보기"
             color="#22C55E"
+            disabled={isWallModeActive}
           />
 
           {/* 편집 모드 버튼 */}
@@ -165,6 +179,7 @@ export function ModeControlPanel({ roomId }) {
             onClick={() => handleModeChange("edit")}
             label="편집"
             color="#3B82F6"
+            disabled={isWallModeActive}
           />
 
           {/* 협업 모드 버튼 - 조건부 표시 */}
@@ -174,6 +189,7 @@ export function ModeControlPanel({ roomId }) {
               onClick={() => handleModeChange("collaboration")}
               label="협업"
               color="#F59E0B"
+              disabled={isWallModeActive}
             />
           )}
         </div>

@@ -76,6 +76,9 @@ function CollaborationPageContent({
   // 채팅 관련 상태와 훅
   const [isChatFocused, setIsChatFocused] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+
+  // Sidebar collapsed 상태
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // 협업 종료 모달 상태
   const [isEndModalOpen, setIsEndModalOpen] = useState(false);
@@ -251,6 +254,8 @@ function CollaborationPageContent({
         showModeControls={false} // 모드 컨트롤은 숨김 (이미 협업 모드)
         showEditControls={true}
         keyboardControlsDisabled={isChatFocused} // 채팅 입력 중일 때 키보드 컨트롤 비활성화
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
         additionalUI={
           <>
             <ConnectedUsersList />
@@ -266,6 +271,7 @@ function CollaborationPageContent({
                 selectedChatId={selectedChatId}
                 onChatSelect={setSelectedChatId}
                 currentUserId={session.user.id}
+                sidebarCollapsed={sidebarCollapsed}
               />
             )}
           </>
@@ -286,6 +292,7 @@ function CollaborationPageContent({
           }
           onChatFocus={setIsChatFocused}
           currentUserId={session.user.id}
+          sidebarCollapsed={sidebarCollapsed}
         />
       )}
 
