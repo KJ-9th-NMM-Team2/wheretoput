@@ -61,6 +61,8 @@ export function ModeControlPanel({ roomId }) {
     isOwnUserRoom,
     checkCollabMode,
     isCollabModeActive,
+    setWallToolMode,
+    setWallDrawingStart,
   } = useStore();
   const { data: session } = useSession();
   const router = useRouter();
@@ -106,6 +108,10 @@ export function ModeControlPanel({ roomId }) {
 
   // 모드 변경 핸들러
   const handleModeChange = (newMode) => {
+    // 모드 전환 시 벽 도구 모드 초기화
+    setWallToolMode(null);
+    setWallDrawingStart(null);
+
     switch (newMode) {
       case "view":
         setViewOnly(true);
