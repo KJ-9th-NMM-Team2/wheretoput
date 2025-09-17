@@ -218,9 +218,8 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
               className="
                 text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
                 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg cursor-pointer
-                text-gray-700 hover:text-blue-700 hover:bg-white hover:border-blue-300 
-                dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-gray-700 
-                border border-gray-200 dark:border-gray-600
+                bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600
+                border border-blue-500
               "
             >
               <MdImage size={20} />
@@ -239,14 +238,7 @@ const ChatRoomView = forwardRef<HTMLDivElement, ChatRoomViewProps>(
               ref={sendButtonRef}
               onClick={sendWithImage}
               disabled={!text.trim() && !selectedImage}
-              className={`
-                text-md font-medium leading-normal px-3 py-2 rounded-2xl transition-all duration-300
-                hover:scale-105 active:scale-95 shadow-md hover:shadow-lg
-                ${text.trim() || selectedImage
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-pointer'
-                  : 'text-gray-700 bg-gray-200 cursor-not-allowed border border-gray-200 dark:border-gray-600'
-                }
-              `}
+              className="px-3 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors min-w-[48px] flex items-center justify-center"
             >
               전송
             </button>

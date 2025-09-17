@@ -53,7 +53,7 @@ const WallTools: React.FC<WallToolsProps> = ({
   // 드롭다운 모드
   if (isDropdown) {
     return (
-      <div className="absolute bottom-4 left-4 z-50 select-none">
+      <div className="absolute top-4 left-4 z-50 select-none">
         {/* 메인 버튼 */}
         <button
           onClick={() => {
@@ -92,7 +92,7 @@ const WallTools: React.FC<WallToolsProps> = ({
 
         {/* 드롭다운 메뉴 */}
         {isOpen && (
-          <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+          <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
             {wallTools.map((tool) => (
               <button
                 key={tool.id}
