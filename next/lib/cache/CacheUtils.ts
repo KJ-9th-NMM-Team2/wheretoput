@@ -30,7 +30,7 @@ class CacheUtils {
       console.log("캐시된 파일 사용:", localPath);
 
       await this.cacheFileAccess(fileName);
-
+      await cacheManager.recordFileAccess(fileName);
       const result = NextResponse.json({
         success: true,
         furniture_id: furniture_id,

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useStore } from "../../useStore";
 import { useSaveFurniture } from "./hooks/useSaveFurniture";
 import Image from "next/image";
+import { useHandleItemClick } from "./hooks/useHandleItemClick";
 
 const ItemSection: React.FC<ItemSectionProps> = ({
   loading,
@@ -14,7 +15,6 @@ const ItemSection: React.FC<ItemSectionProps> = ({
   selectedItems,
   imageErrors,
   selectedCategory,
-  handleItemClick,
   handleImageError,
   handleSelectModel,
   roomId,
@@ -24,6 +24,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
   const isSelectedCategory = selectedItems?.length > 0;
   const { data: session } = useSession();
   const { setAchievements, wallToolMode } = useStore();
+  const handleItemClick = useHandleItemClick();
 
   return (
     <>
