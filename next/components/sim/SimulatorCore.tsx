@@ -723,7 +723,7 @@ export function SimulatorCore({
         />
       )}
 
-      <div className="flex-1 relative">
+      <div className="flex-1 min-w-0">
         {/* 모바일 헤더 */}
         {isMobile && (
           <MobileHeader roomInfo={currentRoomInfo} controlsRef={controlsRef} />
