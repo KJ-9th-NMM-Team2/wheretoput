@@ -22,9 +22,9 @@ class CacheManager {
     private readonly MAX_SIZE: number;
     private lockFile: boolean = false; // 간단한 파일 락
 
-    constructor(cacheDir: string, maxSizeInMB: number = 300) {
+    constructor(cacheDir: string, maxSizeInMB: number = 50) { // 50MB
         this.CACHE_DIR = path.join(cacheDir, 'public', 'cache', 'models');
-        this.CACHE_META_DIR = path.join(this.CACHE_DIR, 'cache-medata.json');
+        this.CACHE_META_DIR = path.join(cacheDir, 'cache-medata.json');
         this.MAX_SIZE = 1024 * 1024 * maxSizeInMB;
     }
 
@@ -114,6 +114,7 @@ class CacheManager {
 
                 metadata.files[filename].fileSize = fileSize;
                 console.log("💾 기존 파일 업데이트 filename", filename);
+                console.log("CACHE_META_DIR Chcek", this.CACHE_META_DIR);
             } else {
                 // 새 파일 추가
                 console.log("💾 새 파일 추가 filename", filename);

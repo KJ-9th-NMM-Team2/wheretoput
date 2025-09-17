@@ -21,7 +21,7 @@ export interface BaseItemProps {
 
 // 각 컴포넌트별 필요한 속성만 선택
 export type ItemSectionProps = Pick<BaseItemProps, 
-    'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleItemClick' | 'handleImageError' | 'roomId'
+    'loading' | 'error' | 'filteredItems' | 'selectedItems' | 'imageErrors' | 'selectedCategory' | 'handleImageError' | 'roomId' // 'handleItemClick' |
 > & {
     handleSelectModel?: (item: Furniture) => void;
 };
