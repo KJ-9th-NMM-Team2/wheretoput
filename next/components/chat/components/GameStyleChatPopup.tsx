@@ -14,6 +14,7 @@ interface GameStyleChatPopupProps {
   onSendMessage: (content: string, messageType?: "text" | "image") => void;
   currentUserId: string | null;
   onChatFocus?: (isFocused: boolean) => void;
+  sidebarCollapsed?: boolean;
 }
 
 const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
@@ -26,6 +27,7 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       onSendMessage,
       currentUserId,
       onChatFocus,
+      sidebarCollapsed = false,
     },
     ref
   ) => {
@@ -36,10 +38,17 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
       file: File;
       preview: string;
     } | null>(null);
-    const [position, setPosition] = useState(() => ({
-      x: typeof window !== 'undefined' ? 83 * 4 : 0, // left-83는 83 * 0.25rem = 83 * 4px
-      y: typeof window !== 'undefined' ? window.innerHeight - 560 : 0
-    }));
+    const [position, setPosition] = useState(() => {
+      if (typeof window !== 'undefined') {
+        // sidebarCollapsed에 따라 초기 x 위치 결정
+        const leftOffset = sidebarCollapsed ? 56 : 340; // collapsed: 40px(사이드바) + 16px(마진), expanded: 320px(사이드바) + 20px(마진)
+        return {
+          x: leftOffset,
+          y: window.innerHeight - 560
+        };
+      }
+      return { x: 0, y: 0 };
+    });
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const [isDragEnabled, setIsDragEnabled] = useState(false);
@@ -58,6 +67,17 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
         return () => clearTimeout(timer);
       }
     }, [messages.length]); // messages 배열 전체가 아닌 length만 의존
+
+    // 사이드바 상태 변경 시 채팅창 위치 업데이트
+    useEffect(() => {
+      if (typeof window !== 'undefined') {
+        const leftOffset = sidebarCollapsed ? 56 : 340;
+        setPosition(prev => ({
+          ...prev,
+          x: leftOffset
+        }));
+      }
+    }, [sidebarCollapsed]);
 
     // 메시지 전송 함수
     const sendWithImage = async () => {

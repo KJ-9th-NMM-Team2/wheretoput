@@ -379,6 +379,9 @@ interface SimulatorCoreProps {
   isMobile?: boolean;
   // 1. normal, 2. collaboration, 3. mobile
   accessType: number;
+  // Sidebar collapsed 상태 (optional)
+  collapsed?: boolean;
+  setCollapsed?: (collapsed: boolean) => void;
 }
 
 /**
@@ -399,6 +402,8 @@ export function SimulatorCore({
   keyboardControlsDisabled = false,
   isMobile = false,
   accessType = 1,
+  collapsed,
+  setCollapsed,
 }: SimulatorCoreProps) {
   const controlsRef = useRef(null);
   const { data: session } = useSession();
@@ -443,6 +448,9 @@ export function SimulatorCore({
     is_public: false,
   });
   const [isOwnUserRoom, setIsOwnUserRoom] = useState(false);
+
+  // Sidebar collapsed 상태
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const router = useRouter();
 
@@ -670,6 +678,8 @@ export function SimulatorCore({
           accessType={accessType}
           onEditClick={handleEditClick}
           newRoomInfo={roomInfo}
+          collapsed={collapsed !== undefined ? collapsed : sidebarCollapsed}
+          setCollapsed={setCollapsed || setSidebarCollapsed}
         />
       )}
 
@@ -733,7 +743,7 @@ export function SimulatorCore({
         )}
 
         {/* 벽 도구 드롭다운 */}
-        {!viewOnly && <WallTools isDropdown={true} />}
+        {!viewOnly && <WallTools isDropdown={true} sidebarVisible={showSidebar} sidebarCollapsed={collapsed !== undefined ? collapsed : sidebarCollapsed} />}
 
         {!viewOnly && <SelectedModelEditModal />}
 
