@@ -63,15 +63,15 @@ export function DraggableModel({
   const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
 
   // 디버깅용 로깅
-  // useEffect(() => {
-  //   if (glbGltf) {
-  //     console.log(modelId, "GLB 사용 중");
-  //   } else if (urlGltf) {
-  //     console.log(modelId, "URL 사용 중");
-  //   } else {
-  //     console.log(modelId, "모델 없음");
-  //   }
-  // }, [glbGltf, urlGltf]);
+  useEffect(() => {
+    if (glbGltf) {
+      console.log(modelId, "GLB 사용 중");
+    } else if (urlGltf) {
+      console.log(modelId, "URL 사용 중");
+    } else {
+      console.log(modelId, "모델 없음");
+    }
+  }, [glbGltf, urlGltf]);
 
 
   // glb or url
