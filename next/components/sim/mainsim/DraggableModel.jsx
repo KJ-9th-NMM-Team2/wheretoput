@@ -273,7 +273,7 @@ export function DraggableModel({
           position={position}
           rotation={[
             rotation[0],
-            rotation[1] + (needsRotation ? Math.PI / 2 : 0),
+            rotation[1] + (needsRotation ? (Math.PI * 3) / 2 : 0),
             rotation[2],
           ]}
           scale={safeScale}
@@ -291,7 +291,7 @@ export function DraggableModel({
           position={position}
           rotation={[
             rotation[0],
-            rotation[1] + (needsRotation ? Math.PI / 2 : 0),
+            rotation[1] + (needsRotation ? (Math.PI * 3) / 2 : 0),
             rotation[2],
           ]}
           scale={safeScale}

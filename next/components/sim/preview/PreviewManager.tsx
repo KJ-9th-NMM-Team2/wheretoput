@@ -52,9 +52,9 @@ function GLBPreview({
 
       meshRef.current.scale.set(targetScale[0], targetScale[1], targetScale[2]);
 
-      // 필요시 90도 회전
+      // 필요시 270도 회전
       if (needsRotation) {
-        meshRef.current.rotation.y = Math.PI / 2;
+        meshRef.current.rotation.y = (Math.PI * 3) / 2;
       }
 
       // 바닥 위치 조정
