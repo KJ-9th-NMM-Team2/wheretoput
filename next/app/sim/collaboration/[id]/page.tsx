@@ -14,6 +14,7 @@ import { useSession } from "next-auth/react";
 import { getColab, toggleColab } from "@/lib/api/toggleColab";
 import { useRouter } from "next/navigation";
 import GameStyleChatPopup from "@/components/chat/components/GameStyleChatPopup";
+import MobileBlockModal from "@/components/ui/MobileBlockModal";
 import CollaborationChatRoomSelector from "@/components/chat/components/CollaborationChatRoomSelector";
 import { useChatConnection } from "@/components/chat/hooks/useChatConnection";
 import { useChatMessages } from "@/components/chat/hooks/useChatMessages";
@@ -70,6 +71,7 @@ function CollaborationPageContent({
   const [isAccessChecking, setIsAccessChecking] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -99,6 +101,11 @@ function CollaborationPageContent({
       handleChatRoomUpdate
     );
 
+  // 모바일 감지 (처음 진입 시에만)
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640); // sm 브레이크포인트
+  }, []);
+
   // 협업 모드 초기 설정
   useEffect(() => {
     setViewOnly(false); // 편집 가능
@@ -118,6 +125,12 @@ function CollaborationPageContent({
       try {
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
+
+        // 모바일 환경에서는 팝업 표시를 위해 체크만 하고 넘어감
+        // if (isMobile) {
+        //   router.push('/');
+        //   return;
+        // }
 
         // 방 소유자인지 확인
         let ownerStatus = false;
@@ -191,6 +204,18 @@ function CollaborationPageContent({
     currentRoomInfo,
     isAccessChecking,
   ]);
+
+  // 모바일 접근 제한 (우선순위 높게)
+  if (isMobile) {
+    return (
+      <MobileBlockModal
+        title="PC에서만 지원됩니다"
+        description="협업 모드는 더 나은 편집 환경을 위해 PC(데스크탑/노트북)에서만 이용 가능합니다."
+        showMobileButton={false}
+        onBackButtonClick={() => router.back()}
+      />
+    );
+  }
 
   // 접근 거부 (우선순위 높게)
   if (accessDenied) {

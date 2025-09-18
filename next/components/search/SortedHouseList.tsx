@@ -93,7 +93,7 @@ export default function SortedHouseList({
 
   return (
     <>
-      <div className="px-20 flex flex-1 justify-center py-5">
+      <div className="px-4 sm:px-8 lg:px-20 flex flex-1 justify-center py-3 sm:py-5">
         <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
           {/* 검색바 */}
           <SearchBar
@@ -102,7 +102,7 @@ export default function SortedHouseList({
             onSearch={handlerSearch}
             setSortType={setSortType}
           />
-          <div className="flex gap-3 p-3 flex-wrap pr-4">
+          <div className="flex gap-2 sm:gap-3 p-2 sm:p-3 flex-wrap pr-2 sm:pr-4">
             {/* // 정렬버튼 */}
             <button
               className={`tool-btn ${
@@ -117,7 +117,7 @@ export default function SortedHouseList({
                 );
               }}
             >
-              <span className="text-sm">조회수 순</span>
+              <span className="text-xs sm:text-sm">조회수 순</span>
             </button>
             <button
               className={`tool-btn ${
@@ -130,7 +130,7 @@ export default function SortedHouseList({
                 );
               }}
             >
-              <span className="text-sm">최신 순</span>
+              <span className="text-xs sm:text-sm">최신 순</span>
             </button>
             <button
               className={`tool-btn ${
@@ -145,12 +145,12 @@ export default function SortedHouseList({
                 );
               }}
             >
-              <span className="text-sm">좋아요 순</span>
+              <span className="text-xs sm:text-sm">좋아요 순</span>
             </button>
           </div>
           {paginatedRooms && paginatedRooms.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 p-2 sm:p-4 justify-items-center">
                 {paginatedRooms.map((house: any) => (
                   <HomeCard key={house.room_id} room={house} />
                 ))}
@@ -162,8 +162,8 @@ export default function SortedHouseList({
               ></PaginationControls>
             </>
           ) : (
-            <div className="flex justify-center items-center h-60">
-              <p className="text-gray-500">
+            <div className="flex justify-center items-center h-40 sm:h-60">
+              <p className="text-gray-500 text-sm sm:text-base text-center px-4">
                 입력된 방 혹은 유저를 찾을 수 없습니다
               </p>
             </div>

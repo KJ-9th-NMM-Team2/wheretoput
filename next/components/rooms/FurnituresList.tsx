@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import ShoppingLink from "../sim/side/ShoppingLink";
 
@@ -9,16 +9,16 @@ export function FurnitureCard({ furniture }: { furniture: any }) {
   const [showModal, setShowModal] = useState(false);
   return (
     <>
-      <div className="flex flex-col gap-2 pb-3 w-full max-w-[158px]">
+      <div className="flex flex-col gap-2 pb-3 w-full max-w-[120px] sm:max-w-[158px]">
         <Image
           src={furniture.image_url}
           alt={furniture.name}
           width={100}
           height={100}
-          className="w-full h-auto aspect-square object-cover rounded-xl  transition-transform duration-200 hover:scale-125  cursor-pointer"
+          className="w-full h-auto aspect-square object-cover rounded-xl transition-transform duration-200 hover:scale-105 sm:hover:scale-125 cursor-pointer"
           onClick={() => setShowModal(true)}
         />
-        <p className="text-gray-800 dark:text-gray-100 font-medium text-sm leading-tight overflow-hidden text-ellipsis line-clamp-2">
+        <p className="text-gray-800 dark:text-gray-100 font-medium text-xs sm:text-sm leading-tight overflow-hidden text-ellipsis line-clamp-2">
           {furniture.name}
         </p>
       </div>
@@ -93,19 +93,25 @@ export default function FurnituresList({
   itemsPerPage?: number;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640);
+  }, []);
 
   const { paginatedItems, totalPages, totalItems } = useMemo(() => {
     const total = room_objects.length;
-    const pages = Math.ceil(total / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const items = room_objects.slice(startIndex, startIndex + itemsPerPage);
+    const effectiveItemsPerPage = isMobile ? 9 : itemsPerPage;
+    const pages = Math.ceil(total / effectiveItemsPerPage);
+    const startIndex = (currentPage - 1) * effectiveItemsPerPage;
+    const items = room_objects.slice(startIndex, startIndex + effectiveItemsPerPage);
 
     return {
       paginatedItems: items,
       totalPages: pages,
       totalItems: total,
     };
-  }, [room_objects, currentPage, itemsPerPage]);
+  }, [room_objects, currentPage, itemsPerPage, isMobile]);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -127,7 +133,7 @@ export default function FurnituresList({
       <div className="mb-4 text-sm text-gray-600">전체 {totalItems}개 가구</div>
 
       {/* 가구 그리드 */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 justify-items-center">
         {paginatedItems.map((r) => (
           <FurnitureCard key={r.furniture_id} furniture={r.furnitures} />
         ))}
