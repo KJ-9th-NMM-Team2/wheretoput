@@ -61,7 +61,7 @@ export default function Header() {
             <img
               src="/asset/wheretoput.png"
               alt="WheretoPut"
-              className="w-8 h-8 sm:w-12 sm:h-12 cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-8 h-8 sm:w-12 sm:h-12 cursor-pointer hover:opacity-80 transition-opacity dark:bg-white dark:rounded-lg dark:p-0.5"
             />
           </Link>
 
