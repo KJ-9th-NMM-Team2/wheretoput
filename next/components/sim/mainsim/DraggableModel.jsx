@@ -80,8 +80,8 @@ export function DraggableModel({
       const sy = meshRef.current.scale.y;
       const sz = meshRef.current.scale.z;
 
-      // 회전 고려한 실제 바운딩 박스 크기 계산
-      const rotationY = meshRef.current.rotation.y;
+      // 회전 고려한 실제 바운딩 박스 크기 계산 (needsRotation 포함)
+      const rotationY = meshRef.current.rotation.y + (needsRotation ? (Math.PI * 3) / 2 : 0);
 
       // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
       const cos = Math.cos(rotationY);
@@ -149,15 +149,22 @@ export function DraggableModel({
           ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
           : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
 
-      // mappedX가 actualD를 따라가고, mappedZ가 actualW를 따라가는 경우 90도 회전
-
       const rotationNeeded = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
       setNeedsRotation(rotationNeeded);
 
-      const targetScale = [
+      // 기본 크기 조정 (length 기반)
+      const baseScale = [
         (mappedX * 0.001) / actualW,
-        safeScale[1] / modelSize.y,
+        (length[1] * 0.001) / modelSize.y,
         (mappedZ * 0.001) / actualD,
+      ];
+
+      // 사용자 스케일을 추가로 적용
+      const currentScale = Array.isArray(scale) ? scale : [scale, scale, scale];
+      const targetScale = [
+        baseScale[0] * currentScale[0],
+        baseScale[1] * currentScale[1],
+        baseScale[2] * currentScale[2],
       ];
 
       meshRef.current.scale.set(...targetScale);
