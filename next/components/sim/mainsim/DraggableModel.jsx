@@ -140,8 +140,8 @@ export function DraggableModel({
       // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
       const actualW = modelSize.x,
         actualD = modelSize.z;
-      const lengthW = length[0],
-        lengthD = length[2];
+      const lengthW = Number(length[0]),
+        lengthD = Number(length[2]);
 
       // 큰 것끼리, 작은 것끼리 매핑
       const [mappedX, mappedZ] =
@@ -151,7 +151,10 @@ export function DraggableModel({
 
       // mappedX가 actualD를 따라가고, mappedZ가 actualW를 따라가는 경우 90도 회전
 
-      const rotationNeeded = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
+      const rotationNeeded =
+        (lengthW > lengthD && actualW < actualD) ||
+        (lengthW < lengthD && actualW > actualD);
+
       setNeedsRotation(rotationNeeded);
 
       const targetScale = [
