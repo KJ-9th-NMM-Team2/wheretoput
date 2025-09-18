@@ -14,7 +14,8 @@ export function useObjectControls(
   onHover,
   controlsRef,
   getSelectionBoxSize,
-  meshRef
+  meshRef,
+  needsRotation
 ) {
   const { camera, gl, raycaster, mouse } = useThree();
   const {
@@ -59,9 +60,17 @@ export function useObjectControls(
 
           const bbox = new THREE.Box3().setFromObject(meshRef.current);
           const size = bbox.getSize(new THREE.Vector3());
-          originalWidth = size.x;
-          originalHeight = size.y;
-          originalDepth = size.z;
+
+          // needsRotation이 true일 때 원본 크기에서 x와 z를 바꿔서 사용
+          if (needsRotation) {
+            originalWidth = size.z;
+            originalHeight = size.y;
+            originalDepth = size.x;
+          } else {
+            originalWidth = size.x;
+            originalHeight = size.y;
+            originalDepth = size.z;
+          }
 
           // 원래 rotation으로 복원
           meshRef.current.rotation.copy(originalRotation);
@@ -78,7 +87,7 @@ export function useObjectControls(
       const furnitureHalfWidth = originalWidth / 2;
       const furnitureHalfDepth = originalDepth / 2;
 
-      // 가구의 현재 회전각 가져오기 - 파라미터로 받은 rotation 우선 사용
+      // 가구의 현재 회전각 가져오기 - 이미 총 회전각이 전달됨
       const furnitureRotationY =
         rotation?.y || meshRef.current?.rotation?.y || 0;
 
@@ -494,9 +503,13 @@ export function useObjectControls(
           const currentModel = loadedModels.find(
             (model) => model.id === modelId
           );
-          const currentRotation = currentModel?.rotation
-            ? { y: currentModel.rotation[1] }
-            : meshRef?.current?.rotation;
+          const baseRotationY = currentModel?.rotation
+            ? currentModel.rotation[1]
+            : meshRef?.current?.rotation?.y || 0;
+          // 사전회전 + 사용자 회전을 포함한 총 회전각 계산
+          const totalRotationY =
+            baseRotationY + (needsRotation ? (Math.PI * 3) / 2 : 0);
+          const currentRotation = { y: totalRotationY };
           const wallSnap = findNearestWallSnap(newPosition, currentRotation);
 
           // 코너 스냅일 때는 완전히 독립적인 위치 계산, 일반 스냅일 때는 제약된 이동 허용
