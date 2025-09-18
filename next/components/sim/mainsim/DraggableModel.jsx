@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
@@ -7,6 +7,7 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 import { convertS3ToCdnUrl } from "@/lib/api/api-url";
+import { useBase64ToArrayBuffer } from "./hooks/useBase64ToArrayBuffer";
 
 export function DraggableModel({
   modelId,
@@ -19,8 +20,8 @@ export function DraggableModel({
   texturePath = null,
   type = "glb",
   onModelLoaded,
+  glbData,
 }) {
-  // console.log("url check cache or s3?", url);
 
   // scale 값을 안전하게 처리
   const safeScale = (() => {
@@ -49,12 +50,32 @@ export function DraggableModel({
     setSnappedWallInfo,
   } = useStore();
 
+  // DraggableModel에서
+  const [glbDataUrl, setGlbDataUrl] = useState(null);
+
   // GLB 모델 로드 (url이 있을 때만 로드)
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
-  const { scene, animations } = hasValidUrl
-    ? useGLTF(convertS3ToCdnUrl(url))
-    : { scene: null, animations: null };
+  const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
+  
+  // Base64 GLB File to ArrayBuffer
+  useBase64ToArrayBuffer({glbData, modelId, setGlbDataUrl});
+  const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
+
+  // 디버깅용 로깅
+  useEffect(() => {
+    if (glbGltf) {
+      console.log(modelId, "GLB 사용 중");
+    } else if (urlGltf) {
+      console.log(modelId, "URL 사용 중");
+    } else {
+      console.log(modelId, "모델 없음");
+    }
+  }, [glbGltf, urlGltf]);
+
+
+  // glb or url
+  const { scene, animations } = glbGltf ||  urlGltf || { scene: null, animations: null }
 
   useEffect(() => {
     if (scene) {
@@ -67,6 +88,7 @@ export function DraggableModel({
   const isHovering = hoveringModelId === modelId;
 
   const originalSizeRef = useRef([1, 1, 1]);
+  const [needsRotation, setNeedsRotation] = useState(false);
   // 선택 표시 박스 크기 결정 (회전 고려)
   const getSelectionBoxSize = useCallback(() => {
     if (!meshRef.current) {
@@ -79,8 +101,8 @@ export function DraggableModel({
       const sy = meshRef.current.scale.y;
       const sz = meshRef.current.scale.z;
 
-      // 회전 고려한 실제 바운딩 박스 크기 계산
-      const rotationY = meshRef.current.rotation.y;
+      // 회전 고려한 실제 바운딩 박스 크기 계산 (needsRotation 포함)
+      const rotationY = meshRef.current.rotation.y + (needsRotation ? (Math.PI * 3) / 2 : 0);
 
       // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
       const cos = Math.cos(rotationY);
@@ -121,7 +143,8 @@ export function DraggableModel({
     hoveringModel,
     controlsRef,
     getSelectionBoxSize,
-    meshRef
+    meshRef,
+    needsRotation
   );
   const texture = texturePath ? useTexture(texturePath) : null;
 
@@ -136,10 +159,36 @@ export function DraggableModel({
       box.getSize(modelSize);
       originalSizeRef.current = [modelSize.x, modelSize.y, modelSize.z];
 
-      // 목표 크기로 스케일 조정
-      const targetScale = safeScale.map(
-        (target, i) => target / modelSize.getComponent(i)
-      );
+      // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
+      const actualW = modelSize.x,
+        actualD = modelSize.z;
+      const lengthW = Number(length[0]) || 0,
+        lengthD = Number(length[2]) || 0;
+
+      // 큰 것끼리, 작은 것끼리 매핑
+      const [mappedX, mappedZ] =
+        actualW >= actualD
+          ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
+          : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
+
+      const rotationNeeded = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
+      setNeedsRotation(rotationNeeded);
+
+      // 기본 크기 조정 (length 기반)
+      const lengthH = Number(length[1]) || 0;
+      const baseScale = [
+        (mappedX * 0.001) / actualW,
+        (lengthH * 0.001) / modelSize.y,
+        (mappedZ * 0.001) / actualD,
+      ];
+
+      // 사용자 스케일을 추가로 적용
+      const currentScale = Array.isArray(scale) ? scale : [scale, scale, scale];
+      const targetScale = [
+        baseScale[0] * currentScale[0],
+        baseScale[1] * currentScale[1],
+        baseScale[2] * currentScale[2],
+      ];
 
       meshRef.current.scale.set(...targetScale);
 
@@ -252,7 +301,11 @@ export function DraggableModel({
         <group
           ref={meshRef}
           position={position}
-          rotation={rotation}
+          rotation={[
+            rotation[0],
+            rotation[1] + (needsRotation ? (Math.PI * 3) / 2 : 0),
+            rotation[2],
+          ]}
           scale={safeScale}
         >
           <primitive object={scene.clone()} />
@@ -266,7 +319,11 @@ export function DraggableModel({
         <group
           ref={meshRef}
           position={position}
-          rotation={rotation}
+          rotation={[
+            rotation[0],
+            rotation[1] + (needsRotation ? (Math.PI * 3) / 2 : 0),
+            rotation[2],
+          ]}
           scale={safeScale}
         >
           {scene ? (

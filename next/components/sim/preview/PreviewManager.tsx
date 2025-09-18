@@ -29,12 +29,33 @@ function GLBPreview({
       const modelSize = new THREE.Vector3();
       box.getSize(modelSize);
 
-      // 목표 크기로 스케일 조정
-      const targetScale = scale.map(
-        (target, i) => target / modelSize.getComponent(i)
-      );
+      // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
+      const actualW = modelSize.x,
+        actualD = modelSize.z;
+      const lengthW = scale[0] / 0.001, // scale에서 역산하여 length 값 구하기
+        lengthD = scale[2] / 0.001;
+
+      // 큰 것끼리, 작은 것끼리 매핑
+      const [mappedX, mappedZ] =
+        actualW >= actualD
+          ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
+          : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
+
+      // 회전 조건: width와 depth가 뒤바뀐 경우
+      const needsRotation = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
+
+      const targetScale = [
+        (mappedX * 0.001) / actualW,
+        scale[1] / modelSize.y,
+        (mappedZ * 0.001) / actualD,
+      ];
 
       meshRef.current.scale.set(targetScale[0], targetScale[1], targetScale[2]);
+
+      // 필요시 270도 회전
+      if (needsRotation) {
+        meshRef.current.rotation.y = (Math.PI * 3) / 2;
+      }
 
       // 바닥 위치 조정
       const min = box.min;

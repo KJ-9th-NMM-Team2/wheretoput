@@ -14,17 +14,21 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://socket:3001
       - AUTH_TRUST_HOST=true
+      - USE_REDIS=true
+      - REDIS_CACHE_META_URL=redis://redis:6379/1
+      - GLB_REDIS_URL=redis://redis:6379/2
     networks:
       - app-network
     volumes:
       - ./next:/app
       - /app/node_modules
+      
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
-
+    command: redis-server --maxmemory 50mb --maxmemory-policy allkeys-lru  # LRU 정책
     networks:
       - app-network
 

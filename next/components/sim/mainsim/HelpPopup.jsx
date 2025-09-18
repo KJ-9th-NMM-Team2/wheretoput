@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { FaCameraRetro, FaPalette, FaShareAlt } from "react-icons/fa";
-import { MdSunny, MdHelp } from "react-icons/md";
+import { MdSunny, MdHelp, MdSave } from "react-icons/md";
 import { TbScreenshot } from "react-icons/tb";
 
 export function HelpPopup() {
@@ -41,16 +41,18 @@ export function HelpPopup() {
     // 기능 아이콘 설명
     <div>
       <p className="text-xl font-semibold mb-3">기능 아이콘</p>
-      <div className="flex items-center text-lg font-semibold"><FaShareAlt className="mr-1" /> 공유하기</div>
-      <p className="mb-2">링크를 다른 사용자와 공유</p>
-      <div className="flex items-center text-lg font-semibold"><TbScreenshot className="mr-1" /> 화면 캡처</div>
-      <p className="mb-2">현재 시뮬레이션 화면 캡처 다운로드</p>
-      <div className="flex items-center text-lg font-semibold"><FaPalette className="mr-1" /> 색상 세팅</div>
-      <p className="mb-2">벽 / 바닥 / 배경 색상 변경</p>
-      <div className="flex items-center text-lg font-semibold"><FaCameraRetro className="mr-1" /> 카메라 세팅</div>
-      <p className="mb-2">벽 투명화, 자석 on/off 설정 | 시야각 조정 | 카메라 위치 리셋</p>
-      <div className="flex items-center text-lg font-semibold"><MdSunny className="mr-1" /> 빛 세팅</div>
-      <p className="mb-2">조명 프리셋 변경 | 햇빛 위치 및 세기 조정</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><FaShareAlt className="mr-1" /> 공유하기</div>
+      <p className="mb-1">보기 전용 링크를 다른 사용자와 공유</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><TbScreenshot className="mr-1" /> 화면 캡처</div>
+      <p className="mb-1">현재 시뮬레이션 화면 캡처 다운로드 / 썸네일 지정</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><FaPalette className="mr-1" /> 커스터마이즈</div>
+      <p className="mb-1">벽 / 바닥 / 배경 색상 및 타입 변경</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><FaCameraRetro className="mr-1" /> 편의기능 | 카메라 세팅</div>
+      <p className="mb-1">벽 투명화, 자석 on/off 설정 | 시야각 조정 | 카메라 위치 리셋</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><MdSunny className="mr-1" /> 빛 세팅</div>
+      <p className="mb-1">햇빛 위치 및 세기 조정</p>
+      <div className="flex items-center text-lg font-semibold gap-1"><MdSave className="mr-1" /> 저장</div>
+      <p>저장 | 현재 방 복사 | 모든 가구 제거</p>
     </div>,
   ];
 

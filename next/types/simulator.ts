@@ -63,6 +63,7 @@ export type RoomObjectTransformer = Prisma.room_objectsGetPayload<{
                 length_y: true;
                 length_z: true;
                 cached_model_url: true;
+                is_redis_cached: true;
             }
         }
     }

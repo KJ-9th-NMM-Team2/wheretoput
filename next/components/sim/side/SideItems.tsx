@@ -76,7 +76,7 @@ const SideItems: React.FC<SideItemsProps> = ({
     setItems(furnitures);
   }, [furnitures]);
 
-  // 페이지나 카테고리 변경 시 데이터 가져오기
+  // 페이지나 카테고리 변경 시 데이터 가져오기 // 이 함수에 (API에서 데이터 가져오기 함수) 포함
   useHandleCategoryChange(sendItems, sendCategoryChangeArguments);
 
   // 카테고리나 정렬 변경 시 첫 페이지로 리셋
