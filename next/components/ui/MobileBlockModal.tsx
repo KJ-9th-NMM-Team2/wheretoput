@@ -45,14 +45,14 @@ export default function MobileBlockModal({
           {showMobileButton && (
             <button
               onClick={onMobileButtonClick}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
+              className="tool-btn tool-btn:hover w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer"
             >
               {mobileButtonText}
             </button>
           )}
           <button
             onClick={onBackButtonClick}
-            className={`w-full font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
+            className={`tool-btn-gray w-full font-medium py-3 px-4 rounded-lg transition-colors cursor-pointer ${
               showMobileButton
                 ? "bg-gray-100 hover:bg-gray-200 text-gray-700"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
