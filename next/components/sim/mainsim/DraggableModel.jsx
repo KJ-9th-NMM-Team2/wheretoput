@@ -122,7 +122,8 @@ export function DraggableModel({
     hoveringModel,
     controlsRef,
     getSelectionBoxSize,
-    meshRef
+    meshRef,
+    needsRotation
   );
   const texture = texturePath ? useTexture(texturePath) : null;
 
@@ -140,8 +141,8 @@ export function DraggableModel({
       // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
       const actualW = modelSize.x,
         actualD = modelSize.z;
-      const lengthW = length[0],
-        lengthD = length[2];
+      const lengthW = Number(length[0]) || 0,
+        lengthD = Number(length[2]) || 0;
 
       // 큰 것끼리, 작은 것끼리 매핑
       const [mappedX, mappedZ] =
@@ -153,9 +154,10 @@ export function DraggableModel({
       setNeedsRotation(rotationNeeded);
 
       // 기본 크기 조정 (length 기반)
+      const lengthH = Number(length[1]) || 0;
       const baseScale = [
         (mappedX * 0.001) / actualW,
-        (length[1] * 0.001) / modelSize.y,
+        (lengthH * 0.001) / modelSize.y,
         (mappedZ * 0.001) / actualD,
       ];
 
