@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  redis:
+  redis-server:
     image: redis:alpine
     command: redis-server --maxmemory 50mb --maxmemory-policy allkeys-lru
     ports:
