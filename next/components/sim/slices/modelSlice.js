@@ -249,4 +249,5 @@ export const modelSlice = (set, get) => ({
       newMap.delete(modelId);
       return { modelBoundingBoxFunctions: newMap };
     }),
+
 });

@@ -136,10 +136,23 @@ export function DraggableModel({
       box.getSize(modelSize);
       originalSizeRef.current = [modelSize.x, modelSize.y, modelSize.z];
 
-      // 목표 크기로 스케일 조정
-      const targetScale = safeScale.map(
-        (target, i) => target / modelSize.getComponent(i)
-      );
+      // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
+      const actualW = modelSize.x,
+        actualD = modelSize.z;
+      const lengthW = length[0],
+        lengthD = length[2];
+
+      // 큰 것끼리, 작은 것끼리 매핑
+      const [mappedX, mappedZ] =
+        actualW >= actualD
+          ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
+          : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
+
+      const targetScale = [
+        (mappedX * 0.001) / actualW,
+        safeScale[1] / modelSize.y,
+        (mappedZ * 0.001) / actualD,
+      ];
 
       meshRef.current.scale.set(...targetScale);
 
