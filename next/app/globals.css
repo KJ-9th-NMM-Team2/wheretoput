@@ -101,6 +101,13 @@ html.dark .tool-btn-red {
   @apply bg-red-900/30 text-red-400 hover:bg-red-900/50 hover:text-red-200;
 }
 
+/* 다크모드에서 메인 아이콘에 흰 배경 추가 */
+html.dark img[src="/asset/wheretoput.png"] {
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding: 2px !important;
+}
+
 .tool-btn:active {
   transform: translateY(0px);
 }

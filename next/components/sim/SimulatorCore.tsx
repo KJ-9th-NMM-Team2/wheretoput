@@ -62,7 +62,7 @@ type position = [number, number, number];
 
 // 완전 검은색인지 판단하는 유틸리티 함수
 function isPureBlack(colorHex: string): boolean {
-  return colorHex.toLowerCase() === '#000000';
+  return colorHex.toLowerCase() === "#000000";
 }
 
 // 바닥 재질 컴포넌트 (깜빡임 방지 개선)
@@ -115,11 +115,7 @@ function FloorMaterial() {
 
     // 완전 검은색이면 색상 혼합 없이 순수 텍스처만 표시
     if (isBlackColor) {
-      return (
-        <meshBasicMaterial
-          map={currentTexture}
-        />
-      );
+      return <meshBasicMaterial map={currentTexture} />;
     } else {
       // 다른 색상이면 색상 혼합
       return (
@@ -135,11 +131,7 @@ function FloorMaterial() {
 
   // 로딩 중 fallback (이전 색상 유지)
   return (
-    <meshStandardMaterial
-      color={floorColor}
-      roughness={0.7}
-      metalness={0.0}
-    />
+    <meshStandardMaterial color={floorColor} roughness={0.7} metalness={0.0} />
   );
 }
 
@@ -195,10 +187,7 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
     // 완전 검은색이면 색상 혼합 없이 순수 텍스처만 표시
     if (isBlackColor) {
       return (
-        <meshBasicMaterial
-          map={currentTexture}
-          transparent={transparent}
-        />
+        <meshBasicMaterial map={currentTexture} transparent={transparent} />
       );
     } else {
       // 다른 색상이면 색상 혼합
@@ -291,7 +280,9 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
   const fov = useStore((state) => state.cameraFov);
   const showMeasurements = useStore((state) => state.showMeasurements);
   const roomCenter = useStore((state) => state.roomCenter);
-  const initialCameraPosition = useStore((state) => state.initialCameraPosition);
+  const initialCameraPosition = useStore(
+    (state) => state.initialCameraPosition
+  );
   const currentRoomId = useStore((state) => state.currentRoomId);
   const isLoading = useStore((state) => state.isLoading);
   const { camera } = useThree();
@@ -315,7 +306,11 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
       initialCameraPosition &&
       initialCameraPosition.length
     ) {
-      console.log("🎬 카메라 위치 및 타겟 설정:", initialCameraPosition, roomCenter);
+      console.log(
+        "🎬 카메라 위치 및 타겟 설정:",
+        initialCameraPosition,
+        roomCenter
+      );
 
       perspectiveCamera.position.set(...initialCameraPosition);
 
@@ -536,10 +531,7 @@ export function SimulatorCore({
         const newSet = new Set(prev);
         newSet.add(modelId);
 
-        console.log(
-          "모든 모델 실제 로드 완료:",
-          performance.now() - startTime
-        );
+        console.log("모든 모델 실제 로드 완료:", performance.now() - startTime);
 
         return newSet;
       });
@@ -741,7 +733,15 @@ export function SimulatorCore({
         )}
 
         {/* 벽 도구 드롭다운 */}
-        {!viewOnly && <WallTools isDropdown={true} sidebarVisible={showSidebar} sidebarCollapsed={collapsed !== undefined ? collapsed : sidebarCollapsed} />}
+        {!viewOnly && (
+          <WallTools
+            isDropdown={true}
+            sidebarVisible={showSidebar}
+            sidebarCollapsed={
+              collapsed !== undefined ? collapsed : sidebarCollapsed
+            }
+          />
+        )}
 
         {!viewOnly && <SelectedModelEditModal />}
 
@@ -764,8 +764,10 @@ export function SimulatorCore({
 
         <Canvas
           camera={{
-            position: initialCameraPosition.length ? initialCameraPosition : [0, 20, 30],
-            fov: 60
+            position: initialCameraPosition.length
+              ? initialCameraPosition
+              : [0, 20, 30],
+            fov: 60,
           }}
           shadows
           style={{
@@ -1020,7 +1022,7 @@ export function SimulatorCore({
             enableDamping={false}
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
-            zoomSpeed={isMobile ? 0.8 : 1.0}
+            zoomSpeed={isMobile ? 1.2 : 1.0}
             minDistance={isMobile ? 1 : 8}
             maxDistance={50}
             maxPolarAngle={
@@ -1042,14 +1044,10 @@ export function SimulatorCore({
               MIDDLE: 1, // 휠 클릭으로 줌
               RIGHT: showMeasurements ? undefined : 2, // 측정 모드에서는 우클릭 비활성화
             }}
-            touches={
-              isMobile
-                ? {
-                    ONE: showMeasurements ? 2 : 0, // 측정 모드에서는 한 손가락으로 패닝
-                    TWO: 1, // 두 손가락으로 확대축소
-                  }
-                : undefined
-            }
+            touches={{
+              ONE: showMeasurements ? 2 : isMobile ? 0 : 0, // 모바일에서는 회전, 측정 모드에서는 패닝
+              TWO: 2, // 두 손가락으로 확대축소 (핀치 줌)
+            }}
           />
 
           {/* 벽 그리기 프리뷰 */}

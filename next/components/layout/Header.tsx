@@ -51,57 +51,78 @@ export default function Header() {
         border-amber-100 bg-white/95 backdrop-blur-sm shadow-sm
         dark:border-gray-700 dark:bg-gray-900 dark:shadow-lg
         sticky top-0 z-50
+        px-3 sm:px-6 lg:px-8
+        py-3 sm:py-4
       "
-      style={{ padding: '14px 32px 14px 12px' }}
     >
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-4">
-          
-            {/* [09.15] 메인아이콘 자리 */}
-              <Link href="/">
-                <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity" />
-              </Link>
-          
-          
+      <div className="flex items-center gap-2 sm:gap-4 lg:gap-8">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/">
-            <h2 className="text-xl font-bold leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
+            <img
+              src="/asset/wheretoput.png"
+              alt="WheretoPut"
+              className="w-8 h-8 sm:w-12 sm:h-12 cursor-pointer hover:opacity-80 transition-opacity dark:bg-white dark:rounded-lg dark:p-0.5"
+            />
+          </Link>
+
+          <Link href="/">
+            <h2 className="text-lg sm:text-2xl font-bold leading-tight tracking-tight text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200 cursor-pointer">
               어따놀래
             </h2>
           </Link>
         </div>
-        <nav className="flex items-center gap-8">
-          <Link
-            href="/create"
-            rel="noopener noreferrer"
-            className="
-              text-lg font-bold leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
-              text-black hover:text-gray-600 hover:bg-gray-100
-              dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
-            "
-          >
-            빌드
-          </Link>
 
-          <Link
-            href="/search"
-            className="
-              text-lg font-bold leading-normal px-3 py-2 rounded-md transition-all duration-200
-              hover:scale-105 active:scale-95
-              text-black hover:text-gray-600 hover:bg-gray-100
-              dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
-            "
-          >
-            집들이
-          </Link>
+        <nav className="flex items-center gap-4 lg:gap-8 flex-1 md:flex-none">
+          {/* 모바일에서는 집들이만 표시 - 오른쪽 정렬 */}
+          <div className="md:hidden flex-1 flex justify-end">
+            <Link
+              href="/search"
+              className="
+                text-sm font-bold leading-normal px-4 py-2 rounded-md transition-all duration-200
+                hover:scale-105 active:scale-95
+                text-black hover:text-gray-600 hover:bg-gray-100
+                dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
+              "
+            >
+              집들이
+            </Link>
+          </div>
+
+          {/* 데스크탑에서는 빌드와 집들이 모두 표시 */}
+          <div className="hidden md:flex items-center gap-4 lg:gap-8">
+            <Link
+              href="/create"
+              rel="noopener noreferrer"
+              className="
+                text-base lg:text-lg font-bold leading-normal px-2 lg:px-3 py-2 rounded-md transition-all duration-200
+                hover:scale-105 active:scale-95
+                text-black hover:text-gray-600 hover:bg-gray-100
+                dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
+              "
+            >
+              빌드
+            </Link>
+
+            <Link
+              href="/search"
+              className="
+                text-base lg:text-lg font-bold leading-normal px-2 lg:px-3 py-2 rounded-md transition-all duration-200
+                hover:scale-105 active:scale-95
+                text-black hover:text-gray-600 hover:bg-gray-100
+                dark:text-white dark:hover:text-gray-300 dark:hover:bg-gray-700
+              "
+            >
+              집들이
+            </Link>
+          </div>
         </nav>
       </div>
 
-      <div className="flex flex-1 justify-end gap-4 items-center mr-5">
-        <div className="flex items-center min-w-60 max-w-80">
+      <div className="flex flex-1 justify-end gap-2 sm:gap-4 items-center">
+        <div className="hidden sm:flex items-center w-32 sm:w-48 lg:min-w-60 lg:max-w-80">
           <div
             className="
-              flex w-full items-stretch rounded-full h-10 shadow-sm
+              flex w-full items-stretch rounded-full h-8 sm:h-10 shadow-sm
               bg-gray-50 border border-gray-200
               dark:bg-gray-800 dark:border-gray-600
               hover:shadow-md transition-shadow duration-200
@@ -109,14 +130,15 @@ export default function Header() {
           >
             <div
               className="
-                flex items-center justify-center pl-4 rounded-l-full
+                flex items-center justify-center pl-2 sm:pl-4 rounded-l-full
                 text-gray-500 dark:text-gray-400
               "
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20px"
-                height="20px"
+                width="16"
+                height="16"
+                className="sm:w-5 sm:h-5"
                 fill="currentColor"
                 viewBox="0 0 256 256"
               >
@@ -130,8 +152,8 @@ export default function Header() {
               onKeyDown={handleKeyDown}
               placeholder="통합 검색"
               className="
-                flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full 
-                focus:outline-none focus:ring-2 border-none h-full px-4 text-sm font-normal leading-normal
+                flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full
+                focus:outline-none focus:ring-2 border-none h-full px-2 sm:px-4 text-xs sm:text-sm font-normal leading-normal
                 transition-all duration-200
                 bg-gray-50 text-gray-900 placeholder:text-gray-500 focus:ring-gray-300
                 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-gray-500
@@ -140,8 +162,8 @@ export default function Header() {
             />
           </div>
         </div>
+        <SignInCheck />
       </div>
-      <SignInCheck />
     </header>
   );
 }

@@ -170,8 +170,8 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
   return (
     <>
       <div className="layout-container flex h-full grow flex-col">
-        {/* 썸네일 섹션 - 75% 너비 */}
-        <div className="w-3/4 mx-auto aspect-[4/3] max-h-[500px] overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-lg">
+        {/* 썸네일 섹션 */}
+        <div className="w-full sm:w-5/6 lg:w-3/4 mx-auto aspect-[4/3] max-h-[300px] sm:max-h-[400px] lg:max-h-[500px] overflow-hidden bg-gray-100 dark:bg-gray-800 relative rounded-lg">
           <img
             src={
               room?.thumbnail_url
@@ -184,19 +184,19 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
         </div>
 
-        <div className="px-40 flex flex-1 justify-center">
+        <div className="px-4 sm:px-8 lg:px-40 flex flex-1 justify-center">
           <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-            <div className="flex flex-wrap gap-2 p-4"></div>
-            <div className="px-4 py-6">
-              <h1 className="text-[#2F3438] dark:text-gray-100 text-3xl font-bold leading-tight tracking-[-0.015em]">
+            <div className="flex flex-wrap gap-2 p-2 sm:p-4"></div>
+            <div className="px-2 sm:px-4 py-4 sm:py-6">
+              <h1 className="text-[#2F3438] dark:text-gray-100 text-2xl sm:text-3xl font-bold leading-tight tracking-[-0.015em]">
                 {room?.title}
               </h1>
             </div>
-            <div>
+            <div className="px-2 sm:px-4">
               {room.root_room_id && room.rooms ? (
                 <Link
                   href={`/rooms/${room.root_room_id}`}
-                  className="inline-block px-4 py-2 mx-4 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words"
+                  className="inline-block px-3 sm:px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words text-sm sm:text-base"
                 >
                   {room.rooms.user.name}님의 "
                   <span className="text-amber-900 dark:text-amber-200">
@@ -209,42 +209,53 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               )}
             </div>
             <div className="flex justify-stretch">
-              <div className="flex flex-1 gap-6 flex-wrap px-4 py-3 justify-start">
-                <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer">
-                  <button className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              <div className="flex flex-1 gap-3 sm:gap-4 lg:gap-6 flex-wrap px-2 sm:px-4 py-3 justify-start">
+                {/* 모바일용 3D View 버튼 */}
+                <Link href={`/sim/mobile/${room.room_id}`} rel="noopener noreferrer" className="sm:hidden">
+                  <button className="flex min-w-[100px] sm:min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-10 sm:h-12 px-3 sm:px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
                     <span className="truncate">3D View</span>
                   </button>
                 </Link>
+
+                {/* 데스크탑용 3D View 버튼 */}
+                <Link href={`/sim/${room.room_id}`} rel="noopener noreferrer" className="hidden sm:block">
+                  <button className="flex min-w-[100px] sm:min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-10 sm:h-12 px-3 sm:px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                    <span className="truncate">3D View</span>
+                  </button>
+                </Link>
+
+                {/* 우리집에 적용 버튼 - 데스크탑에서만 표시 */}
                 <button
                   onClick={handleClone}
-                  className="flex min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-12 px-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base font-bold leading-normal tracking-[0.015em] hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="hidden sm:flex min-w-[100px] sm:min-w-[124px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-10 sm:h-12 px-3 sm:px-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm sm:text-base font-bold leading-normal tracking-[0.015em] hover:from-green-600 hover:to-emerald-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   <span className="truncate">우리집에 적용</span>
                 </button>
+
                 {!loading && <LikeButton room={room} liked={liked} />}
               </div>
             </div>
-            <div className="flex items-center gap-3 px-4 py-2">
+            <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4 py-2">
               <Link href={`/users/${room.user.id}`}>
                 {room.user.image ? (
                   <img
                     src={room.user.image}
                     alt={room.user.name}
-                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
+                    className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 sm:size-10 ring-2
         transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
         ring-amber-200 hover:ring-amber-300
         dark:ring-gray-600 dark:hover:ring-amber-400"
                   />
                 ) : (
-                  <span className="text-xl font-bold text-amber-700 dark:text-orange-200">
+                  <span className="text-lg sm:text-xl font-bold text-amber-700 dark:text-orange-200">
                     {room.user.name?.[0]?.toUpperCase() || "?"}
                   </span>
                 )}
               </Link>
 
               {/* 사용자 프로필 + 날짜 */}
-              <span className="text-[#181411] dark:text-gray-100 text-base font-normal leading-normal flex-1">
-                <span className="font-medium text-lg">{room.user.name}</span>
+              <span className="text-[#181411] dark:text-gray-100 text-sm sm:text-base font-normal leading-normal flex-1">
+                <span className="font-medium text-base sm:text-lg">{room.user.name}</span>
               </span>
 
               {/* 팔로우 버튼 */}
@@ -252,7 +263,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 <button
                   onClick={handleFollowToggle}
                   disabled={followLoading}
-                  className={`ml-4 ${
+                  className={`ml-2 sm:ml-4 text-xs sm:text-sm ${
                     isFollowing ? "following-button" : "follow-button"
                   }`}
                 >
@@ -264,20 +275,20 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 </button>
               )}
               {!room.is_public && (
-                <span className="ml-2 px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
+                <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-1 rounded bg-red-100 dark:bg-gray-700 text-red-700 dark:text-orange-200 text-xs font-semibold">
                   비공개
                 </span>
               )}
               {room.collab_on && (
-                <span className="ml-1 px-2 py-1 rounded bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-yellow-200 text-xs font-semibold">
+                <span className="ml-1 px-1.5 sm:px-2 py-1 rounded bg-yellow-100 dark:bg-gray-700 text-yellow-700 dark:text-yellow-200 text-xs font-semibold">
                   협업 중
                 </span>
               )}
             </div>
 
             {/* 조회수 , 댓글 , 날짜 통계 */}
-            <div className="px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+            <div className="px-2 sm:px-4 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-1 sm:gap-2 text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                 <span>조회 {room.view_count}</span>
                 <span>｜</span>
                 <span>댓글 {room.num_comments}</span>
@@ -294,13 +305,13 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowEditPopup(true)}
-                    className="tool-btn-gray"
+                    className="tool-btn-gray text-xs sm:text-sm px-2 sm:px-3 py-1"
                   >
                     수정
                   </button>
                   <button
                     onClick={() => setShowDeleteModal(true)}
-                    className="tool-btn-red"
+                    className="tool-btn-red text-xs sm:text-sm px-2 sm:px-3 py-1"
                   >
                     삭제
                   </button>
@@ -308,17 +319,17 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               )}
             </div>
 
-            <div className="mx-4 mt-6 mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            <div className="mx-2 sm:mx-4 mt-4 sm:mt-6 mb-4 sm:mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm sm:text-base">
                 {room.description}
               </p>
             </div>
-            <h2 className="text-gray-800 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+            <h2 className="text-gray-800 dark:text-gray-100 text-lg sm:text-[22px] font-bold leading-tight tracking-[-0.015em] px-2 sm:px-4 pb-3 pt-5">
               가구 프리뷰
             </h2>
             <FurnituresList room_objects={uniqueFurnituresByRoom} />
 
-            <h2 className="text-gray-800 dark:text-gray-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+            <h2 className="text-gray-800 dark:text-gray-100 text-lg sm:text-[22px] font-bold leading-tight tracking-[-0.015em] px-2 sm:px-4 pb-3 pt-5">
               댓글 ({room.num_comments})
             </h2>
             <CommentsList
