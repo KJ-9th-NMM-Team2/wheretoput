@@ -536,12 +536,10 @@ export function SimulatorCore({
         const newSet = new Set(prev);
         newSet.add(modelId);
 
-        if (newSet.size === loadedModels.length) {
-          console.log(
-            "모든 모델 실제 로드 완료:",
-            performance.now() - startTime
-          );
-        }
+        console.log(
+          "모든 모델 실제 로드 완료:",
+          performance.now() - startTime
+        );
 
         return newSet;
       });
@@ -924,10 +922,10 @@ export function SimulatorCore({
                     scale={model.scale}
                     length={model.length}
                     controlsRef={controlsRef}
-                    isCityKit={model.isCityKit}
                     texturePath={model.texturePath}
                     type={model.isCityKit ? "building" : "glb"}
                     onModelLoaded={handleModelLoaded}
+                    glbData={model.glbData}
                   />
                 </Suspense>
               )),

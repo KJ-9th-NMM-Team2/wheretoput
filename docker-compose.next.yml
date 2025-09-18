@@ -1,6 +1,14 @@
 version: "3.8"
 
 services:
+  redis:
+    image: redis:alpine
+    command: redis-server --maxmemory 50mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
   next:
     image: ${ECR_REGISTRY}/${ECR_REPO_NEXT}:${IMAGE_TAG}
     ports:
@@ -26,6 +34,9 @@ services:
       - ECR_REGISTRY=${ECR_REGISTRY}
       - ECR_REPO_NEXT=${ECR_REPO_NEXT}
       - IMAGE_TAG=latest
+      - REDIS_CACHE_META_URL=${REDIS_CACHE_META_URL}
+      - GLB_REDIS_URL=${GLB_REDIS_URL}
+      - USE_REDIS=${USE_REDIS}
     restart: unless-stopped
     volumes:
       - cache_data:/app/public/cache

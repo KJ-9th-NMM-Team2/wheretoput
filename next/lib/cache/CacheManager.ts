@@ -2,14 +2,14 @@ import fs from 'fs/promises';
 import path from 'path';
 
 // 캐시 메타데이터 타입 정의
-interface CacheFileInfo {
+export interface CacheFileInfo {
     lastAccessed: string;
     accessCount: number;
     fileSize: number;
     createdAt: string;
 }
 
-interface CacheMetadata {
+export interface CacheMetadata {
     files: Record<string, CacheFileInfo>;
     totalSize: number;
     maxSize: number;
@@ -49,7 +49,7 @@ class CacheManager {
     }
 
     // 메타데이터 읽기
-    private async readMetaData(): Promise<CacheMetadata> {
+    async readMetaData(): Promise<CacheMetadata> {
         try {
             const data = await fs.readFile(this.CACHE_META_DIR, 'utf-8');
             return JSON.parse(data);
@@ -114,7 +114,6 @@ class CacheManager {
 
                 metadata.files[filename].fileSize = fileSize;
                 console.log("💾 기존 파일 업데이트 filename", filename);
-                console.log("CACHE_META_DIR Chcek", this.CACHE_META_DIR);
             } else {
                 // 새 파일 추가
                 console.log("💾 새 파일 추가 filename", filename);
