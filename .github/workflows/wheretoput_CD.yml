@@ -102,6 +102,9 @@ jobs:
           NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
           AUTH_TRUST_HOST=true
           IMAGE=latest
+          REDIS_CACHE_META_URL=${{ secrets.REDIS_CACHE_META_URL }}
+          GLB_REDIS_URL=${{ secrets.GLB_REDIS_URL }}
+          USE_REDIS=${{ secrets.USE_REDIS }}
           EOF
 
       - name: Upload files to Next.js EC2
