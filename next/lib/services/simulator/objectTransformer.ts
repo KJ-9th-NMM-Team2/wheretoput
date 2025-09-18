@@ -1,4 +1,5 @@
 import cacheUtils from "@/lib/cache/CacheUtils";
+import glbCacheManager from "@/lib/cache/GlbCacheManager";
 import { RoomObjectTransformer } from "@/types/simulator";
 
 
@@ -14,12 +15,19 @@ export const objectTransformer = async (roomObjects: RoomObjectTransformer[]) =>
         const hasCachedModel = obj.furnitures?.cached_model_url?.includes("/cache/models/");
         const hasFurniture = obj.furnitures && obj.furniture_id;
 
-        if (hasCachedModel) {
-            console.log(
-            `🎃 Using cached file via API: ${obj.furnitures.cached_model_url}`
-            );
-        } 
-        else {
+        const glbData = await glbCacheManager.readFile(obj);
+        let glbBase64 = null;
+        if (glbData) {
+          console.log(`🎯 캐시 히트! ${obj.furniture_id} - 캐시 데이터 사용`);
+          glbBase64 = Buffer.from(glbData).toString('base64');
+          console.log("Base64 데이터 준비 완료:", glbBase64.length, "characters");
+        } else {
+            console.log(`📥 캐시 미스: ${obj.furniture_id} - URL 사용`);
+            await glbCacheManager.writeFile(obj); // 백그라운드 저장
+        }
+        
+        if (!hasCachedModel && !hasFurniture) {
+          // missing 발생 시 local cache에 저장
             await processCacheMissing(obj);
         }
 
@@ -56,13 +64,13 @@ export const objectTransformer = async (roomObjects: RoomObjectTransformer[]) =>
             // 추가 메타데이터
             furnitureName: hasFurniture ? obj.furnitures.name : "Custom Object",
             categoryId: hasFurniture ? obj.furnitures.category_id : null,
+            glbData: glbBase64,
         };
         })
     );
 }
 
 const processCacheMissing = async (obj: any) => {
-  console.log(`👿 Cache missing: ${obj.furnitures.name}`);
   try {
     const filename = `${obj.furnitures.furniture_id}.glb`;
     const localPath = `public/cache/models/${filename}`;

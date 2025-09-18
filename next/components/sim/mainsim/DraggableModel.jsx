@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
@@ -7,6 +7,7 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { useCallback } from "react";
 import { convertS3ToCdnUrl } from "@/lib/api/api-url";
+import { useBase64ToArrayBuffer } from "./hooks/useBase64ToArrayBuffer";
 
 export function DraggableModel({
   modelId,
@@ -19,8 +20,8 @@ export function DraggableModel({
   texturePath = null,
   type = "glb",
   onModelLoaded,
+  glbData,
 }) {
-  // console.log("url check cache or s3?", url);
 
   // scale 값을 안전하게 처리
   const safeScale = (() => {
@@ -49,12 +50,32 @@ export function DraggableModel({
     setSnappedWallInfo,
   } = useStore();
 
+  // DraggableModel에서
+  const [glbDataUrl, setGlbDataUrl] = useState(null);
+
   // GLB 모델 로드 (url이 있을 때만 로드)
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
-  const { scene, animations } = hasValidUrl
-    ? useGLTF(convertS3ToCdnUrl(url))
-    : { scene: null, animations: null };
+  const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
+  
+  // Base64 GLB File to ArrayBuffer
+  useBase64ToArrayBuffer({glbData, modelId, setGlbDataUrl});
+  const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
+
+  // 디버깅용 로깅
+  // useEffect(() => {
+  //   if (glbGltf) {
+  //     console.log(modelId, "GLB 사용 중");
+  //   } else if (urlGltf) {
+  //     console.log(modelId, "URL 사용 중");
+  //   } else {
+  //     console.log(modelId, "모델 없음");
+  //   }
+  // }, [glbGltf, urlGltf]);
+
+
+  // glb or url
+  const { scene, animations } = glbGltf ||  urlGltf || { scene: null, animations: null }
 
   useEffect(() => {
     if (scene) {

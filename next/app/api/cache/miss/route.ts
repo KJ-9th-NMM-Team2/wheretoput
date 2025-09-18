@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
         if (!response) {
             return HttpResponse.notFound("가구의 아이디가 정확하지 않습니다.")
         } 
+        return HttpResponse.success({ success: true });
     } catch (error) {
         return HttpResponse.internalError(error.message);
     }

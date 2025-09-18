@@ -5,6 +5,7 @@ import { generateTrellisModel } from '@/lib/trellis_api.js';
 import cacheUtils, { CACHE_DIR } from "@/lib/cache/CacheUtils";
 import path from 'path';
 import { HttpResponse } from "@/utils/httpResponse";
+import glbCacheManager from '@/lib/cache/GlbCacheManager';
 
 
 /**
@@ -103,7 +104,9 @@ export async function POST(request: NextRequest) {
     const furniture = await prisma.furnitures.findUnique({
       where: { furniture_id: furniture_id },
       select: {
+        furniture_id: true,
         model_url: true,
+        cached_model_url: true,
         image_url: true,
         name: true,
       }
@@ -115,7 +118,31 @@ export async function POST(request: NextRequest) {
 
     // 이미 model_url이 있는 경우 기존 URL 사용 (S3 또는 로컬)
     if (furniture.model_url) {
-      console.log('기존 model_url 발견:', furniture.model_url)
+      
+      // 레디스 캐시 파일 확인
+      try {
+        const response = await glbCacheManager.readFile(furniture);
+        console.log("🔫 Redis Cache 읽기 성공 데이터 확인 필요");
+
+        if (response) {
+          console.log("🌈 Redis cache success!");
+          const uint8Array = new Uint8Array(response);
+
+          return new NextResponse(uint8Array, {
+            headers: {
+              "Content-Type": "model/gltf-binary",
+              "Content-Length": uint8Array.byteLength.toString(),
+            }
+          });
+        }
+        
+        console.log("✍️ write file");
+        await glbCacheManager.writeFile(furniture);
+
+        console.log("🔫 Redis glb 파일 저장 성공 데이터 확인 필요");
+      } catch (error) {
+        console.log("🤬 Redis Cache 테스트 실패");
+      }
 
       const fileName = `${furniture_id}.glb`;
       const localPath = path.join(CACHE_DIR, fileName);

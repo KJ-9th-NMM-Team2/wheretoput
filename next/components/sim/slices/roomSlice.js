@@ -415,6 +415,7 @@ export const roomSlice = (set, get) => ({
             type: obj.type,
             furnitureName: obj.furnitureName,
             categoryId: obj.categoryId,
+            glbData: obj.glbData,
           };
         });
       } else {
