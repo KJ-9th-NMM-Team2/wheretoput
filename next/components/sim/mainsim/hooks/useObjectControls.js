@@ -38,10 +38,13 @@ export function useObjectControls(
   // 벽 자석 기능 - OBB 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
   const findNearestWallSnap = useCallback(
     (position, rotation) => {
+      // useStore에서 최신 wallsData를 직접 가져오기 (의존성 문제 해결)
+      const currentWallsData = useStore.getState().wallsData;
+
       if (
         !enableWallMagnet ||
-        !wallsData ||
-        wallsData.length === 0 ||
+        !currentWallsData ||
+        currentWallsData.length === 0 ||
         !getSelectionBoxSize ||
         !meshRef.current
       )
@@ -97,7 +100,7 @@ export function useObjectControls(
       // 이제 회전을 고려한 OBB 기반 계산 수행
 
       // 각 벽에 대해 회전을 고려한 거리 계산
-      wallsData.forEach((wall) => {
+      currentWallsData.forEach((wall) => {
         const wallPos = new THREE.Vector3(...wall.position);
         const wallRotation = wall.rotation[1]; // Y축 회전각
         const wallWidth = wall.dimensions.width;
@@ -389,7 +392,7 @@ export function useObjectControls(
 
       return null;
     },
-    [wallsData, enableWallMagnet, getSelectionBoxSize]
+    [enableWallMagnet, getSelectionBoxSize]
   );
 
   const handlePointerDown = useCallback(
