@@ -37,10 +37,6 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
         const currentRoomId = resolvedParams.id;
 
         // 모바일 환경에서는 리다이렉트하지 않고 팝업 표시
-        // if (isMobile) {
-        //   router.replace(`/sim/mobile/${currentRoomId}`);
-        //   return;
-        // }
 
         // /rooms/{id}에서 온 경우 sessionStorage 초기화 (create가 아님을 명시)
         if (document.referrer && document.referrer.includes("/rooms/")) {
