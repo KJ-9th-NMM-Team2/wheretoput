@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
@@ -67,6 +67,7 @@ export function DraggableModel({
   const isHovering = hoveringModelId === modelId;
 
   const originalSizeRef = useRef([1, 1, 1]);
+  const [needsRotation, setNeedsRotation] = useState(false);
   // 선택 표시 박스 크기 결정 (회전 고려)
   const getSelectionBoxSize = useCallback(() => {
     if (!meshRef.current) {
@@ -136,10 +137,28 @@ export function DraggableModel({
       box.getSize(modelSize);
       originalSizeRef.current = [modelSize.x, modelSize.y, modelSize.z];
 
-      // 목표 크기로 스케일 조정
-      const targetScale = safeScale.map(
-        (target, i) => target / modelSize.getComponent(i)
-      );
+      // GLTF 실제 크기와 length 배열 매핑하여 스케일 조정
+      const actualW = modelSize.x,
+        actualD = modelSize.z;
+      const lengthW = length[0],
+        lengthD = length[2];
+
+      // 큰 것끼리, 작은 것끼리 매핑
+      const [mappedX, mappedZ] =
+        actualW >= actualD
+          ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
+          : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
+
+      // mappedX가 actualD를 따라가고, mappedZ가 actualW를 따라가는 경우 90도 회전
+
+      const rotationNeeded = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
+      setNeedsRotation(rotationNeeded);
+
+      const targetScale = [
+        (mappedX * 0.001) / actualW,
+        safeScale[1] / modelSize.y,
+        (mappedZ * 0.001) / actualD,
+      ];
 
       meshRef.current.scale.set(...targetScale);
 
@@ -252,7 +271,11 @@ export function DraggableModel({
         <group
           ref={meshRef}
           position={position}
-          rotation={rotation}
+          rotation={[
+            rotation[0],
+            rotation[1] + (needsRotation ? Math.PI / 2 : 0),
+            rotation[2],
+          ]}
           scale={safeScale}
         >
           <primitive object={scene.clone()} />
@@ -266,7 +289,11 @@ export function DraggableModel({
         <group
           ref={meshRef}
           position={position}
-          rotation={rotation}
+          rotation={[
+            rotation[0],
+            rotation[1] + (needsRotation ? Math.PI / 2 : 0),
+            rotation[2],
+          ]}
           scale={safeScale}
         >
           {scene ? (

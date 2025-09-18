@@ -2,7 +2,7 @@ import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useStore } from "@/components/sim/useStore";
 import { useHistory, ActionType } from "@/components/sim/history";
-import { useDeleteKey }  from "@/components/sim/mainsim/hooks/useDeleteKey";
+import { useDeleteKey } from "@/components/sim/mainsim/hooks/useDeleteKey";
 import { RotationControl } from "@/components/sim/mainsim/control/RotationControl";
 import { CollapsibleSidebar } from "./CollapsibleSidebar";
 import { handleStackModel as stackModel } from "@/components/sim/mainsim/utils/stackUtils";
@@ -83,17 +83,17 @@ export function SelectedModelEditModal() {
               [type === ActionType.FURNITURE_SCALE
                 ? "scale"
                 : type === ActionType.FURNITURE_ROTATE
-                  ? "rotation"
-                  : "position"]:
+                ? "rotation"
+                : "position"]:
                 type === ActionType.FURNITURE_SCALE
                   ? { x: currentValue, y: currentValue, z: currentValue }
                   : type === ActionType.FURNITURE_ROTATE
-                    ? {
+                  ? {
                       x: currentValue[0],
                       y: currentValue[1],
                       z: currentValue[2],
                     }
-                    : {
+                  : {
                       x: currentValue[0],
                       y: currentValue[1],
                       z: currentValue[2],
@@ -102,17 +102,17 @@ export function SelectedModelEditModal() {
                 [type === ActionType.FURNITURE_SCALE
                   ? "scale"
                   : type === ActionType.FURNITURE_ROTATE
-                    ? "rotation"
-                    : "position"]:
+                  ? "rotation"
+                  : "position"]:
                   type === ActionType.FURNITURE_SCALE
                     ? { x: initialValue, y: initialValue, z: initialValue }
                     : type === ActionType.FURNITURE_ROTATE
-                      ? {
+                    ? {
                         x: initialValue[0],
                         y: initialValue[1],
                         z: initialValue[2],
                       }
-                      : {
+                    : {
                         x: initialValue[0],
                         y: initialValue[1],
                         z: initialValue[2],
@@ -150,28 +150,28 @@ export function SelectedModelEditModal() {
             [type === ActionType.FURNITURE_SCALE
               ? "scale"
               : type === ActionType.FURNITURE_ROTATE
-                ? "rotation"
-                : "position"]:
+              ? "rotation"
+              : "position"]:
               type === ActionType.FURNITURE_SCALE
                 ? { x: finalValue, y: finalValue, z: finalValue }
                 : type === ActionType.FURNITURE_ROTATE
-                  ? { x: finalValue[0], y: finalValue[1], z: finalValue[2] }
-                  : { x: finalValue[0], y: finalValue[1], z: finalValue[2] },
+                ? { x: finalValue[0], y: finalValue[1], z: finalValue[2] }
+                : { x: finalValue[0], y: finalValue[1], z: finalValue[2] },
             previousData: {
               [type === ActionType.FURNITURE_SCALE
                 ? "scale"
                 : type === ActionType.FURNITURE_ROTATE
-                  ? "rotation"
-                  : "position"]:
+                ? "rotation"
+                : "position"]:
                 type === ActionType.FURNITURE_SCALE
                   ? { x: initialValue, y: initialValue, z: initialValue }
                   : type === ActionType.FURNITURE_ROTATE
-                    ? {
+                  ? {
                       x: initialValue[0],
                       y: initialValue[1],
                       z: initialValue[2],
                     }
-                    : {
+                  : {
                       x: initialValue[0],
                       y: initialValue[1],
                       z: initialValue[2],
@@ -275,7 +275,8 @@ export function SelectedModelEditModal() {
       >
         <div className="flex flex-col gap-2 overflow-auto p-4 select-none">
           {loadedModels.map((model) => (
-            <button className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-300 active:bg-gradient-to-r active:from-green-500 active:to-green-600 active:text-white border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap cursor-pointer transition-all duration-200"
+            <button
+              className="w-full bg-gray-50 border-gray-300 hover:bg-green-50 hover:border-green-300 active:bg-gradient-to-r active:from-green-500 active:to-green-600 active:text-white border-2 rounded-lg p-3 text-left text-ellipsis overflow-hidden whitespace-nowrap cursor-pointer transition-all duration-200"
               key={model.id}
               onClick={() => {
                 selectModel(model.id);
@@ -308,26 +309,17 @@ export function SelectedModelEditModal() {
           {/* 크기 조정 */}
           <div className="mb-4 font-bold ">
             <ControlSlider
-              label={`W ${Math.ceil(
-                selectedModel.length[0] *
-                (Array.isArray(selectedModel.scale)
+              label={(() => {
+                const scale = Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
-                  : selectedModel.scale)
+                  : selectedModel.scale;
 
-              )} × H${Math.ceil(
-
-                selectedModel.length[1] *
-                (Array.isArray(selectedModel.scale)
-                  ? selectedModel.scale[1]
-                  : selectedModel.scale)
-
-              )} × D${Math.ceil(
-                selectedModel.length[2] *
-                (Array.isArray(selectedModel.scale)
-                  ? selectedModel.scale[2]
-                  : selectedModel.scale)
-              )}`}
-
+                return `W${Math.ceil(
+                  selectedModel.length[0] * scale
+                )} × H${Math.ceil(
+                  selectedModel.length[1] * scale
+                )} × D${Math.ceil(selectedModel.length[2] * scale)}`;
+              })()}
               value={
                 Array.isArray(selectedModel.scale)
                   ? selectedModel.scale[0]
@@ -343,9 +335,10 @@ export function SelectedModelEditModal() {
                   ActionType.FURNITURE_SCALE,
                   initialValue,
                   finalValue,
-                  `가구 "${selectedModel.name ||
-                  selectedModel.furnitureName ||
-                  "Unknown"
+                  `가구 "${
+                    selectedModel.name ||
+                    selectedModel.furnitureName ||
+                    "Unknown"
                   }"의 크기를 변경했습니다`
                 );
               }}
@@ -377,9 +370,10 @@ export function SelectedModelEditModal() {
                   ActionType.FURNITURE_MOVE,
                   initialPosition,
                   finalPosition,
-                  `가구 "${selectedModel.name ||
-                  selectedModel.furnitureName ||
-                  "Unknown"
+                  `가구 "${
+                    selectedModel.name ||
+                    selectedModel.furnitureName ||
+                    "Unknown"
                   }"의 높이를 변경했습니다`
                 );
               }}
@@ -417,10 +411,12 @@ export function SelectedModelEditModal() {
                     ActionType.FURNITURE_ROTATE,
                     initialRotation,
                     newRotation,
-                    `가구 "${selectedModel.name ||
-                    selectedModel.furnitureName ||
-                    "Unknown"
-                    }"의 ${axis}축을 ${degrees > 0 ? "+" : ""
+                    `가구 "${
+                      selectedModel.name ||
+                      selectedModel.furnitureName ||
+                      "Unknown"
+                    }"의 ${axis}축을 ${
+                      degrees > 0 ? "+" : ""
                     }${degrees}° 회전했습니다`
                   );
                 }}
@@ -437,9 +433,10 @@ export function SelectedModelEditModal() {
                     ActionType.FURNITURE_ROTATE,
                     initialRotation,
                     finalRotation,
-                    `가구 "${selectedModel.name ||
-                    selectedModel.furnitureName ||
-                    "Unknown"
+                    `가구 "${
+                      selectedModel.name ||
+                      selectedModel.furnitureName ||
+                      "Unknown"
                     }"의 ${axis}축을 회전했습니다`
                   );
                 }}
@@ -453,7 +450,6 @@ export function SelectedModelEditModal() {
             <button
               onClick={handleStartStackingMode}
               className="tool-btn tool-btn-green-active flex-1"
-
             >
               쌓기
             </button>
@@ -483,10 +479,11 @@ export function SelectedModelEditModal() {
                       object_id: selectedModel.object_id,
                     },
                   },
-                  description: `가구 "${selectedModel.name ||
+                  description: `가구 "${
+                    selectedModel.name ||
                     selectedModel.furnitureName ||
                     "Unknown"
-                    }"를 삭제했습니다`,
+                  }"를 삭제했습니다`,
                 });
 
                 // 실제 가구 삭제
@@ -494,7 +491,6 @@ export function SelectedModelEditModal() {
                 deselectModel();
               }}
               className="tool-btn tool-btn-red-active flex-1"
-
             >
               삭제
             </button>
