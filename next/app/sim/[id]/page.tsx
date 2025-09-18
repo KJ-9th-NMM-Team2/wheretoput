@@ -7,14 +7,21 @@ import { HistoryProvider } from "@/components/sim/history";
 import { useStore } from "@/components/sim/useStore.js";
 import { getColab } from "@/lib/api/toggleColab";
 import { useRouter } from "next/navigation";
+import MobileBlockModal from "@/components/ui/MobileBlockModal";
 
 /**
  * 일반 시뮬레이터 페이지 (보기/편집 모드)
  */
 function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const { setCollaborationMode, setCurrentRoomId } = useStore();
   const router = useRouter();
+
+  // 모바일 감지 (처음 진입 시에만)
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640); // sm 브레이크포인트
+  }, []);
 
   // 일반 시뮬레이터 모드 초기화
   useEffect(() => {
@@ -22,12 +29,18 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
     setCollaborationMode(false);
   }, [setCollaborationMode]);
 
-  // URL 파라미터에서 room_id 추출
+  // URL 파라미터에서 room_id 추출 및 모바일 리다이렉트 처리
   useEffect(() => {
     const initializeSimulator = async () => {
       try {
         const resolvedParams = await params;
         const currentRoomId = resolvedParams.id;
+
+        // 모바일 환경에서는 리다이렉트하지 않고 팝업 표시
+        // if (isMobile) {
+        //   router.replace(`/sim/mobile/${currentRoomId}`);
+        //   return;
+        // }
 
         // /rooms/{id}에서 온 경우 sessionStorage 초기화 (create가 아님을 명시)
         if (document.referrer && document.referrer.includes("/rooms/")) {
@@ -42,10 +55,23 @@ function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
     };
 
     initializeSimulator();
-  }, [params]);
+  }, [params, isMobile, router]);
 
   if (!roomId) {
     return <div>Loading...</div>;
+  }
+
+  if (isMobile) {
+    return (
+      <MobileBlockModal
+        title="PC에서만 지원됩니다"
+        description="시뮬레이터 모드는 더 나은 편집 환경을 위해 PC(데스크탑/노트북)에서만 이용 가능합니다."
+        showMobileButton={true}
+        mobileButtonText="모바일 버전으로 보기"
+        onMobileButtonClick={() => router.push(`/sim/mobile/${roomId}`)}
+        onBackButtonClick={() => router.back()}
+      />
+    );
   }
 
   return (

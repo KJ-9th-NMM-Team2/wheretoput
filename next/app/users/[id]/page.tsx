@@ -67,9 +67,9 @@ export default function UserPage({
   });
 
   if (loading) {
-    return <div className="px-20 flex flex-1 justify-center py-5">
+    return <div className="px-4 sm:px-8 lg:px-20 flex flex-1 justify-center py-3 sm:py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-        Loading...
+        <div className="text-center text-gray-500">Loading...</div>
       </div>
     </div>;
   }
@@ -78,9 +78,9 @@ export default function UserPage({
     return <UserNotFound />;
   }
   return (
-    <div className="px-20 flex flex-1 justify-center py-5">
+    <div className="px-4 sm:px-8 lg:px-20 flex flex-1 justify-center py-3 sm:py-5">
       <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-      <Follow 
+      <Follow
         user={user}
         followersCount={followersCount}
         followingCount={followingCount}
@@ -92,8 +92,8 @@ export default function UserPage({
         handleFollowToggle={handleFollowToggle}
       />
 
-      <UserTabs 
-        user={user} 
+      <UserTabs
+        user={user}
         userRooms={userRooms}
         isOwner={isOwner}
         isDeleteMode={isDeleteMode}

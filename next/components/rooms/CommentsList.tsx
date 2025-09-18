@@ -87,7 +87,7 @@ export function CommentCard({
 
   return (
     <div
-      className={`flex w-full flex-row items-start justify-start gap-3 p-4 transition-opacity ${isLoading ? "opacity-70" : ""
+      className={`flex w-full flex-row items-start justify-start gap-2 sm:gap-3 p-2 sm:p-4 transition-opacity ${isLoading ? "opacity-70" : ""
         }`}
     >
       <Link href={`/users/${comment.user.id}`}>
@@ -95,7 +95,7 @@ export function CommentCard({
           <img
             src={comment.user.image}
             alt={comment.user.name}
-            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 
+            className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8 sm:size-10 ring-2
         transition-all duration-200 hover:scale-110 hover:ring-4 cursor-pointer
         ring-amber-200 hover:ring-amber-300
         dark:ring-gray-600 dark:hover:ring-amber-400"
@@ -109,11 +109,11 @@ export function CommentCard({
 
       <div className="flex h-full flex-1 flex-col items-start justify-start">
         <div className="flex w-full flex-row items-start justify-between">
-          <div className="flex flex-row items-start justify-start gap-x-3">
-            <p className="text-[#181411] dark:text-gray-100 text-sm font-bold leading-normal tracking-[0.015em]">
+          <div className="flex flex-col sm:flex-row items-start justify-start gap-x-2 sm:gap-x-3">
+            <p className="text-[#181411] dark:text-gray-100 text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">
               {comment.user.name}
             </p>
-            <p className="text-[#8a7260] dark:text-orange-300 text-sm font-normal leading-normal">
+            <p className="text-[#8a7260] dark:text-orange-300 text-xs sm:text-sm font-normal leading-normal">
               {new Date(comment.created_at).toLocaleDateString()}{" "}
               {new Date(comment.created_at).toLocaleTimeString()}
             </p>
@@ -200,7 +200,7 @@ export function CommentCard({
           </div>
         ) : (
           <div className="flex items-start gap-2">
-            <p className="text-[#181411] dark:text-gray-100 text-sm font-normal leading-normal flex-1">
+            <p className="text-[#181411] dark:text-gray-100 text-xs sm:text-sm font-normal leading-normal flex-1">
               {comment.content}
             </p>
             {isLoading && (
@@ -263,7 +263,7 @@ export default function CommentsList({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-3 p-4">
+    <div className="grid grid-cols-1 gap-2 sm:gap-3 p-2 sm:p-4">
       <form className="mb-4 flex flex-row gap-2" onSubmit={handleSubmit}>
         <textarea
           className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 transition-all duration-200"
