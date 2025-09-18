@@ -531,10 +531,7 @@ export function SimulatorCore({
         const newSet = new Set(prev);
         newSet.add(modelId);
 
-        console.log(
-          "모든 모델 실제 로드 완료:",
-          performance.now() - startTime
-        );
+        console.log("모든 모델 실제 로드 완료:", performance.now() - startTime);
 
         return newSet;
       });
@@ -1025,7 +1022,7 @@ export function SimulatorCore({
             enableDamping={false}
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
-            zoomSpeed={isMobile ? 0.8 : 1.0}
+            zoomSpeed={isMobile ? 1.2 : 1.0}
             minDistance={isMobile ? 1 : 8}
             maxDistance={50}
             maxPolarAngle={
@@ -1048,8 +1045,8 @@ export function SimulatorCore({
               RIGHT: showMeasurements ? undefined : 2, // 측정 모드에서는 우클릭 비활성화
             }}
             touches={{
-              ONE: showMeasurements ? 2 : 0, // 측정 모드에서는 한 손가락으로 패닝
-              TWO: 1, // 두 손가락으로 확대축소
+              ONE: showMeasurements ? 2 : isMobile ? 0 : 0, // 모바일에서는 회전, 측정 모드에서는 패닝
+              TWO: 2, // 두 손가락으로 확대축소 (핀치 줌)
             }}
           />
 
