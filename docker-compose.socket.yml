@@ -6,8 +6,6 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
-    volumes:
-      - redis_data:/data
   socket:
     image: ${ECR_REGISTRY}/${ECR_REPO_SOCKET}:${IMAGE_TAG}
     ports:
