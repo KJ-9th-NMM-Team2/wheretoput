@@ -60,15 +60,19 @@ import AutoSaveIndicator from "@/components/sim/save/AutoSaveIndicator";
 
 type position = [number, number, number];
 
-// 완전 검은색인지 판단하는 유틸리티 함수
-function isPureBlack(colorHex: string): boolean {
-  return colorHex.toLowerCase() === "#000000";
-}
 
 // 바닥 재질 컴포넌트 (깜빡임 방지 개선)
 function FloorMaterial() {
-  const { floorColor, floorTexture, floorTexturePresets } = useStore();
+  const { floorColor, floorTexture, floorTexturePresets, useOriginalTexture } = useStore();
   const currentPreset = floorTexturePresets[floorTexture];
+
+  // 디버깅용 로그
+  console.log('FloorMaterial 렌더링:', {
+    floorTexture,
+    currentPreset,
+    useOriginalTexture,
+    floorColor
+  });
 
   // 모든 바닥재 텍스처를 미리 로드 (깜빡임 방지)
   const allTextures = React.useMemo(() => {
@@ -87,6 +91,14 @@ function FloorMaterial() {
     const textureIndex = allTextures.indexOf(currentPreset.texture);
     const texture = preloadedTextures[textureIndex];
 
+    console.log('텍스처 로딩 상태:', {
+      currentPresetTexture: currentPreset.texture,
+      textureIndex,
+      texture: texture ? 'loaded' : 'not loaded',
+      imageComplete: texture?.image?.complete,
+      allTextures
+    });
+
     if (texture && texture.image && texture.image.complete) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       texture.repeat.set(6, 6);
@@ -96,12 +108,13 @@ function FloorMaterial() {
     }
 
     return texture;
-  }, [currentPreset, allTextures, preloadedTextures]);
+  }, [currentPreset, allTextures, preloadedTextures, floorTexture]);
 
   // 단색 모드
   if (currentPreset.type === "color") {
     return (
       <meshStandardMaterial
+        key={`floor-color-${floorTexture}-${floorColor}`}
         color={floorColor}
         roughness={0.9}
         metalness={0.0}
@@ -109,23 +122,31 @@ function FloorMaterial() {
     );
   }
 
-  // 텍스처 모드 (프리로드된 텍스처 사용)
+  // 텍스처 모드
   if (currentPreset.type === "texture" && currentTexture) {
-    const isBlackColor = isPureBlack(floorColor);
+    console.log('텍스처 모드 Material 반환:', {
+      useOriginalTexture,
+      hasTexture: !!currentTexture,
+      floorColor
+    });
 
-    // 완전 검은색이면 색상 혼합 없이 순수 텍스처만 표시
-    if (isBlackColor) {
+    // 원본질감 모드: 순수 텍스처만 사용
+    if (useOriginalTexture) {
+      console.log('→ 원본질감 Material 반환');
       return (
         <meshStandardMaterial
+          key={`floor-original-${floorTexture}`}
           map={currentTexture}
-          roughness={0.9}
+          color={0x808080}
+          roughness={1.0}
           metalness={0.0}
         />
       );
     } else {
-      // 다른 색상이면 색상 혼합
+      console.log('→ 색상+텍스처 혼합 Material 반환');
       return (
         <meshStandardMaterial
+          key={`floor-mixed-${floorTexture}-${floorColor}-${useOriginalTexture}`}
           map={currentTexture}
           color={floorColor}
           roughness={0.9}
@@ -135,15 +156,22 @@ function FloorMaterial() {
     }
   }
 
-  // 로딩 중 fallback (이전 색상 유지)
+  console.log('→ Fallback Material 반환 (단색)');
+
+  // 로딩 중 fallback
   return (
-    <meshStandardMaterial color={floorColor} roughness={0.7} metalness={0.0} />
+    <meshStandardMaterial
+      key={`floor-fallback-${floorTexture}-${floorColor}`}
+      color={floorColor}
+      roughness={0.7}
+      metalness={0.0}
+    />
   );
 }
 
 // 벽지 재질 컴포넌트 (깜빡임 방지 개선)
 export function WallMaterial({ wallMaterialColor, transparent = true }) {
-  const { wallColor, wallTexture, wallTexturePresets } = useStore();
+  const { wallColor, wallTexture, wallTexturePresets, useOriginalWallTexture } = useStore();
   const currentPreset = wallTexturePresets[wallTexture];
 
   // 모든 텍스처를 미리 로드 (깜빡임 방지)
@@ -188,17 +216,23 @@ export function WallMaterial({ wallMaterialColor, transparent = true }) {
 
   // 텍스처 모드 (프리로드된 텍스처 사용)
   if (currentPreset.type === "texture" && currentTexture) {
-    const isBlackColor = isPureBlack(wallColor);
-
-    // 완전 검은색이면 색상 혼합 없이 순수 텍스처만 표시
-    if (isBlackColor) {
-      return (
-        <meshBasicMaterial map={currentTexture} transparent={transparent} />
-      );
-    } else {
-      // 다른 색상이면 색상 혼합
+    // 원본질감 모드: 순수 텍스처만 사용
+    if (useOriginalWallTexture) {
       return (
         <meshStandardMaterial
+          key={`wall-original-${wallTexture}`}
+          map={currentTexture}
+          color={0x808080}
+          transparent={transparent}
+          roughness={1.0}
+          metalness={0.0}
+        />
+      );
+    } else {
+      // 일반 모드: 색상과 텍스처 혼합
+      return (
+        <meshStandardMaterial
+          key={`wall-mixed-${wallTexture}-${wallColor}-${useOriginalWallTexture}`}
           map={currentTexture}
           color={wallMaterialColor || wallColor}
           transparent={transparent}

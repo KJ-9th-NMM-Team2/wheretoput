@@ -32,6 +32,10 @@ export const environmentSlice = (set, get) => ({
   floorColor: "#875f32",
   backgroundColor: "#87CEEB",
 
+  // 원본 질감 사용 여부
+  useOriginalTexture: false,
+  useOriginalWallTexture: false,
+
   ////////////////////////////////////
   // [09.15] 바닥재 텍스처 관련 상태
   // "color" | "vinyl" | "wood" | "tile"
@@ -153,4 +157,7 @@ export const environmentSlice = (set, get) => ({
       get().collaborationCallbacks.broadcastWallTextureChange?.(texture);
     }
   },
+
+  setUseOriginalTexture: (use) => set({ useOriginalTexture: use }),
+  setUseOriginalWallTexture: (use) => set({ useOriginalWallTexture: use }),
 });
