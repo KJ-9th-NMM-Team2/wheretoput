@@ -30,7 +30,6 @@ export function ColorControlPanel({ isPopup = false }) {
     color: "white",
     fontSize: "13px",
     width: "250px",
-    maxHeight: "400px",
     overflowY: "auto",
   };
 
