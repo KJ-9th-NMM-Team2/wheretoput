@@ -47,10 +47,10 @@
 ## 📌 팀원
 
 | 이름 | 깃허브 | 포지션 | 이름 | 깃허브 | 포지션 |
-| :--- | :--- | :---: | :--- | :--- | :---: |
-| 송상록     |      | ![FE](https://img.shields.io/badge/-FE-blue) | 조성진     |      | ![BE](https://img.shields.io/badge/-BE-red) |
-| 이종호    |      | ![FE](https://img.shields.io/badge/-FE-blue) |  오준탁    |      | ![BE](https://img.shields.io/badge/-BE-red) |
-| 박수연     |      | ![FE](https://img.shields.io/badge/-FE-blue) |      |      |      |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 송상록<br>(팀장)     |[@strawberry-tree](https://github.com/strawberry-tree/)      |시뮬레이터 (가구)<br>동시 편집  | 조성진     |[@likewoody](https://github.com/likewoody)      |캐시/DB 최적화<br>CI/CD  |
+| 이종호    |[@ssumday24](https://github.com/ssumday24)      |시뮬레이터 (벽, 도면)<br>UI · UX|  오준탁    |[@juntak45](https://github.com/juntak45)      |소켓 인프라 구축<br>실시간 채팅|
+| 박수연     |[@SuyeonP25](https://github.com/SuyeonP25)      |시뮬레이터 (공간)<br>가구 조작 패널 |      |      |      |
 
 
 <a name="Stack"></a>
@@ -66,7 +66,8 @@
 
 <a name="Architecture"></a>
 ## 📌 서비스 아키텍처
-![서비스 아키텍처](next/public/Project_Architecture.png)
+<img width="1367" height="732" alt="서비스 아키텍처" src="https://github.com/user-attachments/assets/488a73fe-f62b-457c-83b9-45e0454817e4" />
+
 
 
 <a name="Poster"></a>
