@@ -189,7 +189,7 @@ export function ColorControlPanel({ isPopup = false }) {
                       transition: "all 0.2s",
                     }}
                     onClick={() => {
-                      console.log('바닥재 타입 클릭:', key);
+                      // console.log('바닥재 타입 클릭:', key);
                       setFloorTexture(key);
                       // 바닥재 타입 변경 시 원본질감 모드 해제
                       setUseOriginalTexture(false);

@@ -60,19 +60,19 @@ import AutoSaveIndicator from "@/components/sim/save/AutoSaveIndicator";
 
 type position = [number, number, number];
 
-
 // 바닥 재질 컴포넌트 (깜빡임 방지 개선)
 function FloorMaterial() {
-  const { floorColor, floorTexture, floorTexturePresets, useOriginalTexture } = useStore();
+  const { floorColor, floorTexture, floorTexturePresets, useOriginalTexture } =
+    useStore();
   const currentPreset = floorTexturePresets[floorTexture];
 
   // 디버깅용 로그
-  console.log('FloorMaterial 렌더링:', {
-    floorTexture,
-    currentPreset,
-    useOriginalTexture,
-    floorColor
-  });
+  // console.log('FloorMaterial 렌더링:', {
+  //   floorTexture,
+  //   currentPreset,
+  //   useOriginalTexture,
+  //   floorColor
+  // });
 
   // 모든 바닥재 텍스처를 미리 로드 (깜빡임 방지)
   const allTextures = React.useMemo(() => {
@@ -91,13 +91,13 @@ function FloorMaterial() {
     const textureIndex = allTextures.indexOf(currentPreset.texture);
     const texture = preloadedTextures[textureIndex];
 
-    console.log('텍스처 로딩 상태:', {
-      currentPresetTexture: currentPreset.texture,
-      textureIndex,
-      texture: texture ? 'loaded' : 'not loaded',
-      imageComplete: texture?.image?.complete,
-      allTextures
-    });
+    // console.log('텍스처 로딩 상태:', {
+    //   currentPresetTexture: currentPreset.texture,
+    //   textureIndex,
+    //   texture: texture ? 'loaded' : 'not loaded',
+    //   imageComplete: texture?.image?.complete,
+    //   allTextures
+    // });
 
     if (texture && texture.image && texture.image.complete) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -124,15 +124,15 @@ function FloorMaterial() {
 
   // 텍스처 모드
   if (currentPreset.type === "texture" && currentTexture) {
-    console.log('텍스처 모드 Material 반환:', {
-      useOriginalTexture,
-      hasTexture: !!currentTexture,
-      floorColor
-    });
+    // console.log('텍스처 모드 Material 반환:', {
+    //   useOriginalTexture,
+    //   hasTexture: !!currentTexture,
+    //   floorColor
+    // });
 
     // 원본질감 모드: 순수 텍스처만 사용
     if (useOriginalTexture) {
-      console.log('→ 원본질감 Material 반환');
+      // console.log('→ 원본질감 Material 반환');
       return (
         <meshStandardMaterial
           key={`floor-original-${floorTexture}`}
@@ -143,7 +143,7 @@ function FloorMaterial() {
         />
       );
     } else {
-      console.log('→ 색상+텍스처 혼합 Material 반환');
+      // console.log('→ 색상+텍스처 혼합 Material 반환');
       return (
         <meshStandardMaterial
           key={`floor-mixed-${floorTexture}-${floorColor}-${useOriginalTexture}`}
@@ -156,7 +156,7 @@ function FloorMaterial() {
     }
   }
 
-  console.log('→ Fallback Material 반환 (단색)');
+  // console.log('→ Fallback Material 반환 (단색)');
 
   // 로딩 중 fallback
   return (
@@ -171,7 +171,8 @@ function FloorMaterial() {
 
 // 벽지 재질 컴포넌트 (깜빡임 방지 개선)
 export function WallMaterial({ wallMaterialColor, transparent = true }) {
-  const { wallColor, wallTexture, wallTexturePresets, useOriginalWallTexture } = useStore();
+  const { wallColor, wallTexture, wallTexturePresets, useOriginalWallTexture } =
+    useStore();
   const currentPreset = wallTexturePresets[wallTexture];
 
   // 모든 텍스처를 미리 로드 (깜빡임 방지)
@@ -346,11 +347,11 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
       initialCameraPosition &&
       initialCameraPosition.length
     ) {
-      console.log(
-        "🎬 카메라 위치 및 타겟 설정:",
-        initialCameraPosition,
-        roomCenter
-      );
+      // console.log(
+      //   "🎬 카메라 위치 및 타겟 설정:",
+      //   initialCameraPosition,
+      //   roomCenter
+      // );
 
       perspectiveCamera.position.set(...initialCameraPosition);
 
