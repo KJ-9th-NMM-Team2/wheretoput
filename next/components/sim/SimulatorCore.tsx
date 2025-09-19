@@ -115,7 +115,13 @@ function FloorMaterial() {
 
     // 완전 검은색이면 색상 혼합 없이 순수 텍스처만 표시
     if (isBlackColor) {
-      return <meshBasicMaterial map={currentTexture} />;
+      return (
+        <meshStandardMaterial
+          map={currentTexture}
+          roughness={0.9}
+          metalness={0.0}
+        />
+      );
     } else {
       // 다른 색상이면 색상 혼합
       return (
