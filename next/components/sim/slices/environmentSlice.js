@@ -19,7 +19,7 @@ export const environmentSlice = (set, get) => ({
   directionalLightPosition: [26, 15, 0],
   directionalLightAzimuth: 0,
   directionalLightElevation: 30,
-  directionalLightIntensity: 1.0,
+  directionalLightIntensity: 6,
 
   // 카메라 상태
   cameraFov: 30, // Perspective

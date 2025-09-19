@@ -786,7 +786,7 @@ export function SimulatorCore({
           {/* 메인 햇빛 조명 - 강도 대폭 증가 */}
           <directionalLight
             position={directionalLightPosition}
-            intensity={directionalLightIntensity * 2} // 기존 강도의 2배
+            intensity={directionalLightIntensity}
             castShadow
             shadow-camera-near={0.1}
             shadow-camera-far={50}
