@@ -129,7 +129,7 @@ export default function UserTabs({
         <AchievementList />
       ) : paginatedRooms.length > 0 ? (
         <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-2 sm:px-4 justify-items-stretch sm:justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-2 sm:px-4 justify-items-stretch">
             {paginatedRooms.map((house: any) => (
               <div key={house.room_id} className="relative group">
                 <HomeCard
