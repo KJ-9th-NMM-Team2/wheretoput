@@ -16,16 +16,12 @@ export function ColorControlPanel({ isPopup = false }) {
     wallTexture,
     wallTexturePresets,
     setWallTexture,
+    useOriginalTexture,
+    setUseOriginalTexture,
+    useOriginalWallTexture,
+    setUseOriginalWallTexture,
   } = useStore();
   const [colorTarget, setColorTarget] = React.useState("wall"); // 'wall' | 'floor' | 'background'
-  const [originalColors, setOriginalColors] = React.useState({
-    wall: wallColor,
-    floor: floorColor
-  });
-  const [isBlackFromOriginal, setIsBlackFromOriginal] = React.useState({
-    wall: false,
-    floor: false
-  });
 
   const baseStyle = {
     background: "rgba(0,0,0,0.7)",
@@ -140,12 +136,9 @@ export function ColorControlPanel({ isPopup = false }) {
                       transition: "all 0.2s",
                     }}
                     onClick={() => {
-                      // 단색으로 전환할 때 원본질감 상태 확인 후 원래 색상 복원
-                      if (key === 'color' && isBlackFromOriginal.wall && wallColor === '#000000') {
-                        setWallColor(originalColors.wall);
-                        setIsBlackFromOriginal(prev => ({ ...prev, wall: false }));
-                      }
                       setWallTexture(key);
+                      // 벽지 타입 변경 시 원본질감 모드 해제
+                      setUseOriginalWallTexture(false);
                     }}
                     onMouseEnter={(e) => {
                       if (wallTexture !== key) {
@@ -197,12 +190,10 @@ export function ColorControlPanel({ isPopup = false }) {
                       transition: "all 0.2s",
                     }}
                     onClick={() => {
-                      // 단색으로 전환할 때 원본질감 상태 확인 후 원래 색상 복원
-                      if (key === 'color' && isBlackFromOriginal.floor && floorColor === '#000000') {
-                        setFloorColor(originalColors.floor);
-                        setIsBlackFromOriginal(prev => ({ ...prev, floor: false }));
-                      }
+                      console.log('바닥재 타입 클릭:', key);
                       setFloorTexture(key);
+                      // 바닥재 타입 변경 시 원본질감 모드 해제
+                      setUseOriginalTexture(false);
                     }}
                     onMouseEnter={(e) => {
                       if (floorTexture !== key) {
@@ -224,8 +215,8 @@ export function ColorControlPanel({ isPopup = false }) {
 
           {/* 색상 선택 - 배경은 항상, 벽과 바닥은 텍스처와 함께 조합 가능 */}
           {(colorTarget === "background" ||
-            colorTarget === "wall" ||
-            colorTarget === "floor") && (
+            (colorTarget === "wall" && !useOriginalWallTexture) ||
+            (colorTarget === "floor" && !useOriginalTexture)) && (
             <div>
               <div
                 style={{
@@ -259,18 +250,9 @@ export function ColorControlPanel({ isPopup = false }) {
                     : backgroundColor
                 }
                 onChange={(color) => {
-                  // 색상 변경 시 원본질감 상태 해제
                   if (colorTarget === "wall") {
-                    if (color !== '#000000') {
-                      setOriginalColors(prev => ({ ...prev, wall: color }));
-                      setIsBlackFromOriginal(prev => ({ ...prev, wall: false }));
-                    }
                     setWallColor(color);
                   } else if (colorTarget === "floor") {
-                    if (color !== '#000000') {
-                      setOriginalColors(prev => ({ ...prev, floor: color }));
-                      setIsBlackFromOriginal(prev => ({ ...prev, floor: false }));
-                    }
                     setFloorColor(color);
                   } else {
                     setBackgroundColor(color);
@@ -280,42 +262,72 @@ export function ColorControlPanel({ isPopup = false }) {
             </div>
           )}
 
-          {/* 질감 모드일 때 색 없애기 버튼 추가 */}
-          {((colorTarget === "wall" && wallTexture !== "color") ||
-            (colorTarget === "floor" && floorTexture !== "color")) && (
+          {/* 벽지 텍스처 모드일 때만 원본질감 토글 버튼 */}
+          {colorTarget === "wall" && wallTexture !== "color" && (
             <div style={{ marginTop: "10px" }}>
               <button
                 style={{
-                  padding: "4px 8px",
+                  padding: "6px 12px",
                   fontSize: "12px",
                   border: "1px solid rgba(255,255,255,0.3)",
                   borderRadius: "4px",
-                  background: "rgba(255, 255, 255, 0.1)",
+                  background: useOriginalWallTexture
+                    ? "rgba(59, 130, 246, 0.8)"
+                    : "rgba(255, 255, 255, 0.1)",
                   color: "white",
                   cursor: "pointer",
                   transition: "all 0.2s",
                 }}
                 onClick={() => {
-                  if (colorTarget === "wall") {
-                    // 원본 색상 저장하고 원본질감 상태 설정
-                    setOriginalColors(prev => ({ ...prev, wall: wallColor }));
-                    setIsBlackFromOriginal(prev => ({ ...prev, wall: true }));
-                    setWallColor("#000000");
-                  } else if (colorTarget === "floor") {
-                    // 원본 색상 저장하고 원본질감 상태 설정
-                    setOriginalColors(prev => ({ ...prev, floor: floorColor }));
-                    setIsBlackFromOriginal(prev => ({ ...prev, floor: true }));
-                    setFloorColor("#000000");
-                  }
+                  setUseOriginalWallTexture(!useOriginalWallTexture);
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "rgba(59, 130, 246, 0.8)";
+                  if (!useOriginalWallTexture) {
+                    e.target.style.background = "rgba(255,255,255,0.2)";
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  if (!useOriginalWallTexture) {
+                    e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  }
                 }}
               >
-                원본 질감
+                {useOriginalWallTexture ? "✓ 원본 질감" : "원본 질감"}
+              </button>
+            </div>
+          )}
+
+          {/* 바닥재 텍스처 모드일 때만 원본질감 토글 버튼 */}
+          {colorTarget === "floor" && floorTexture !== "color" && (
+            <div style={{ marginTop: "10px" }}>
+              <button
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  border: "1px solid rgba(255,255,255,0.3)",
+                  borderRadius: "4px",
+                  background: useOriginalTexture
+                    ? "rgba(59, 130, 246, 0.8)"
+                    : "rgba(255, 255, 255, 0.1)",
+                  color: "white",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+                onClick={() => {
+                  setUseOriginalTexture(!useOriginalTexture);
+                }}
+                onMouseEnter={(e) => {
+                  if (!useOriginalTexture) {
+                    e.target.style.background = "rgba(255,255,255,0.2)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!useOriginalTexture) {
+                    e.target.style.background = "rgba(255, 255, 255, 0.1)";
+                  }
+                }}
+              >
+                {useOriginalTexture ? "✓ 원본 질감" : "원본 질감"}
               </button>
             </div>
           )}
