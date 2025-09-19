@@ -30,6 +30,8 @@ export const collaborationSlice = (set, get) => ({
     broadcastEnvironmentPresetChange: null,
     broadcastWallTextureChange: null,
     broadcastFloorTextureChange: null,
+    broadcastUseOriginalTextureChange: null,
+    broadcastUseOriginalWallTextureChange: null,
   },
 
   // 쓰로틀링 관리 객체

@@ -106,6 +106,8 @@ export async function POST(req: NextRequest) {
           environment_preset: original_room?.environment_preset || "apartment",
           wall_type: original_room?.wall_type || "color",
           floor_type: original_room?.floor_type || "color",
+          floor_use_original_texture: original_room?.floor_use_original_texture || false,
+          wall_use_original_texture: original_room?.wall_use_original_texture || false,
         },
       });
 

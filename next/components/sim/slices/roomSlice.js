@@ -188,6 +188,8 @@ export const roomSlice = (set, get) => ({
           environmentPreset: currentState.environmentPreset,
           wallType: currentState.wallTexture,
           floorType: currentState.floorTexture,
+          floorUseOriginalTexture: currentState.useOriginalTexture,
+          wallUseOriginalTexture: currentState.useOriginalWallTexture,
         }),
       });
 
@@ -353,6 +355,8 @@ export const roomSlice = (set, get) => ({
           environmentPreset: currentState.environmentPreset,
           wallType: currentState.wallTexture,
           floorType: currentState.floorTexture,
+          floorUseOriginalTexture: currentState.useOriginalTexture,
+          wallUseOriginalTexture: currentState.useOriginalWallTexture,
         }),
       });
 
@@ -446,6 +450,8 @@ export const roomSlice = (set, get) => ({
       const floorColor = result.floor_color || "#875f32";
       const wallTexture = result.wall_type || "color";
       const floorTexture = result.floor_type || "color";
+      const useOriginalTexture = result.floor_use_original_texture || false;
+      const useOriginalWallTexture = result.wall_use_original_texture || false;
 
       // wallUtils를 사용하여 방 중앙과 카메라 초기 위치 계산
       let roomCenter = [0, 0, 0];
@@ -470,6 +476,8 @@ export const roomSlice = (set, get) => ({
         floorColor: floorColor,
         wallTexture: wallTexture,
         floorTexture: floorTexture,
+        useOriginalTexture: useOriginalTexture,
+        useOriginalWallTexture: useOriginalWallTexture,
         backgroundColor: result.background_color || "#87CEEB",
         environmentPreset: result.environment_preset || "apartment",
         roomCenter: roomCenter,
