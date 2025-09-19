@@ -164,32 +164,34 @@ model room_walls {
 }
 
 model rooms {
-  room_id             String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id             String
-  title               String          @db.VarChar(100)
-  description         String?
-  thumbnail_url       String?
-  is_public           Boolean?        @default(true)
-  view_count          Int?            @default(0)
-  created_at          DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?       @default(now()) @db.Timestamp(6)
-  root_room_id        String?         @db.Uuid
-  collab_on           Boolean?        @default(false)
-  wall_color          String          @default("#969593")
-  floor_color         String          @default("#875F32")
-  background_color    String          @default("#87CEEB")
-  environment_preset  String          @default("apartment")
-  collab_chat_room_id String?         @db.Uuid
-  wall_type           String?         @default("color")
-  floor_type          String?         @default("color")
-  room_comments       room_comments[]
-  room_likes          room_likes[]
-  room_objects        room_objects[]
-  room_walls          room_walls[]
-  chat_rooms          chat_rooms?     @relation(fields: [collab_chat_room_id], references: [chat_room_id], onUpdate: NoAction, map: "fk_rooms_collab_chat_room")
-  rooms               rooms?          @relation("roomsTorooms", fields: [root_room_id], references: [room_id], onUpdate: NoAction, map: "fk_rooms_root_room")
-  other_rooms         rooms[]         @relation("roomsTorooms")
-  user                User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  room_id                    String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                    String
+  title                      String          @db.VarChar(100)
+  description                String?
+  thumbnail_url              String?
+  is_public                  Boolean?        @default(true)
+  view_count                 Int?            @default(0)
+  created_at                 DateTime?       @default(now()) @db.Timestamp(6)
+  updated_at                 DateTime?       @default(now()) @db.Timestamp(6)
+  root_room_id               String?         @db.Uuid
+  collab_on                  Boolean?        @default(false)
+  wall_color                 String          @default("#969593")
+  floor_color                String          @default("#875F32")
+  background_color           String          @default("#87CEEB")
+  environment_preset         String          @default("apartment")
+  collab_chat_room_id        String?         @db.Uuid
+  wall_type                  String?         @default("color")
+  floor_type                 String?         @default("color")
+  wall_use_original_texture  Boolean         @default(false)
+  floor_use_original_texture Boolean         @default(false)
+  room_comments              room_comments[]
+  room_likes                 room_likes[]
+  room_objects               room_objects[]
+  room_walls                 room_walls[]
+  chat_rooms                 chat_rooms?     @relation(fields: [collab_chat_room_id], references: [chat_room_id], onUpdate: NoAction, map: "fk_rooms_collab_chat_room")
+  rooms                      rooms?          @relation("roomsTorooms", fields: [root_room_id], references: [room_id], onUpdate: NoAction, map: "fk_rooms_root_room")
+  other_rooms                rooms[]         @relation("roomsTorooms")
+  user                       User            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([is_public], map: "idx_rooms_public")
   @@index([user_id], map: "idx_rooms_user")

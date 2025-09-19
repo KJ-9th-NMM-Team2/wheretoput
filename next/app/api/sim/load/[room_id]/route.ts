@@ -132,6 +132,8 @@ export async function GET(
           environment_preset: true,
           wall_type: true,
           floor_type: true,
+          floor_use_original_texture: true,
+          wall_use_original_texture: true,
         }
       }),
       prisma.room_objects.findMany({ 

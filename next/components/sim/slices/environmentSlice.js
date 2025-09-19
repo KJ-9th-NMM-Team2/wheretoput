@@ -158,6 +158,16 @@ export const environmentSlice = (set, get) => ({
     }
   },
 
-  setUseOriginalTexture: (use) => set({ useOriginalTexture: use }),
-  setUseOriginalWallTexture: (use) => set({ useOriginalWallTexture: use }),
+  setUseOriginalTexture: (use, shouldBroadcast = true) => {
+    set({ useOriginalTexture: use });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastUseOriginalTextureChange?.(use);
+    }
+  },
+  setUseOriginalWallTexture: (use, shouldBroadcast = true) => {
+    set({ useOriginalWallTexture: use });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastUseOriginalWallTextureChange?.(use);
+    }
+  },
 });
