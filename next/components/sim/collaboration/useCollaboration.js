@@ -43,6 +43,8 @@ export function useCollaboration(roomId) {
     setEnvironmentPreset,
     setWallTexture,
     setFloorTexture,
+    setUseOriginalTexture,
+    setUseOriginalWallTexture,
   } = useStore();
 
   const router = useRouter();
@@ -300,6 +302,18 @@ export function useCollaboration(roomId) {
       }
     });
 
+    socket.current.on("use-original-texture-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setUseOriginalTexture(data.use, false);
+      }
+    });
+
+    socket.current.on("use-original-wall-texture-changed", (data) => {
+      if (data.userId !== currentUser.id) {
+        setUseOriginalWallTexture(data.use, false);
+      }
+    });
+
     socket.current.on("wall-added", (data) => {
       if (data.userId !== currentUser.id) {
         console.log("wall-added 데이터 수신:", data);
@@ -405,6 +419,8 @@ export function useCollaboration(roomId) {
         broadcastEnvironmentPresetChange,
         broadcastWallTextureChange,
         broadcastFloorTextureChange,
+        broadcastUseOriginalTextureChange,
+        broadcastUseOriginalWallTextureChange,
       });
     } else {
       setCollaborationCallbacks({
@@ -425,6 +441,8 @@ export function useCollaboration(roomId) {
         broadcastEnvironmentPresetChange: null,
         broadcastWallTextureChange: null,
         broadcastFloorTextureChange: null,
+        broadcastUseOriginalTextureChange: null,
+        broadcastUseOriginalWallTextureChange: null,
       });
     }
   }, [collaborationMode]);
@@ -550,6 +568,20 @@ export function useCollaboration(roomId) {
     });
   };
 
+  const broadcastUseOriginalTextureChange = (use) => {
+    emitEvent("use-original-texture-changed", {
+      userId: currentUser.id,
+      use,
+    });
+  };
+
+  const broadcastUseOriginalWallTextureChange = (use) => {
+    emitEvent("use-original-wall-texture-changed", {
+      userId: currentUser.id,
+      use,
+    });
+  };
+
   const broadcastWallAdd = (wallData) => {
     console.log("broadcast WallData", wallData);
     emitEvent("wall-added", {
@@ -594,6 +626,10 @@ export function useCollaboration(roomId) {
     broadcastFloorColorChange,
     broadcastBackgroundColorChange,
     broadcastEnvironmentPresetChange,
+    broadcastWallTextureChange,
+    broadcastFloorTextureChange,
+    broadcastUseOriginalTextureChange,
+    broadcastUseOriginalWallTextureChange,
 
     // 연결 관리
     disconnect,

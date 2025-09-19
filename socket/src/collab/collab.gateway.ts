@@ -803,6 +803,52 @@ export class CollabGateway {
     });
   }
 
+  // 원본 텍스처 사용 변경
+  @SubscribeMessage('use-original-texture-changed')
+  async onUseOriginalTextureChanged(
+    @MessageBody() data: { userId: string; use: boolean },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🖼️ USE ORIGINAL TEXTURE CHANGED: ${data.use} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('use-original-texture-changed', data);
+      }
+    });
+  }
+
+  // 원본 벽 텍스처 사용 변경
+  @SubscribeMessage('use-original-wall-texture-changed')
+  async onUseOriginalWallTextureChanged(
+    @MessageBody() data: { userId: string; use: boolean },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    this.logger.log(`🧱 USE ORIGINAL WALL TEXTURE CHANGED: ${data.use} by ${data.userId}`);
+
+    // 사용자 활동 시간 업데이트
+    const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
+    if (roomId) {
+      await this.redisService.updateRoomUser(roomId, data.userId, {
+        lastActivity: Date.now(),
+      });
+    }
+
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) {
+        socket.to(room).emit('use-original-wall-texture-changed', data);
+      }
+    });
+  }
+
   // 미활동 사용자 연결해제
   // @Cron('0 */5 * * * *') // 5분에 1번씩 실행
   // async cleanupInactiveUsers() {

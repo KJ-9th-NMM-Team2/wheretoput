@@ -104,6 +104,8 @@ export async function POST(req: NextRequest) {
       environmentPreset,
       wallType,
       floorType,
+      floorUseOriginalTexture,
+      wallUseOriginalTexture,
     } = body;
 
     // 필수 파라미터 확인
@@ -179,6 +181,8 @@ export async function POST(req: NextRequest) {
             environment_preset: environmentPreset,
             wall_type: wallType || "color",
             floor_type: floorType || "color",
+            floor_use_original_texture: floorUseOriginalTexture || false,
+            wall_use_original_texture: wallUseOriginalTexture || false,
           },
         });
       } catch (roomUpdateError) {

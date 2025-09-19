@@ -17,6 +17,8 @@ export const extractRoomInfo = async (
   const environment_preset = room.environment_preset || "apartment";
   const wall_type = room.wall_type || "color";
   const floor_type = room.floor_type || "color";
+  const floor_use_original_texture = room.floor_use_original_texture || false;
+  const wall_use_original_texture = room.wall_use_original_texture || false;
   const result: SimualtorModel = {
     success: true,
     room_id: room_id,
@@ -36,6 +38,8 @@ export const extractRoomInfo = async (
     environment_preset: environment_preset,
     wall_type: wall_type,
     floor_type: floor_type,
+    floor_use_original_texture: floor_use_original_texture,
+    wall_use_original_texture: wall_use_original_texture,
   };
 
   return result;

@@ -19,7 +19,7 @@ export const environmentSlice = (set, get) => ({
   directionalLightPosition: [26, 15, 0],
   directionalLightAzimuth: 0,
   directionalLightElevation: 30,
-  directionalLightIntensity: 1.0,
+  directionalLightIntensity: 6,
 
   // 카메라 상태
   cameraFov: 30, // Perspective
@@ -31,6 +31,10 @@ export const environmentSlice = (set, get) => ({
   wallColor: "#969593",
   floorColor: "#875f32",
   backgroundColor: "#87CEEB",
+
+  // 원본 질감 사용 여부
+  useOriginalTexture: false,
+  useOriginalWallTexture: false,
 
   ////////////////////////////////////
   // [09.15] 바닥재 텍스처 관련 상태
@@ -151,6 +155,19 @@ export const environmentSlice = (set, get) => ({
     set({ wallTexture: texture });
     if (shouldBroadcast) {
       get().collaborationCallbacks.broadcastWallTextureChange?.(texture);
+    }
+  },
+
+  setUseOriginalTexture: (use, shouldBroadcast = true) => {
+    set({ useOriginalTexture: use });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastUseOriginalTextureChange?.(use);
+    }
+  },
+  setUseOriginalWallTexture: (use, shouldBroadcast = true) => {
+    set({ useOriginalWallTexture: use });
+    if (shouldBroadcast) {
+      get().collaborationCallbacks.broadcastUseOriginalWallTextureChange?.(use);
     }
   },
 });

@@ -29,7 +29,7 @@ export function HomeCard({
       className="h-full w-full group"
     >
       <div
-        className="flex h-full flex-1 flex-col gap-3 rounded-lg max-w-sm w-full transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-xl bg-white dark:bg-gray-800 overflow-hidden"
+        className="flex h-full flex-1 flex-col gap-3 rounded-lg w-full transition-all duration-200 group-hover:scale-[1.02] group-hover:shadow-xl bg-white dark:bg-gray-800 overflow-hidden"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
