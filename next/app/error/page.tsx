@@ -57,7 +57,7 @@ export default function AuthErrorPage() {
         <div className="mt-6">
           <a
             href="/"
-            className="inline-block px-6 py-3 bg-[#1c140d] text-white font-semibold rounded-lg hover:bg-gray-800 transition-color cursor-pointers"
+            className="inline-block px-6 py-3 bg-[#1c140d] text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
           >
             홈으로 돌아가기
           </a>
