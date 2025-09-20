@@ -8,7 +8,7 @@
 
 ## 서비스 소개 영상 (변경 가능)
 
-[![Wheretoput](https://img.youtube.com/vi/th9PeXoU-x8/1.jpg)](https://youtu.be/th9PeXoU-x8)
+[![Wheretoput](https://img.youtube.com/vi/th9PeXoU-x8/0.jpg)](https://youtu.be/th9PeXoU-x8)
 
 
 
