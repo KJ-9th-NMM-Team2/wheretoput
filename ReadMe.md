@@ -3,7 +3,7 @@
 > **우리 집 꾸미기 시뮬레이터**
 
 ## 프로젝트 포스터 (변경 가능)
-<img width="2245" height="3179" alt="어따놀래 포스터" src="https://github.com/user-attachments/assets/12f22cc5-92a2-4dae-b5f9-6c9a77efe0c7" />
+<img width="2245" height="3179" alt="어따놀래 포스터" src="https://github.com/user-attachments/assets/13423540-7fce-4ec0-b148-9c3ec886faa5" />
 
 
 ## 서비스 소개 영상 (변경 가능)
