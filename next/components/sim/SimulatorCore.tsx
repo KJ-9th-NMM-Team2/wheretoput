@@ -475,6 +475,7 @@ export function SimulatorCore({
 
   const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   // EditPopup 관련 상태
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -635,16 +636,25 @@ export function SimulatorCore({
               await checkUserRoom(roomId, session.user.id);
             }
           } catch (loadError) {
-            console.log(
-              `방 ${roomId}의 저장된 데이터 없음:`,
-              loadError.message
-            );
+            console.error(`방 ${roomId} 로드 실패:`, loadError.message);
+
+            // 404 에러인 경우 not-found 페이지로 이동
+            if (loadError.message.includes('404') || loadError.message.includes('찾을 수 없')) {
+              router.replace('/not-found');
+              return;
+            }
+
+            // 그 외 에러는 에러 상태 설정 (렌더링 시 throw됨)
+            setLoadError(new Error(`방 로드에 실패했습니다: ${loadError.message}`));
+            return;
           }
         } else {
           console.log(`임시 방 ${roomId}이므로 데이터 로드를 건너뜁니다.`);
         }
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);
+        // 초기화 실패 시에도 에러 상태 설정
+        setLoadError(new Error(`시뮬레이터 초기화에 실패했습니다: ${error.message}`));
       }
     };
 
@@ -658,6 +668,7 @@ export function SimulatorCore({
     collaborationMode,
     session?.user?.id,
     checkUserRoom,
+    router,
   ]);
 
   // 히스토리 시스템에서 오는 가구 추가/삭제 이벤트 처리
@@ -695,6 +706,11 @@ export function SimulatorCore({
       );
     };
   }, [addModelWithId, removeModel]);
+
+  // 에러 상태가 있으면 throw하여 에러 바운더리 트리거
+  if (loadError) {
+    throw loadError;
+  }
 
   return (
     <div
