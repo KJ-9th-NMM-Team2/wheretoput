@@ -81,3 +81,6 @@
 ## 기술적 챌린지
 [위키를 확인해 주세요.](https://github.com/KJ-9th-NMM-Team2/wheretoput/wiki)
 
+<a name="APIDocs"></a>
+## API 명세서
+[위키 - API 명세서](https://github.com/KJ-9th-NMM-Team2/wheretoput/wiki/API-%EB%AA%85%EC%84%B8%EC%84%9C)
