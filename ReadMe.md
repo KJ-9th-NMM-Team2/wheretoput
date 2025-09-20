@@ -78,7 +78,8 @@
 
 <a name="Architecture"></a>
 ## 서비스 아키텍처
-<img width="1367" height="732" alt="서비스 아키텍처" src="https://github.com/user-attachments/assets/488a73fe-f62b-457c-83b9-45e0454817e4" />
+<img width="1367" height="732" alt="서비스 아키텍처" src="https://github.com/user-attachments/assets/27572647-c0d3-4796-beeb-29a677e946c4" />
+
 
 <a name="Challenges"></a>
 ## 기술적 챌린지
