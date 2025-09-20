@@ -45,7 +45,7 @@
 5. **랜선 집들이**: 완성된 집을 공유하고, 다른 사용자와 집에도 방문할 수 있습니다.
 
 <a name="Team"></a>
-## 📌 팀원
+## 팀원
 
 | 이름 | 깃허브 | 포지션 |
 | :--- | :--- | :--- |
@@ -64,7 +64,7 @@
 - 2025.09.17 ~ 2025.09.27: QA, 문서화, 최종 발표 준비
 
 <a name="Stack"></a>
-## 📌 기술스택 및 개발환경
+## 기술스택 및 개발환경
 | 분류 | 기술 |
 | :--- | :--- |
 | **Client + API Server** | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white) |
@@ -77,7 +77,7 @@
 | **Infrastructure** | ![Amazon Route 53](https://img.shields.io/badge/Amazon%20Route%2053-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white) ![Amazon ALB](https://img.shields.io/badge/Amazon%20ALB-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white) |
 
 <a name="Architecture"></a>
-## 📌 서비스 아키텍처
+## 서비스 아키텍처
 <img width="1367" height="732" alt="서비스 아키텍처" src="https://github.com/user-attachments/assets/488a73fe-f62b-457c-83b9-45e0454817e4" />
 
 <a name="Challenges"></a>
