@@ -9,7 +9,7 @@
 ## 서비스 소개 영상 (변경 가능)
 
 [![Wheretoput](https://img.youtube.com/vi/th9PeXoU-x8/0.jpg)](https://youtu.be/th9PeXoU-x8)
-
+- 클릭해서 서비스 영상으로 이동
 
 
 
