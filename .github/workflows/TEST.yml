@@ -1,12 +1,24 @@
 name: Test SCP via Bastion
-
 on:
   workflow_dispatch:
-
 jobs:
   test-scp-bastion:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug - Find docker-compose files
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== All files in current directory ==="
+          ls -la
+          echo "=== Find all docker-compose files ==="
+          find . -name "*docker-compose*" -type f
+          echo "=== Find all yml files ==="
+          find . -name "*.yml" -type f
+
       - name: Setup SSH keys and config
         run: |
           mkdir -p ~/.ssh
@@ -34,7 +46,53 @@ jobs:
               ProxyJump bastion
               StrictHostKeyChecking no
           EOF
-      
+
+      - name: Create Next.js .env.production
+        run: |
+          cat > .env.production << 'EOF'
+          NODE_ENV=production
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DATABASE_READONLY_URL=${{ secrets.DATABASE_READONLY_URL }}
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+          ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+          ECR_REPO_NEXT=${{ secrets.ECR_REPO_NEXT }}
+          IMAGE_TAG=${{ github.sha }}
+          FRONTEND_PORT=3000
+          AWS_S3_BUCKET_NAME=${{ secrets.AWS_S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          AUTH_GITHUB_ID=${{ secrets.AUTH_GITHUB_ID }}
+          AUTH_GITHUB_SECRET=${{ secrets.AUTH_GITHUB_SECRET }}
+          AUTH_GOOGLE_ID=${{ secrets.AUTH_GOOGLE_ID }}
+          AUTH_GOOGLE_SECRET=${{ secrets.AUTH_GOOGLE_SECRET }}
+          REPLICATE_API_TOKEN=${{ secrets.REPLICATE_API_TOKEN }}
+          NEXTAUTH_SECRET=${{ secrets.JWT_SECRET }}
+          AUTH_TRUST_HOST=true
+          IMAGE=latest
+          REDIS_CACHE_META_URL=${{ secrets.REDIS_CACHE_META_URL }}
+          GLB_REDIS_URL=${{ secrets.GLB_REDIS_URL }}
+          USE_REDIS=${{ secrets.USE_REDIS }}
+          EOF
+
+      - name: Check files before scp
+        run: |
+          echo "Checking required files:"
+          ls -la docker-compose.next.yml || echo "docker-compose.next.yml NOT FOUND"
+          ls -la .env.production || echo ".env.production NOT FOUND"
+          
+          echo "=== Content of .env.production ==="
+          cat .env.production
+
       - name: Test scp via Bastion
         run: |
-          scp docker-compose.next.yml .env.production target:/home/ubuntu/
+          # 파일이 실제로 존재하는지 확인 후 실행
+          if [ -f "docker-compose.next.yml" ] && [ -f ".env.production" ]; then
+            echo "Both files found, proceeding with scp..."
+            scp docker-compose.next.yml .env.production target:/home/ubuntu/
+          else
+            echo "Required files not found!"
+            echo "Available files:"
+            ls -la
+            exit 1
+          fi
