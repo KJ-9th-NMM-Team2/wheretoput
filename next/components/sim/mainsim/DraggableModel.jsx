@@ -1,13 +1,19 @@
-import React, { useRef, useEffect, useMemo, useState } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
-import { useCallback } from "react";
 import { convertS3ToCdnUrl } from "@/lib/api/api-url";
 import { useBase64ToArrayBuffer } from "./hooks/useBase64ToArrayBuffer";
+import ModelErrorBoundary from "./ModelErrorBoundary";
 
 export function DraggableModel({
   modelId,
@@ -62,6 +68,11 @@ export function DraggableModel({
   // Base64 GLB File to ArrayBuffer
   useBase64ToArrayBuffer({ glbData, modelId, setGlbDataUrl });
   const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
+  // 모델 URL 결정: glbDataUrl이 있으면 우선, 없으면 url 사용
+  // const modelUrl = useMemo(() => {
+  //   if (glbDataUrl) return glbDataUrl;
+  //   return "";
+  // }, [glbDataUrl]);
 
   // 디버깅용 로깅
   // useEffect(() => {
@@ -298,7 +309,7 @@ export function DraggableModel({
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
   return (
-    <>
+    <ModelErrorBoundary>
       {viewOnly ? (
         <group
           ref={meshRef}
@@ -365,7 +376,7 @@ export function DraggableModel({
           />
         </group>
       )}
-    </>
+    </ModelErrorBoundary>
   );
 }
 

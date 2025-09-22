@@ -117,7 +117,9 @@ export const convertS3ToCdnUrl = (s3Url: string): string => {
 
   if (match) {
     const path = match[1];
-    return `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${path}`;
+    // URL encode the path to handle Korean characters and special characters properly
+    const encodedPath = encodeURIComponent(decodeURIComponent(path));
+    return `${process.env.NEXT_PUBLIC_IMAGE_BASE_URL}/${encodedPath}`;
   }
 
   return s3Url;
