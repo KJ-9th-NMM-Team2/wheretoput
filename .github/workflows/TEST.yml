@@ -89,7 +89,7 @@ jobs:
           # 파일이 실제로 존재하는지 확인 후 실행
           if [ -f "docker-compose.next.yml" ] && [ -f ".env.production" ]; then
             echo "Both files found, proceeding with scp..."
-            scp docker-compose.next.yml .env.production target:/home/ubuntu/
+            scp docker-compose.next.yml .env.production target:/home/ubuntu/app/
           else
             echo "Required files not found!"
             echo "Available files:"
