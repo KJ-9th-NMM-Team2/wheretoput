@@ -19,8 +19,6 @@ export const useBase64ToArrayBuffer = ({glbData, modelId, setGlbDataUrl}: useBas
             const blob = new Blob([bytes.buffer], { type: "model/gltf-binary" });
             const url = URL.createObjectURL(blob);
             setGlbDataUrl(url);
-        } else { // if (glbUrlCache.has(modelId))
-            console.log("glbData 없음");
         }
     }, [glbData, modelId]);
 }
