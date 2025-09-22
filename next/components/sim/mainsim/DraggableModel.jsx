@@ -65,34 +65,31 @@ export function DraggableModel({
   // const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
   // ********* 이게 urlGltf *********
 
-  // Base64 GLB File to ArrayBuffer
+  // glbData가 있으면 캐시 우선, 없으면 URL 사용
+  const hasGlbData = Boolean(glbData);
+  const hasValidUrl = url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
+
+  // glbData가 있으면 캐시 로딩을 기다리고, 없으면 바로 URL 사용
+  const shouldLoadFromUrl = !hasGlbData && hasValidUrl;
+  const urlGltf = shouldLoadFromUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
+
+  // Base64 처리 Blob url로 변환
   useBase64ToArrayBuffer({ glbData, modelId, setGlbDataUrl });
   const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
-  // 모델 URL 결정: glbDataUrl이 있으면 우선, 없으면 url 사용
-  // const modelUrl = useMemo(() => {
-  //   if (glbDataUrl) return glbDataUrl;
-  //   return "";
-  // }, [glbDataUrl]);
 
   // 디버깅용 로깅
-  // useEffect(() => {
-  //   if (glbGltf) {
-  //     console.log(glbDataUrl, "GLB 사용 중");
-  //   } else {
-  //     console.log(modelId, "모델 없음");
-  //   }
-  // }, [glbGltf]); // , urlGltf
+  useEffect(() => {
+    if (glbGltf) {
+      console.log(glbDataUrl, "GLB 사용 중");
+    } else if (urlGltf) {
+      console.log(modelId, "URL 사용 중");
+    } else {
+      console.log(modelId, "모델 없음");
+    }
+  }, [glbGltf, urlGltf]); // , urlGltf
 
-  // glb or url
-  const { scene, animations } = glbGltf ||
-    { scene: null, animations: null }; // urlGltf ||
-
-  // useEffect(() => {
-  //   if (scene) {
-  //     // 모든 텍스처와 지오메트리가 준비되면
-  //     // onModelLoaded(modelId);
-  //   }
-  // }, []);
+  // 우선순위 적용
+  const { scene, animations } = glbGltf || urlGltf || { scene: null, animations: null };
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
