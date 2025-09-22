@@ -3,6 +3,7 @@ import { useStore } from "@/components/sim/useStore.js";
 import { io } from "socket.io-client";
 import { connectSocket as startSocket } from "@/lib/client/socket";
 import { useRouter } from "next/navigation";
+import { convertBlobUrl } from "../mainsim/hooks/useBase64ToArrayBuffer";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
@@ -14,9 +15,11 @@ import { useRouter } from "next/navigation";
  * - 사용자 선택 상태 동기화
  */
 export function useCollaboration(roomId) {
+
   const socket = useRef(null);
   const isManualDisconnect = useRef(false);
-  const [showCollaborationEndNotice, setShowCollaborationEndNotice] = useState(false);
+  const [showCollaborationEndNotice, setShowCollaborationEndNotice] =
+    useState(false);
 
   const {
     collaborationMode,
@@ -127,8 +130,11 @@ export function useCollaboration(roomId) {
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
         // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
-        // 방소유주한테는 모달창 띄우지 않음 
-        if (data.reason === "collaboration-ended" && data.ownerId !== currentUser.id) {
+        // 방소유주한테는 모달창 띄우지 않음
+        if (
+          data.reason === "collaboration-ended" &&
+          data.ownerId !== currentUser.id
+        ) {
           setShowCollaborationEndNotice(true);
         } else if (data.reason === "time-out") {
           alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
@@ -170,12 +176,46 @@ export function useCollaboration(roomId) {
         removeModel(model.id, false);
       });
 
-      // Redis의 모든 모델을 새로 추가
+      // Redis의 모든 모델을 새로 추가 (GLB 캐시 로직 적용)
       if (data.models && data.models.length > 0) {
-        data.models.forEach((redisModel, index) => {
+        data.models.forEach(async (redisModel, index) => {
           try {
+            // furniture_id가 있고 Redis GLB 캐시를 활용할 수 있는 경우
+            try {
+              const response = await fetch("/api/model-upload", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  furniture_id: redisModel.furniture_id,
+                }),
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.model_url) {
+                  // Redis 캐시 또는 S3에서 로드된 모델 URL로 업데이트
+                  const modelWithCachedUrl = {
+                    ...redisModel,
+                    url: result.model_url,
+                    glbData: result.base64_url
+                  };
+                  addModelWithId(modelWithCachedUrl, false);
+                  // console.log(`✅ 모델 ${redisModel.id} Redis GLB 캐시 로드 성공`);
+                  return;
+                }
+              }
+            } catch (apiError) {
+              console.error(
+                `❌ 모델 ${redisModel.id} API 호출 실패:`,
+                apiError
+              );
+            }
+
+            // 기본 모델 추가 (furniture_id가 없거나 API 호출 실패 시)
             addModelWithId(redisModel, false);
-            // console.log(`✅ 모델 ${redisModel.id} 추가 성공`);
+            // console.log(`✅ 모델 ${redisModel.id} 기본 추가 성공`);
           } catch (error) {
             console.error(`❌ 모델 ${redisModel.id} 추가 실패:`, error);
           }
@@ -604,7 +644,6 @@ export function useCollaboration(roomId) {
       wallId,
     });
   };
-
 
   return {
     // 연결 상태
