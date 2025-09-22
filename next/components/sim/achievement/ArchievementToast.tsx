@@ -10,7 +10,7 @@ export function ArchievementToast() {
     const showAchievementToast = (achievement: any) => {
         setAchievementToast(achievement);
         setTimeout(() => {
-            console.log("🔫 토스트 숨기기:", achievement.title);
+            // console.log("🔫 토스트 숨기기:", achievement.title);
             setAchievementToast(null);
         }, 2000); // 2초 표시
     };
@@ -19,33 +19,33 @@ export function ArchievementToast() {
         // 상대 경로 사용: 현재 origin에서 /api/achievement/sse 호출
         const eventSource = new EventSource(`/api/achievement/sse?userId=${session?.user?.id}`); 
         
-        eventSource.onopen = () => {
-            console.log('SSE 연결됨');
-        };
+        // eventSource.onopen = () => {
+        //     console.log('SSE 연결됨');
+        // };
 
         eventSource.onmessage = (e) => {
             const datas = JSON.parse(e.data);
-            console.log("🔫 업적 토스트 수신:", datas);
+            // console.log("🔫 업적 토스트 수신:", datas);
             
             if (datas.type === 'achievements_unlocked') {
                 const achievements = datas.achievements;
 
                 for (let i=0; i<achievements.length; i++) {
                     setTimeout(() => {
-                        console.log(`🔫 ${i}번째 토스트 표시:`, achievements[i].title);
+                        // console.log(`🔫 ${i}번째 토스트 표시:`, achievements[i].title);
                         showAchievementToast(achievements[i]);
                     }, i * 3500); // 0초, 3.5초, 7초
                 }
             }
         }
 
-        eventSource.onerror = (error) => {
-            console.log('SSE 연결 오류:', error);
-        }
+        // eventSource.onerror = (error) => {
+        //     console.log('SSE 연결 오류:', error);
+        // }
 
         // cleanup 함수로 연결 정리
         return () => {
-            console.log('SSE 연결 정리 중...');
+            // console.log('SSE 연결 정리 중...');
             eventSource.close();
         };
     }, [session?.user?.id])

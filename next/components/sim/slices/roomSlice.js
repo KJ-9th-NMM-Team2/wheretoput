@@ -379,7 +379,7 @@ export const roomSlice = (set, get) => ({
     set({ isLoading: true });
 
     try {
-      const start_time = performance.now();
+      // const start_time = performance.now();
 
       let loadedModels = [];
       const response = await fetch(`/api/sim/load/${roomId}`);
@@ -484,9 +484,9 @@ export const roomSlice = (set, get) => ({
         initialCameraPosition: initialCameraPosition,
       });
 
-      const end_time = performance.now();
-      const duration = end_time - start_time;
-      console.log(`시뮬레이터 상태 로드 완료: ${duration}ms`);
+      // const end_time = performance.now();
+      // const duration = end_time - start_time;
+      // console.log(`시뮬레이터 상태 로드 완료: ${duration}ms`);
 
       return result;
     } catch (error) {
