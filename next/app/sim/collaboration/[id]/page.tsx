@@ -21,6 +21,7 @@ import { useChatMessages } from "@/components/chat/hooks/useChatMessages";
 import { useChatRooms } from "@/components/chat/hooks/useChatRooms";
 import { formatRelativeTime } from "@/components/chat/utils/chat-utils";
 import EndCollaborationModal from "@/components/sim/collaboration/EndCollaborationModal";
+import CollaborationEndNoticeModal from "@/components/sim/collaboration/CollaborationEndNoticeModal";
 import { api } from "@/lib/client/api";
 import {
   checkCollaborationAccess,
@@ -165,7 +166,7 @@ function CollaborationPageContent({
   }, [params, session, checkUserRoom]);
 
   // 2단계: 협업 소켓 연결 (roomId 설정 후)
-  const collaboration = useCollaboration(roomId);
+  const { showCollaborationEndNotice, setShowCollaborationEndNotice, ...collaboration } = useCollaboration(roomId);
 
   // 3단계: 소켓 연결 완료 후 채팅방 설정
   useEffect(() => {
@@ -326,6 +327,13 @@ function CollaborationPageContent({
         isOpen={isEndModalOpen}
         onConfirm={handleEndCollaboration}
         onCancel={() => setIsEndModalOpen(false)}
+      />
+
+      {/* 협업 종료 알림 모달 */}
+      <CollaborationEndNoticeModal
+        isOpen={showCollaborationEndNotice}
+        onClose={() => setShowCollaborationEndNotice(false)}
+        roomId={roomId}
       />
     </>
   );
