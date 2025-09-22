@@ -85,7 +85,7 @@ export async function followUser(userId: string): Promise<boolean> {
     const base_url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const url = `${base_url}/api/users/${userId}/follow`;
 
-    console.log("팔로우 요청:", url);
+    //console.log("팔로우 요청:", url);
     const response = await fetch(url, {
       method: "POST",
       credentials: "include",
@@ -94,7 +94,7 @@ export async function followUser(userId: string): Promise<boolean> {
       },
     });
 
-    console.log("팔로우 응답:", response.status, response.ok);
+    //console.log("팔로우 응답:", response.status, response.ok);
     if (!response.ok) {
       const errorData = await response.text();
       console.error("팔로우 실패:", errorData);
