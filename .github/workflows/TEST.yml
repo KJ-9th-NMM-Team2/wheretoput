@@ -1,0 +1,25 @@
+name: Test SCP via Bastion
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-scp-bastion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WTT_NEXT_SSH_KEY }}" > ~/.ssh/wtt-next-private.pem
+          chmod 600 ~/.ssh/wtt-next-private.pem
+
+      - name: Test scp via Bastion
+        run: |
+          scp -vvv -i ~/.ssh/wtt-next-private.pem \
+            -o StrictHostKeyChecking=no \
+            -o ProxyJump=ubuntu@${{ secrets.BASTION_SERVER }} \
+            docker-compose.next.yml .env.production \
+            ubuntu@${{ secrets.WTT_NEXT_HOST }}:/home/ubuntu/app/
