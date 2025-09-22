@@ -52,10 +52,12 @@ export function DraggableModel({
   // DraggableModel에서
   const [glbDataUrl, setGlbDataUrl] = useState(null);
 
-  // GLB 모델 로드 (url이 있을 때만 로드)
-  const hasValidUrl =
-    url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
-  const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
+  // ********* 이게 urlGltf *********
+  // GLB 모델 로드 (url이 있을 때만 로드) 
+  // const hasValidUrl =
+  //   url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
+  // const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
+  // ********* 이게 urlGltf *********
 
   // Base64 GLB File to ArrayBuffer
   useBase64ToArrayBuffer({ glbData, modelId, setGlbDataUrl });
@@ -64,17 +66,15 @@ export function DraggableModel({
   // 디버깅용 로깅
   // useEffect(() => {
   //   if (glbGltf) {
-  //     console.log(modelId, "GLB 사용 중");
-  //   } else if (urlGltf) {
-  //     console.log(modelId, "URL 사용 중");
+  //     console.log(glbDataUrl, "GLB 사용 중");
   //   } else {
   //     console.log(modelId, "모델 없음");
   //   }
-  // }, [glbGltf, urlGltf]);
+  // }, [glbGltf]); // , urlGltf
 
   // glb or url
   const { scene, animations } = glbGltf ||
-    urlGltf || { scene: null, animations: null };
+    { scene: null, animations: null }; // urlGltf ||
 
   // useEffect(() => {
   //   if (scene) {
