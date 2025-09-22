@@ -37,14 +37,14 @@ export const useChatMessages = (
   // 방 선택 시 join + 히스토리 로드 (순차적 처리로 타이밍 문제 해결)
   useEffect(() => {
     if (!open || !selectedChatId || !token) return;
-    
+
     let cancelled = false;
     let currentSocket: Socket | null = null;
 
     const joinRoom = async () => {
       try {
         currentSocket = connectSocket(token);
-        
+
         // 소켓 연결 대기 (연결이 불안정할 경우 대비)
         await new Promise(resolve => {
           if (currentSocket.connected) {
@@ -58,7 +58,7 @@ export const useChatMessages = (
 
         if (cancelled) return;
 
-        console.log("🚪 FRONTEND JOIN:", selectedChatId);
+        // console.log("🚪 FRONTEND JOIN:", selectedChatId);
         currentSocket.emit("join", { roomId: selectedChatId });
 
         // join 명령 처리 대기 (서버 처리 시간 확보)
@@ -76,7 +76,7 @@ export const useChatMessages = (
         );
 
         if (cancelled) return;
-        
+
         const history: Message[] = (data?.messages ?? data ?? []).map(
           (m: any) => {
             // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
@@ -96,7 +96,7 @@ export const useChatMessages = (
             };
           }
         );
-        
+
         console.log(
           "Messages with avatars:",
           history.map((h) => ({
@@ -104,9 +104,9 @@ export const useChatMessages = (
             senderImage: h.senderImage,
           }))
         );
-        
+
         setMessagesByRoom((prev) => ({ ...prev, [selectedChatId]: history }));
-        
+
         // 히스토리 로드 후 읽음 처리 (받은 메시지들만 읽음으로 표시)
         const receivedMessages = history.filter(msg => msg.senderId !== currentUserId);
         if (receivedMessages.length > 0 && !cancelled) {
@@ -132,7 +132,7 @@ export const useChatMessages = (
       cancelled = true;
       // leave 이벤트 전송 (순차 처리)
       if (currentSocket && currentSocket.connected) {
-        console.log("🚪 FRONTEND LEAVE:", selectedChatId);
+        // console.log("🚪 FRONTEND LEAVE:", selectedChatId);
         currentSocket.emit("leave", { roomId: selectedChatId });
       }
     };
@@ -145,7 +145,7 @@ export const useChatMessages = (
     if (!s) return;
 
     const onMessage = (m: any) => {
-      
+
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
       const isImageMessage = m.content && m.content.startsWith('chat/') &&
         /\.(jpg|jpeg|png|gif|webp)$/i.test(m.content);
@@ -255,20 +255,20 @@ export const useChatMessages = (
 
     // 서버 이벤트 처리 (연결 상태 확인)
     const onJoined = (data: { roomId: string }) => {
-      console.log('🟢 JOINED ROOM:', data.roomId);
+      // console.log('🟢 JOINED ROOM:', data.roomId);
     };
 
     const onLeft = (data: { roomId: string }) => {
-      console.log('🔴 LEFT ROOM:', data.roomId);
+      // console.log('🔴 LEFT ROOM:', data.roomId);
     };
 
     const onSystem = (data: { type: string; roomId: string; userId?: string; at: string }) => {
-      console.log('🔔 SYSTEM EVENT:', data.type, data.roomId);
+      // console.log('🔔 SYSTEM EVENT:', data.type, data.roomId);
       // 시스템 메시지는 필요에 따라 UI에 표시 가능
     };
 
     const onWelcome = (data: { id: string; time: string }) => {
-      console.log('👋 WELCOME:', data.id, data.time);
+      // console.log('👋 WELCOME:', data.id, data.time);
     };
 
     s.on("message", onMessage);
@@ -297,7 +297,7 @@ export const useChatMessages = (
         console.error("메시지 전송 실패: 토큰 또는 사용자 ID 없음");
         return;
       }
-      
+
       const now = new Date().toISOString();
       const tempId = `tmp-${Math.random().toString(36).slice(2)}`;
       const tempMsg: Message = {
@@ -337,8 +337,8 @@ export const useChatMessages = (
       });
 
       const s = getSocket() ?? connectSocket(token);
-      console.log("🔵 WEBSOCKET SEND:", { roomId, content, tempId });
-      console.log("🔵 SOCKET STATE:", s.connected);
+      // console.log("🔵 WEBSOCKET SEND:", { roomId, content, tempId });
+      // console.log("🔵 SOCKET STATE:", s.connected);
       s.emit("send", { roomId, content, tempId });
     },
     [currentUserId, token, onChatRoomUpdate]
@@ -355,7 +355,7 @@ export const useChatMessages = (
     setChatLastMessage(trimmed)
 
     if (!trimmed || !selectedChatId) return;
-        onSendMessage(selectedChatId, trimmed);
+    onSendMessage(selectedChatId, trimmed);
 
     setText("");
   }, [text, selectedChatId, onSendMessage]);
