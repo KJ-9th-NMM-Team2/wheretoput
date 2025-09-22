@@ -14,12 +14,14 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.WTT_NEXT_SSH_KEY }}" > ~/.ssh/wtt-next-private.pem
-          chmod 600 ~/.ssh/wtt-next-private.pem
+          chmod 400 ~/.ssh/wtt-next-private.pem
+
+      
 
       - name: Test scp via Bastion
         run: |
-          scp -vvv -i ~/.ssh/wtt-next-private.pem \
-            -o StrictHostKeyChecking=no \
-            -o ProxyJump=ubuntu@${{ secrets.BASTION_SERVER }} \
-            docker-compose.next.yml .env.production \
-            ubuntu@${{ secrets.WTT_NEXT_HOST }}:/home/ubuntu/app/
+          scp -o StrictHostKeyChecking=no \
+              -i ~/.ssh/wtt-next-private.pem \
+              -o ProxyJump=ubuntu@${{ secrets.BASTION_SERVER }} \
+              docker-compose.next.yml .env.production \
+              ubuntu@${{ secrets.WTT_NEXT_HOST }}:/home/ubuntu/app/
