@@ -7,21 +7,34 @@ jobs:
   test-scp-bastion:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup SSH key
+      - name: Setup SSH keys and config
         run: |
           mkdir -p ~/.ssh
+          
+          # Bastion 서버용 SSH 키
+          echo "${{ secrets.BASTION_SSH_KEY }}" > ~/.ssh/bas.pem
+          chmod 400 ~/.ssh/bas.pem
+          
+          # Target 서버용 SSH 키  
           echo "${{ secrets.WTT_NEXT_SSH_KEY }}" > ~/.ssh/wtt-next-private.pem
           chmod 400 ~/.ssh/wtt-next-private.pem
-
+          
+          # SSH config 설정
+          cat > ~/.ssh/config << 'EOF'
+          Host bastion
+              HostName ${{ secrets.BASTION_SERVER }}
+              User ubuntu
+              IdentityFile ~/.ssh/bas.pem
+              StrictHostKeyChecking no
+          
+          Host target
+              HostName ${{ secrets.WTT_NEXT_HOST }}
+              User ubuntu
+              IdentityFile ~/.ssh/wtt-next-private.pem
+              ProxyJump bastion
+              StrictHostKeyChecking no
+          EOF
       
-
       - name: Test scp via Bastion
         run: |
-          scp -o StrictHostKeyChecking=no \
-              -i ~/.ssh/wtt-next-private.pem \
-              -o ProxyJump=ubuntu@${{ secrets.BASTION_SERVER }} \
-              docker-compose.next.yml .env.production \
-              ubuntu@${{ secrets.WTT_NEXT_HOST }}:/home/ubuntu/app/
+          scp docker-compose.next.yml .env.production target:/home/ubuntu/app/
