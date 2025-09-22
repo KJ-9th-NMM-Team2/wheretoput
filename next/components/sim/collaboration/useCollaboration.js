@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/components/sim/useStore.js";
 import { io } from "socket.io-client";
 import { connectSocket as startSocket } from "@/lib/client/socket";
@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 export function useCollaboration(roomId) {
   const socket = useRef(null);
   const isManualDisconnect = useRef(false);
+  const [showCollaborationEndNotice, setShowCollaborationEndNotice] = useState(false);
 
   const {
     collaborationMode,
@@ -126,9 +127,9 @@ export function useCollaboration(roomId) {
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
         // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
-        if (data.reason === "collaboration-ended") {
-          alert("방 소유자가 협업 모드를 종료하여 방에서 나갔습니다.");
-          router.replace(roomId ? `/sim/${roomId}` : `/`);
+        // 방소유주한테는 모달창 띄우지 않음 
+        if (data.reason === "collaboration-ended" && data.ownerId !== currentUser.id) {
+          setShowCollaborationEndNotice(true);
         } else if (data.reason === "time-out") {
           alert("비활성 상태로 인해 방에서 퇴장되었습니다.");
           router.replace(roomId ? `/sim/${roomId}` : `/`);
@@ -604,6 +605,7 @@ export function useCollaboration(roomId) {
     });
   };
 
+
   return {
     // 연결 상태
     isConnected: socket.current?.connected || false,
@@ -633,5 +635,9 @@ export function useCollaboration(roomId) {
 
     // 연결 관리
     disconnect,
+
+    // 상태
+    showCollaborationEndNotice,
+    setShowCollaborationEndNotice,
   };
 }

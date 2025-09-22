@@ -3,6 +3,7 @@ import { WallDetector } from "@/lib/wallDetection.js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import CreateRoomModal from "@/components/CreateRoomModal";
+import toast from "react-hot-toast";
 
 import {
   Square,
@@ -1101,10 +1102,16 @@ const FloorPlanEditor = () => {
         containerHeight: canvasHeight,
       });
 
-      alert(`벽 검출이 완료되었습니다!`);
+      toast.success('벽 검출이 완료되었습니다!', {
+        duration: 3000,
+        position: 'top-center',
+      });
     } catch (error) {
       console.error("Wall detection failed:", error);
-      alert("벽 검출에 실패했습니다.");
+      toast.error('벽 검출에 실패했습니다.', {
+        duration: 3000,
+        position: 'top-center',
+      });
     } finally {
       setIsProcessing(false);
 
