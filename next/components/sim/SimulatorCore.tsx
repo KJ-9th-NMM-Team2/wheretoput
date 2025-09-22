@@ -473,7 +473,7 @@ export function SimulatorCore({
     initialCameraPosition,
   } = useStore();
 
-  const [startTime, setStartTime] = useState<number>(0);
+  // const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
   const [loadError, setLoadError] = useState<Error | null>(null);
 
@@ -561,25 +561,25 @@ export function SimulatorCore({
   };
 
   // 상태 기반 속도 측정
-  useEffect(() => {
-    if (!loadedModels.length && !startTime) {
-      setStartTime(performance.now());
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!loadedModels.length && !startTime) {
+  //     setStartTime(performance.now());
+  //   }
+  // }, []);
 
-  const handleModelLoaded = useCallback(
-    (modelId: string) => {
-      setLoadedModelIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(modelId);
+  // const handleModelLoaded = useCallback(
+  //   (modelId: string) => {
+  //     setLoadedModelIds((prev) => {
+  //       const newSet = new Set(prev);
+  //       newSet.add(modelId);
 
-        console.log("모든 모델 실제 로드 완료:", performance.now() - startTime);
+  //       console.log("모든 모델 실제 로드 완료:", performance.now() - startTime);
 
-        return newSet;
-      });
-    },
-    [loadedModels.length, startTime]
-  );
+  //       return newSet;
+  //     });
+  //   },
+  //   [loadedModels.length, startTime]
+  // );
 
   // Suspense fallback이 완전히 사라진 후
   // useEffect(() => {
@@ -983,7 +983,7 @@ export function SimulatorCore({
                     controlsRef={controlsRef}
                     texturePath={model.texturePath}
                     type={model.isCityKit ? "building" : "glb"}
-                    onModelLoaded={handleModelLoaded}
+                    // onModelLoaded={handleModelLoaded}
                     glbData={model.glbData}
                   />
                 </Suspense>
