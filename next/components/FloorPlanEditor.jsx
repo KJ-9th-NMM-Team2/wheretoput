@@ -137,10 +137,8 @@ const FloorPlanEditor = () => {
     setScaleRealLength("");
     setTool("wall"); // 벽 그리기 모드로 변경
 
-    alert(
-      `축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(
-        2
-      )}mm)\n이제 벽을 그려보세요.`
+    toast.success(
+      `축척이 설정되었습니다! (1픽셀 = ${newPixelToMmRatio.toFixed(2)}mm)`
     );
   };
 
@@ -1102,21 +1100,21 @@ const FloorPlanEditor = () => {
         containerHeight: canvasHeight,
       });
 
-      toast.success('벽 검출이 완료되었습니다!', {
+      toast.success("벽 검출이 완료되었습니다!", {
         duration: 3000,
-        position: 'top-center',
+        position: "top-center",
       });
     } catch (error) {
       console.error("Wall detection failed:", error);
-      toast.error('벽 검출에 실패했습니다.', {
+      toast.error("벽 검출에 실패했습니다.", {
         duration: 3000,
-        position: 'top-center',
+        position: "top-center",
       });
     } finally {
       setIsProcessing(false);
 
       //[09.16] onchange 이벤트 발생 위해 값 초기화
-      event.target.value='';
+      event.target.value = "";
     }
   };
 
@@ -1252,8 +1250,11 @@ const FloorPlanEditor = () => {
                 className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer"
               >
                 {/* [09.15] 메인아이콘 자리 */}
-              <img src="/asset/wheretoput.png" alt="WheretoPut" className="w-12 h-12 dark:bg-white dark:rounded-lg dark:p-0.5" />
-
+                <img
+                  src="/asset/wheretoput.png"
+                  alt="WheretoPut"
+                  className="w-12 h-12 dark:bg-white dark:rounded-lg dark:p-0.5"
+                />
               </Link>
               <h1 className="text-base lg:text-lg font-black text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200">
                 어따놀래
@@ -1518,7 +1519,6 @@ const FloorPlanEditor = () => {
                     </p>
                   ) : (
                     <div>
-        
                       <div className="mb-3">
                         <label className="block text-xs font-medium text-gray-800 dark:text-gray-200 mb-3">
                           실제 길이 (mm) :
@@ -1535,7 +1535,11 @@ const FloorPlanEditor = () => {
                         <button
                           onClick={applyScale}
                           disabled={!scaleRealLength}
-                          className={`flex-1 px-4 py-2 font-semibold rounded-lg transition-all cursor-pointer ${!scaleRealLength ? "tool-btn-inactive" : "tool-btn-active"} disabled:cursor-not-allowed`}
+                          className={`flex-1 px-4 py-2 font-semibold rounded-lg transition-all cursor-pointer ${
+                            !scaleRealLength
+                              ? "tool-btn-inactive"
+                              : "tool-btn-active"
+                          } disabled:cursor-not-allowed`}
                         >
                           축척 적용
                         </button>
@@ -1561,7 +1565,8 @@ const FloorPlanEditor = () => {
                     선택된 벽
                   </h4>
                   <p className="text-gray-800 dark:text-gray-100 mb-2 tracking-tight">
-                    현재 길이 : {(() => {
+                    현재 길이 :{" "}
+                    {(() => {
                       const dist = calculateDistance(
                         selectedWall.start,
                         selectedWall.end
@@ -1579,9 +1584,7 @@ const FloorPlanEditor = () => {
                         <input
                           type="number"
                           value={editingWallLength}
-                          onChange={(e) =>
-                            setEditingWallLength(e.target.value)
-                          }
+                          onChange={(e) => setEditingWallLength(e.target.value)}
                           className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                           placeholder="길이 입력"
                         />
@@ -1605,7 +1608,6 @@ const FloorPlanEditor = () => {
                       정확한 길이 조정을 위해, '축척 설정'을 먼저 해주세요.
                     </p>
                   )}
-
                 </div>
               )}
 
@@ -1634,18 +1636,15 @@ const FloorPlanEditor = () => {
                 </div>
 
                 <div>
-                <button
-                  onClick={() => {
-                    setViewScale(1);
-                    setViewOffset({ x: 0, y: 0 });
-                  }}
-
-                  className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 flex items-center justify-center gap-2"
-                 
-                >
-                  Reset   <RotateCcw size={18} />
-                  
-                </button>
+                  <button
+                    onClick={() => {
+                      setViewScale(1);
+                      setViewOffset({ x: 0, y: 0 });
+                    }}
+                    className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors cursor-pointer dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 flex items-center justify-center gap-2"
+                  >
+                    Reset <RotateCcw size={18} />
+                  </button>
                 </div>
 
                 <p className="text-xs text-gray-800 dark:text-gray-100 mb-2 tracking-tight mt-4 flex gap-x-3">
