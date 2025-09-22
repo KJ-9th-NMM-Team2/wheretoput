@@ -1,6 +1,6 @@
 "use client"; // 클라이언트 컴포넌트라는 것을 명시 // 이거 안하면 렌더링 안됨
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SideTitle from "@/components/sim/side/SideTitle";
 import SideSearch from "@/components/sim/side/SideSearch";
 import SideCategories from "@/components/sim/side/SideCategories";
@@ -9,6 +9,7 @@ import SideItems from "@/components/sim/side/SideItems";
 import { HistoryControls, useHistoryKeyboard } from "@/components/sim/history";
 import type { furnitures as Furniture } from "@prisma/client";
 import { RoomInfo } from "@/lib/services/roomService";
+import { useStore } from "./useStore";
 
 
 const SideViewContent: React.FC<{
@@ -31,9 +32,18 @@ const SideViewContent: React.FC<{
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 8;
 
+  const { setSelectedCategory: setStoreCategory } = useStore();
+
+  // 컴포넌트 마운트 시 카테고리를 전체(99)로 초기화
+  useEffect(() => {
+    setStoreCategory(99);
+  }, [roomId, setStoreCategory]);
+
   useHistoryKeyboard();
 
   const handleCategorySelect = (category: string) => {
+    if (selectedCategory === category) return; // 같은 카테고리면 무시
+
     setSearchResults([]);
     setSelectedCategory(category);
     setSearchQuery("");
