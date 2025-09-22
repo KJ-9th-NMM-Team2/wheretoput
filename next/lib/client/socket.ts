@@ -22,7 +22,7 @@ export function connectSocket(jwt: string, namespace: string = "/") {
   if (sockets.has(namespace)) {
     const existingSocket = sockets.get(namespace)!;
     if (existingSocket.connected) {
-      console.log(`🔄 REUSING EXISTING SOCKET [${namespace}]:`, fullUrl);
+      // console.log(`🔄 REUSING EXISTING SOCKET [${namespace}]:`, fullUrl);
       return existingSocket;
     } else {
       // 연결이 끊어진 소켓은 제거하고 새로 생성
