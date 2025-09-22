@@ -12,7 +12,7 @@ import * as THREE from "three";
  */
 function SimPageContent({ params }: { params: Promise<{ id: string }> }) {
   const [roomId, setRoomId] = useState<string | null>(null);
-  const { setCollaborationMode, setViewOnly, currrentRoomInfo } = useStore();
+  const { setCollaborationMode, setViewOnly, currentRoomInfo } = useStore();
 
   // 모바일 전용 초기화 - 보기 모드로 고정
   useEffect(() => {
