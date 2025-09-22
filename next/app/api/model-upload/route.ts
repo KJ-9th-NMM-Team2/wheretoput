@@ -127,12 +127,17 @@ export async function POST(request: NextRequest) {
         if (response) {
           console.log("🌈 Redis cache success!");
           const uint8Array = new Uint8Array(response);
+  
+          // Blob URL 생성해서 model_url로 제공
+          const blob = new Blob([uint8Array], { type: 'model/gltf-binary' });
+          const model_url = URL.createObjectURL(blob);
 
-          return new NextResponse(uint8Array, {
-            headers: {
-              "Content-Type": "model/gltf-binary",
-              "Content-Length": uint8Array.byteLength.toString(),
-            }
+          return NextResponse.json({
+            success: true,
+            furniture_id: furniture_id,
+            model_url: model_url, // 캐시된 데이터의 Blob URL
+            message: 'Redis 캐시 3D 모델을 사용합니다.',
+            cached: true,
           });
         }
         
