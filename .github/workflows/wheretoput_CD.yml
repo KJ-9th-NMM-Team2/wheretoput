@@ -129,7 +129,7 @@ jobs:
           proxy_username: ubuntu
           proxy_key: ${{ secrets.BASTION_SSH_KEY }}
 
-      - name: Deploy Next.js on EC2 (via Bastion)
+      - name: Debug ECR connectivity and Deploy Next.js
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.WTT_NEXT_HOST }}
@@ -139,20 +139,48 @@ jobs:
           proxy_username: ubuntu
           proxy_key: ${{ secrets.BASTION_SSH_KEY }}
           script: |
-            docker system prune -f
             set -e
             cd /home/ubuntu/app/
             
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
-              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            echo "=== 1. 네트워크 연결 테스트 ==="
+            curl -I https://amazonaws.com || echo "일반 인터넷 연결 실패"
+            curl -I https://${{ env.ECR_REGISTRY }} || echo "ECR 레지스트리 연결 실패"
             
+            echo "=== 2. AWS CLI 설치 및 버전 확인 ==="
+            which aws || echo "AWS CLI 없음"
+            aws --version || echo "AWS CLI 버전 확인 실패"
+            
+            echo "=== 3. IAM 권한 확인 ==="
+            aws sts get-caller-identity || echo "AWS 인증 실패"
+            
+            echo "=== 4. ECR 로그인 테스트 ==="
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+              docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }} || echo "ECR 로그인 실패"
+            
+            echo "=== 5. 현재 Docker 이미지 상태 ==="
+            docker images | grep ${{ secrets.ECR_REPO_NEXT }} || echo "기존 이미지 없음"
+            
+            echo "=== 6. 환경변수 확인 ==="
+            echo "IMAGE_TAG: ${{ github.sha }}"
+            echo "ECR_REGISTRY: ${{ env.ECR_REGISTRY }}"
+            echo "ECR_REPO_NEXT: ${{ secrets.ECR_REPO_NEXT }}"
+            
+            echo "=== 7. ECR 이미지 존재 확인 ==="
+            aws ecr describe-images \
+              --repository-name ${{ secrets.ECR_REPO_NEXT }} \
+              --image-ids imageTag=${{ github.sha }} \
+              --region ${{ env.AWS_REGION }} || echo "해당 태그 이미지 없음"
+            
+            echo "=== 8. 이미지 Pull 시도 ==="
+            docker pull ${{ env.ECR_REGISTRY }}/${{ secrets.ECR_REPO_NEXT }}:${{ github.sha }} || echo "이미지 pull 실패"
+            
+            echo "=== 9. Docker Compose 실행 ==="
             export IMAGE_TAG=${{ github.sha }}
             export ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             export ECR_REPO_NEXT=${{ secrets.ECR_REPO_NEXT }}
             
-            docker-compose -f docker-compose.next.yml --env-file .env.production pull
-            docker-compose -f docker-compose.next.yml --env-file .env.production up -d --remove-orphans
-            docker image prune -f
+            docker-compose -f docker-compose.next.yml --env-file .env.production pull || echo "Compose pull 실패"
+            docker-compose -f docker-compose.next.yml --env-file .env.production up -d --remove-orphans || echo "Compose up 실패"
 
   deploy-nest:
     needs: build-and-push
