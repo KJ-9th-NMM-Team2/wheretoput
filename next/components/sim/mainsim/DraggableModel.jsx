@@ -13,7 +13,6 @@ import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndica
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
 import { convertS3ToCdnUrl } from "@/lib/api/api-url";
 import { useBase64ToArrayBuffer } from "./hooks/useBase64ToArrayBuffer";
-import ModelErrorBoundary from "./ModelErrorBoundary";
 
 export function DraggableModel({
   modelId,
@@ -59,7 +58,7 @@ export function DraggableModel({
   const [glbDataUrl, setGlbDataUrl] = useState(null);
 
   // ********* 이게 urlGltf *********
-  // GLB 모델 로드 (url이 있을 때만 로드) 
+  // GLB 모델 로드 (url이 있을 때만 로드)
   // const hasValidUrl =
   //   url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   // const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
@@ -67,7 +66,8 @@ export function DraggableModel({
 
   // glbData가 있으면 캐시 우선, 없으면 URL 사용
   const hasGlbData = Boolean(glbData);
-  const hasValidUrl = url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
+  const hasValidUrl =
+    url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
 
   // glbData가 있으면 캐시 로딩을 기다리고, 없으면 바로 URL 사용
   const shouldLoadFromUrl = !hasGlbData && hasValidUrl;
@@ -89,7 +89,8 @@ export function DraggableModel({
   }, [glbGltf, urlGltf]); // , urlGltf
 
   // 우선순위 적용
-  const { scene, animations } = glbGltf || urlGltf || { scene: null, animations: null };
+  const { scene, animations } = glbGltf ||
+    urlGltf || { scene: null, animations: null };
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -306,7 +307,7 @@ export function DraggableModel({
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
   return (
-    <ModelErrorBoundary>
+    <>
       {viewOnly ? (
         <group
           ref={meshRef}
@@ -373,7 +374,7 @@ export function DraggableModel({
           />
         </group>
       )}
-    </ModelErrorBoundary>
+    </>
   );
 }
 
