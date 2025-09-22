@@ -53,7 +53,7 @@ class CacheUtils {
     fileName: string,
     furniture_id: string
   ) => {
-    const response = await fetch(furniture.model_url);
+    const response = await fetch(encodeURIComponent(furniture.model_url));
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
