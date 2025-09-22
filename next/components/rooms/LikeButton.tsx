@@ -32,7 +32,7 @@ export default function LikeButton({
     // 일단 대기
     setIsLoading(true);
     try {
-      console.log(session);
+      //console.log(session);
       // fetchPostLike (/lib/api/likes.ts) 호출
       const result = await fetchPostLike(room.room_id, session.user.id);
       if (result.success) {
