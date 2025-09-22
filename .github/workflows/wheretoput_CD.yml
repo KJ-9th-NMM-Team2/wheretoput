@@ -107,27 +107,32 @@ jobs:
           USE_REDIS=${{ secrets.USE_REDIS }}
           EOF
 
-      - name: Upload files to Next.js EC2
+      - name: Upload files to Next.js EC2 (via Bastion)
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY_NEXT }}
+          host: ${{ secrets.WTT_NEXT_HOST }}
+          username: ubuntu
+          key: ${{ secrets.WTT_NEXT_SSH_KEY }}
           source: "docker-compose.next.yml,.env.production"
-          target: ${{ secrets.EC2_DEPLOY_PATH }}/next/
+          target: /home/ubuntu/app/
           timeout: 60s
+          proxy_host: ${{ secrets.BASTION_SERVER }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.BASTION_SSH_KEY }}
 
-
-      - name: Deploy Next.js on EC2
+      - name: Deploy Next.js on EC2 (via Bastion)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_SSH_HOST_NEXT }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY_NEXT }}
+          host: ${{ secrets.WTT_NEXT_HOST }}
+          username: ubuntu
+          key: ${{ secrets.WTT_NEXT_SSH_KEY }}
+          proxy_host: ${{ secrets.BASTION_SERVER }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.BASTION_SSH_KEY }}
           script: |
             docker system prune -f
             set -e
-            cd ${{ secrets.EC2_DEPLOY_PATH }}/next
+            cd /home/ubuntu/app/
             
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
               docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
@@ -163,26 +168,32 @@ jobs:
           IMAGE_TAG=latest
           EOF
 
-      - name: Upload files to NestJS EC2
+      - name: Upload files to NestJS EC2 (via Bastion)
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST_SOCKET }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
+          host: ${{ secrets.WTT_SOCKET_HOST }}
+          username: ubuntu
+          key: ${{ secrets.WTT_SOCKET_SSH_KEY }}
           source: "docker-compose.socket.yml,.env.production"
-          target: ${{ secrets.EC2_DEPLOY_PATH }}/socket/
+          target: /home/ubuntu/app/
           timeout: 60s
+          proxy_host: ${{ secrets.BASTION_SERVER }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.BASTION_SSH_KEY }}
       
-      - name: Deploy NestJS on EC2
+      - name: Deploy NestJS on EC2 (via Bastion)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST_SOCKET }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY_SOCKET }}
+          host: ${{ secrets.WTT_SOCKET_HOST }}
+          username: ubuntu
+          key: ${{ secrets.WTT_SOCKET_SSH_KEY }}
+          proxy_host: ${{ secrets.BASTION_SERVER }}
+          proxy_username: ubuntu
+          proxy_key: ${{ secrets.BASTION_SSH_KEY }}
           script: |
             docker system prune -f
             set -e
-            cd ${{ secrets.EC2_DEPLOY_PATH }}/socket
+            cd /home/ubuntu/app/
 
             mkdir -p ./temp && chmod 755 ./temp
             
