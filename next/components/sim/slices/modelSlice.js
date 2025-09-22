@@ -38,10 +38,11 @@ export const modelSlice = (set, get) => ({
 
       // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
       if (shouldBroadcast) {
+        const modelWithId = result.loadedModels[result.loadedModels.length - 1];
         get().broadcastWithThrottle(
           "broadcastModelAdd",
-          model.id,
-          model,
+          modelWithId.id,
+          modelWithId, // glbData가 있으면 포함된 전체 모델 데이터
           0
         );
       }
@@ -84,10 +85,11 @@ export const modelSlice = (set, get) => ({
 
       // Socket 브로드캐스트 (협업 모드이고 브로드캐스트가 필요한 경우)
       if (shouldBroadcast) {
+        const modelWithId = result.loadedModels[result.loadedModels.length - 1];
         get().broadcastWithThrottle(
           "broadcastModelAddWithId",
-          model.id,
-          model,
+          modelWithId.id,
+          modelWithId, // glbData가 있으면 포함된 전체 모델 데이터
           0
         );
       }
