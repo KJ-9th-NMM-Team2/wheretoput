@@ -123,10 +123,13 @@ export async function POST(request: NextRequest) {
       try {
         const response = await glbCacheManager.readFile(furniture);
         console.log("🔫 Redis Cache 읽기 성공 데이터 확인 필요");
-
+        
+        let glbBase64 = null;
         if (response) {
           console.log("🌈 Redis cache success!");
           const uint8Array = new Uint8Array(response);
+
+          glbBase64 = Buffer.from(response).toString('base64');
   
           // Blob URL 생성해서 model_url로 제공
           const blob = new Blob([uint8Array], { type: 'model/gltf-binary' });
@@ -135,6 +138,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({
             success: true,
             furniture_id: furniture_id,
+            base64_url: glbBase64,
             model_url: model_url, // 캐시된 데이터의 Blob URL
             message: 'Redis 캐시 3D 모델을 사용합니다.',
             cached: true,
