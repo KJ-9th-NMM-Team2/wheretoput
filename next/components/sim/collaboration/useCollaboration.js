@@ -53,7 +53,7 @@ export function useCollaboration(roomId) {
   // 협업 종료 브로드캐스트 함수
   const broadcastCollaborationEnd = () => {
     if (socket.current && socket.current.connected) {
-      console.log("🔚 협업 종료 알림을 다른 사용자들에게 전송");
+      // console.log("🔚 협업 종료 알림을 다른 사용자들에게 전송");
       socket.current.emit("collaboration-ended", {
         ownerId: currentUser.id,
         roomId,
@@ -64,7 +64,7 @@ export function useCollaboration(roomId) {
 
   // Socket.IO 연결 초기화
   const connectSocket = async () => {
-    console.log("소켓접속 시도중");
+    // console.log("소켓접속 시도중");
     if (!roomId || !collaborationMode) return;
 
     try {
@@ -80,14 +80,14 @@ export function useCollaboration(roomId) {
       // console.log("소켓:", socket.current);
 
       socket.current.on("connect", () => {
-        console.log("🔗 협업 모드 연결됨");
+        // console.log("🔗 협업 모드 연결됨");
         setConnectionStatus(true);
 
         // 방 입장
         socket.current.emit("join-room", roomId);
 
         // 협업 모드에서는 바로 사용자 입장 처리
-        console.log("협업 모드 연결 완료, 즉시 사용자 입장 처리");
+        // console.log("협업 모드 연결 완료, 즉시 사용자 입장 처리");
         socket.current.emit("user-join", {
           userId: currentUser.id,
           userData: {
@@ -101,7 +101,7 @@ export function useCollaboration(roomId) {
       setupSocketListeners();
 
       socket.current.on("disconnect", async () => {
-        console.log("🔌 협업 연결 끊김");
+        // console.log("🔌 협업 연결 끊김");
         setConnectionStatus(false);
       });
 
@@ -119,11 +119,11 @@ export function useCollaboration(roomId) {
 
     socket.current.on("user-join", (data) => {
       updateConnectedUser(data.userId, data.userData);
-      console.log(`👤 ${data.userData.name}님이 입장했습니다`);
+      // console.log(`👤 ${data.userData.name}님이 입장했습니다`);
     });
 
     socket.current.on("user-left", async (data) => {
-      console.log("🔴 user-left 이벤트 수신:", data, roomId);
+      // console.log("🔴 user-left 이벤트 수신:", data, roomId);
 
       if (data.userId === currentUser.id && !isManualDisconnect.current) {
         // 협업 종료로 인한 퇴장인지 일반 퇴장인지 구분
@@ -142,13 +142,13 @@ export function useCollaboration(roomId) {
       } else {
         // 사용자 정보 제거
         removeConnectedUser(data.userId);
-        console.log(
-          `👋 ${data.userData?.name || data.userId}님이 퇴장했습니다`
-        );
-        console.log(
-          "퇴장 후 connectedUsers:",
-          useStore.getState().connectedUsers
-        );
+        // console.log(
+        //   `👋 ${data.userData?.name || data.userId}님이 퇴장했습니다`
+        // );
+        // console.log(
+        //   "퇴장 후 connectedUsers:",
+        //   useStore.getState().connectedUsers
+        // );
       }
     });
 
@@ -175,20 +175,20 @@ export function useCollaboration(roomId) {
         data.models.forEach((redisModel, index) => {
           try {
             addModelWithId(redisModel, false);
-            console.log(`✅ 모델 ${redisModel.id} 추가 성공`);
+            // console.log(`✅ 모델 ${redisModel.id} 추가 성공`);
           } catch (error) {
             console.error(`❌ 모델 ${redisModel.id} 추가 실패:`, error);
           }
         });
       } else {
-        console.log("📭 Redis에 저장된 모델이 없음");
+        // console.log("📭 Redis에 저장된 모델이 없음");
       }
 
       // 연결된 사용자 정보 업데이트
       if (data.connectedUsers) {
         data.connectedUsers.forEach(([userId, userData]) => {
           if (userId !== currentUser.id) {
-            console.log(`기존 사용자 정보 업데이트: ${userData.name}`);
+            // console.log(`기존 사용자 정보 업데이트: ${userData.name}`);
             updateConnectedUser(userId, userData);
           }
         });
@@ -199,24 +199,24 @@ export function useCollaboration(roomId) {
     socket.current.on("user-info-response", (data) => {
       if (data.userId !== currentUser.id) {
         updateConnectedUser(data.userId, data.userData);
-        console.log(
-          `📋 기존 사용자 확인: ${data.userData.name}님이 이미 접속해 있습니다`
-        );
+        // console.log(
+        //   `📋 기존 사용자 확인: ${data.userData.name}님이 이미 접속해 있습니다`
+        // );
       } else {
-        console.log(`🔄 자신의 정보는 무시: ${data.userData.name}`);
+        // console.log(`🔄 자신의 정보는 무시: ${data.userData.name}`);
       }
     });
 
     socket.current.on("model-added", (data) => {
       if (data.userId !== currentUser.id) {
-        console.log("➕ model-added 이벤트 수신:", data);
+        // console.log("➕ model-added 이벤트 수신:", data);
         addModel(data.modelData, false);
       }
     });
 
     socket.current.on("model-added-with-id", (data) => {
       if (data.userId !== currentUser.id) {
-        console.log("➕ model-added-with-id 이벤트 수신:", data);
+        // console.log("➕ model-added-with-id 이벤트 수신:", data);
         addModelWithId(data.modelData, false); // shouldBroadcast = false
       }
     });
@@ -246,7 +246,7 @@ export function useCollaboration(roomId) {
     });
 
     socket.current.on("model-select", (data) => {
-      console.log("🔥 model-select 이벤트 수신:", data);
+      // console.log("🔥 model-select 이벤트 수신:", data);
       if (data.userId !== currentUser.id) {
         updateConnectedUser(data.userId, {
           selectedModelId: data.modelId,
@@ -257,7 +257,7 @@ export function useCollaboration(roomId) {
     });
 
     socket.current.on("model-deselect", (data) => {
-      console.log("🔥 model-deselect 이벤트 수신:", data);
+      // console.log("🔥 model-deselect 이벤트 수신:", data);
       if (data.userId !== currentUser.id) {
         updateConnectedUser(data.userId, {
           selectedModelId: null,
@@ -317,20 +317,20 @@ export function useCollaboration(roomId) {
 
     socket.current.on("wall-added", (data) => {
       if (data.userId !== currentUser.id) {
-        console.log("wall-added 데이터 수신:", data);
+        // console.log("wall-added 데이터 수신:", data);
         addWallWithId(data.wallData, false); // 완성된 벽 객체 사용
       }
     });
 
     socket.current.on("wall-added-with-id", (data) => {
       if (data.userId !== currentUser.id) {
-        console.log("wall-added-with-id 데이터 수신:", data);
+        // console.log("wall-added-with-id 데이터 수신:", data);
         addWallWithId(data.wallData, false);
       }
     });
 
     socket.current.on("wall-removed", (data) => {
-      console.log("wall-removed 데이터 수신", data);
+      // console.log("wall-removed 데이터 수신", data);
       if (data.userId !== currentUser.id) {
         removeWall(data.wallId, false, false);
       }
@@ -386,11 +386,11 @@ export function useCollaboration(roomId) {
       isManualDisconnect.current = false;
       connectSocket();
     } else {
-      console.log("connectSocket 실행 조건 미충족:", {
-        collaborationMode,
-        roomId,
-        currentUserId: currentUser.id,
-      });
+      // console.log("connectSocket 실행 조건 미충족:", {
+      //   collaborationMode,
+      //   roomId,
+      //   currentUserId: currentUser.id,
+      // });
       disconnect();
     }
 
@@ -584,7 +584,7 @@ export function useCollaboration(roomId) {
   };
 
   const broadcastWallAdd = (wallData) => {
-    console.log("broadcast WallData", wallData);
+    // console.log("broadcast WallData", wallData);
     emitEvent("wall-added", {
       userId: currentUser.id,
       wallData,

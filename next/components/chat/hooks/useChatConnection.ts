@@ -39,7 +39,7 @@ export const useChatConnection = (open: boolean) => {
         // 소켓 연결 상태 확인 (일관성을 위해 추가)
         if (!socket.connected) {
           socket.once('connect', () => {
-            console.log('🟢 CHAT CONNECTION: Socket connected');
+            // console.log('🟢 CHAT CONNECTION: Socket connected');
           });
         }
       } catch (e) {
