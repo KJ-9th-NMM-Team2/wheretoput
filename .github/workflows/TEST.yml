@@ -37,4 +37,4 @@ jobs:
       
       - name: Test scp via Bastion
         run: |
-          scp docker-compose.next.yml .env.production target:/home/ubuntu/app/
+          scp docker-compose.next.yml .env.production target:/home/ubuntu/
