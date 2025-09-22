@@ -1,13 +1,19 @@
-import React, { useRef, useEffect, useMemo, useState } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { useTexture, useGLTF, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useObjectControls } from "@/components/sim/mainsim/hooks/useObjectControls";
 import { useStore } from "@/components/sim/useStore";
 import { ModelTooltip } from "@/components/sim/collaboration/CollaborationIndicators";
 import { PreviewBox } from "@/components/sim/preview/PreviewBox";
-import { useCallback } from "react";
 import { convertS3ToCdnUrl } from "@/lib/api/api-url";
 import { useBase64ToArrayBuffer } from "./hooks/useBase64ToArrayBuffer";
+import ModelErrorBoundary from "./ModelErrorBoundary";
 
 export function DraggableModel({
   modelId,
@@ -52,29 +58,25 @@ export function DraggableModel({
   // DraggableModel에서
   const [glbDataUrl, setGlbDataUrl] = useState(null);
 
-  // GLB 모델 로드 (url이 있을 때만 로드)
-  const hasValidUrl =
-    url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
-  const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
-
   // Base64 GLB File to ArrayBuffer
   useBase64ToArrayBuffer({ glbData, modelId, setGlbDataUrl });
-  const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
 
-  // 디버깅용 로깅
-  // useEffect(() => {
-  //   if (glbGltf) {
-  //     console.log(modelId, "GLB 사용 중");
-  //   } else if (urlGltf) {
-  //     console.log(modelId, "URL 사용 중");
-  //   } else {
-  //     console.log(modelId, "모델 없음");
-  //   }
-  // }, [glbGltf, urlGltf]);
+  // 모델 URL 결정: glbDataUrl이 있으면 우선, 없으면 url 사용
+  const modelUrl = useMemo(() => {
+    if (glbDataUrl) return glbDataUrl;
+    if (url && typeof url === "string" && url !== "/legacy_mesh (1).glb") {
+      return convertS3ToCdnUrl(url);
+    }
+    return "";
+  }, [glbDataUrl, url]);
 
-  // glb or url
-  const { scene, animations } = glbGltf ||
-    urlGltf || { scene: null, animations: null };
+  // 단일 useGLTF 호출 (hook 규칙 준수)
+  const gltf = useGLTF(modelUrl || "");
+
+  // 유효한 모델이 있을 때만 scene과 animations 사용
+  const { scene, animations } = useMemo(() => {
+    return modelUrl && gltf?.scene ? gltf : { scene: null, animations: null };
+  }, [modelUrl, gltf]);
 
   // useEffect(() => {
   //   if (scene) {
@@ -298,7 +300,7 @@ export function DraggableModel({
   }, [modelId, updateModelPosition, updateModelRotation, updateModelScale]);
 
   return (
-    <>
+    <ModelErrorBoundary>
       {viewOnly ? (
         <group
           ref={meshRef}
@@ -365,7 +367,7 @@ export function DraggableModel({
           />
         </group>
       )}
-    </>
+    </ModelErrorBoundary>
   );
 }
 
