@@ -79,6 +79,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug - Find docker-compose files for Next.js
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== All files in current directory ==="
+          ls -la
+          echo "=== Find docker-compose.next.yml ==="
+          find . -name "docker-compose.next.yml" -type f
+
       - name: Create Next.js .env.production
         run: |
           cat > .env.production << 'EOF'
@@ -151,6 +160,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Debug - Find docker-compose files for NestJS
+        run: |
+          echo "=== Current directory ==="
+          pwd
+          echo "=== All files in current directory ==="
+          ls -la
+          echo "=== Find docker-compose.socket.yml ==="
+          find . -name "docker-compose.socket.yml" -type f
 
       - name: Create NestJS .env.production
         run: |
