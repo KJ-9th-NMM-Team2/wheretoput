@@ -518,6 +518,10 @@ function ControlSlider({
   const [isDragging, setIsDragging] = useState(false);
 
   const formatValue = (value) => {
+    // 0.001 미만의 값은 0 처리 (0, 0.0, -0.0 왔다갔다하는 거 방지 용도)
+    if (Math.abs(value) < 0.001) {
+      return "0";
+    }
     if (step < 1) {
       return Number.isInteger(value) ? String(value) : value.toFixed(1);
     }

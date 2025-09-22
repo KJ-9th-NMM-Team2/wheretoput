@@ -22,7 +22,6 @@ export function DraggableModel({
   // onModelLoaded,
   glbData,
 }) {
-
   // scale 값을 안전하게 처리
   const safeScale = (() => {
     const scaleArray = Array.isArray(scale) ? scale : [scale, scale, scale];
@@ -57,9 +56,9 @@ export function DraggableModel({
   const hasValidUrl =
     url && typeof url === "string" && url !== "/legacy_mesh (1).glb";
   const urlGltf = hasValidUrl ? useGLTF(convertS3ToCdnUrl(url)) : null;
-  
+
   // Base64 GLB File to ArrayBuffer
-  useBase64ToArrayBuffer({glbData, modelId, setGlbDataUrl});
+  useBase64ToArrayBuffer({ glbData, modelId, setGlbDataUrl });
   const glbGltf = glbDataUrl ? useGLTF(glbDataUrl) : null;
 
   // 디버깅용 로깅
@@ -73,16 +72,16 @@ export function DraggableModel({
   //   }
   // }, [glbGltf, urlGltf]);
 
-
   // glb or url
-  const { scene, animations } = glbGltf ||  urlGltf || { scene: null, animations: null }
+  const { scene, animations } = glbGltf ||
+    urlGltf || { scene: null, animations: null };
 
-  useEffect(() => {
-    if (scene) {
-      // 모든 텍스처와 지오메트리가 준비되면
-      // onModelLoaded(modelId);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (scene) {
+  //     // 모든 텍스처와 지오메트리가 준비되면
+  //     // onModelLoaded(modelId);
+  //   }
+  // }, []);
 
   const isSelected = selectedModelId === modelId;
   const isHovering = hoveringModelId === modelId;
@@ -102,7 +101,8 @@ export function DraggableModel({
       const sz = meshRef.current.scale.z;
 
       // 회전 고려한 실제 바운딩 박스 크기 계산 (needsRotation 포함)
-      const rotationY = meshRef.current.rotation.y + (needsRotation ? (Math.PI * 3) / 2 : 0);
+      const rotationY =
+        meshRef.current.rotation.y + (needsRotation ? (Math.PI * 3) / 2 : 0);
 
       // 회전 각도에 따라 sin, cos 값을 사용하여 바운딩 박스 크기를 계산 (임의의 각도 지원)
       const cos = Math.cos(rotationY);
@@ -171,7 +171,9 @@ export function DraggableModel({
           ? [Math.max(lengthW, lengthD), Math.min(lengthW, lengthD)]
           : [Math.min(lengthW, lengthD), Math.max(lengthW, lengthD)];
 
-      const rotationNeeded = (lengthW > lengthD && actualW < actualD) || (lengthW < lengthD && actualW > actualD);
+      const rotationNeeded =
+        (lengthW > lengthD && actualW < actualD) ||
+        (lengthW < lengthD && actualW > actualD);
       setNeedsRotation(rotationNeeded);
 
       // 기본 크기 조정 (length 기반)
