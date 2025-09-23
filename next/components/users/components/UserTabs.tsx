@@ -4,6 +4,7 @@ import { HomeCard } from "@/components/main/HomeCardList";
 import AchievementList from "./AchievementList";
 import { DeleteRoom } from "./DeleteRoom";
 import { FaTrashCan } from "react-icons/fa6";
+import { getDisplayName } from "@/utils/displayName";
 import DeleteConfirmModal from "@/components/DeleteConfirmModal";
 import { PaginationControls } from "@/components/ui/Pagination";
 
@@ -82,7 +83,7 @@ export default function UserTabs({
               ${!isAchievement ? "tool-btn" : "tool-btn-gray"}
             `}
           >
-            {user.display_name || user.name} 님의 방
+            {getDisplayName(user.display_name, user.name)} 님의 방
           </button>
 
           <button

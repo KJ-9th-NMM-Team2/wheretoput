@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { fetchUserById, fetchFollowers, fetchFollowing, unfollowUser } from "@/lib/api/users";
+import { getDisplayName } from "@/utils/displayName";
 
 interface User {
   id: string;
@@ -115,7 +116,7 @@ export function FollowsModal({ isOpen, onClose, initialTab = "followers", userId
         </div>
         <div className="flex-1">
           <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-            {user.display_name || user.name}
+            {getDisplayName(user.display_name, user.name)}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             @{user.name}

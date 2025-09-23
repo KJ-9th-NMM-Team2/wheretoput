@@ -8,6 +8,7 @@ import CommentsList from "@/components/rooms/CommentsList";
 import { useEffect, useState } from "react";
 import { fetchLike } from "@/lib/api/room/likes";
 import { followUser, unfollowUser, checkFollowStatus } from "@/lib/api/users";
+import { getDisplayName } from "@/utils/displayName";
 import EditPopup from "@/components/sim/side/EditPopup";
 import { useRouter } from "next/navigation";
 import { deleteRoom } from "@/lib/services/roomService";
@@ -198,7 +199,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
                   href={`/rooms/${room.root_room_id}`}
                   className="inline-block px-3 sm:px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words text-sm sm:text-base"
                 >
-                  {room.rooms.user.display_name || room.rooms.user.name}님의 "
+                  {getDisplayName(room.rooms.user.display_name, room.rooms.user.name)}님의 "
                   <span className="text-amber-900 dark:text-amber-200">
                     {room.rooms.title}
                   </span>
@@ -255,7 +256,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
 
               {/* 사용자 프로필 + 날짜 */}
               <span className="text-[#181411] dark:text-gray-100 text-sm sm:text-base font-normal leading-normal flex-1">
-                <span className="font-medium text-base sm:text-lg">{room.user.display_name || room.user.name}</span>
+                <span className="font-medium text-base sm:text-lg">{getDisplayName(room.user.display_name, room.user.name)}</span>
               </span>
 
               {/* 팔로우 버튼 */}

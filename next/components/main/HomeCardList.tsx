@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FaEye, FaCommentDots } from "react-icons/fa";
 import { FcLike } from "react-icons/fc";
 import { useState } from "react";
+import { getDisplayName } from "@/utils/displayName";
 
 // 메인 홈페이지 카드 리스트
 export function HomeCard({
@@ -78,7 +79,7 @@ export function HomeCard({
                 )}
               </div>
               <span className="text-black dark:text-gray-100 text-base font-medium">
-                {room.user?.display_name || room.user?.name || "익명"}
+                {getDisplayName(room.user?.display_name, room.user?.name)}
               </span>
             </div>
             <div className="flex items-center gap-1">

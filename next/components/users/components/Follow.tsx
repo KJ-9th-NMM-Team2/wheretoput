@@ -1,3 +1,5 @@
+import { getDisplayName } from "@/utils/displayName";
+
 interface FollowProps {
   user: any;
   followersCount: number;
@@ -42,7 +44,7 @@ export function Follow({
 
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {user.display_name || user.name}
+            {getDisplayName(user.display_name, user.name)}
           </h1>
           <p className="text-amber-700 dark:text-orange-300 text-lg">
             @{user.name}
