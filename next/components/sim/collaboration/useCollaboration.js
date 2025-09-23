@@ -3,7 +3,6 @@ import { useStore } from "@/components/sim/useStore.js";
 import { io } from "socket.io-client";
 import { connectSocket as startSocket } from "@/lib/client/socket";
 import { useRouter } from "next/navigation";
-import { convertBlobUrl } from "../mainsim/hooks/useBase64ToArrayBuffer";
 
 /**
  * 실시간 협업을 위한 WebSocket 연결 관리 훅
@@ -15,7 +14,6 @@ import { convertBlobUrl } from "../mainsim/hooks/useBase64ToArrayBuffer";
  * - 사용자 선택 상태 동기화
  */
 export function useCollaboration(roomId) {
-
   const socket = useRef(null);
   const isManualDisconnect = useRef(false);
   const [showCollaborationEndNotice, setShowCollaborationEndNotice] =
