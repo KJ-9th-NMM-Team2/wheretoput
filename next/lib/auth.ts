@@ -32,15 +32,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       if (account?.provider === "google" || account?.provider === "github") {
+        // For privacy protection, use email prefix for Google OAuth users
+        let displayName = user.name;
+        if (account?.provider === "google" && user.email) {
+          // Extract email prefix (part before @) for Google users
+          displayName = user.email.split('@')[0];
+        }
+        
         await prisma.User.upsert({
           where: { email: user.email! },
           update: {
-            name: user.name,
+            name: displayName,
             image: user.image,
           },
           create: {
             email: user.email!,
-            name: user.name,
+            name: displayName,
             image: user.image,
           },
         });
