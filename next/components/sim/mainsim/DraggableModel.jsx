@@ -319,7 +319,15 @@ export function DraggableModel({
           ]}
           scale={safeScale}
         >
-          <primitive object={scene.clone()} />
+          {scene ? (
+            <primitive object={scene.clone()} />
+          ) : (
+            <PreviewBox
+              position={[0, 0, 0]}
+              size={[1, 1, 1]}
+              isLoading={false}
+            />
+          )}
           <ModelTooltip
             modelId={modelId}
             position={position}
