@@ -2,11 +2,13 @@
 
 > **우리 집 꾸미기 시뮬레이터**
 
-## 프로젝트 포스터 (변경 가능)
-<img width="2245" height="3179" alt="어따놀래 포스터" src="https://github.com/user-attachments/assets/13423540-7fce-4ec0-b148-9c3ec886faa5" />
+## 프로젝트 포스터
+
+<img width="2245" height="3179" alt="어따놀래 포스터" src="https://github.com/user-attachments/assets/808275db-e73a-4fde-bc64-e13fb25c82c4" />
 
 
-## 서비스 소개 영상 (변경 가능)
+
+## 서비스 소개 영상
 
 [![Wheretoput](https://img.youtube.com/vi/th9PeXoU-x8/0.jpg)](https://youtu.be/th9PeXoU-x8)
 - 클릭해서 서비스 영상으로 이동
