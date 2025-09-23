@@ -51,18 +51,18 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
     });
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [isDragEnabled, setIsDragEnabled] = useState(false);
+    const [isDragEnabled, setIsDragEnabled] = useState(true);
 
     // 새 메시지가 추가될 때마다 스크롤을 맨 아래로 (부드럽게)
     useEffect(() => {
       if (messages.length > 0) {
-        // 약간의 지연을 두어 DOM이 완전히 렌더링된 후 스크롤
+        // 이미지 로딩을 고려한 지연 후 스크롤
         const timer = setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({
             behavior: "smooth",
-            block: "end",
+            block: "nearest",
           });
-        }, 10);
+        }, 100);
 
         return () => clearTimeout(timer);
       }
@@ -307,6 +307,15 @@ const GameStyleChatPopup = forwardRef<HTMLDivElement, GameStyleChatPopupProps>(
                                 src={`/api/chat/image/${encodeURIComponent(message.content)}`}
                                 alt="이미지"
                                 className="max-w-full max-h-48 rounded-lg cursor-pointer"
+                                onLoad={() => {
+                                  // 이미지 로딩 완료 후 추가 스크롤
+                                  setTimeout(() => {
+                                    messagesEndRef.current?.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "nearest",
+                                    });
+                                  }, 50);
+                                }}
                                 onError={(e) => {
                                   // 이미지 로드 실패 시 S3 키 텍스트로 표시
                                   const errorDiv = document.createElement('div');
