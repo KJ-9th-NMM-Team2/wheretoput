@@ -145,6 +145,7 @@ export async function GET(
         user: {
           select: {
             name: true,
+            display_name: true,
             image: true,
           },
         },

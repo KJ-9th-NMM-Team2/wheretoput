@@ -218,6 +218,7 @@ model follows {
 model User {
   id                String              @id @default(cuid())
   name              String?
+  display_name      String?
   email             String              @unique
   emailVerified     DateTime?
   image             String?

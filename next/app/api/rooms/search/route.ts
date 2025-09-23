@@ -108,10 +108,20 @@ export async function GET(req: NextRequest) {
           },
           {
             user: {
-              name: {
-                contains: query,
-                mode: "insensitive",
-              },
+              OR: [
+                {
+                  name: {
+                    contains: query,
+                    mode: "insensitive",
+                  },
+                },
+                {
+                  display_name: {
+                    contains: query,
+                    mode: "insensitive",
+                  },
+                },
+              ],
             },
           },
         ],
@@ -121,6 +131,7 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             name: true,
+            display_name: true,
           },
         },
       },

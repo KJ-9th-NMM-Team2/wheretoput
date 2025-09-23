@@ -111,7 +111,7 @@ export function CommentCard({
         <div className="flex w-full flex-row items-start justify-between">
           <div className="flex flex-col sm:flex-row items-start justify-start gap-x-2 sm:gap-x-3">
             <p className="text-[#181411] dark:text-gray-100 text-xs sm:text-sm font-bold leading-normal tracking-[0.015em]">
-              {comment.user.name}
+              {comment.user.display_name || comment.user.name}
             </p>
             <p className="text-[#8a7260] dark:text-orange-300 text-xs sm:text-sm font-normal leading-normal">
               {new Date(comment.created_at).toLocaleDateString()}{" "}

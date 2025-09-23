@@ -8,6 +8,7 @@ interface FollowProps {
   setFollowModalTab: (tab: "followers" | "following") => void;
   setFollowModalOpen: (open: boolean) => void;
   handleFollowToggle: () => void;
+  onEditProfile?: () => void;
 }
 
 export function Follow({
@@ -20,6 +21,7 @@ export function Follow({
   setFollowModalTab,
   setFollowModalOpen,
   handleFollowToggle,
+  onEditProfile,
 }: FollowProps) {
   return (
     <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
@@ -80,6 +82,17 @@ export function Follow({
               }`}
             >
               {followLoading ? "처리 중..." : isFollowing ? "팔로잉" : "팔로우"}
+            </button>
+          </div>
+        )}
+
+        {session?.user?.id && session.user.id === user.user_id && onEditProfile && (
+          <div className="mt-4">
+            <button
+              onClick={onEditProfile}
+              className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+            >
+              프로필 편집
             </button>
           </div>
         )}

@@ -154,6 +154,7 @@ export async function GET(
         user: {
           select: {
             name: true,
+            display_name: true,
             image: true,
             id: true,
           },
@@ -166,6 +167,7 @@ export async function GET(
             user: {
               select: {
                 name: true,
+                display_name: true,
                 id: true,
               },
             },
@@ -191,6 +193,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
+                display_name: true,
                 image: true,
               },
             },

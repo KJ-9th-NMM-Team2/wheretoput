@@ -96,6 +96,7 @@ export async function GET(req: NextRequest) {
         user: {
           select: {
             name: true,
+            display_name: true,
             id: true,
             image: true,
           },

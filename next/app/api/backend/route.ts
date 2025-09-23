@@ -56,10 +56,27 @@ export async function GET(req: Request) {
         const limit = parseInt(searchParams.get('limit') || "10");
         const users = await prisma.user.findMany({
             where: {
-                name: {
-                    contains: query,
-                    mode: "insensitive",
-                }
+                OR: [
+                    {
+                        name: {
+                            contains: query,
+                            mode: "insensitive",
+                        }
+                    },
+                    {
+                        display_name: {
+                            contains: query,
+                            mode: "insensitive",
+                        }
+                    }
+                ]
+            },
+            select: {
+                id: true,
+                name: true,
+                display_name: true,
+                email: true,
+                image: true,
             },
             take: limit,
         })
