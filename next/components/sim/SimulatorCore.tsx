@@ -299,9 +299,9 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   const minZ = Math.min(...allZ);
   const maxZ = Math.max(...allZ);
 
-  // 내부 영역 크기 계산 (벽 두께 고려하여 약간 작게)
-  const width = maxX - minX - 0.2; // 벽 두께만큼 빼기
-  const height = maxZ - minZ - 0.2;
+  // 내부 영역 크기 계산
+  const width = maxX - minX;
+  const height = maxZ - minZ;
   const centerX = (minX + maxX) / 2;
   const centerZ = (minZ + maxZ) / 2;
 
