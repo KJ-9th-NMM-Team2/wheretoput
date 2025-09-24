@@ -838,7 +838,7 @@ export function SimulatorCore({
           {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
-          <color attach="background" args={[backgroundColor]} />
+          {!isLoading && <color attach="background" args={[backgroundColor]} />}
 
           {/* 메인 햇빛 조명 */}
           {/* 메인 햇빛 조명 - 강도 대폭 증가 */}
@@ -931,42 +931,44 @@ export function SimulatorCore({
             intensity={2.0}
             color="#ffffff"
           />
-          <Floor wallsData={wallsData} />
+          {!isLoading && <Floor wallsData={wallsData} />}
 
           {/* 벽 렌더링 - 자동 병합 적용 */}
           {wallsData.length > 0 ? (
             <MergedWalls wallsData={wallsData} />
           ) : (
-            <>
-              <Wall
-                id="default-wall-north"
-                width={20}
-                height={5}
-                position={[0, 2.5, -10]}
-                rotation={[0, 0, 0]}
-              />
-              <Wall
-                id="default-wall-west"
-                width={20}
-                height={5}
-                position={[-10, 2.5, 0]}
-                rotation={[0, Math.PI / 2, 0]}
-              />
-              <Wall
-                id="default-wall-east"
-                width={20}
-                height={5}
-                position={[10, 2.5, 0]}
-                rotation={[0, -Math.PI / 2, 0]}
-              />
-              <Wall
-                id="default-wall-south"
-                width={20}
-                height={5}
-                position={[0, 2.5, 10]}
-                rotation={[0, Math.PI, 0]}
-              />
-            </>
+            !isLoading && (
+              <>
+                <Wall
+                  id="default-wall-north"
+                  width={20}
+                  height={5}
+                  position={[0, 2.5, -10]}
+                  rotation={[0, 0, 0]}
+                />
+                <Wall
+                  id="default-wall-west"
+                  width={20}
+                  height={5}
+                  position={[-10, 2.5, 0]}
+                  rotation={[0, Math.PI / 2, 0]}
+                />
+                <Wall
+                  id="default-wall-east"
+                  width={20}
+                  height={5}
+                  position={[10, 2.5, 0]}
+                  rotation={[0, -Math.PI / 2, 0]}
+                />
+                <Wall
+                  id="default-wall-south"
+                  width={20}
+                  height={5}
+                  position={[0, 2.5, 10]}
+                  rotation={[0, Math.PI, 0]}
+                />
+              </>
+            )
           )}
 
           {useMemo(
