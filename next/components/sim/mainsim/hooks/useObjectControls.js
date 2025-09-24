@@ -588,9 +588,11 @@ export function useObjectControls(
           // 위치가 실제 변경되었을 때만 업데이트 (더 엄격한 조건)
           const newPos = [finalPosition.x, finalPosition.y, finalPosition.z];
           const prevPos = prevPositionRef.current;
-          const hasPositionChanged = !prevPos || newPos.some((val, idx) =>
-            Math.abs(val - prevPos[idx]) > 0.01 // 1cm 이상 차이날 때만
-          );
+          const hasPositionChanged =
+            !prevPos ||
+            newPos.some(
+              (val, idx) => Math.abs(val - prevPos[idx]) > 0.01 // 1cm 이상 차이날 때만
+            );
 
           if (hasPositionChanged) {
             onPositionChange(modelId, newPos, true, true);
@@ -669,21 +671,29 @@ export function useObjectControls(
     controlsRef,
   ]);
 
-  const handlePointerOver = useCallback(() => {
-    onHover(modelId);
+  const handlePointerOver = useCallback(
+    (e) => {
+      e.stopPropagation();
+      onHover(modelId);
 
-    if (!isDragging && !isScaling) {
-      gl.domElement.style.cursor = "pointer";
-    }
-  }, [modelId, gl, isDragging, isScaling, onHover]);
+      if (!isDragging && !isScaling) {
+        gl.domElement.style.cursor = "pointer";
+      }
+    },
+    [modelId, gl, isDragging, isScaling, onHover]
+  );
 
-  const handlePointerOut = useCallback(() => {
-    onHover(null);
+  const handlePointerOut = useCallback(
+    (e) => {
+      e.stopPropagation();
+      onHover(null);
 
-    if (!isDragging && !isScaling) {
-      gl.domElement.style.cursor = "auto";
-    }
-  }, [gl, isDragging, isScaling, onHover]);
+      if (!isDragging && !isScaling) {
+        gl.domElement.style.cursor = "auto";
+      }
+    },
+    [gl, isDragging, isScaling, onHover]
+  );
 
   return {
     isDragging,
