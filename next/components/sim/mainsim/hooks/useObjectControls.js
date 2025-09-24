@@ -1,9 +1,29 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { on } from "events";
 import { useStore } from "@/components/sim/useStore";
 import { useHistoryDrag } from "@/components/sim/history/useHistoryDrag";
+
+// 쓰로틀링 헬퍼 함수
+const throttle = (func, delay) => {
+  let timeoutId;
+  let lastExecTime = 0;
+  return function (...args) {
+    const currentTime = Date.now();
+
+    if (currentTime - lastExecTime > delay) {
+      func.apply(this, args);
+      lastExecTime = currentTime;
+    } else {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(this, args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
 
 export function useObjectControls(
   modelId,
@@ -31,9 +51,18 @@ export function useObjectControls(
   const [initialMouseY, setInitialMouseY] = useState(0);
   const [initialScale, setInitialScale] = useState(1);
   const [isSnappedToWall, setIsSnappedToWall] = useState(false);
+  // 현재 스냅된 벽 정보 저장
+  const [snappedWallInfo, setSnappedWallInfo] = useState(null);
 
   // 히스토리 기능
   const { startDrag, endDragMove, endDragScale } = useHistoryDrag();
+
+  // 쓰로틀링된 상태 업데이트 함수들 (16ms = ~60FPS)
+  const throttledSetSnappedWall = useCallback(throttle(setIsSnappedToWall, 16), []);
+  const throttledSetSnappedWallInfo = useCallback(throttle(setSnappedWallInfo, 16), []);
+  const throttledPositionChange = useCallback(throttle((modelId, position, shouldBroadcast, isDragging) => {
+    onPositionChange(modelId, position, shouldBroadcast, isDragging);
+  }, 16), [onPositionChange]);
 
   // 벽 자석 기능 - OBB 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
   const findNearestWallSnap = useCallback(
@@ -528,13 +557,13 @@ export function useObjectControls(
             finalPosition = newPosition;
           }
 
-          // 벽에 스냅되었는지 상태 업데이트
+          // 벽에 스냅되었는지 상태 업데이트 (쓰로틀링 적용)
           const wasSnapped = isSnappedToWall;
           const isNowSnapped = !!wallSnap;
-          setIsSnappedToWall(isNowSnapped);
 
-          // 스냅된 벽 정보 업데이트
-          setSnappedWallInfo(wallSnap);
+          // 16ms(~60FPS) 간격으로 상태 업데이트 제한
+          throttledSetSnappedWall(isNowSnapped);
+          throttledSetSnappedWallInfo(wallSnap);
 
           // 스냅 상태가 변경되었을 때 시각적/햅틱 피드백
           if (!wasSnapped && isNowSnapped) {
@@ -549,7 +578,8 @@ export function useObjectControls(
             gl.domElement.style.cursor = "grabbing";
           }
 
-          onPositionChange(
+          // 위치 업데이트도 쓰로틀링 적용
+          throttledPositionChange(
             modelId,
             [finalPosition.x, finalPosition.y, finalPosition.z],
             true,
@@ -643,9 +673,6 @@ export function useObjectControls(
       gl.domElement.style.cursor = "auto";
     }
   }, [gl, isDragging, isScaling, onHover]);
-
-  // 현재 스냅된 벽 정보 저장
-  const [snappedWallInfo, setSnappedWallInfo] = useState(null);
 
   return {
     isDragging,
