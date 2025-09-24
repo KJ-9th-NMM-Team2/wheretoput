@@ -263,7 +263,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
         <FloorMaterial />
       </mesh>
@@ -308,7 +308,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
 
   return (
     <mesh
-      position={[centerX, -0.01, centerZ]}
+      position={[centerX, 0, centerZ]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
     >
