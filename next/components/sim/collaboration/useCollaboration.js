@@ -197,7 +197,7 @@ export function useCollaboration(roomId) {
                   const modelWithCachedUrl = {
                     ...redisModel,
                     url: result.model_url,
-                    glbData: result.base64_url
+                    glbData: result.model_url
                   };
                   addModelWithId(modelWithCachedUrl, false);
                   // console.log(`✅ 모델 ${redisModel.id} Redis GLB 캐시 로드 성공`);

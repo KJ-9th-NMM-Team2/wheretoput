@@ -447,7 +447,7 @@ export function SimulatorCore({
     viewOnly,
     backgroundColor,
     environmentPreset,
-    // loadedModels,
+    loadedModels,
     deselectModel,
     directionalLightPosition,
     directionalLightIntensity,
