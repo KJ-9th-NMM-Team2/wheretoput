@@ -24,7 +24,7 @@ const SideViewContent: React.FC<{
   const [searchQuery, setSearchQuery] = useState<string>();
   const [searchResults, setSearchResults] = useState<Furniture[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [sortOption, setSortOption] = useState<string>('updated_desc');
+  const [sortOption, setSortOption] = useState<string>('created_desc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
