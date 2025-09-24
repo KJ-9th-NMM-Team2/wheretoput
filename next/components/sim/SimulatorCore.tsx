@@ -28,6 +28,7 @@ import { MergedWalls } from "@/components/sim/mainsim/wall/MergedWalls.jsx";
 import { WallPreview } from "@/components/sim/mainsim/wall/WallPreview.jsx";
 import { WallSnapPoints } from "@/components/sim/mainsim/wall/WallSnapPoints.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
+import ModelErrorBoundary from "@/components/sim/mainsim/ModelErrorBoundary";
 import { ControlIcons } from "@/components/sim/mainsim/control/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 
@@ -972,20 +973,22 @@ export function SimulatorCore({
             () =>
               loadedModels.map((model: any) => (
                 <Suspense key={model.id} fallback={null}>
-                  <DraggableModel
-                    key={model.id}
-                    modelId={model.id}
-                    url={model.url}
-                    position={model.position}
-                    rotation={model.rotation}
-                    scale={model.scale}
-                    length={model.length}
-                    controlsRef={controlsRef}
-                    texturePath={model.texturePath}
-                    type={model.isCityKit ? "building" : "glb"}
-                    // onModelLoaded={handleModelLoaded}
-                    glbData={model.glbData}
-                  />
+                  <ModelErrorBoundary>
+                    <DraggableModel
+                      key={model.id}
+                      modelId={model.id}
+                      url={model.url}
+                      position={model.position}
+                      rotation={model.rotation}
+                      scale={model.scale}
+                      length={model.length}
+                      controlsRef={controlsRef}
+                      texturePath={model.texturePath}
+                      type={model.isCityKit ? "building" : "glb"}
+                      // onModelLoaded={handleModelLoaded}
+                      glbData={model.glbData}
+                    />
+                  </ModelErrorBoundary>
                 </Suspense>
               )),
             [loadedModels, controlsRef]

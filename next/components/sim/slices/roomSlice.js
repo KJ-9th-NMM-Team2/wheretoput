@@ -1,4 +1,7 @@
-import { calculateRoomCenter, getInitialCameraPosition } from "../wall/wallUtils.js";
+import {
+  calculateRoomCenter,
+  getInitialCameraPosition,
+} from "../wall/wallUtils.js";
 
 export const roomSlice = (set, get) => ({
   currentRoomId: null,
@@ -376,7 +379,12 @@ export const roomSlice = (set, get) => ({
 
   loadSimulatorState: async (roomId, options = {}) => {
     const { wallsOnly = false } = options;
-    set({ isLoading: true });
+    set({
+      isLoading: true,
+      loadedModels: [],
+      wallsData: [],
+      selectedModelId: null,
+    });
 
     try {
       // const start_time = performance.now();
@@ -478,7 +486,7 @@ export const roomSlice = (set, get) => ({
         floorTexture: floorTexture,
         useOriginalTexture: useOriginalTexture,
         useOriginalWallTexture: useOriginalWallTexture,
-        backgroundColor: result.background_color || "#87CEEB",
+        backgroundColor: result.background_color || "#606060",
         environmentPreset: result.environment_preset || "apartment",
         roomCenter: roomCenter,
         initialCameraPosition: initialCameraPosition,

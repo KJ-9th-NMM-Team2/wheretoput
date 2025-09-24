@@ -193,7 +193,7 @@ export default function RoomPageClient({ room }: RoomPageClientProps) {
               </h1>
             </div>
             <div className="px-2 sm:px-4">
-              {room.root_room_id && room.rooms ? (
+              {room.root_room_id && room.rooms && room.rooms.is_public ? (
                 <Link
                   href={`/rooms/${room.root_room_id}`}
                   className="inline-block px-3 sm:px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800/30 text-amber-700 hover:text-amber-900 dark:text-orange-200 dark:hover:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-800/50 transition-colors break-words text-sm sm:text-base"
