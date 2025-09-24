@@ -124,7 +124,7 @@ const ItemSection: React.FC<ItemSectionProps> = ({
 
                       {selectedCategory != "-1" &&
                       (
-                        <span>.</span>)
+                        <span></span>)
                       }
 
                         {/* 가구 카운트 */}
