@@ -372,7 +372,7 @@ function CameraUpdater({ controlsRef }: { controlsRef: React.RefObject<any> }) {
       if (showMeasurements) {
         // 측정 모드 켜짐: 카메라를 위에서 내려다보는 위치로 이동
         const target = controls.target;
-        const topViewPosition = new THREE.Vector3(target.x, 30, target.z);
+        const topViewPosition = new THREE.Vector3(target.x, 18, target.z);
 
         // 부드럽게 이동
         controls.object.position.copy(topViewPosition);
@@ -641,13 +641,18 @@ export function SimulatorCore({
             console.error(`방 ${roomId} 로드 실패:`, loadError.message);
 
             // 404 에러인 경우 not-found 페이지로 이동
-            if (loadError.message.includes('404') || loadError.message.includes('찾을 수 없')) {
-              router.replace('/not-found');
+            if (
+              loadError.message.includes("404") ||
+              loadError.message.includes("찾을 수 없")
+            ) {
+              router.replace("/not-found");
               return;
             }
 
             // 그 외 에러는 에러 상태 설정 (렌더링 시 throw됨)
-            setLoadError(new Error(`방 로드에 실패했습니다: ${loadError.message}`));
+            setLoadError(
+              new Error(`방 로드에 실패했습니다: ${loadError.message}`)
+            );
             return;
           }
         } else {
@@ -656,7 +661,9 @@ export function SimulatorCore({
       } catch (error) {
         console.error("시뮬레이터 초기화 실패:", error);
         // 초기화 실패 시에도 에러 상태 설정
-        setLoadError(new Error(`시뮬레이터 초기화에 실패했습니다: ${error.message}`));
+        setLoadError(
+          new Error(`시뮬레이터 초기화에 실패했습니다: ${error.message}`)
+        );
       }
     };
 
@@ -842,7 +849,7 @@ export function SimulatorCore({
             width: "100%",
             height: "100vh",
             marginTop: isMobile ? "60px" : "0", // 모바일 헤더 높이만큼 여백
-            visibility: (isLoading || !cameraReady) ? "hidden" : "visible",
+            visibility: isLoading || !cameraReady ? "hidden" : "visible",
           }}
           frameloop="demand"
         >
@@ -1094,19 +1101,15 @@ export function SimulatorCore({
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
             zoomSpeed={isMobile ? 1.2 : 1.0}
-            minDistance={isMobile ? 0.5 : 8}
+            minDistance={isMobile ? 0.1 : 8}
             maxDistance={50}
             maxPolarAngle={
-              showMeasurements
-                ? 0.001 // 완전히 탑다운으로 고정
-                : isMobile
+              isMobile
                 ? Math.PI * 0.95
                 : Math.PI
             }
             minPolarAngle={
-              showMeasurements
-                ? 0.001 // 완전히 탑다운으로 고정
-                : isMobile
+              isMobile
                 ? Math.PI * 0.05
                 : 0
             }
