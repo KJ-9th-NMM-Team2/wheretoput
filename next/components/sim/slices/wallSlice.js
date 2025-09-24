@@ -177,8 +177,8 @@ export const wallSlice = (set, get) => ({
       // Y축 회전각 계산
       const rotationY = Math.atan2(-dz, dx);
 
-      // 벽 높이 결정 (기존 벽이 있으면 그 높이, 없으면 기본 5.0)
-      const wallHeight = state.wallsData[0]?.dimensions?.height || 5.0;
+      // 벽 높이 결정 (기존 벽이 있으면 그 높이, 없으면 기본 2.5)
+      const wallHeight = state.wallsData[0]?.dimensions?.height || 2.5;
 
       const newWall = {
         id: id || `wall-${crypto.randomUUID()}`,

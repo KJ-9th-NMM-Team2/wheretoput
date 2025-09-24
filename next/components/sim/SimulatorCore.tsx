@@ -941,29 +941,29 @@ export function SimulatorCore({
               <Wall
                 id="default-wall-north"
                 width={20}
-                height={5}
-                position={[0, 2.5, -10]}
+                height={2.5}
+                position={[0, 1.25, -10]}
                 rotation={[0, 0, 0]}
               />
               <Wall
                 id="default-wall-west"
                 width={20}
-                height={5}
-                position={[-10, 2.5, 0]}
+                height={2.5}
+                position={[-10, 1.25, 0]}
                 rotation={[0, Math.PI / 2, 0]}
               />
               <Wall
                 id="default-wall-east"
                 width={20}
-                height={5}
-                position={[10, 2.5, 0]}
+                height={2.5}
+                position={[10, 1.25, 0]}
                 rotation={[0, -Math.PI / 2, 0]}
               />
               <Wall
                 id="default-wall-south"
                 width={20}
-                height={5}
-                position={[0, 2.5, 10]}
+                height={2.5}
+                position={[0, 1.25, 10]}
                 rotation={[0, Math.PI, 0]}
               />
             </>
