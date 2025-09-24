@@ -301,14 +301,14 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   const maxZ = Math.max(...allZ);
 
   // 내부 영역 크기 계산
-  const width = maxX - minX;
-  const height = maxZ - minZ;
+  const width = maxX - minX - 0.1;
+  const height = maxZ - minZ - 0.1;
   const centerX = (minX + maxX) / 2;
   const centerZ = (minZ + maxZ) / 2;
 
   return (
     <mesh
-      position={[centerX, -0.01, centerZ]}
+      position={[centerX, 0, centerZ]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
     >
