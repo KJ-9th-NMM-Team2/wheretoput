@@ -57,12 +57,10 @@ export function useObjectControls(
   // 히스토리 기능
   const { startDrag, endDragMove, endDragScale } = useHistoryDrag();
 
-  // 쓰로틀링된 상태 업데이트 함수들 (16ms = ~60FPS)
-  const throttledSetSnappedWall = useCallback(throttle(setIsSnappedToWall, 16), []);
-  const throttledSetSnappedWallInfo = useCallback(throttle(setSnappedWallInfo, 16), []);
-  const throttledPositionChange = useCallback(throttle((modelId, position, shouldBroadcast, isDragging) => {
-    onPositionChange(modelId, position, shouldBroadcast, isDragging);
-  }, 16), [onPositionChange]);
+  // 이전 값들을 저장하여 실제 변경시에만 업데이트
+  const prevSnappedRef = useRef(false);
+  const prevWallInfoRef = useRef(null);
+  const prevPositionRef = useRef(null);
 
   // 벽 자석 기능 - OBB 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
   const findNearestWallSnap = useCallback(
@@ -561,9 +559,18 @@ export function useObjectControls(
           const wasSnapped = isSnappedToWall;
           const isNowSnapped = !!wallSnap;
 
-          // 16ms(~60FPS) 간격으로 상태 업데이트 제한
-          throttledSetSnappedWall(isNowSnapped);
-          throttledSetSnappedWallInfo(wallSnap);
+          // 실제 변경시에만 상태 업데이트 (무한 루프 방지)
+          if (prevSnappedRef.current !== isNowSnapped) {
+            setIsSnappedToWall(isNowSnapped);
+            prevSnappedRef.current = isNowSnapped;
+          }
+
+          const wallSnapString = JSON.stringify(wallSnap);
+          const prevWallSnapString = JSON.stringify(prevWallInfoRef.current);
+          if (wallSnapString !== prevWallSnapString) {
+            setSnappedWallInfo(wallSnap);
+            prevWallInfoRef.current = wallSnap;
+          }
 
           // 스냅 상태가 변경되었을 때 시각적/햅틱 피드백
           if (!wasSnapped && isNowSnapped) {
@@ -578,13 +585,17 @@ export function useObjectControls(
             gl.domElement.style.cursor = "grabbing";
           }
 
-          // 위치 업데이트도 쓰로틀링 적용
-          throttledPositionChange(
-            modelId,
-            [finalPosition.x, finalPosition.y, finalPosition.z],
-            true,
-            true
-          ); // shouldBroadcast=true, isDragging=true
+          // 위치가 실제 변경되었을 때만 업데이트 (더 엄격한 조건)
+          const newPos = [finalPosition.x, finalPosition.y, finalPosition.z];
+          const prevPos = prevPositionRef.current;
+          const hasPositionChanged = !prevPos || newPos.some((val, idx) =>
+            Math.abs(val - prevPos[idx]) > 0.01 // 1cm 이상 차이날 때만
+          );
+
+          if (hasPositionChanged) {
+            onPositionChange(modelId, newPos, true, true);
+            prevPositionRef.current = newPos;
+          }
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
