@@ -6,7 +6,7 @@ interface useBase64ToArrayBufferType {
     setGlbDataUrl: (glbDataUrl: string) => void;
 }
 
-export const useBase64ToArrayBuffer = ({glbData, modelId, setGlbDataUrl}: useBase64ToArrayBufferType) => {
+export const useBase64ToArrayBuffer = ({glbData, setGlbDataUrl}: useBase64ToArrayBufferType) => {
     useEffect(() => {
         if (glbData) {
             // base64를 ArrayBuffer로 변환
@@ -20,5 +20,5 @@ export const useBase64ToArrayBuffer = ({glbData, modelId, setGlbDataUrl}: useBas
             const url = URL.createObjectURL(blob);
             setGlbDataUrl(url);
         }
-    }, [glbData, modelId]);
+    }, [glbData]);
 }

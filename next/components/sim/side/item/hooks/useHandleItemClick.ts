@@ -73,6 +73,7 @@ export function useHandleItemClick() {
             .then((result) => {
                 if (result.success && result.model_url) {
                     // 실제 모델 URL을 가져왔으면 업데이트
+                    // console.log("🌈 result.model_url 체크해본다?", result.model_url);
                     const {
                         setCurrentPreviewFurniture,
                         currentPreviewFurniture,
