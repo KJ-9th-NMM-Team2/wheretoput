@@ -255,7 +255,7 @@ model rooms {
   collab_on                  Boolean?        @default(false)
   wall_color                 String          @default("#969593")
   floor_color                String          @default("#875F32")
-  background_color           String          @default("#87CEEB")
+  background_color           String          @default("#606060")
   environment_preset         String          @default("apartment")
   collab_chat_room_id        String?         @db.Uuid
   wall_type                  String?         @default("color")

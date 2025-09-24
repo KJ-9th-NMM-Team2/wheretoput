@@ -1174,8 +1174,8 @@ const FloorPlanEditor = () => {
     try {
       // 도면 데이터 준비 (API 스키마에 맞춤)
       const roomData = {
-        title: `Floor Plan Room ${new Date().toLocaleString()}`,
-        description: `Generated from floor plan with ${walls.length} walls`,
+        title: `새 집 - ${new Date().toLocaleString()}`,
+        description: `벽 ${walls.length}개의 집`,
         is_public: false,
         room_data: {
           walls: walls,
