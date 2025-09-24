@@ -477,6 +477,7 @@ export function SimulatorCore({
   // const [startTime, setStartTime] = useState<number>(0);
   const [loadedModelIds, setLoadedModelIds] = useState(new Set());
   const [loadError, setLoadError] = useState<Error | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
 
   // EditPopup 관련 상태
   const [showEditPopup, setShowEditPopup] = useState(false);
@@ -708,6 +709,15 @@ export function SimulatorCore({
     };
   }, [addModelWithId, removeModel]);
 
+  // 카메라 준비 상태 확인
+  useEffect(() => {
+    if (!isLoading && initialCameraPosition.length > 0) {
+      setCameraReady(true);
+    } else {
+      setCameraReady(false);
+    }
+  }, [isLoading, initialCameraPosition]);
+
   // 에러 상태가 있으면 throw하여 에러 바운더리 트리거
   if (loadError) {
     throw loadError;
@@ -737,7 +747,7 @@ export function SimulatorCore({
           <MobileHeader roomInfo={currentRoomInfo} controlsRef={controlsRef} />
         )}
         {/* 로딩 상태 표시 */}
-        {isLoading && (
+        {(isLoading || !cameraReady) && (
           <div
             style={{
               position: "absolute",
@@ -832,13 +842,14 @@ export function SimulatorCore({
             width: "100%",
             height: "100vh",
             marginTop: isMobile ? "60px" : "0", // 모바일 헤더 높이만큼 여백
+            visibility: (isLoading || !cameraReady) ? "hidden" : "visible",
           }}
           frameloop="demand"
         >
           {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
-          {!isLoading && <color attach="background" args={[backgroundColor]} />}
+          <color attach="background" args={[backgroundColor]} />
 
           {/* 메인 햇빛 조명 */}
           {/* 메인 햇빛 조명 - 강도 대폭 증가 */}
@@ -931,44 +942,42 @@ export function SimulatorCore({
             intensity={2.0}
             color="#ffffff"
           />
-          {!isLoading && <Floor wallsData={wallsData} />}
+          <Floor wallsData={wallsData} />
 
           {/* 벽 렌더링 - 자동 병합 적용 */}
           {wallsData.length > 0 ? (
             <MergedWalls wallsData={wallsData} />
           ) : (
-            !isLoading && (
-              <>
-                <Wall
-                  id="default-wall-north"
-                  width={20}
-                  height={5}
-                  position={[0, 2.5, -10]}
-                  rotation={[0, 0, 0]}
-                />
-                <Wall
-                  id="default-wall-west"
-                  width={20}
-                  height={5}
-                  position={[-10, 2.5, 0]}
-                  rotation={[0, Math.PI / 2, 0]}
-                />
-                <Wall
-                  id="default-wall-east"
-                  width={20}
-                  height={5}
-                  position={[10, 2.5, 0]}
-                  rotation={[0, -Math.PI / 2, 0]}
-                />
-                <Wall
-                  id="default-wall-south"
-                  width={20}
-                  height={5}
-                  position={[0, 2.5, 10]}
-                  rotation={[0, Math.PI, 0]}
-                />
-              </>
-            )
+            <>
+              <Wall
+                id="default-wall-north"
+                width={20}
+                height={5}
+                position={[0, 2.5, -10]}
+                rotation={[0, 0, 0]}
+              />
+              <Wall
+                id="default-wall-west"
+                width={20}
+                height={5}
+                position={[-10, 2.5, 0]}
+                rotation={[0, Math.PI / 2, 0]}
+              />
+              <Wall
+                id="default-wall-east"
+                width={20}
+                height={5}
+                position={[10, 2.5, 0]}
+                rotation={[0, -Math.PI / 2, 0]}
+              />
+              <Wall
+                id="default-wall-south"
+                width={20}
+                height={5}
+                position={[0, 2.5, 10]}
+                rotation={[0, Math.PI, 0]}
+              />
+            </>
           )}
 
           {useMemo(
