@@ -53,7 +53,7 @@ export async function searchFurnitures(query: string, selectedCategory: string, 
                 ...whereCondition,
                 furniture_id: { in: uniqueIds.map(f => f.furniture_id) }
             },
-            orderBy: [{ updated_at: 'desc' }]
+            order By: [{ created_at: 'desc' }]
         });
 
         const response = {

@@ -76,7 +76,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "8");
     const categoryParam = searchParams.get("category");
     const category = categoryParam ? parseInt(categoryParam) : null;
-    const sortParam = searchParams.get("sort") || "updated_desc";
+    const sortParam = searchParams.get("sort") || "created_desc";
     const query = searchParams.get("query") || "";
     const skip = (page - 1) * limit;
 
@@ -90,9 +90,9 @@ export async function GET(request: Request) {
       case "price_desc":
         orderBy = { price: "desc" };
         break;
-      case "updated_desc":
+      case "created_desc":
       default:
-        orderBy = { updated_at: "desc" };
+        orderBy = { created_at: "desc" };
         break;
     }
 

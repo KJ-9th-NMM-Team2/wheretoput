@@ -1,5 +1,5 @@
 // 선택되어 있는 아이템들 가져오는 함수
-export async function fetchSelectedFurnitures(furnitureIds: string[], roomId: string, sortOption: string = 'updated_desc') {
+export async function fetchSelectedFurnitures(furnitureIds: string[], roomId: string, sortOption: string = 'created_desc') {
     try {
         const idsParams = furnitureIds.join(',');
         const response = await fetch(`/api/furnitures/selected?idsParams=${idsParams}&roomId=${roomId}&sort=${sortOption}`);
