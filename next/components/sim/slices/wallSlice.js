@@ -177,11 +177,14 @@ export const wallSlice = (set, get) => ({
       // Y축 회전각 계산
       const rotationY = Math.atan2(-dz, dx);
 
+      // 벽 높이 결정 (기존 벽이 있으면 그 높이, 없으면 기본 2.5)
+      const wallHeight = state.wallsData[0]?.dimensions?.height || 2.5;
+
       const newWall = {
         id: id || `wall-${crypto.randomUUID()}`,
         position: [
           (snappedStart[0] + snappedEnd[0]) / 2, // 중점 X
-          state.wallsData[0]?.position[1] || 2.5, // 기존 벽 높이나 기본값
+          wallHeight / 2, // 벽 중심이 바닥(Y=0)에서 높이/2 위치에 오도록
           (snappedStart[2] + snappedEnd[2]) / 2, // 중점 Z
         ],
         rotation: [
@@ -191,7 +194,7 @@ export const wallSlice = (set, get) => ({
         ],
         dimensions: {
           width: wallLength, // 계산된 길이 사용
-          height: 2.5, // 기존 벽 높이 사용
+          height: wallHeight, // 계산된 높이 사용
           depth: 0.15,
         },
       };

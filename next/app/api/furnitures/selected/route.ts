@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
         const searchParams = new URL(req.url).searchParams;
         const idsParams = searchParams.get('idsParams');
         const roomId = searchParams.get('roomId');
-        const sortParam = searchParams.get('sort') || 'updated_desc';
+        const sortParam = searchParams.get('sort') || 'created_desc';
 
         if (!idsParams) {
             return HttpResponse.badRequest();
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
             case "price_desc":
                 orderBy = { price: "desc" };
                 break;
-            case "updated_desc":
+            case "created_desc":
             default:
                 orderBy = { updated_at: "desc" };
                 break;

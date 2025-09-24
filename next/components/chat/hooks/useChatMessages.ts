@@ -81,7 +81,7 @@ export const useChatMessages = (
           (m: any) => {
             // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
             const isImageMessage = m.content && m.content.startsWith('chat/') &&
-              /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(m.content);
+              /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(m.content);
 
             return {
               id: m.id ?? String(m.message_id),
@@ -148,7 +148,7 @@ export const useChatMessages = (
 
       // S3 키 패턴 감지로 이미지 메시지 판단 (임시 해결책)
       const isImageMessage = m.content && m.content.startsWith('chat/') &&
-        /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(m.content);
+        /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(m.content);
 
       const msg: Message = {
         id: m.id ?? String(m.message_id),
@@ -187,7 +187,7 @@ export const useChatMessages = (
 
       // 채팅방 목록 업데이트
       const displayMessage = msg.message_type === "image" ||
-        (msg.content && msg.content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp)$/i.test(msg.content))
+        (msg.content && msg.content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(msg.content))
         ? "사진"
         : msg.content;
 
@@ -323,7 +323,7 @@ export const useChatMessages = (
       }));
 
       const displayMessage = messageType === "image" ||
-        (content && content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(content))
+        (content && content.startsWith('chat/') && /\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(content))
         ? "사진"
         : content;
 
