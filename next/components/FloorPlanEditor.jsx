@@ -1101,8 +1101,12 @@ const FloorPlanEditor = () => {
       });
 
       toast.success("벽 검출이 완료되었습니다!", {
-        duration: 3000,
+        duration: 2000,
         position: "top-center",
+        style: {marginTop : "80px",
+         backgroundColor: "#333333", // 진한 회색
+        color: "#FFFFFF"           // 흰색 글씨
+        }
       });
     } catch (error) {
       console.error("Wall detection failed:", error);
