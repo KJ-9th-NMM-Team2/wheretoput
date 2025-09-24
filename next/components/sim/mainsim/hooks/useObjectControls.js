@@ -1,9 +1,29 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { on } from "events";
 import { useStore } from "@/components/sim/useStore";
 import { useHistoryDrag } from "@/components/sim/history/useHistoryDrag";
+
+// 쓰로틀링 헬퍼 함수
+const throttle = (func, delay) => {
+  let timeoutId;
+  let lastExecTime = 0;
+  return function (...args) {
+    const currentTime = Date.now();
+
+    if (currentTime - lastExecTime > delay) {
+      func.apply(this, args);
+      lastExecTime = currentTime;
+    } else {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(this, args);
+        lastExecTime = Date.now();
+      }, delay - (currentTime - lastExecTime));
+    }
+  };
+};
 
 export function useObjectControls(
   modelId,
@@ -31,9 +51,16 @@ export function useObjectControls(
   const [initialMouseY, setInitialMouseY] = useState(0);
   const [initialScale, setInitialScale] = useState(1);
   const [isSnappedToWall, setIsSnappedToWall] = useState(false);
+  // 현재 스냅된 벽 정보 저장
+  const [snappedWallInfo, setSnappedWallInfo] = useState(null);
 
   // 히스토리 기능
   const { startDrag, endDragMove, endDragScale } = useHistoryDrag();
+
+  // 이전 값들을 저장하여 실제 변경시에만 업데이트
+  const prevSnappedRef = useRef(false);
+  const prevWallInfoRef = useRef(null);
+  const prevPositionRef = useRef(null);
 
   // 벽 자석 기능 - OBB 기준으로 가장 가까운 벽까지의 거리와 스냅 위치 계산
   const findNearestWallSnap = useCallback(
@@ -528,13 +555,22 @@ export function useObjectControls(
             finalPosition = newPosition;
           }
 
-          // 벽에 스냅되었는지 상태 업데이트
+          // 벽에 스냅되었는지 상태 업데이트 (쓰로틀링 적용)
           const wasSnapped = isSnappedToWall;
           const isNowSnapped = !!wallSnap;
-          setIsSnappedToWall(isNowSnapped);
 
-          // 스냅된 벽 정보 업데이트
-          setSnappedWallInfo(wallSnap);
+          // 실제 변경시에만 상태 업데이트 (무한 루프 방지)
+          if (prevSnappedRef.current !== isNowSnapped) {
+            setIsSnappedToWall(isNowSnapped);
+            prevSnappedRef.current = isNowSnapped;
+          }
+
+          const wallSnapString = JSON.stringify(wallSnap);
+          const prevWallSnapString = JSON.stringify(prevWallInfoRef.current);
+          if (wallSnapString !== prevWallSnapString) {
+            setSnappedWallInfo(wallSnap);
+            prevWallInfoRef.current = wallSnap;
+          }
 
           // 스냅 상태가 변경되었을 때 시각적/햅틱 피드백
           if (!wasSnapped && isNowSnapped) {
@@ -549,12 +585,17 @@ export function useObjectControls(
             gl.domElement.style.cursor = "grabbing";
           }
 
-          onPositionChange(
-            modelId,
-            [finalPosition.x, finalPosition.y, finalPosition.z],
-            true,
-            true
-          ); // shouldBroadcast=true, isDragging=true
+          // 위치가 실제 변경되었을 때만 업데이트 (더 엄격한 조건)
+          const newPos = [finalPosition.x, finalPosition.y, finalPosition.z];
+          const prevPos = prevPositionRef.current;
+          const hasPositionChanged = !prevPos || newPos.some((val, idx) =>
+            Math.abs(val - prevPos[idx]) > 0.01 // 1cm 이상 차이날 때만
+          );
+
+          if (hasPositionChanged) {
+            onPositionChange(modelId, newPos, true, true);
+            prevPositionRef.current = newPos;
+          }
         }
       } else if (isScaling) {
         const deltaY = (initialMouseY - e.clientY) * 0.01;
@@ -643,9 +684,6 @@ export function useObjectControls(
       gl.domElement.style.cursor = "auto";
     }
   }, [gl, isDragging, isScaling, onHover]);
-
-  // 현재 스냅된 벽 정보 저장
-  const [snappedWallInfo, setSnappedWallInfo] = useState(null);
 
   return {
     isDragging,

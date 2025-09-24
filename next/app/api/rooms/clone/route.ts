@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
           root_room_id: original_room?.root_room_id || original_room.room_id,
           wall_color: original_room?.wall_color || "#969593",
           floor_color: original_room?.floor_color || "#875F32",
-          background_color: original_room?.background_color || "#87CEEB",
+          background_color: original_room?.background_color || "#606060",
           environment_preset: original_room?.environment_preset || "apartment",
           wall_type: original_room?.wall_type || "color",
           floor_type: original_room?.floor_type || "color",

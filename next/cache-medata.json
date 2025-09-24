@@ -67,8 +67,8 @@
       "createdAt": "2025. 9. 18. 오후 7:01:38"
     },
     "75c624ef-4e85-48a7-995b-9e8c018441e1.glb": {
-      "lastAccessed": "2025. 9. 19. 오후 4:43:35",
-      "accessCount": 1,
+      "lastAccessed": "2025. 9. 24. 오후 4:11:47",
+      "accessCount": 9,
       "fileSize": 189856,
       "createdAt": "2025. 9. 19. 오후 4:43:35"
     },
@@ -89,9 +89,15 @@
       "accessCount": 3,
       "fileSize": 65632,
       "createdAt": "2025. 9. 22. 오후 7:19:33"
+    },
+    "c4a07f1f-04b5-4aa3-8e27-34092acca4b3.glb": {
+      "lastAccessed": "2025. 9. 24. 오후 4:11:46",
+      "accessCount": 7,
+      "fileSize": 69820,
+      "createdAt": "2025. 9. 24. 오후 4:06:28"
     }
   },
-  "totalSize": 1533716,
+  "totalSize": 1603536,
   "maxSize": 52428800,
   "lastCleanup": "2025. 9. 18. 오후 12:42:14"
 }

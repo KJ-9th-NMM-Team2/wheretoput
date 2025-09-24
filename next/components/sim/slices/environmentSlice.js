@@ -30,7 +30,7 @@ export const environmentSlice = (set, get) => ({
   // 색상 관련 상태
   wallColor: "#969593",
   floorColor: "#875f32",
-  backgroundColor: "#87CEEB",
+  backgroundColor: "#606060",
 
   // 원본 질감 사용 여부
   useOriginalTexture: false,

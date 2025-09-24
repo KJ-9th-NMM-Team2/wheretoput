@@ -24,7 +24,7 @@ interface ModelData {
 // - 자신의 방(isOwnUserRoom)일 때만 자동저장 작동
 
 export default function AutoSave({
-  interval = 10000, // 기본
+  interval = 20000, // 20초마다 자동저장
   enabled = true
 }: AutoSaveProps) {
   const saveSimulatorState = useStore((state) => state.saveSimulatorState);
@@ -42,12 +42,13 @@ export default function AutoSave({
     const {
       loadedModels: currentLoadedModels,
       isSaving: currentIsSaving,
+      isLoading: currentIsLoading,
       isOwnUserRoom: currentIsOwnUserRoom,
       currentRoomId: currentRoomIdState
     } = currentState;
 
-    // 방이 존재하고, 저장중이 아니고, 자신의 방일때만 활성화
-    if (!enabled || !currentRoomIdState || currentIsSaving || !currentIsOwnUserRoom) {
+    // 방이 존재하고, 저장중이 아니고, 로딩중이 아니고, 자신의 방일때만 활성화
+    if (!enabled || !currentRoomIdState || currentIsSaving || currentIsLoading || !currentIsOwnUserRoom) {
       return;
     }
 

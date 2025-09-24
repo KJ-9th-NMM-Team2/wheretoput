@@ -28,6 +28,7 @@ import { MergedWalls } from "@/components/sim/mainsim/wall/MergedWalls.jsx";
 import { WallPreview } from "@/components/sim/mainsim/wall/WallPreview.jsx";
 import { WallSnapPoints } from "@/components/sim/mainsim/wall/WallSnapPoints.jsx";
 import { DraggableModel } from "@/components/sim/mainsim/DraggableModel.jsx";
+import ModelErrorBoundary from "@/components/sim/mainsim/ModelErrorBoundary";
 import { ControlIcons } from "@/components/sim/mainsim/control/ControlIcons.jsx";
 import { SelectedModelEditModal } from "@/components/sim/mainsim/SelectedModelSidebar.jsx";
 
@@ -299,9 +300,9 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   const minZ = Math.min(...allZ);
   const maxZ = Math.max(...allZ);
 
-  // 내부 영역 크기 계산 (벽 두께 고려하여 약간 작게)
-  const width = maxX - minX - 0.2; // 벽 두께만큼 빼기
-  const height = maxZ - minZ - 0.2;
+  // 내부 영역 크기 계산
+  const width = maxX - minX;
+  const height = maxZ - minZ;
   const centerX = (minX + maxX) / 2;
   const centerZ = (minZ + maxZ) / 2;
 
@@ -837,7 +838,7 @@ export function SimulatorCore({
           {/* <Environment preset={environmentPreset} background={false} /> */}
 
           <CameraUpdater controlsRef={controlsRef} />
-          <color attach="background" args={[backgroundColor]} />
+          {!isLoading && <color attach="background" args={[backgroundColor]} />}
 
           {/* 메인 햇빛 조명 */}
           {/* 메인 햇빛 조명 - 강도 대폭 증가 */}
@@ -930,62 +931,66 @@ export function SimulatorCore({
             intensity={2.0}
             color="#ffffff"
           />
-          <Floor wallsData={wallsData} />
+          {!isLoading && <Floor wallsData={wallsData} />}
 
           {/* 벽 렌더링 - 자동 병합 적용 */}
           {wallsData.length > 0 ? (
             <MergedWalls wallsData={wallsData} />
           ) : (
-            <>
-              <Wall
-                id="default-wall-north"
-                width={20}
-                height={5}
-                position={[0, 2.5, -10]}
-                rotation={[0, 0, 0]}
-              />
-              <Wall
-                id="default-wall-west"
-                width={20}
-                height={5}
-                position={[-10, 2.5, 0]}
-                rotation={[0, Math.PI / 2, 0]}
-              />
-              <Wall
-                id="default-wall-east"
-                width={20}
-                height={5}
-                position={[10, 2.5, 0]}
-                rotation={[0, -Math.PI / 2, 0]}
-              />
-              <Wall
-                id="default-wall-south"
-                width={20}
-                height={5}
-                position={[0, 2.5, 10]}
-                rotation={[0, Math.PI, 0]}
-              />
-            </>
+            !isLoading && (
+              <>
+                <Wall
+                  id="default-wall-north"
+                  width={20}
+                  height={5}
+                  position={[0, 2.5, -10]}
+                  rotation={[0, 0, 0]}
+                />
+                <Wall
+                  id="default-wall-west"
+                  width={20}
+                  height={5}
+                  position={[-10, 2.5, 0]}
+                  rotation={[0, Math.PI / 2, 0]}
+                />
+                <Wall
+                  id="default-wall-east"
+                  width={20}
+                  height={5}
+                  position={[10, 2.5, 0]}
+                  rotation={[0, -Math.PI / 2, 0]}
+                />
+                <Wall
+                  id="default-wall-south"
+                  width={20}
+                  height={5}
+                  position={[0, 2.5, 10]}
+                  rotation={[0, Math.PI, 0]}
+                />
+              </>
+            )
           )}
 
           {useMemo(
             () =>
               loadedModels.map((model: any) => (
                 <Suspense key={model.id} fallback={null}>
-                  <DraggableModel
-                    key={model.id}
-                    modelId={model.id}
-                    url={model.url}
-                    position={model.position}
-                    rotation={model.rotation}
-                    scale={model.scale}
-                    length={model.length}
-                    controlsRef={controlsRef}
-                    texturePath={model.texturePath}
-                    type={model.isCityKit ? "building" : "glb"}
-                    // onModelLoaded={handleModelLoaded}
-                    glbData={model.glbData}
-                  />
+                  <ModelErrorBoundary>
+                    <DraggableModel
+                      key={model.id}
+                      modelId={model.id}
+                      url={model.url}
+                      position={model.position}
+                      rotation={model.rotation}
+                      scale={model.scale}
+                      length={model.length}
+                      controlsRef={controlsRef}
+                      texturePath={model.texturePath}
+                      type={model.isCityKit ? "building" : "glb"}
+                      // onModelLoaded={handleModelLoaded}
+                      glbData={model.glbData}
+                    />
+                  </ModelErrorBoundary>
                 </Suspense>
               )),
             [loadedModels, controlsRef]

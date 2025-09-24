@@ -1101,8 +1101,12 @@ const FloorPlanEditor = () => {
       });
 
       toast.success("벽 검출이 완료되었습니다!", {
-        duration: 3000,
+        duration: 2000,
         position: "top-center",
+        style: {marginTop : "80px",
+         backgroundColor: "#333333", // 진한 회색
+        color: "#FFFFFF"           // 흰색 글씨
+        }
       });
     } catch (error) {
       console.error("Wall detection failed:", error);
@@ -1174,8 +1178,8 @@ const FloorPlanEditor = () => {
     try {
       // 도면 데이터 준비 (API 스키마에 맞춤)
       const roomData = {
-        title: `Floor Plan Room ${new Date().toLocaleString()}`,
-        description: `Generated from floor plan with ${walls.length} walls`,
+        title: `새 집 - ${new Date().toLocaleString()}`,
+        description: `벽 ${walls.length}개의 집`,
         is_public: false,
         room_data: {
           walls: walls,
