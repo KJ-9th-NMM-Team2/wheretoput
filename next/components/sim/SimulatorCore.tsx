@@ -1094,18 +1094,18 @@ export function SimulatorCore({
             rotateSpeed={isMobile ? 0.8 : 0.3}
             panSpeed={showMeasurements ? 1.5 : isMobile ? 1.0 : 0.5}
             zoomSpeed={isMobile ? 1.2 : 1.0}
-            minDistance={isMobile ? 1 : 8}
+            minDistance={isMobile ? 0.5 : 8}
             maxDistance={50}
             maxPolarAngle={
               showMeasurements
-                ? (Math.PI * 18) / 180
+                ? 0.001 // 완전히 탑다운으로 고정
                 : isMobile
                 ? Math.PI * 0.95
                 : Math.PI
             }
             minPolarAngle={
               showMeasurements
-                ? (Math.PI * 18) / 180
+                ? 0.001 // 완전히 탑다운으로 고정
                 : isMobile
                 ? Math.PI * 0.05
                 : 0
