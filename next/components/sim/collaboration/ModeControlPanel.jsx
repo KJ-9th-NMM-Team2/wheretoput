@@ -64,6 +64,8 @@ export function ModeControlPanel({ roomId }) {
     setWallToolMode,
     setWallDrawingStart,
     wallToolMode,
+    saveSimulatorState,
+    currentRoomId,
   } = useStore();
   const { data: session } = useSession();
   const router = useRouter();
@@ -103,7 +105,10 @@ export function ModeControlPanel({ roomId }) {
 
   // 현재 모드 결정
   // 벽 모드 활성화 여부 확인
-  const isWallModeActive = wallToolMode === "add" || wallToolMode === "edit" || wallToolMode === "delete";
+  const isWallModeActive =
+    wallToolMode === "add" ||
+    wallToolMode === "edit" ||
+    wallToolMode === "delete";
 
   const getCurrentMode = () => {
     if (viewOnly) return "view";
@@ -111,7 +116,7 @@ export function ModeControlPanel({ roomId }) {
   };
 
   // 모드 변경 핸들러
-  const handleModeChange = (newMode) => {
+  const handleModeChange = async (newMode) => {
     // 벽 모드 활성화 시 클릭 방지
     if (isWallModeActive) return;
 
@@ -129,6 +134,15 @@ export function ModeControlPanel({ roomId }) {
         setCollaborationMode(false);
         break;
       case "collaboration":
+        // 협업 모드가 닫혀있고 방 주인인 경우만 저장 후 이동
+        if (!isCollabModeActive && isOwnUserRoom && currentRoomId) {
+          try {
+            await saveSimulatorState();
+          } catch (error) {
+            console.log(`저장 실패: ${error.message}`);
+          }
+        }
+
         // 협업 모드로 페이지 이동
         router.push(`/sim/collaboration/${roomId}`);
         break;
