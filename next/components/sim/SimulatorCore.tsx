@@ -844,6 +844,7 @@ export function SimulatorCore({
               : [0, 20, 30],
             fov: 60,
           }}
+          dpr={1}
           shadows
           style={{
             width: "100%",
@@ -1103,16 +1104,8 @@ export function SimulatorCore({
             zoomSpeed={isMobile ? 1.2 : 1.0}
             minDistance={isMobile ? 0.1 : 8}
             maxDistance={50}
-            maxPolarAngle={
-              isMobile
-                ? Math.PI * 0.95
-                : Math.PI
-            }
-            minPolarAngle={
-              isMobile
-                ? Math.PI * 0.05
-                : 0
-            }
+            maxPolarAngle={isMobile ? Math.PI * 0.95 : Math.PI}
+            minPolarAngle={isMobile ? Math.PI * 0.05 : 0}
             mouseButtons={{
               LEFT: showMeasurements ? 2 : 0, // 측정 모드에서는 왼쪽 클릭으로 패닝
               MIDDLE: 1, // 휠 클릭으로 줌
