@@ -24,11 +24,12 @@ export default function SearchBar({
     setSearchInput("");
   }
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3" style={{ backgroundColor: 'var(--background)' }}>
       <label className="flex flex-col min-w-40 h-12 max-w-md mx-auto">
         <div className="flex w-full flex-1 items-stretch rounded-full h-full shadow-sm border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow duration-200">
           <div
-            className="text-gray-500 dark:text-gray-400 flex items-center justify-center pl-4 rounded-l-full bg-gray-50 dark:bg-gray-800"
+className="text-gray-500 dark:text-gray-400 flex items-center justify-center pl-4 rounded-l-full"
+            style={{ backgroundColor: 'var(--background)' }}
             data-icon="MagnifyingGlass"
             data-size="24px"
             data-weight="regular"
@@ -44,7 +45,8 @@ export default function SearchBar({
             </svg>
           </div>
           <input
-            className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full focus:outline-none border-none h-full px-4 text-sm font-normal leading-normal transition-all duration-200 bg-gray-50 text-gray-900 placeholder:text-gray-500 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full focus:outline-none border-none h-full px-4 text-sm font-normal leading-normal transition-all duration-200 text-gray-900 placeholder:text-gray-500 dark:text-gray-100 dark:placeholder:text-gray-400"
+            style={{ backgroundColor: 'var(--background)' }}
             onChange={(e) => {
               setSearchInput(e.target.value);
             }}
@@ -52,7 +54,7 @@ export default function SearchBar({
             value={searchInput}
             placeholder="유저 이름 혹은 방 이름을 입력하세요."
           />
-          <div className="flex items-center justify-center rounded-r-full bg-gray-50 dark:bg-gray-800 pr-4">
+<div className="flex items-center justify-center rounded-r-full pr-4" style={{ backgroundColor: 'var(--background)' }}>
             <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-transparent text-gray-900 dark:text-gray-100 gap-2 text-base font-bold leading-normal tracking-[0.015em] h-auto min-w-0 px-0"
               onClick={handleXBox}
             >
