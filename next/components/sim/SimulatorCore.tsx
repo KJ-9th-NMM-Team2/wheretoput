@@ -263,7 +263,7 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   // 벽 데이터가 없으면 기본 바닥 렌더링
   if (!wallsData || wallsData.length === 0) {
     return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
         <FloorMaterial />
       </mesh>
@@ -301,14 +301,14 @@ function Floor({ wallsData }: { wallsData: any[] }) {
   const maxZ = Math.max(...allZ);
 
   // 내부 영역 크기 계산
-  const width = maxX - minX;
-  const height = maxZ - minZ;
+  const width = maxX - minX - 0.1;
+  const height = maxZ - minZ - 0.1;
   const centerX = (minX + maxX) / 2;
   const centerZ = (minZ + maxZ) / 2;
 
   return (
     <mesh
-      position={[centerX, -0.01, centerZ]}
+      position={[centerX, 0, centerZ]}
       rotation={[-Math.PI / 2, 0, 0]}
       receiveShadow
     >
@@ -960,29 +960,29 @@ export function SimulatorCore({
               <Wall
                 id="default-wall-north"
                 width={20}
-                height={5}
-                position={[0, 2.5, -10]}
+                height={2.5}
+                position={[0, 1.25, -10]}
                 rotation={[0, 0, 0]}
               />
               <Wall
                 id="default-wall-west"
                 width={20}
-                height={5}
-                position={[-10, 2.5, 0]}
+                height={2.5}
+                position={[-10, 1.25, 0]}
                 rotation={[0, Math.PI / 2, 0]}
               />
               <Wall
                 id="default-wall-east"
                 width={20}
-                height={5}
-                position={[10, 2.5, 0]}
+                height={2.5}
+                position={[10, 1.25, 0]}
                 rotation={[0, -Math.PI / 2, 0]}
               />
               <Wall
                 id="default-wall-south"
                 width={20}
-                height={5}
-                position={[0, 2.5, 10]}
+                height={2.5}
+                position={[0, 1.25, 10]}
                 rotation={[0, Math.PI, 0]}
               />
             </>

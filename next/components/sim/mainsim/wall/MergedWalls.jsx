@@ -44,8 +44,8 @@ export function MergedWalls({ wallsData }) {
         <Wall
           key={mergedWall.id}
           width={Math.max(mergedWall.dimensions.width, 0.5)}
-          height={2.5}
-          depth={0.15}
+          height={mergedWall.dimensions.height || 2.5}
+          depth={mergedWall.dimensions.depth || 0.15}
           position={mergedWall.position}
           rotation={mergedWall.rotation}
           id={mergedWall.id}
@@ -59,8 +59,8 @@ export function MergedWalls({ wallsData }) {
         <Wall
           key={wall.id}
           width={Math.max(wall.dimensions.width, 0.5)}
-          height={2.5}
-          depth={0.15}
+          height={wall.dimensions.height || 2.5}
+          depth={wall.dimensions.depth || 0.15}
           position={wall.position}
           rotation={wall.rotation}
           id={wall.id}

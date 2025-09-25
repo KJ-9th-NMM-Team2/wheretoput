@@ -10,7 +10,7 @@ const SideSort: React.FC<SideSortProps> = ({ collapsed, onSortChange, currentSor
   const [isOpen, setIsOpen] = useState(false);
 
   const sortOptions = [
-    { value: 'updated_desc', label: '최신순' },
+    { value: 'created_desc', label: '최신순' },
     { value: 'price_asc', label: '가격 낮은순' },
     { value: 'price_desc', label: '가격 높은순' },
   ];
