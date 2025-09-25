@@ -537,7 +537,7 @@ export class CollabGateway {
     });
   }
 
-  // 락 타임아웃 (1분에 1번씩 체크)
+  // 락 타임아웃 (1분에 1번씩 체크) - 마지막 활동 기준으로 락 해제
   @Cron('0 * * * * *') // 매 분 0초마다 실행
   async cleanupExpiredLocks() {
     this.logger.log('🧹 Running cleanupExpiredLocks cron job');
@@ -549,8 +549,11 @@ export class CollabGateway {
       const roomState = await this.redisService.getRoomState(roomId);
       if (roomState) {
         for (const [userId, userData] of roomState.connectedUsers.entries()) {
-          if (userData.selectedModelId && userData.lockTimeStamp) {
-            if (now - userData.lockTimeStamp > LOCK_TIMEOUT) {
+          if (userData.selectedModelId && userData.lastActivity) {
+            // 마지막 활동 시간 기준으로 락 해제 체크 (lockTimeStamp 대신 lastActivity 사용)
+            if (now - userData.lastActivity > LOCK_TIMEOUT) {
+              this.logger.log(`🔓 Releasing lock for user ${userId} due to inactivity (${Math.round((now - userData.lastActivity) / 1000)}s)`);
+
               await this.redisService.updateRoomUser(roomId, userId, {
                 selectedModelId: null,
                 showTooltip: false,
