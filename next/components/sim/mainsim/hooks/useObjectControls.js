@@ -270,7 +270,7 @@ export function useObjectControls(
         }
       });
 
-      // 코너 스냅 기능: 두 벽에 동시에 스냅 가능한지 확인
+      // 코너 스냅 기능: 두 벽에 동시에 스냅 가능한지 확인 (O(N) 최적화)
       const CORNER_SNAP_DISTANCE = 0.5; // 코너 스냅을 위한 더 큰 거리 (더 강한 자석 효과)
 
       // 가까운 후보들만 필터링 (코너 스냅용) - 이미 스냅된 상태에서도 다른 벽을 감지할 수 있도록 거리 조건을 완화
@@ -301,103 +301,97 @@ export function useObjectControls(
       }
 
       if (candidatesForCorner.length >= 2) {
-        // 각 벽 조합을 확인하여 직각인지 체크
-        for (let i = 0; i < candidatesForCorner.length; i++) {
-          for (let j = i + 1; j < candidatesForCorner.length; j++) {
-            const wall1 = candidatesForCorner[i].wall;
-            const wall2 = candidatesForCorner[j].wall;
+        // O(N) 축별 분류로 최적화
+        const xConstraintCandidates = [];
+        const zConstraintCandidates = [];
 
-            // 두 벽의 회전각 차이가 90도(π/2) 근처인지 확인 (평행 벽 제외)
-            const angleDiff = Math.abs(wall1.rotation[1] - wall2.rotation[1]);
-            const normalizedDiff = angleDiff % (2 * Math.PI); // 2π로 정규화
-            const isRightAngle =
-              Math.abs(normalizedDiff - Math.PI / 2) < 0.1 ||
-              Math.abs(normalizedDiff - (3 * Math.PI) / 2) < 0.1;
+        // 벽의 회전을 고려하여 실제 월드 축 제약을 계산하는 헬퍼 함수
+        const getWorldAxisConstraint = (candidate) => {
+          const wallRotation = candidate.wall.rotation[1];
+          const face = candidate.face;
 
-            if (isRightAngle) {
-              const candidate1 = candidatesForCorner[i];
-              const candidate2 = candidatesForCorner[j];
+          // 벽의 회전각을 고려하여 실제 월드 축에서 어떤 제약인지 판단
+          const normalizedRotation =
+            ((wallRotation % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 
-              // 벽의 회전을 고려하여 실제 월드 축 제약을 계산
-              const getWorldAxisConstraint = (candidate) => {
-                const wallRotation = candidate.wall.rotation[1];
-                const face = candidate.face;
+          // 벽이 X축 방향 (0도 또는 180도)인 경우
+          const isWallXAligned =
+            Math.abs(normalizedRotation) < 0.1 ||
+            Math.abs(normalizedRotation - Math.PI) < 0.1;
 
-                // 벽의 회전각을 고려하여 실제 월드 축에서 어떤 제약인지 판단
-                const normalizedRotation =
-                  ((wallRotation % (2 * Math.PI)) + 2 * Math.PI) %
-                  (2 * Math.PI);
+          if (isWallXAligned) {
+            // X축 정렬된 벽: front/back이 Z축 제약, left/right이 X축 제약
+            return face === "front" || face === "back" ? "Z" : "X";
+          } else {
+            // Z축 정렬된 벽 (90도 또는 270도): front/back이 X축 제약, left/right이 Z축 제약
+            return face === "front" || face === "back" ? "X" : "Z";
+          }
+        };
 
-                // 벽이 X축 방향 (0도 또는 180도)인 경우
-                const isWallXAligned =
-                  Math.abs(normalizedRotation) < 0.1 ||
-                  Math.abs(normalizedRotation - Math.PI) < 0.1;
+        // 한 번의 순회로 축별 분류 (O(N))
+        candidatesForCorner.forEach(candidate => {
+          const axisConstraint = getWorldAxisConstraint(candidate);
+          if (axisConstraint === "X") {
+            xConstraintCandidates.push(candidate);
+          } else {
+            zConstraintCandidates.push(candidate);
+          }
+        });
 
-                if (isWallXAligned) {
-                  // X축 정렬된 벽: front/back이 Z축 제약, left/right이 X축 제약
-                  return face === "front" || face === "back" ? "Z" : "X";
-                } else {
-                  // Z축 정렬된 벽 (90도 또는 270도): front/back이 X축 제약, left/right이 Z축 제약
-                  return face === "front" || face === "back" ? "X" : "Z";
-                }
+        // X축 제약과 Z축 제약 벽이 모두 있으면 코너 스냅 가능
+        if (xConstraintCandidates.length > 0 && zConstraintCandidates.length > 0) {
+          // 각 축에서 가장 가까운 후보 선택 (O(N))
+          const bestXCandidate = xConstraintCandidates.reduce((best, current) =>
+            !best || current.distance < best.distance ? current : best
+          );
+
+          const bestZCandidate = zConstraintCandidates.reduce((best, current) =>
+            !best || current.distance < best.distance ? current : best
+          );
+
+          // 안전성을 위한 직각 검증 (이론적으로는 항상 직각이지만 예외 상황 대비)
+          const wall1 = bestXCandidate.wall;
+          const wall2 = bestZCandidate.wall;
+          const angleDiff = Math.abs(wall1.rotation[1] - wall2.rotation[1]);
+          const normalizedDiff = angleDiff % (2 * Math.PI);
+          const isRightAngle =
+            Math.abs(normalizedDiff - Math.PI / 2) < 0.1 ||
+            Math.abs(normalizedDiff - (3 * Math.PI) / 2) < 0.1;
+
+          // 직각이 아닌 경우 코너 스냅 건너뛰기
+          if (!isRightAngle) {
+            // 일반 스냅으로 처리하도록 다음 로직으로 진행
+          } else {
+            // 코너 위치 계산
+            const cornerPosition = {
+              x: bestXCandidate.snapPosition.x,
+              y: position.y,
+              z: bestZCandidate.snapPosition.z,
+            };
+
+            // 코너 위치에서의 거리 계산
+            const cornerDistance = Math.sqrt(
+              Math.pow(cornerPosition.x - position.x, 2) +
+                Math.pow(cornerPosition.z - position.z, 2)
+            );
+
+            // 코너 스냅 거리를 더 크게 해서 자석 효과 강화
+            // 이미 한 벽에 스냅된 상태에서도 코너 스냅이 가능하도록 거리 조건을 완화
+            const isAlreadySnapped =
+              bestXCandidate.distance < 0.01 || bestZCandidate.distance < 0.01;
+            const effectiveCornerDistance = isAlreadySnapped
+              ? CORNER_SNAP_DISTANCE * 1.5
+              : CORNER_SNAP_DISTANCE;
+
+            if (cornerDistance < effectiveCornerDistance) {
+              return {
+                wall: bestXCandidate.wall, // 주 벽
+                wall2: bestZCandidate.wall, // 보조 벽
+                snapPosition: cornerPosition,
+                distance: 0, // 코너 스냅은 최우선으로 처리 (거리를 0으로 설정)
+                face: "corner",
+                isCornerSnap: true,
               };
-
-              const candidate1Axis = getWorldAxisConstraint(candidate1);
-              const candidate2Axis = getWorldAxisConstraint(candidate2);
-
-              // 같은 축을 제약하는 경우는 코너 스냅이 아님 (스킵)
-              if (candidate1Axis === candidate2Axis) {
-                continue;
-              }
-
-              // 단순화된 코너 위치 계산: 두 개별 스냅 위치를 조합
-              const calculateCornerPosition = () => {
-                let cornerX, cornerZ;
-
-                // X축 제약을 가진 후보에서 X 좌표를 가져옴
-                if (candidate1Axis === "X") {
-                  cornerX = candidate1.snapPosition.x;
-                  cornerZ = candidate2.snapPosition.z;
-                } else {
-                  cornerX = candidate2.snapPosition.x;
-                  cornerZ = candidate1.snapPosition.z;
-                }
-
-                return { x: cornerX, z: cornerZ };
-              };
-
-              const { x: cornerX, z: cornerZ } = calculateCornerPosition();
-
-              const cornerPosition = {
-                x: cornerX,
-                y: position.y,
-                z: cornerZ,
-              };
-
-              // 코너 위치에서의 거리 계산
-              const cornerDistance = Math.sqrt(
-                Math.pow(cornerPosition.x - position.x, 2) +
-                  Math.pow(cornerPosition.z - position.z, 2)
-              );
-
-              // 코너 스냅 거리를 더 크게 해서 자석 효과 강화
-              // 이미 한 벽에 스냅된 상태에서도 코너 스냅이 가능하도록 거리 조건을 완화
-              const isAlreadySnapped =
-                candidate1.distance < 0.01 || candidate2.distance < 0.01;
-              const effectiveCornerDistance = isAlreadySnapped
-                ? CORNER_SNAP_DISTANCE * 1.5
-                : CORNER_SNAP_DISTANCE;
-
-              if (cornerDistance < effectiveCornerDistance) {
-                return {
-                  wall: wall1, // 주 벽
-                  wall2: wall2, // 보조 벽
-                  snapPosition: cornerPosition,
-                  distance: 0, // 코너 스냅은 최우선으로 처리 (거리를 0으로 설정)
-                  face: "corner",
-                  isCornerSnap: true,
-                };
-              }
             }
           }
         }
