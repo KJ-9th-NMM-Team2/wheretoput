@@ -345,19 +345,36 @@ export function DraggableModel({
           ]}
           scale={safeScale}
         >
+          {/* 실제 모델 - 클릭만 */}
           {scene ? (
-            <primitive object={scene.clone()} />
+            <group onPointerDown={handlePointerDown}>
+              <primitive object={scene.clone()} />
+            </group>
           ) : (
             <PreviewBox
               position={[0, 0, 0]}
               size={[1, 1, 1]}
               isLoading={false}
+              onPointerDown={handlePointerDown}
             />
           )}
 
-          {/* 투명한 클릭/호버 감지 영역 */}
+          {/* 안정적인 투명 박스 - 호버만 */}
           <mesh
-            onPointerDown={handlePointerDown}
+            onPointerDown={(e) => {
+              // mesh가 있으면 무시
+              if (
+                scene &&
+                e.intersections.some(
+                  (i) =>
+                    i.object.userData.modelId === modelId &&
+                    i.object !== e.object
+                )
+              ) {
+                return;
+              }
+              handlePointerDown(e);
+            }}
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
           >
