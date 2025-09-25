@@ -172,7 +172,11 @@ export async function generateTrellisModel(furnitureId, imageUrl) {
         };
     } catch (error) {
         console.error('Trellis 모델 생성 실패:', error);
-        throw error;
+        return {
+            success: false,
+            model_url: null,
+            furniture_id: furnitureId
+        }
     }
 }
 
