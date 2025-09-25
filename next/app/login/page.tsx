@@ -21,6 +21,7 @@ export default async function SignInPage(props: {
                 className="w-12 h-12 sm:w-16 sm:h-16"
               />
             </div>
+            <div>OAuth 로그인 시 서비스별 계정명(구글 이름/깃허브 사용자명)이 사용됩니다.</div>
           </div>
 
           <div className="space-y-3 sm:space-y-4">
