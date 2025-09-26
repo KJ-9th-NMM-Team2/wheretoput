@@ -23,7 +23,8 @@
 #### [**3. 프로젝트 기간**](#Period)
 #### [**4. 기술스택 및 개발환경**](#Stack)
 #### [**5. 서비스 아키텍처**](#Architecture)
-#### [**6. 기술적 챌린지**](#Challenges)
+#### [**6. Q&A**](#QnA)
+#### [**7. 기술적 챌린지**](#Challenges)
 
 
 <a name="Wheretoput"></a>
@@ -82,6 +83,9 @@
 ## 서비스 아키텍처
 <img width="1367" height="732" alt="서비스 아키텍처" src="https://github.com/user-attachments/assets/27572647-c0d3-4796-beeb-29a677e946c4" />
 
+<a name="QnA"></a>
+## 기술 Q&A
+[위키를 확인해 주세요.](https://github.com/KJ-9th-NMM-Team2/wheretoput/wiki/%EC%96%B4%EB%94%B0%EB%86%80%EB%9E%98-%EA%B8%B0%EC%88%A0-Q%26A)
 
 <a name="Challenges"></a>
 ## 기술적 챌린지
