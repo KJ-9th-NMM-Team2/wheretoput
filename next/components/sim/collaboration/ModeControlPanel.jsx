@@ -25,7 +25,7 @@ function ModeButton({ isActive, onClick, label, color, disabled = false }) {
         color: isActive || isHovered ? color : "#9CA3AF",
         padding: "8px 12px",
         borderRadius: "4px",
-        fontSize: "14px",
+        fontSize: "17px",
         fontWeight: isActive ? "600" : isHovered ? "500" : "400",
         cursor: disabled ? "not-allowed" : "pointer",
         transition: "all 0.2s ease",
@@ -158,14 +158,14 @@ export function ModeControlPanel({ roomId }) {
           top: "10px",
           left: "50%",
           transform: "translateX(-50%)",
-          background: "rgba(0,0,0,0.8)",
+          background: "rgba(255,255,255,0.8)",
           padding: "8px",
           borderRadius: "8px",
           zIndex: 100,
-          color: "white",
+          color: "black",
           fontSize: "13px",
           textAlign: "center",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
         }}
       >
         <div
@@ -173,7 +173,7 @@ export function ModeControlPanel({ roomId }) {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            background: "rgba(255,255,255,0.1)",
+            background: "rgba(255,255,255,0.5)",
             borderRadius: "6px",
             padding: "4px",
           }}
