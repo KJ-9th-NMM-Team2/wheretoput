@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { TotalPrice } from './price/TotalPrice';
-import { CategoryProps } from '@/types/furnitureTypes';
-import { useStore } from '../useStore';
+import React, { useState, useEffect } from "react";
+import { TotalPrice } from "./price/TotalPrice";
+import { CategoryProps } from "@/types/furnitureTypes";
+import { useStore } from "../useStore";
 
 interface SideCategoriesProps {
   collapsed: boolean;
@@ -9,8 +9,11 @@ interface SideCategoriesProps {
   totalPrice: number;
 }
 
-const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySelect, totalPrice }) => {
-
+const SideCategories: React.FC<SideCategoriesProps> = ({
+  collapsed,
+  onCategorySelect,
+  totalPrice,
+}) => {
   // 실제 DB의 categories 테이블과 일치하도록 수정완료
   // # -2  = 가구 , -1 = 선택된 가구(장바구니)
   // # 0 = chairs , 1 = Lighting
@@ -22,16 +25,15 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
   // # 12 = Home Decor
   const categories: CategoryProps[] = [
     { id: 99, name: "전체" },
-    { id: -2, name: "가구" }, 
-    { id: 0, name: "의자" }, 
-    { id: 1, name: "조명" }, 
-    { id: 3, name: "테이블" }, 
-    { id: 4, name: "데코" }, 
-    { id: 5, name: "욕실용품" }, 
-    { id: 7, name: "가전·디지털" }, 
-    { id: 9, name: "설치 가구" }, 
-    { id: 10, name: "침구류" }, 
-
+    { id: -2, name: "가구" },
+    { id: 0, name: "의자" },
+    { id: 1, name: "조명" },
+    { id: 3, name: "테이블" },
+    { id: 4, name: "데코" },
+    { id: 5, name: "욕실용품" },
+    { id: 7, name: "가전·디지털" },
+    { id: 9, name: "설치 가구" },
+    { id: 10, name: "침구류" },
   ];
   const { selectedCategory, setSelectedCategory, wallToolMode } = useStore();
 
@@ -40,7 +42,6 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
     // 기본값으로 첫 번째 카테고리 선택
     onCategorySelect(categories[0].id.toString());
   }, []); // 빈 배열로 한 번만 실행
-
 
   const handleCategoryClick = (category: CategoryProps) => {
     // 벽 추가 모드가 활성화된 경우 카테고리 선택 방지
@@ -57,7 +58,7 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
 
   return (
     <div className="flex-shrink-0 border-b border-gray-300">
-      <div className="p-4">
+      <div className="px-4 pt-4">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm font-semibold text-gray-600">카테고리</h3>
           <TotalPrice totalPrice={totalPrice} />
@@ -68,24 +69,25 @@ const SideCategories: React.FC<SideCategoriesProps> = ({ collapsed, onCategorySe
           <div
             className="overflow-x-auto overflow-y-hidden"
             style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#d1d5db #f3f4f6'
+              scrollbarWidth: "thin",
+              scrollbarColor: "#d1d5db #f3f4f6",
             }}
           >
-            <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-2 pb-2" style={{ width: "max-content" }}>
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   className={`py-2 px-3 text-sm tool-btn transition whitespace-nowrap flex-shrink-0 ${
                     wallToolMode
-                      ? 'cursor-not-allowed opacity-50 tool-btn-inactive'
-                      : 'cursor-pointer'
-                  } ${selectedCategory === cat.id && !wallToolMode
-                      ? 'tool-btn-active'
+                      ? "cursor-not-allowed opacity-50 tool-btn-inactive"
+                      : "cursor-pointer"
+                  } ${
+                    selectedCategory === cat.id && !wallToolMode
+                      ? "tool-btn-active"
                       : !wallToolMode
-                        ? 'tool-btn-inactive'
-                        : 'tool-btn-inactive'
-                    }`}
+                      ? "tool-btn-inactive"
+                      : "tool-btn-inactive"
+                  }`}
                   onClick={() => handleCategoryClick(cat)}
                   disabled={wallToolMode}
                 >
