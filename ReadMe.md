@@ -10,6 +10,8 @@
 
 ## 서비스 소개 영상
 
+🎬 [최종 발표 영상 보기](https://www.youtube.com/watch?v=NzAyGC2Smv4&t)
+
 [![Wheretoput](https://img.youtube.com/vi/th9PeXoU-x8/0.jpg)](https://youtu.be/th9PeXoU-x8)
 - 클릭해서 서비스 영상으로 이동
 
