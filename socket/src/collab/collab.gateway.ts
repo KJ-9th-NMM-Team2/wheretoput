@@ -317,13 +317,6 @@ export class CollabGateway {
         position: data.position,
       });
 
-      // 락 TTL 연장
-      await this.redisService.refreshModelLock(
-        roomId,
-        data.modelId,
-        data.userId,
-      );
-
       // 사용자 활동 시간 업데이트
       await this.redisService.updateRoomUser(roomId, data.userId, {
         lastActivity: Date.now(),
@@ -355,13 +348,6 @@ export class CollabGateway {
         rotation: data.rotation,
       });
 
-      // 락 TTL 연장
-      await this.redisService.refreshModelLock(
-        roomId,
-        data.modelId,
-        data.userId,
-      );
-
       // 사용자 활동 시간 업데이트
       await this.redisService.updateRoomUser(roomId, data.userId, {
         lastActivity: Date.now(),
@@ -390,13 +376,6 @@ export class CollabGateway {
         id: data.modelId,
         scale: data.scale,
       });
-
-      // 락 TTL 연장
-      await this.redisService.refreshModelLock(
-        roomId,
-        data.modelId,
-        data.userId,
-      );
 
       // 사용자 활동 시간 업데이트
       await this.redisService.updateRoomUser(roomId, data.userId, {
@@ -605,27 +584,46 @@ export class CollabGateway {
     });
   }
 
-  // 락 타임아웃 (1분에 1번씩 체크)
-  // 락 키는 마지막 활동 기준 TTL로 자동 만료되므로, 만료된 사용자의 선택 상태만 정리
+  // 락 타임아웃 (1분에 1번씩 체크) - 마지막 활동 기준으로 락 해제
+  // 락 해제 시점은 크론이 단일 기준: 락 키 삭제와 말풍선 해제(model-deselect)를 함께 처리해
+  // Redis 락 상태와 화면이 어긋나지 않게 함. 락 키의 TTL은 서버 장애 대비 안전장치일 뿐
   @Cron('0 * * * * *') // 매 분 0초마다 실행
   async cleanupExpiredLocks() {
     this.logger.log('🧹 Running cleanupExpiredLocks cron job');
     const allRooms = await this.redisService.getAllRooms();
+    const now = Date.now();
+    const LOCK_TIMEOUT = 60 * 1000; // 1분
 
     for (const roomId of allRooms) {
       const roomState = await this.redisService.getRoomState(roomId);
       if (roomState) {
         for (const [userId, userData] of roomState.connectedUsers.entries()) {
-          if (userData.selectedModelId) {
-            const ownerId = await this.redisService.getModelLockOwner(
-              roomId,
-              userData.selectedModelId,
-            );
-            if (ownerId !== userId) {
-              this.logger.log(
-                `🔓 Releasing lock for user ${userId} on ${userData.selectedModelId} (expired)`,
-              );
+          if (userData.selectedModelId && userData.lastActivity) {
+            const modelId = userData.selectedModelId;
+            let shouldRelease = false;
 
+            if (now - userData.lastActivity > LOCK_TIMEOUT) {
+              this.logger.log(
+                `🔓 Releasing lock for user ${userId} due to inactivity (${Math.round((now - userData.lastActivity) / 1000)}s)`,
+              );
+              await this.redisService.releaseModelLock(roomId, modelId, userId);
+              shouldRelease = true;
+            } else {
+              // 활동 중이면 안전장치 TTL 연장 (키가 사라졌다면 재획득, 다른 사용자가 잡았으면 해제)
+              const { acquired } = await this.redisService.acquireModelLock(
+                roomId,
+                modelId,
+                userId,
+              );
+              if (!acquired) {
+                this.logger.log(
+                  `🔓 Releasing stale selection of user ${userId} on ${modelId} (lock held by another user)`,
+                );
+                shouldRelease = true;
+              }
+            }
+
+            if (shouldRelease) {
               await this.redisService.updateRoomUser(roomId, userId, {
                 selectedModelId: null,
                 showTooltip: false,

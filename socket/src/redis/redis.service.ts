@@ -263,7 +263,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return result === 1;
   }
 
-  // 락 TTL 연장: 내 락일 때만 (이동/회전/스케일 등 활동 시)
+  // 락 TTL 연장: 내 락일 때만
   async refreshModelLock(
     roomId: string,
     modelId: string,
@@ -304,8 +304,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 }
 
-// 락 유지 시간 (마지막 활동 기준 1분)
-export const MODEL_LOCK_TTL_MS = 60 * 1000;
+// 락 키 안전장치 TTL: 실제 타임아웃(1분)은 크론이 lastActivity 기준으로 처리하고,
+// 이 TTL은 서버 장애 등으로 크론이 락을 못 지웠을 때 남는 키를 정리하는 용도.
+// 크론 주기(1분)보다 충분히 길어야 활동 중인 락이 먼저 만료되지 않음
+export const MODEL_LOCK_TTL_MS = 5 * 60 * 1000;
 
 const RELEASE_LOCK_SCRIPT = `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
