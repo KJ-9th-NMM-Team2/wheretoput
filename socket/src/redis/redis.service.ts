@@ -110,7 +110,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   // 🆕 사용자 상태 업데이트 메서드
-  async updateRoomUser(roomId: string, userId: string, userData: any): Promise<RoomState> {
+  async updateRoomUser(
+    roomId: string,
+    userId: string,
+    userData: any,
+  ): Promise<RoomState> {
     const currentState = (await this.getRoomState(roomId)) || {
       models: [] as any[],
       connectedUsers: new Map(),
@@ -212,6 +216,107 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async clearRoomState(roomId: string): Promise<void> {
     const key = `room:${roomId}:state`;
     await this.client.del(key);
+    await this.clearRoomLocks(roomId);
     console.log(`🔴 Room ${roomId} state cleared from Redis`);
   }
+
+  // ===== 가구 락 (가구별 개별 키, SET NX로 원자적 획득) =====
+
+  private lockKey(roomId: string, modelId: string): string {
+    return `room:${roomId}:lock:${modelId}`;
+  }
+
+  // 락 획득: 비어 있으면 SET NX로 획득, 이미 내 락이면 TTL 연장
+  // 반환값: 성공 여부와 현재 락 소유자
+  async acquireModelLock(
+    roomId: string,
+    modelId: string,
+    userId: string,
+  ): Promise<{ acquired: boolean; ownerId: string | null }> {
+    const key = this.lockKey(roomId, modelId);
+    const result = await this.client.set(key, userId, {
+      condition: 'NX',
+      expiration: { type: 'PX', value: MODEL_LOCK_TTL_MS },
+    });
+    if (result === 'OK') {
+      return { acquired: true, ownerId: userId };
+    }
+
+    // 이미 내가 가진 락이면 TTL만 연장 (재선택)
+    if (await this.refreshModelLock(roomId, modelId, userId)) {
+      return { acquired: true, ownerId: userId };
+    }
+
+    return { acquired: false, ownerId: await this.client.get(key) };
+  }
+
+  // 락 해제: 내 락일 때만 삭제 (compare-and-delete)
+  async releaseModelLock(
+    roomId: string,
+    modelId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const result = await this.client.eval(RELEASE_LOCK_SCRIPT, {
+      keys: [this.lockKey(roomId, modelId)],
+      arguments: [userId],
+    });
+    return result === 1;
+  }
+
+  // 락 TTL 연장: 내 락일 때만 (이동/회전/스케일 등 활동 시)
+  async refreshModelLock(
+    roomId: string,
+    modelId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const result = await this.client.eval(REFRESH_LOCK_SCRIPT, {
+      keys: [this.lockKey(roomId, modelId)],
+      arguments: [userId, MODEL_LOCK_TTL_MS.toString()],
+    });
+    return result === 1;
+  }
+
+  // 현재 락 소유자 조회
+  async getModelLockOwner(
+    roomId: string,
+    modelId: string,
+  ): Promise<string | null> {
+    return this.client.get(this.lockKey(roomId, modelId));
+  }
+
+  // 가구 삭제 시 락 강제 제거
+  async deleteModelLock(roomId: string, modelId: string): Promise<void> {
+    await this.client.del(this.lockKey(roomId, modelId));
+  }
+
+  // 방의 모든 락 제거
+  async clearRoomLocks(roomId: string): Promise<void> {
+    const keys: string[] = [];
+    for await (const batch of this.client.scanIterator({
+      MATCH: `room:${roomId}:lock:*`,
+      COUNT: 100,
+    })) {
+      keys.push(...batch);
+    }
+    if (keys.length > 0) {
+      await this.client.del(keys);
+    }
+  }
 }
+
+// 락 유지 시간 (마지막 활동 기준 1분)
+export const MODEL_LOCK_TTL_MS = 60 * 1000;
+
+const RELEASE_LOCK_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+return 0
+`;
+
+const REFRESH_LOCK_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('PEXPIRE', KEYS[1], ARGV[2])
+end
+return 0
+`;
