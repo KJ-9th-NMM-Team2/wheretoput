@@ -110,7 +110,11 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   // 🆕 사용자 상태 업데이트 메서드
-  async updateRoomUser(roomId: string, userId: string, userData: any): Promise<RoomState> {
+  async updateRoomUser(
+    roomId: string,
+    userId: string,
+    userData: any,
+  ): Promise<RoomState> {
     const currentState = (await this.getRoomState(roomId)) || {
       models: [] as any[],
       connectedUsers: new Map(),
@@ -212,6 +216,76 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   async clearRoomState(roomId: string): Promise<void> {
     const key = `room:${roomId}:state`;
     await this.client.del(key);
+    await this.clearRoomLocks(roomId);
     console.log(`🔴 Room ${roomId} state cleared from Redis`);
   }
+
+  // ===== 가구 락 (방별 Redis 해시, HSETNX로 원자적 획득) =====
+  // room:{roomId}:locks 해시에 field = modelId, value = userId 로 저장
+  // 필드별 안전장치 TTL은 HPEXPIRE 사용 (Redis 7.4+)
+
+  private locksKey(roomId: string): string {
+    return `room:${roomId}:locks`;
+  }
+
+  // 락 획득: 비어 있으면 HSETNX로 획득, 이미 내 락이면 TTL 연장
+  // 반환값: 성공 여부와 현재 락 소유자
+  async acquireModelLock(
+    roomId: string,
+    modelId: string,
+    userId: string,
+  ): Promise<{ acquired: boolean; ownerId: string | null }> {
+    const [acquired, ownerId] = (await this.client.eval(ACQUIRE_LOCK_SCRIPT, {
+      keys: [this.locksKey(roomId)],
+      arguments: [modelId, userId, MODEL_LOCK_TTL_MS.toString()],
+    })) as [number, string | null];
+    return { acquired: acquired === 1, ownerId: ownerId || null };
+  }
+
+  // 락 해제: 내 락일 때만 삭제 (compare-and-delete)
+  async releaseModelLock(
+    roomId: string,
+    modelId: string,
+    userId: string,
+  ): Promise<boolean> {
+    const result = await this.client.eval(RELEASE_LOCK_SCRIPT, {
+      keys: [this.locksKey(roomId)],
+      arguments: [modelId, userId],
+    });
+    return result === 1;
+  }
+
+  // 가구 삭제 시 락 강제 제거
+  async deleteModelLock(roomId: string, modelId: string): Promise<void> {
+    await this.client.hDel(this.locksKey(roomId), modelId);
+  }
+
+  // 방의 모든 락 제거
+  async clearRoomLocks(roomId: string): Promise<void> {
+    await this.client.del(this.locksKey(roomId));
+  }
 }
+
+// 락 필드 안전장치 TTL: 실제 타임아웃(1분)은 크론이 lastActivity 기준으로 처리하고,
+// 이 TTL은 서버 장애 등으로 크론이 락을 못 지웠을 때 남는 필드를 정리하는 용도.
+// 크론 주기(1분)보다 충분히 길어야 활동 중인 락이 먼저 만료되지 않음
+export const MODEL_LOCK_TTL_MS = 5 * 60 * 1000;
+
+// KEYS[1] = 락 해시, ARGV = [modelId, userId, ttlMs]
+// 획득(HSETNX) 또는 내 락 확인 + TTL 설정을 한 번에 원자적으로 처리
+const ACQUIRE_LOCK_SCRIPT = `
+if redis.call('HSETNX', KEYS[1], ARGV[1], ARGV[2]) == 1
+  or redis.call('HGET', KEYS[1], ARGV[1]) == ARGV[2] then
+  redis.call('HPEXPIRE', KEYS[1], ARGV[3], 'FIELDS', 1, ARGV[1])
+  return {1, ARGV[2]}
+end
+return {0, redis.call('HGET', KEYS[1], ARGV[1])}
+`;
+
+// KEYS[1] = 락 해시, ARGV = [modelId, userId]
+const RELEASE_LOCK_SCRIPT = `
+if redis.call('HGET', KEYS[1], ARGV[1]) == ARGV[2] then
+  return redis.call('HDEL', KEYS[1], ARGV[1])
+end
+return 0
+`;

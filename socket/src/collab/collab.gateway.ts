@@ -59,6 +59,14 @@ export class CollabGateway {
         `🚪 User ${userId} (${userData?.name}) disconnected from room ${roomId}`,
       );
 
+      // 사용자가 잡고 있던 가구 락 해제
+      const prevState = await this.redisService.getRoomState(roomId);
+      const lockedModelId =
+        prevState?.connectedUsers.get(userId)?.selectedModelId;
+      if (lockedModelId) {
+        await this.redisService.releaseModelLock(roomId, lockedModelId, userId);
+      }
+
       // Redis에서 사용자 정보 직접 제거
       await this.redisService.removeConnectedUser(roomId, userId);
       this.logger.log(`🗑️ User ${userId} removed from Redis`);
@@ -446,6 +454,7 @@ export class CollabGateway {
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
       await this.redisService.removeRoomModel(roomId, data.modelId);
+      await this.redisService.deleteModelLock(roomId, data.modelId);
 
       // 사용자 활동 시간 업데이트
       await this.redisService.updateRoomUser(roomId, data.userId, {
@@ -468,10 +477,40 @@ export class CollabGateway {
   ) {
     this.logger.log(`✅ MODEL SELECT: ${data.modelId} by ${data.userId}`);
 
-    // 현재 사용자 상태 업데이트 (Redis)
+    // 가구별 락 키에 SET NX로 원자적 획득 시도
     // lockTimeStamp, lastActivity는 락 시간제한 용도
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
+      const { acquired, ownerId } = await this.redisService.acquireModelLock(
+        roomId,
+        data.modelId,
+        data.userId,
+      );
+
+      if (!acquired) {
+        this.logger.log(
+          `🔒 MODEL SELECT DENIED: ${data.modelId} is locked by ${ownerId}`,
+        );
+        socket.emit('model-select-denied', {
+          modelId: data.modelId,
+          ownerId,
+        });
+        return;
+      }
+
+      // 다른 가구를 선택 중이었다면 이전 락 해제
+      const roomState = await this.redisService.getRoomState(roomId);
+      const prevModelId = roomState?.connectedUsers.get(
+        data.userId,
+      )?.selectedModelId;
+      if (prevModelId && prevModelId !== data.modelId) {
+        await this.redisService.releaseModelLock(
+          roomId,
+          prevModelId,
+          data.userId,
+        );
+      }
+
       await this.redisService.updateRoomUser(roomId, data.userId, {
         selectedModelId: data.modelId,
         showTooltip: true,
@@ -520,9 +559,17 @@ export class CollabGateway {
   ) {
     this.logger.log(`✅ MODEL DESELECT: ${data.modelId} by ${data.userId}`);
 
-    // 현재 사용자 상태 업데이트 (Redis)
+    // 락 해제 후 현재 사용자 상태 업데이트 (Redis)
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
     if (roomId) {
+      if (data.modelId) {
+        await this.redisService.releaseModelLock(
+          roomId,
+          data.modelId,
+          data.userId,
+        );
+      }
+
       await this.redisService.updateRoomUser(roomId, data.userId, {
         selectedModelId: null,
         showTooltip: false,
@@ -538,6 +585,8 @@ export class CollabGateway {
   }
 
   // 락 타임아웃 (1분에 1번씩 체크) - 마지막 활동 기준으로 락 해제
+  // 락 해제 시점은 크론이 단일 기준: 락 키 삭제와 말풍선 해제(model-deselect)를 함께 처리해
+  // Redis 락 상태와 화면이 어긋나지 않게 함. 락 키의 TTL은 서버 장애 대비 안전장치일 뿐
   @Cron('0 * * * * *') // 매 분 0초마다 실행
   async cleanupExpiredLocks() {
     this.logger.log('🧹 Running cleanupExpiredLocks cron job');
@@ -550,10 +599,31 @@ export class CollabGateway {
       if (roomState) {
         for (const [userId, userData] of roomState.connectedUsers.entries()) {
           if (userData.selectedModelId && userData.lastActivity) {
-            // 마지막 활동 시간 기준으로 락 해제 체크 (lockTimeStamp 대신 lastActivity 사용)
-            if (now - userData.lastActivity > LOCK_TIMEOUT) {
-              this.logger.log(`🔓 Releasing lock for user ${userId} due to inactivity (${Math.round((now - userData.lastActivity) / 1000)}s)`);
+            const modelId = userData.selectedModelId;
+            let shouldRelease = false;
 
+            if (now - userData.lastActivity > LOCK_TIMEOUT) {
+              this.logger.log(
+                `🔓 Releasing lock for user ${userId} due to inactivity (${Math.round((now - userData.lastActivity) / 1000)}s)`,
+              );
+              await this.redisService.releaseModelLock(roomId, modelId, userId);
+              shouldRelease = true;
+            } else {
+              // 활동 중이면 안전장치 TTL 연장 (키가 사라졌다면 재획득, 다른 사용자가 잡았으면 해제)
+              const { acquired } = await this.redisService.acquireModelLock(
+                roomId,
+                modelId,
+                userId,
+              );
+              if (!acquired) {
+                this.logger.log(
+                  `🔓 Releasing stale selection of user ${userId} on ${modelId} (lock held by another user)`,
+                );
+                shouldRelease = true;
+              }
+            }
+
+            if (shouldRelease) {
               await this.redisService.updateRoomUser(roomId, userId, {
                 selectedModelId: null,
                 showTooltip: false,
@@ -674,7 +744,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; texture: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🖼️ WALL TEXTURE CHANGED: ${data.texture} by ${data.userId}`);
+    this.logger.log(
+      `🖼️ WALL TEXTURE CHANGED: ${data.texture} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
@@ -697,7 +769,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; texture: string },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🏠 FLOOR TEXTURE CHANGED: ${data.texture} by ${data.userId}`);
+    this.logger.log(
+      `🏠 FLOOR TEXTURE CHANGED: ${data.texture} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
@@ -812,7 +886,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; use: boolean },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🖼️ USE ORIGINAL TEXTURE CHANGED: ${data.use} by ${data.userId}`);
+    this.logger.log(
+      `🖼️ USE ORIGINAL TEXTURE CHANGED: ${data.use} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);
@@ -835,7 +911,9 @@ export class CollabGateway {
     @MessageBody() data: { userId: string; use: boolean },
     @ConnectedSocket() socket: Socket,
   ) {
-    this.logger.log(`🧱 USE ORIGINAL WALL TEXTURE CHANGED: ${data.use} by ${data.userId}`);
+    this.logger.log(
+      `🧱 USE ORIGINAL WALL TEXTURE CHANGED: ${data.use} by ${data.userId}`,
+    );
 
     // 사용자 활동 시간 업데이트
     const roomId = Array.from(socket.rooms).find((room) => room !== socket.id);

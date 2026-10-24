@@ -305,6 +305,21 @@ export function useCollaboration(roomId) {
       }
     });
 
+    // 🔒 서버에서 락 획득 실패 (다른 사용자가 먼저 선택함)
+    socket.current.on("model-select-denied", (data) => {
+      const store = useStore.getState();
+      if (store.selectedModelId === data.modelId) {
+        store.deselectModel(false);
+      }
+      if (data.ownerId && data.ownerId !== currentUser.id) {
+        updateConnectedUser(data.ownerId, {
+          selectedModelId: data.modelId,
+          showTooltip: true,
+          tooltipModelId: data.modelId,
+        });
+      }
+    });
+
     socket.current.on("wall-color-changed", (data) => {
       if (data.userId !== currentUser.id) {
         setWallColor(data.color, false);
